@@ -11,6 +11,7 @@ Documento vivo. Cada cargo revisado (checklist de regras assinado por contador, 
 | Cargo | Checklist | Situação | Requisitos |
 | --- | --- | --- | --- |
 | Recepcionista (mensalista, escala 5x2) | Checklist de Regras: Recepcionista | Concluído em 15/10/2026 | AJ-01 a AJ-11 e C-01 a C-05 |
+| Auxiliar de serviços gerais (ASG, horista) | Checklist de Regras: Auxiliar de Serviços Gerais | Em revisão | AJ-17 a AJ-19 e os já existentes (seção 5.3) |
 | Instrutor de musculação (horista) | Checklist de Regras: Instrutor de Musculação | Respondido em 15/10/2026; pendências com contador e jurídico | AJ-01, AJ-05, AJ-09 a AJ-11, AJ-12 a AJ-16 e C-01, C-06, C-07 |
 | Próximos cargos | — | A fazer | — |
 
@@ -36,6 +37,9 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-14 | Horista com dias fixos e escala de fim de semana | Código | Instrutor horista | A fazer |
 | AJ-15 | Interjornada em rubrica própria com incidências configuráveis | Código | Instrutor horista; todos | A fazer — depende do jurídico |
 | AJ-16 | Marcações duplicadas: ignorar sozinho ou só sinalizar | Código | Instrutor horista; todos | A fazer |
+| AJ-17 | Adicional de insalubridade ou periculosidade parametrizável | Código | ASG | A fazer |
+| AJ-18 | Entrega e controle de EPI e uniforme | Código | ASG; todos com EPI | A fazer |
+| AJ-19 | Exames ocupacionais (ASO) e treinamentos com vencimento | Código | ASG; todos | A fazer — confirmar no checklist |
 | C-01 | Corrigir a Regra Sindical CCT da academia (ES) | Config | Todos da academia | A fazer |
 | C-02 | Cadastrar os perfis 5x2 da recepção | Config | Recepção | A fazer |
 | C-03 | Vale-refeição por dia trabalhado | Config | Recepção | A fazer |
@@ -167,7 +171,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
   - Linha sem CartãoGV não entra no arquivo; o arquivo tem 27 campos por linha e abre no portal sem erro.
 - **A confirmar antes de usar:**
   - O layout de 27 campos veio do PRD GVBus; validar com um upload de teste no portal.
-  - O arquivo leva só a quantidade **diária** de passagens, não os dias do mês. Confirmar no portal como se informa a quantidade de dias de cada colaborador no pedido; se for um número único para todos, a sugestão por colaborador vira um relatório de conferência.
+  - O arquivo leva só a quantidade **diária** de passagens, não os dias do mês. **Decisão do Ricardo (15/10/2026):** o programa faz a previsão dos dias de cada um pelo calendário do ano e pelos dias de trabalho, e os dias e o valor de cada linha ficam **editáveis antes de emitir**. Toda edição manual grava o valor sugerido, o valor novo, quem mudou e o motivo, e passa pelas mesmas travas de média.
   - O RG é obrigatório no layout; hoje o programa não guarda RG.
 - **Fonte:** Lei 7.418/1985, art. 1º e 4º; Decreto 10.854/2021; CCT cl. 13ª; PRD GVBus v2.0. Origem: recepção, item 18.
 
@@ -291,6 +295,38 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Aceite:** com "só sinalizar", batidas 08:00 e 08:01 geram inconsistência e o dia não é apurado até o tratamento.
 - **Origem:** instrutor, item 18.
 
+### AJ-17 — Adicional de insalubridade ou periculosidade parametrizável
+- **Hoje:** o programa não tem nenhum dos dois adicionais.
+- **Pedido do Ricardo:** o ASG tem "adicional de periculosidade de 20%" e isso precisa ser parametrizável.
+- **Atenção:** periculosidade é sempre 30% do salário base (CLT art. 193, §1º). O de 20% é **insalubridade em grau médio**, sobre o salário mínimo (CLT art. 192; Súmula Vinculante 4 STF). Limpeza de banheiros de uso público é grau máximo, 40% (Súmula 448 TST). O laudo (PGR/LTCAT) define tipo e grau.
+- **Mudança:**
+  - DocType "Regra de Adicional de Risco" com vigência: empresa, cargos ou colaboradores, tipo (insalubridade / periculosidade), percentual, base de cálculo (salário mínimo vigente / salário base / piso da CCT), laudo anexado (número, data, validade) e se o EPI neutraliza o risco.
+  - Validação: periculosidade só 30%; insalubridade só 10, 20 ou 40% (alerta se outro valor, para casos de CCT). Os dois não se acumulam no mesmo colaborador: vale o de maior valor.
+  - Horista: valor proporcional às horas pagas no mês (horas ÷ 220 × valor mensal); mensalista: valor mensal, com desconto proporcional nas faltas.
+  - Reflexos: o adicional entra na base da hora extra (OJ 47 TST), do DSR do horista e do adicional noturno; INSS, FGTS, férias e 13º ficam na folha.
+  - Rubricas novas INSALUB e PERIC no Fechamento de Ponto. Tabela do salário mínimo por vigência.
+  - Laudo vencido ou sem laudo: inconsistência no fechamento (alerta).
+- **Aceite:** ASG horista com 100h no mês, insalubridade 20% sobre mínimo de R$ 1.621,00: 324,20 ÷ 220 × 100 = R$ 147,36. Tentar gravar periculosidade de 20%: recusado.
+- **Fonte:** CLT art. 189 a 195; NR-15; NR-16; Súmulas 80, 139 e 448 TST; OJ 47 SDI-1 TST. Origem: ASG, itens 5 a 7 e 28.
+
+### AJ-18 — Entrega e controle de EPI e uniforme
+- **Hoje:** o programa não controla EPI nem uniforme.
+- **Pedido do Ricardo:** o ASG tem que receber EPI "e outros".
+- **Mudança:**
+  - Cadastro de itens: EPI (com número do CA e validade do CA) ou uniforme; prazo de troca em dias; cargos que devem receber cada item.
+  - "Entrega de EPI": colaborador, data, itens, quantidade, CA, motivo (admissão, troca, perda, dano) e confirmação do colaborador (assinatura em PDF ou confirmação eletrônica no portal). Gera a ficha de EPI do colaborador em PDF.
+  - Estoque simples por unidade (entrada e saída pela entrega).
+  - Alertas: troca vencida, CA vencido, colaborador do cargo sem entrega registrada; devolução na demissão.
+  - Nunca gerar desconto de uniforme ou EPI em folha (exceto dano doloso, com decisão do RH).
+- **Aceite:** ASG admitido sem entrega de luvas e botas em 5 dias gera alerta; luvas com troca a cada 30 dias geram alerta no 31º dia.
+- **Fonte:** CLT art. 166 e 456-A; NR-6; CCT cl. 19ª. Origem: ASG, itens 25 a 27 e 31.
+
+### AJ-19 — Exames ocupacionais (ASO) e treinamentos com vencimento
+- **Hoje:** o programa não controla ASO nem treinamentos.
+- **Mudança:** registro de ASO (admissional, periódico, retorno, mudança de risco, demissional) com resultado (apto / inapto), médico, data e próximo vencimento; treinamentos (uso de EPI, produtos químicos) com validade. Alerta 30 dias antes do vencimento ao RH e ao gestor; inconsistência quando vencido. O resultado do ASO é dado de saúde: acesso só do RH Saúde (LGPD), como o CID.
+- **Aceite:** ASO periódico vencendo em 30 dias gera aviso; vencido gera inconsistência no fechamento.
+- **Fonte:** NR-1; NR-7; CLT art. 168. Origem: ASG, itens 29 a 31 (a confirmar no checklist).
+
 ## 5. Cargos
 
 ### 5.1 Recepcionista — mensalista, escala fixa 5x2 (concluído em 15/10/2026)
@@ -307,6 +343,13 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Item 6 (adicional noturno):** marcado OK, mas o contracheque de setembro ainda paga 20% (R$ 59,86). A CCT exige 25% (R$ 74,83 em setembro, mais R$ 2,99 de reflexo no DSR). Ver C-01.
 - **Contracheque:** o DSR (código 3) parece já incluir as horas extras e a rubrica 9189 paga de novo o DSR sobre elas (R$ 33,00). Ver AJ-12.
 - **Ainda com o jurídico:** contrato do fim de semana (intermitente ou horista com mínimo) e incidências da interjornada (AJ-15).
+
+### 5.3 Auxiliar de serviços gerais (ASG) — horista (em revisão)
+- **Base:** pedido do Ricardo em 15/10/2026: horista, perto da recepção, vale-alimentação por dia trabalhado, prêmio, adicional de risco de 20% e entrega de EPI.
+- **Checklist:** Checklist de Regras: Auxiliar de Serviços Gerais, com 31 itens. Cada item diz se o programa já atende, se é só parametrizar ou qual requisito falta.
+- **Reaproveita:** AJ-01 (piso), AJ-03, AJ-05, AJ-06 (VT), AJ-07 (prêmio), AJ-08, AJ-09 a AJ-12, AJ-14 a AJ-16, C-01 e C-03 (VA proporcional, como o VR).
+- **Novos:** AJ-17 (adicional de risco), AJ-18 (EPI e uniforme), AJ-19 (ASO e treinamentos).
+- **A confirmar:** piso por hora do ASG (a CCT só traz piso horista de instrutor; derivado do mensalista: R$ 7,50/h) e se o adicional é insalubridade 20% ou outro, pelo laudo.
 
 ### 5.x Modelo para o próximo cargo
 - Cargo, tipo de remuneração e escala.
@@ -328,3 +371,5 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | DSR do horista | O DSR (código 3) inclui as horas extras e a rubrica 9189 paga de novo? Base do DSR com ou sem HE? | AJ-12 |
 | Hora extra 100% | De onde vieram as 5h a 100% de setembro, se o horista não recebe HE em folga? | AJ-14 |
 | CBO | 224120 é o CBO correto para instrutor de musculação? | C-06 |
+| ASG — adicional | O "20%" é insalubridade grau médio? O laudo indica grau máximo (banheiros de uso público)? O EPI neutraliza? | AJ-17 |
+| ASG — piso | Qual o piso por hora do ASG horista (a CCT não traz)? R$ 7,50 derivado do mensalista? | AJ-01 |
