@@ -1,19 +1,20 @@
-# PRD — Ajustes do programa por cargo
+# PRD — Alterações do programa
 
-Documento vivo. Cada cargo revisado (checklist de regras assinado por contador, jurídico e administrativo) acrescenta aqui os requisitos de alteração do programa. Os requisitos são numerados em sequência (`AJ-01`, `AJ-02`…) e nunca são renumerados; um requisito que vale para vários cargos é escrito uma vez e citado na seção de cada cargo.
+Documento único com todas as alterações pedidas para o programa de ponto e folha, em etapas de execução. Junta o PRD de ajustes por cargo (recepção, instrutor horista, ASG), o módulo de vale-transporte GVBus (AJ-06) e o controle de estagiários (seção 6). Requisitos numerados em sequência (`AJ-01`, `EST-01`, `C-01`…) nunca são renumerados; um requisito que vale para vários cargos é escrito uma vez e citado na seção de cada cargo.
 
-- **Programa:** app `hrms_secullum_brasil` (repositório Admsmartfit/RH). As regras gerais do projeto continuam em `docs/PRD.md` e `AGENTS.md`; este documento só descreve **mudanças**.
-- **Base legal usada:** CLT, Lei 605/1949, súmulas e OJs do TST, e a CCT SENALBA-ES × SINDELIVRE-ES 2026/2027 (registro MTE ES000299/2026, vigência 01/05/2026 a 30/04/2027).
-- **Cópias:** este arquivo fica na pasta do projeto (`prd/PRD-ajustes-por-cargo.md`) e no repositório (`docs/PRD-ajustes-por-cargo.md`). Ao alterar um, alterar o outro.
+- **Programa:** app `hrms_secullum_brasil` (repositório Admsmartfit/RH), Frappe/ERPNext/HRMS v15. As regras gerais continuam em `docs/PRD.md` e `AGENTS.md`; este documento só descreve **mudanças**.
+- **Como executar:** seção 3, uma etapa por vez.
+- **Base legal usada:** CLT, Lei 605/1949, Lei 7.418/1985, Lei 11.788/2008, súmulas e OJs do TST, NRs e a CCT SENALBA-ES × SINDELIVRE-ES 2026/2027 (registro MTE ES000299/2026, vigência 01/05/2026 a 30/04/2027).
+- **Cópias:** `docs/PRD-alteracoes.md` no repositório e `prd/PRD-alteracoes.md` na pasta do projeto. Ao alterar um, alterar o outro. Substitui `PRD-ajustes-por-cargo.md` e `PRD-estagiarios.md`.
 
 ## 1. Situação por cargo
 
 | Cargo | Checklist | Situação | Requisitos |
 | --- | --- | --- | --- |
 | Recepcionista (mensalista, escala 5x2) | Checklist de Regras: Recepcionista | Concluído em 15/10/2026 | AJ-01 a AJ-11 e C-01 a C-05 |
-| Auxiliar de serviços gerais (ASG, mensalista 5x2) | Checklist de Regras: Auxiliar de Serviços Gerais | Concluído em 15/10/2026 | AJ-17 a AJ-19, C-08 e os da recepção (seção 5.3) |
+| Auxiliar de serviços gerais (ASG, mensalista 5x2) | Checklist de Regras: Auxiliar de Serviços Gerais | Concluído em 15/10/2026 | AJ-17 a AJ-19, C-08 e os da recepção (seção 7.3) |
 | Instrutor de musculação (horista) | Checklist de Regras: Instrutor de Musculação | Respondido em 15/10/2026; pendências com contador e jurídico | AJ-01, AJ-05, AJ-09 a AJ-11, AJ-12 a AJ-16 e C-01, C-06, C-07 |
-| Estagiário (Lei 11.788/2008) | — (PRD próprio: `docs/PRD-estagiarios.md`) | PRD adaptado em 15/10/2026, dividido em 8 etapas | EST-01 a EST-09 (seção 5.4) |
+| Estagiário (Lei 11.788/2008) | — (PRD enviado pelo Ricardo, adaptado na seção 6) | PRD adaptado em 15/10/2026 | EST-01 a EST-09 (seções 6 e 7.4) |
 | Próximos cargos | — | A fazer | — |
 
 ## 2. Resumo dos requisitos
@@ -41,6 +42,15 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-17 | Adicional de insalubridade ou periculosidade parametrizável | Código | ASG | A fazer |
 | AJ-18 | Entrega e controle de EPI e uniforme | Código | ASG (EPI); todos os cargos (uniforme) | A fazer |
 | AJ-19 | Exames ocupacionais (ASO) e treinamentos com vencimento | Código | Todos os cargos | A fazer |
+| EST-01 | Instituição de Ensino e Agente de Integração | Código | Estagiário | A fazer |
+| EST-02 | Termo de Compromisso de Estágio com vigência e validações | Código | Estagiário | A fazer |
+| EST-03 | Perfil de jornada limitado ao TCE | Código | Estagiário | A fazer |
+| EST-04 | Apuração sem hora extra, banco e DSR, com alerta de excesso | Código | Estagiário | A fazer |
+| EST-05 | Dia de prova e calendário acadêmico | Código | Estagiário | A fazer |
+| EST-06 | Recesso remunerado | Código | Estagiário | A fazer |
+| EST-07 | Relatório de estágio semestral | Código | Estagiário | A fazer |
+| EST-08 | Rotina diária de alertas do estágio | Código | Estagiário | A fazer |
+| EST-09 | Bolsa, auxílio-transporte e fechamento | Código | Estagiário | A fazer |
 | C-01 | Corrigir a Regra Sindical CCT da academia (ES) | Config | Todos da academia | A fazer |
 | C-02 | Cadastrar os perfis 5x2 da recepção | Config | Recepção | A fazer |
 | C-03 | Vale-refeição por dia trabalhado | Config | Recepção | A fazer |
@@ -50,7 +60,170 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | C-07 | Empresa e feriados de Vila Velha/ES | Config | Todos da ES Fitness | A fazer |
 | C-08 | Cadastro do ASG (perfil 5x2, insalubridade e EPI) | Config | ASG | A fazer — depende do AJ-17 e AJ-18 |
 
-## 3. Ajustes de configuração (sem programar)
+A ordem de execução está na seção 3.
+
+## 3. Plano de etapas
+
+Ordem de execução de **todos** os requisitos deste documento. Cada etapa pode ser feita e testada sozinha, na ordem abaixo, por um agente de código (Antigravity) ou por uma pessoa. Peça uma etapa por vez, por exemplo: "Leia AGENTS.md, docs/PROGRESS.md e docs/PRD-alteracoes.md e faça a Etapa 3".
+
+### Regras para todas as etapas
+- Ler `AGENTS.md`, `docs/PROGRESS.md` e a etapa inteira antes de começar. `AGENTS.md` manda: nada no core do Frappe/HRMS; regra de cálculo em `engine/` (Python puro, sem import frappe); Custom Fields, Roles e Salary Components como fixtures; tempos em minutos inteiros; dinheiro em Decimal com ROUND_HALF_UP no final; tabs; ruff com linha de 110.
+- Usar os testes de **Aceite** de cada requisito citado como casos de teste (pytest no engine; `FrappeTestCase` na pasta do DocType).
+- Ao terminar: `ruff check .`, `ruff format --check .`, `pytest --cov` (engine ≥ 90%) e os testes Frappe da etapa (`bench --site ponto.localhost run-tests --app hrms_secullum_brasil --module <módulo>`). Não seguir para a próxima etapa com teste vermelho.
+- Atualizar `docs/PROGRESS.md` e a coluna "Situação" da seção 2 deste documento.
+- Regra do PRD ambígua: parar e perguntar, não inventar.
+
+### Visão geral
+
+| Etapa | Requisitos | Depende de | Situação |
+| --- | --- | --- | --- |
+| 0 | C-01, C-03, C-04, C-07 (cadastro pelo RH) | — | A fazer (RH) |
+| 1 | AJ-13 e AJ-06 parte 1 (engine do VT) | — | Feito em rascunho |
+| 2 | AJ-01, AJ-04, AJ-05, AJ-15, AJ-16 (opções da CCT e do cargo) | — | A fazer |
+| 3 | AJ-11 e AJ-03 (feriados) | — | A fazer |
+| 4 | AJ-09, AJ-02 e C-05 (escala do mês, trocas e repouso) | 3 | A fazer |
+| 5 | AJ-10 (descanso semanal de 35h) | 4 | A fazer |
+| 6 | AJ-14, AJ-12 e C-06 (horista) | 4 | A fazer |
+| 7 | AJ-07 (prêmio SE / E / ENTÃO) | — | A fazer |
+| 8 | AJ-08 (custeio da CCT) | — | A fazer |
+| 9 | AJ-06 parte 2 (telas do VT e arquivo GVBus) | 1, 4 | A fazer |
+| 10 | AJ-17 e C-08 (insalubridade) | — | A fazer |
+| 11 | AJ-18 (EPI e uniforme) | — | A fazer |
+| 12 | AJ-19 (ASO e treinamentos) | — | A fazer |
+| 13 | EST: regras puras do estágio (engine) | — | A fazer |
+| 14 | EST-04: motor de apuração com a flag de estágio | 13 | A fazer |
+| 15 | EST-01 a EST-03: módulo Estagio e cadastros | 13 | A fazer |
+| 16 | EST-04 e EST-05: apuração do estagiário no Frappe | 14, 15 | A fazer |
+| 17 | EST-06: recesso | 15 | A fazer |
+| 18 | EST-07 e EST-08: relatórios semestrais e alertas | 15 | A fazer |
+| 19 | EST-09: folha do estagiário | 9, 16 | A fazer |
+| 20 | Documentação final e C-02 (perfis 5x2) | todas | A fazer |
+
+### Etapa 0 — Cadastros sem programar (RH)
+- **Requisitos:** C-01, C-03, C-04, C-07 (seção 4).
+- **Quem faz:** o RH, nas telas do programa. Não é tarefa do agente de código.
+- **Pronto quando:** a Regra Sindical CCT do ES está com 25% de adicional noturno, vigência 01/05/2026 a 30/04/2027 e sem intervalo reduzido; VA/VR proporcional; empresa de Vila Velha cadastrada com os feriados de lá.
+
+### Etapa 1 — DSR em duas rubricas e engine do VT (feito)
+- **Requisitos:** AJ-13; AJ-06 parte 1.
+- **Situação:** feito na branch `claude/project-thread-fsnf1q` (`engine/valoracao.py`, rubrica `DSR_ADN`, `engine/vale_transporte.py`, testes no engine).
+- **Falta:** rodar os testes Frappe de `payroll_handoff/test_fechamento.py` no ambiente `docker/`.
+
+### Etapa 2 — Opções da CCT e do cargo
+- **Requisitos:** AJ-01 (piso por cargo e alerta), AJ-04 (adicional noturno por cargo, mínimo 20%), AJ-05 (banco de horas padrão por cargo), AJ-15 (incidências da interjornada), AJ-16 (duplicadas: ignorar ou sinalizar).
+- **Arquivos principais:** `configuracao_ponto/doctype/regra_cct_cargo` (hoje só tem `designation`: incluir piso, tipo do piso, carga de referência, percentual noturno e banco padrão); `configuracao_ponto/doctype/regra_sindical_cct` (opção de duplicadas); `engine/defaults_legais.py` e `engine/tests/test_defaults_legais.py`; `engine/pareamento.py:remover_duplicadas`; `apuracao/adaptador.py:regra_de_cct`; `fixtures/salary_component.json` (incidências de INTER); hook de Employee para o banco padrão; alerta de piso na Salary Structure Assignment e no Fechamento.
+- **Testes:** os aceites de AJ-01, AJ-04, AJ-05, AJ-15 e AJ-16.
+- **Pronto quando:** testes verdes e nenhum resultado antigo muda com as opções no padrão.
+
+### Etapa 3 — Feriados
+- **Requisitos:** AJ-11 (módulo de feriados com importação, inclusão e remoção manual) e AJ-03 (folga compensatória de feriado trabalhado, padrão pagar 100%).
+- **Arquivos principais:** cliente HTTP próprio com modo mock (no padrão de `integrations/secullum/client.py`, sem `requests` fora dele); DocType de feriados por UF e município; job anual em `hooks.py`; novo tipo "Compensação de feriado" no Select de `apuracao/doctype/tratamento_de_ponto`; opção "Feriado trabalhado" e prazo na Regra Sindical CCT; `apuracao/adaptador.py`.
+- **Testes:** aceites de AJ-11 e AJ-03 (importação sem duplicar; 27/07 fora da lista; 07/09 com folga em 09/09 sem HE e sem falta).
+- **Pronto quando:** testes verdes; mudar feriado marca os dias para reapuração.
+
+### Etapa 4 — Escala do mês, trocas e repouso semanal
+- **Requisitos:** AJ-09 (Troca de Escala, escala mensal, domingo de folga a cada 2 semanas para mulheres e 3 para homens), AJ-02 (repouso marcado na escala de cada semana; tipo de dia "Folga compensada") e C-05 (liberar o tipo "Escala" do Perfil de Jornada quando isto estiver pronto).
+- **Arquivos principais:** DocType novo "Troca de Escala" e escala do mês por colaborador (módulo Configuracao Ponto); `apuracao/adaptador.py:jornada_do_dia` (troca aprovada substitui o perfil); `engine/horas_extras.py:tipo_do_dia` e `engine/defaults_legais.py` (novo tipo "Folga compensada"); Select de `faixa_hora_extra`; inconsistência nova de domingos no Select de Inconsistencia de Ponto; `apuracao/permissoes.py` para os DocTypes com `employee`; `apuracao/reapuracao.py:marcar_para_reapuracao` ao aprovar troca.
+- **Testes:** aceites de AJ-09 e AJ-02.
+- **Pronto quando:** testes verdes e a meta de desempenho de `utils/carga.py` mantida.
+
+### Etapa 5 — Descanso semanal de 35h e 7 dias seguidos
+- **Requisitos:** AJ-10.
+- **Arquivos principais:** função nova no engine por semana (usa `descanso_semanal_minimo`, que já existe na CCT e hoje não é usado); `apuracao/servico.py:_concluir_colaborador` (efeito por semana, como o DSR); tipos novos de inconsistência.
+- **Testes:** aceite de AJ-10.
+- **Pronto quando:** testes verdes.
+
+### Etapa 6 — Horista com escala e mínimo de horas
+- **Requisitos:** AJ-14 (dias previstos pela escala do mês, mínimo de horas por colaborador, sem HE por trabalhar em folga), AJ-12 (DSR do horista mensal, só sobre horas normais) e C-06.
+- **Arquivos principais:** `engine/apuracao_dia.py` (ramo `horista`), `engine/models.py`, `apuracao/adaptador.py`, `apuracao/dsr.py` e `engine/dsr.py` (opção semanal/mensal), `engine/valoracao.py` (complemento do mínimo em HORAS), Custom Field do mínimo no Employee.
+- **Testes:** aceites de AJ-14 e AJ-12 (setembro/2026: DSR_HOR R$ 268,85 e DSR_HE R$ 33,00).
+- **Pronto quando:** testes verdes e os horistas atuais sem escala continuam com o mesmo resultado.
+
+### Etapa 7 — Prêmio com regras SE / E / ENTÃO
+- **Requisitos:** AJ-07.
+- **Arquivos principais:** `apuracao/doctype/regra_de_premiacao` e `condicao_premiacao` (hoje: tudo ou nada, métricas faltas, atraso, atestados e dias de atestado); `engine/premiacao.py` (primeira regra verdadeira vence; SENÃO; métricas novas); botão "Simular"; espelho do prêmio no fechamento.
+- **Testes:** aceite de AJ-07.
+- **Pronto quando:** testes verdes; regras antigas continuam valendo como uma regra única.
+
+### Etapa 8 — Custeio do benefício social da CCT
+- **Requisitos:** AJ-08.
+- **Arquivos principais:** campos na Regra Sindical CCT; relatório no módulo Reports; envio mensal por e-mail no `scheduler_events`.
+- **Testes:** aceite de AJ-08.
+- **Pronto quando:** testes verdes.
+
+### Etapa 9 — Vale-transporte: telas e arquivo GVBus
+- **Requisitos:** AJ-06 parte 2.
+- **Arquivos principais:** Custom Fields do colaborador (CartãoGV, RG, tarifas; RG e CPF restritos ao RH); tabela de tarifas com vigência; DocType "Carga de VT" mensal com edição em lote, motivo, aprovação e log; exportação usando `engine/vale_transporte.py`; rubricas VT e VT_DESC no `payroll_handoff/fechamento.py`; percentual de desconto por tipo de colaborador (0% para estagiário).
+- **Testes:** aceites de AJ-06.
+- **Pronto quando:** testes verdes; arquivo validado com um upload de teste no portal GVBus.
+
+### Etapa 10 — Adicional de insalubridade
+- **Requisitos:** AJ-17 e C-08.
+- **Arquivos principais:** DocType "Regra de Adicional de Risco" com vigência e laudo anexado (usar `configuracao_ponto/regras.py`); tabela do salário mínimo por vigência; `engine/valoracao.py` (rubricas INSALUB e PERIC; adicional na base da HE e do noturno; desconto por falta); fixtures de Salary Components.
+- **Testes:** aceite de AJ-17 (R$ 1.800,00 → R$ 360,00; com 1 falta R$ 348,00; periculosidade de 20% recusada).
+- **Pronto quando:** testes verdes.
+
+### Etapa 11 — EPI e uniforme
+- **Requisitos:** AJ-18.
+- **Arquivos principais:** módulo novo (ex.: "Seguranca Trabalho") com itens, entregas, estoque e ficha em PDF; alertas diários; permissões.
+- **Testes:** aceite de AJ-18.
+- **Pronto quando:** testes verdes.
+
+### Etapa 12 — ASO e treinamentos
+- **Requisitos:** AJ-19.
+- **Arquivos principais:** mesmo módulo da etapa 11; resultado do ASO em permlevel 1 (RH Saúde, regra de LGPD do `AGENTS.md`); alertas diários.
+- **Testes:** aceite de AJ-19.
+- **Pronto quando:** testes verdes.
+
+### Etapa 13 — Estagiário: regras puras (engine)
+- **Requisitos:** validações do EST-02, dia de prova do EST-05, saldo do EST-06, datas e proporção do EST-08, valores do EST-09.
+- **Arquivos:** novo `engine/estagio.py`; constantes em `engine/defaults_legais.py` (limites por nível de ensino, 24 meses, 10 por supervisor, 2,5 dias por mês); testes em `engine/tests/test_estagio.py`.
+- **Funções:** `limites_do_nivel`, `erros_do_tce`, `avisos_do_tce`, `jornada_dia_de_prova`, `saldo_recesso`, `datas_alerta_vencimento` (30/15/5), `relatorios_devidos`, `limite_proporcao`, `desconto_bolsa`.
+- **Testes (mínimo):** superior com 7h/dia → erro; EJA com 5h/dia → erro; superior 6h/30h → ok. Cadeia de 18 + 8 meses → erro; PcD com 30 meses → ok. Não obrigatório sem bolsa → erro. Supervisor com 10 recebendo o 11º → erro. Prova com 6h → 180 min; 4h → 120; 5h15 → 157. 7 meses sem recesso → 17,5 dias; 12 meses com 10 tirados → 20. Bolsa R$ 1.200,00 com 1 falta → R$ 40,00; 30h semanais e 30 min de atraso → R$ 4,00. Quadro de 8 → até 2; 40 → até 8.
+- **Pronto quando:** pytest verde, engine ≥ 90% e `test_isolamento` verde.
+
+### Etapa 14 — Estagiário: motor de apuração
+- **Requisitos:** EST-04 (parte do engine).
+- **Arquivos:** `engine/models.py` (`EntradaDia.estagio`, `EntradaDia.limite_diario_estagio`, `ResultadoDia.excesso_estagio`), `engine/apuracao_dia.py`, Select `tipo` de Inconsistencia de Ponto (`excesso_jornada_estagio`, `excesso_semanal_estagio`, `tce_vencido`, `relatorio_estagio_pendente`, `seguro_estagio_vencido`), testes em `engine/tests/test_apuracao_estagio.py`.
+- **Testes:** previsto 6h e trabalhou 6h30 → normais 360, excesso 30, sem HE, inconsistência Alta; trabalhou 6h → sem inconsistência; atraso calculado normalmente; noturno sem valor pago.
+- **Pronto quando:** testes verdes; nada muda com `estagio=False`.
+
+### Etapa 15 — Estagiário: módulo e cadastros
+- **Requisitos:** EST-01, EST-02, EST-03.
+- **Arquivos:** `modules.txt` (+ `Estagio`); pasta `estagio/` com Instituicao de Ensino, Agente de Integracao (fixtures CIEE-ES e IEL-ES), Termo de Compromisso de Estagio e a filha Calendario Academico Estagio; `estagio/tce.py` (`get_tce_vigente`, cadeia de aditivos); opção "Estagiario" em `tipo_remuneracao` (`fixtures/custom_field.json`); hook de Employee para validar o perfil; permissões em `apuracao/permissoes.py` e `hooks.py`.
+- **Testes Frappe:** TCE válido submetido → Employee vira Estagiario/Intern e sai do banco; TCE com 7h → erro; aditivo passando de 24 meses → erro; 11º estagiário do supervisor → erro; perfil de 8h vinculado a estagiário → erro; colaborador vê só o próprio TCE.
+- **Pronto quando:** `bench migrate` sem erro e testes verdes.
+
+### Etapa 16 — Estagiário: apuração no Frappe
+- **Requisitos:** EST-04 (Frappe) e EST-05.
+- **Arquivos:** `apuracao/adaptador.py:montar_entrada` (TCE vigente via `lote.memo`; metade da jornada em dia de prova), `apuracao/servico.py` (grava `excesso_estagio`; checagem semanal em `_concluir_colaborador`), `apuracao/dsr.py` e `apuracao/banco_horas.py` (pulam estagiário), campo `excesso_estagio` em Apuracao Diaria, reapuração ao mudar o calendário acadêmico.
+- **Testes Frappe:** 7h num dia → sem HE e com inconsistência; 32h na semana com TCE de 30h → `excesso_semanal_estagio`; dia de prova com 3h → sem falta; sem DSR Semanal e sem Banco de Horas Movimento.
+- **Pronto quando:** testes verdes e meta de `utils/carga.py` mantida.
+
+### Etapa 17 — Estagiário: recesso
+- **Requisitos:** EST-06.
+- **Arquivos:** fixture do Leave Type "Recesso de Estagio"; `estagio/recesso.py` (saldo pelo engine; `validate` de Leave Application em `doc_events`); saldo somente leitura no TCE.
+- **Testes Frappe:** pedido acima do saldo → erro; dentro do saldo e aprovado → dias abonados; fora das férias escolares → aviso.
+- **Pronto quando:** testes verdes.
+
+### Etapa 18 — Estagiário: relatórios semestrais e alertas
+- **Requisitos:** EST-07 e EST-08.
+- **Arquivos:** DocType Relatorio de Estagio; `estagio/alertas.py:verificar_estagios` em `scheduler_events.daily` (padrão de `apuracao/instrutores.py:verificar_cref`); bloqueio de aditivo sem relatório; inconsistências por `apuracao/inconsistencias.py`.
+- **Testes Frappe:** TCE vencendo em 15 dias → notificação; TCE vencido com batida → `tce_vencido`; 6º mês sem relatório → `relatorio_estagio_pendente` e aditivo recusado; seguro vencido → `seguro_estagio_vencido`; o job não levanta exceção.
+- **Pronto quando:** testes verdes.
+
+### Etapa 19 — Estagiário: folha
+- **Requisitos:** EST-09.
+- **Arquivos:** `engine/valoracao.py` (ramo de estágio com `engine/estagio.py:desconto_bolsa`), `fixtures/salary_component.json` (`BOLSA_DESC`, `RECESSO_EST`), `hooks.py` (`_RUBRICAS_FOLHA`), `payroll_handoff/fechamento.py`, VT com 0% de desconto (etapa 9), `docs/implantacao.md` (Salary Structure "Estágio").
+- **Testes:** bolsa R$ 1.200,00, 1 falta e 30 min de atraso → `BOLSA_DESC` R$ 44,00 e nenhuma outra rubrica; Fechamento de Ponto com estagiário gera só `BOLSA_DESC`.
+- **Pronto quando:** testes verdes e contagem de Salary Components atualizada nos docs.
+
+### Etapa 20 — Documentação final e perfis
+- **Requisitos:** C-02 (perfis 5x2 da recepção e do ASG, cadastrados pelo RH depois da etapa 4) e documentação.
+- **Arquivos:** `docs/manual_rh.md` (escala, trocas, feriados, prêmio, VT, insalubridade, EPI, ASO, estagiário), `docs/checklist_validacao.md`, `docs/implantacao.md`, `docs/PROGRESS.md`.
+- **Pronto quando:** o RH consegue operar cada recurso novo só com o manual.
+
+## 4. Ajustes de configuração (sem programar)
 
 ### C-01 — Regra Sindical CCT da academia (ES)
 - Sindicato: "SENALBA-ES × SINDELIVRE-ES 2026/2027" (hoje "SINDACAD-ES (exemplo)").
@@ -101,7 +274,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - ASO e treinamentos (AJ-19) cadastrados para todos os cargos; para o ASG, treinamento de uso do EPI e de produtos químicos.
 - Origem: checklist do ASG, itens 1 a 8.
 
-## 4. Requisitos de alteração do programa
+## 5. Requisitos de alteração do programa
 
 ### AJ-01 — Piso salarial por cargo e alerta de salário abaixo do piso
 - **Hoje:** o salário de cada um fica na Salary Structure Assignment (campo base) e pode ter qualquer valor, mas o programa não conhece o piso da CCT nem avisa quando o salário fica abaixo.
@@ -344,14 +517,162 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Aceite:** ASO periódico vencendo em 30 dias gera aviso; vencido gera inconsistência no fechamento.
 - **Fonte:** NR-1; NR-7; CLT art. 168. Origem: ASG, itens 7 e 8 (Ricardo: incluir para todos os cargos).
 
-## 5. Cargos
+## 6. Estagiários (Lei 11.788/2008)
 
-### 5.1 Recepcionista — mensalista, escala fixa 5x2 (concluído em 15/10/2026)
+Adaptação do "PRD - Controle de Estagiários HRMS Secullum" enviado pelo Ricardo em 15/10/2026. A seção 6.2 lista o que mudou em relação ao original e por quê. Requisitos com o prefixo `EST-`; a execução está nas etapas 13 a 19 da seção 3.
+
+### 6.1 Objetivo
+
+Controlar estagiários no mesmo programa de ponto, com regras próprias e travas para que o estágio não vire vínculo CLT:
+
+- ponto vindo do Secullum, sem hora extra, sem banco de horas e sem DSR;
+- alerta crítico quando a jornada passa do limite do termo de compromisso;
+- controle do Termo de Compromisso de Estágio (TCE), do seguro, das avaliações semestrais e do recesso.
+
+### 6.2 O que mudou em relação ao PRD original
+
+| Original | Adaptado | Motivo |
+| --- | --- | --- |
+| Cadastro específico de "Estagiários" | O estagiário continua sendo um **Employee** (Tipo de emprego "Intern" do HRMS, `tipo_remuneracao` = "Estagiario"), com um DocType novo **Termo de Compromisso de Estagio** que guarda o contrato com vigência. | Ponto, Secullum, permissões, espelho e fechamento já funcionam por Employee. Um cadastro paralelo duplicaria tudo. |
+| Limite fixo de 6h/dia e 30h/semana | Limite **do TCE**, validado contra o teto legal do nível de ensino: 6h/30h (superior, profissional de nível médio e médio regular) ou 4h/20h (educação especial e anos finais do fundamental, na modalidade EJA). | Lei 11.788, art. 10, I e II. |
+| Campo "É Estágio?" no Perfil de Jornada e `jornada_esperada` 06:00:00 | O Perfil de Jornada continua igual (o estagiário pode ter qualquer escala). Ao salvar o TCE e ao vincular o perfil, o programa recusa perfil com dia acima do limite diário ou semana acima do limite semanal do TCE. | Um mesmo perfil pode servir a vários cargos; a regra é do contrato, não da escala. |
+| "Bloqueio de batidas fora de hora" | O programa **não bloqueia** batida (a marcação original do Secullum é imutável). Gera a inconsistência crítica `excesso_jornada_estagio` e o alerta no painel. | Regra do projeto: `Secullum Checkin Raw` nunca é alterado. Bloquear batida não impede o trabalho, só esconde o registro. |
+| Dia de prova = 3 horas | Dia de prova = **metade da jornada prevista do dia** (TCE com 6h → 3h; com 4h → 2h), só se o TCE prevê a redução. | Lei 11.788, art. 10, §2º: "pelo menos à metade". |
+| "Seguro de Vida" | **Seguro contra acidentes pessoais**: seguradora, apólice, vigência e valor; alerta se vencer antes do fim do TCE. | Lei 11.788, art. 9º, IV. |
+| Sem regra de proporção no quadro | Incluída: limite de estagiários por tamanho do quadro de empregados do estabelecimento (não vale para nível superior e profissional de nível médio). | Lei 11.788, art. 17. |
+| Recesso de 2,5 dias por mês | Mantido. Recesso entra como **Leave Application** com o Leave Type novo "Recesso de Estagio" (já abona o dia na apuração). Remunerado só se o estagiário recebe bolsa. | Lei 11.788, art. 13. A apuração já trata licença aprovada como abono (`apuracao/adaptador.py:abonos_do_dia`). |
+| `engine/dsr.py` desconsidera DSR "sindical pesado" | Estagiário fica fora do DSR por completo (`apuracao/dsr.py`), do banco de horas e do adicional noturno. Falta só desconta a bolsa do dia. | DSR, banco e adicional noturno são verbas CLT. |
+| "INSS descontado: não" | Bolsa sem INSS obrigatório e sem FGTS; **IRRF incide** sobre a bolsa pela tabela mensal. INSS só se o estagiário optar por contribuir como facultativo, fora da folha. | Lei 11.788, art. 12, §2º; regra do IRRF sobre rendimentos do trabalho. Confirmar com o contador. |
+| Auxílio-transporte obrigatório | Usa o módulo de vale-transporte (AJ-06) com **desconto de 0%** para estagiário. | Lei 11.788, art. 12: o auxílio não é o VT da Lei 7.418, então não há desconto de 6%. |
+| Particularidades do ES | CIEE-ES e IEL-ES entram como registros iniciais de Agente de Integração; feriados do ES vêm do AJ-11; "Suspensão de calendário" vira um evento do calendário acadêmico do TCE. | Sem mudança de regra, só cadastro. |
+
+### 6.3 Base legal mapeada
+
+| Regra | Onde fica no programa | Fonte |
+| --- | --- | --- |
+| Estágio não cria vínculo CLT: sem FGTS, 13º, aviso prévio, multa, hora extra, DSR | Flag de estágio no motor (EST-04) e estrutura salarial própria (EST-09) | Lei 11.788, art. 3º e 12 |
+| Jornada máxima por nível de ensino (4h/20h ou 6h/30h) | TCE (EST-02) e validação do Perfil de Jornada (EST-03) | Art. 10 |
+| Redução de pelo menos metade em dia de prova | Calendário acadêmico do TCE (EST-05) | Art. 10, §2º |
+| Duração máxima de 2 anos, exceto PcD | Validação do TCE e dos termos aditivos (EST-02) | Art. 11 |
+| Recesso de 30 dias a cada 12 meses, proporcional, de preferência nas férias escolares | Saldo de recesso e Leave Type (EST-06) | Art. 13 |
+| Relatório de atividades em prazo não superior a 6 meses | Relatório de Estágio e alertas (EST-07) | Art. 7º, IV, e 9º, VII |
+| Supervisor com no máximo 10 estagiários | Validação no TCE (EST-02) | Art. 9º, III |
+| Seguro contra acidentes pessoais | Campos e alerta no TCE (EST-02, EST-08) | Art. 9º, IV |
+| Bolsa e auxílio-transporte obrigatórios no estágio não obrigatório | Campos obrigatórios no TCE e rubricas (EST-02, EST-09) | Art. 12 |
+| Proporção de estagiários no quadro | Alerta no TCE e relatório (EST-08) | Art. 17 |
+| Descumprimento caracteriza vínculo de emprego | Inconsistências críticas (EST-04, EST-08) | Art. 3º, §2º, e 15 |
+
+### 6.4 Cadastros
+
+#### EST-01 — Instituição de Ensino e Agente de Integração
+- DocType **Instituicao de Ensino**: nome, CNPJ, UF, município, contato, e-mail para envio de relatórios. Ex.: UFES, IFES.
+- DocType **Agente de Integracao**: nome, CNPJ, contato. Registros iniciais (fixture): CIEE-ES e IEL-ES.
+- Ambos simples, no módulo novo **Estagio**.
+
+#### EST-02 — Termo de Compromisso de Estágio (TCE)
+- DocType **Termo de Compromisso de Estagio** (submetível, com vigência), módulo Estagio:
+  - Colaborador (Employee), empresa, instituição de ensino, agente de integração (opcional), curso, nível de ensino (Select: Superior / Profissional de nível médio / Médio regular / Educação especial / Fundamental EJA), obrigatório ou não obrigatório, PcD (Check).
+  - Data de início, data de fim prevista, carga diária (min) e semanal (min), dia de prova reduz jornada (Check, padrão sim).
+  - Bolsa-auxílio mensal (Currency) e auxílio-transporte (Currency por dia ou mensal).
+  - Supervisor (Employee), seguradora, número da apólice, vigência do seguro.
+  - Anexo do TCE assinado (permlevel 0, só RH).
+  - Termo aditivo: link para o TCE anterior (`tce_anterior`), formando uma cadeia.
+- **Validações** (regras em `engine/estagio.py`, etapa 13):
+  - Carga diária e semanal até o teto do nível de ensino (erro).
+  - Soma da duração da cadeia de TCEs até 24 meses, exceto PcD (erro).
+  - Não obrigatório sem bolsa ou sem auxílio-transporte (erro).
+  - Supervisor com mais de 10 estagiários com TCE vigente na mesma data (erro).
+  - Seguro vencendo antes do fim do TCE (aviso).
+  - Sobreposição de dois TCEs do mesmo colaborador: usar `configuracao_ponto/regras.py:validar_sem_sobreposicao`.
+- O TCE vigente na data é lido por uma função `estagio/tce.py:get_tce_vigente(employee, data)`, no mesmo padrão de `get_regra_vigente`.
+- Ao submeter: grava no Employee `tipo_remuneracao = "Estagiario"` e `employment_type = "Intern"`, e desliga `participa_banco_horas`.
+
+#### EST-03 — Perfil de Jornada do estagiário
+- Sem campo novo no Perfil de Jornada.
+- Ao vincular perfil a um estagiário (Employee `on_update`) e ao submeter o TCE: recusa perfil com algum dia acima da carga diária do TCE ou semana acima da carga semanal. Mensagem: "Perfil X tem 8h na segunda; o TCE permite no máximo 6h."
+- Perfis tipo Horista, Professor e Intermitente: recusados para estagiário.
+
+### 6.5 Apuração de ponto
+
+#### EST-04 — Motor sem hora extra, banco e DSR
+- `engine/models.py`: `EntradaDia` ganha `estagio: bool = False` e `limite_diario_estagio: int = 0`.
+- `engine/apuracao_dia.py`, quando `estagio`:
+  - Trabalhado até o previsto = normal. Acima do previsto ou do limite diário: **não** vira hora extra nem banco (`he_faixas` vazio). Os minutos excedentes ficam em um campo novo `excesso_estagio` do `ResultadoDia`.
+  - Excesso > 0: inconsistência `excesso_jornada_estagio`, severidade Alta, mensagem "Jornada de estágio passou do limite do TCE em X min (risco de vínculo CLT)".
+  - Sem adicional noturno, sem intrajornada indenizada e sem interjornada paga. O tempo noturno fica registrado só para conferência.
+  - Atraso e falta continuam calculados (descontam a bolsa).
+- Semana: `apuracao/servico.py` (no fechamento da semana do colaborador, junto do DSR) soma o trabalhado da semana. Acima da carga semanal do TCE: inconsistência `excesso_semanal_estagio`, Alta.
+- `apuracao/dsr.py`: estagiário não gera DSR Semanal nem perda de DSR.
+- `apuracao/banco_horas.py`: estagiário nunca gera lançamento.
+- Novos tipos no Select de Inconsistencia de Ponto: `excesso_jornada_estagio`, `excesso_semanal_estagio`, `tce_vencido`, `relatorio_estagio_pendente`, `seguro_estagio_vencido` (o teste de tipos do engine exige isso).
+- Painel: o card "Alerta de risco trabalhista" lista as inconsistências de estágio abertas do mês.
+
+#### EST-05 — Dia de prova e calendário acadêmico
+- Tabela filha no TCE: **Calendario Academico Estagio** — data início, data fim, tipo (Prova / Férias escolares / Suspensão de calendário), comprovante anexado.
+- Dia de prova (com o TCE marcando a redução): jornada prevista do dia = metade da jornada do perfil, arredondada para baixo em minutos. Trabalhar mais que a metade gera `excesso_jornada_estagio`.
+- Suspensão de calendário (greve, recesso acadêmico, ex.: UFES/IFES): o RH escolhe no evento se o estágio continua normal ou se os dias são abonados. Padrão: continua normal.
+- Férias escolares: só servem para sugerir o período do recesso (EST-06).
+- Mudar o calendário marca os dias para reapuração (`apuracao/reapuracao.py:marcar_para_reapuracao`).
+
+#### EST-06 — Recesso remunerado
+- Leave Type novo **Recesso de Estagio** (fixture), sem acúmulo automático do HRMS.
+- Saldo calculado pelo engine: 2,5 dias por mês completo de estágio na cadeia de TCEs, menos os dias de recesso aprovados. Ao completar 12 meses o direito é de 30 dias; contratos menores têm direito proporcional.
+- Leave Application de recesso: recusa se passar do saldo. Aviso se não cair dentro das férias escolares cadastradas (a lei pede "preferencialmente").
+- Encerramento do TCE com saldo: aviso ao RH para pagar o recesso proporcional na rescisão do estágio.
+- Recesso remunerado só se houver bolsa; sem bolsa, os dias contam como recesso sem pagamento.
+- Na apuração o dia já fica abonado (licença aprovada), sem falta e sem desconto da bolsa.
+
+### 6.6 Avaliações e alertas
+
+#### EST-07 — Relatório de Estágio semestral
+- DocType **Relatorio de Estagio**: TCE, período (início/fim), relatório do estagiário (anexo), avaliação do supervisor (anexo ou texto), data de entrega, enviado à instituição (Check).
+- Prazo: um relatório a cada 6 meses de TCE.
+- Alerta no 5º mês de cada semestre ao RH e ao supervisor. Vencido o 6º mês sem relatório: inconsistência `relatorio_estagio_pendente`.
+- Termo aditivo (prorrogação) **recusado** se algum relatório vencido da cadeia estiver sem anexo.
+
+#### EST-08 — Rotina diária de alertas
+- Job diário em `hooks.py` (`estagio/alertas.py:verificar_estagios`), no padrão de `apuracao/instrutores.py:verificar_cref`:
+  - TCE vencendo em 30, 15 e 5 dias: e-mail e notificação ao RH e ao supervisor.
+  - TCE vencido com o colaborador ainda ativo e batendo ponto: inconsistência `tce_vencido` (Alta).
+  - Seguro vencido com TCE vigente: inconsistência `seguro_estagio_vencido` (Alta).
+  - Relatório do semestre (EST-07).
+  - Cadeia chegando a 24 meses (não PcD): aviso 60 dias antes.
+- Proporção no quadro (art. 17): na submissão do TCE e no relatório, comparar estagiários de nível médio não profissional e fundamental com o número de empregados do estabelecimento (1 a 5: 1; 6 a 10: 2; 11 a 25: 5; acima de 25: 20%). Acima: aviso (não bloqueio).
+- Erros do job viram inconsistência pelo `apuracao/inconsistencias.py`; o job não levanta exceção.
+
+### 6.7 Folha
+
+#### EST-09 — Bolsa, auxílio-transporte e fechamento
+- Salary Structure "Estágio" (documentado em `docs/implantacao.md`): Bolsa-auxílio e Auxílio-transporte, IRRF; sem INSS, FGTS, 13º e férias.
+- Salary Components novos (fixtures): `BOLSA_DESC` (desconto de faltas e atrasos da bolsa) e `RECESSO_EST` (recesso proporcional na rescisão do estágio).
+- `engine/valoracao.py`: para estagiário, valor do dia = bolsa ÷ 30 e valor do minuto = bolsa ÷ (carga semanal do TCE × 5) ÷ 60. Gera só `BOLSA_DESC` (falta e atraso). Nunca HE, ADN, DSR, banco, intrajornada ou interjornada.
+- `payroll_handoff/fechamento.py`: estagiário passa pelo mesmo Fechamento de Ponto; o adaptador usa a valoração de estágio.
+- Auxílio-transporte: módulo de VT (AJ-06) com percentual de desconto 0% para estagiários.
+- Prêmio e vale-alimentação: seguem as regras da empresa, se ela quiser incluir estagiários (não é obrigatório).
+
+### 6.8 Decisões tomadas (confirmar com o Ricardo)
+
+| Ponto | Padrão adotado |
+| --- | --- |
+| Hora excedente do estagiário | Não é paga como hora extra nem vai para banco; vira inconsistência crítica para o RH resolver (orientar, ajustar escala). |
+| Desconto de falta | Bolsa ÷ 30 por dia de falta injustificada; atraso por minuto. Configurável para "não descontar". |
+| Suspensão de calendário acadêmico | Estágio continua normal; o RH pode abonar no evento. |
+| IRRF sobre a bolsa | Incide; confirmar com o contador. |
+| Proporção no quadro | Só aviso. |
+
+### 6.9 Fora do escopo
+- Portal do estagiário para enviar o relatório (fica para depois; nesta versão o RH anexa).
+- Integração automática com CIEE/IEL (cadastro manual).
+- Contribuição facultativa ao INSS.
+
+## 7. Cargos
+
+### 7.1 Recepcionista — mensalista, escala fixa 5x2 (concluído em 15/10/2026)
 - **Itens aprovados sem mudança (X):** 1, 3, 5, 6, 7, 9, 12, 13, 15, 16, 17, 22, 23, 26 a 30, 32, 33, 37 e 38.
 - **Itens com correção → requisito:** 2 → AJ-01; 4 → C-02; 8 → AJ-02; 10 → AJ-03; 11 → AJ-04 e C-01; 14 → AJ-05; 18 → AJ-06; 19 → C-03; 20 → AJ-07; 21 → AJ-08; 24 → C-02, C-05 e AJ-09; 25 → AJ-09; 31 → C-04; 34 → AJ-10; 35 → AJ-09; 36 → AJ-11.
 - **Observação:** a correção do item 34 foi escrita na linha do item 35; foi tratada como item 34 (AJ-10). O item 35 (domingos de folga) foi coberto pela correção do item 24 (AJ-09).
 
-### 5.2 Instrutor de musculação — horista (respondido em 15/10/2026)
+### 7.2 Instrutor de musculação — horista (respondido em 15/10/2026)
 - **Base:** checklist respondido pelo Ricardo e contracheque de setembro/2026 (ES Fitness, Vila Velha/ES; instrutor horista, R$ 16,50/h, admitido em 01/09/2026).
 - **Itens OK:** 6, 7, 15, 16, 20, 21, 23, 27 e 29.
 - **Não se aplicam ao horista:** 1, 2, 12, 13, 14 e 19.
@@ -361,26 +682,26 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Contracheque:** o DSR (código 3) parece já incluir as horas extras e a rubrica 9189 paga de novo o DSR sobre elas (R$ 33,00). Ver AJ-12.
 - **Ainda com o jurídico:** contrato do fim de semana (intermitente ou horista com mínimo) e incidências da interjornada (AJ-15).
 
-### 5.3 Auxiliar de serviços gerais (ASG) — mensalista 5x2 (concluído em 15/10/2026)
+### 7.3 Auxiliar de serviços gerais (ASG) — mensalista 5x2 (concluído em 15/10/2026)
 - **Base:** checklist respondido pelo Ricardo em 15/10/2026. O ASG trabalha exatamente como a recepção (mensalista, escala fixa 5x2); o checklist foi reduzido ao que difere dela. Correção do Ricardo: o ASG nunca é horista.
-- **Igual à recepção:** valem as respostas e os requisitos da seção 5.1 (C-02, C-03, AJ-02 a AJ-11, AJ-13, AJ-15 e AJ-16, C-01, C-04 e C-05).
+- **Igual à recepção:** valem as respostas e os requisitos da seção 7.1 (C-02, C-03, AJ-02 a AJ-11, AJ-13, AJ-15 e AJ-16, C-01, C-04 e C-05).
 - **Não se aplica:** AJ-01 (piso), porque a empresa sempre paga acima; AJ-12 e AJ-14 são só do horista.
 - **Itens aprovados sem mudança (X):** 1 e 4.
 - **Itens com correção → requisito:** 2 → AJ-17 (é insalubridade, a empresa tem o laudo); 3 → AJ-17 e C-08 (20% configurável, base no salário contratual, vigência desde o início do pagamento, todos os ASG); 5 → AJ-18 (uniforme para todos os cargos); 6 → AJ-17 (anexar o laudo); 7 → AJ-19 (para todos os cargos); 8 → AJ-18 e AJ-19 (alerta no fechamento).
 - **Cadastro:** C-08.
 
-### 5.4 Estagiário (PRD próprio)
-- **Base:** "PRD - Controle de Estagiários HRMS Secullum" enviado pelo Ricardo em 15/10/2026, adaptado ao programa em `docs/PRD-estagiarios.md` (cópia em `prd/PRD-estagiarios.md`).
-- **Requisitos:** EST-01 a EST-09, com plano de 8 etapas na seção 9 daquele documento.
-- **Usa daqui:** AJ-06 (auxílio-transporte com desconto 0%) e AJ-11 (feriados do ES).
+### 7.4 Estagiário
+- **Base:** "PRD - Controle de Estagiários HRMS Secullum" enviado pelo Ricardo em 15/10/2026, adaptado na seção 6.
+- **Requisitos:** EST-01 a EST-09; etapas 13 a 19.
+- **Usa também:** AJ-06 (auxílio-transporte com desconto 0%) e AJ-11 (feriados do ES).
 
-### 5.x Modelo para o próximo cargo
+### 7.x Modelo para o próximo cargo
 - Cargo, tipo de remuneração e escala.
 - Itens aprovados sem mudança.
 - Itens com correção → requisito (novo AJ ou um já existente).
 - Pendências com o jurídico ou contador.
 
-## 6. Pendências para jurídico e contador
+## 8. Pendências para jurídico e contador
 
 Respostas do Ricardo em 15/10/2026:
 
@@ -406,3 +727,5 @@ Ainda em aberto:
 | Folha de setembro | O contador precisa tirar as horas extras da base do DSR (código 3), porque o DSR sobre elas já sai na rubrica 9189. | AJ-12 |
 | Hora extra 100% de setembro | As 5h a 100% parecem ser do feriado de 07/09, que paga 100% por lei. Confirmar. | AJ-03 e AJ-14 |
 | Horas extras do horista | Acima de 8h no dia ou 44h na semana a lei obriga hora extra, mesmo para horista. | AJ-14 |
+| IRRF da bolsa | Confirmar com o contador que o IRRF incide sobre a bolsa-auxílio. | EST-09 |
+| Decisões do estágio | Confirmar os padrões da seção 6.8 (hora excedente vira alerta e não é paga; falta desconta 1/30 da bolsa). | EST-04 e EST-09 |

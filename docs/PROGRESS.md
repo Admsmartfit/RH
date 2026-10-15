@@ -418,7 +418,7 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - CI no GitHub (repositório sem remoto) e primeiro commit.
 - Validações da Seção 13: ver `docs/checklist_validacao.md`.
 
-## Ajustes por cargo — `docs/PRD-ajustes-por-cargo.md` (15/10/2026)
+## Alterações do programa — `docs/PRD-alteracoes.md` (15/10/2026)
 
 ### Feito
 - **AJ-06 (parte 1, engine):** `engine/vale_transporte.py` — dias de trabalho do mês (perfil + trocas de escala), sugestão de passes (feriados, ausências, acerto do mês anterior, abono em lote), desconto de 6% limitado ao benefício, média histórica e travas (alerta ≥ 15%, trava dura > 30%), validação ERR-01/ERR-02 e arquivo GVBus de 27 campos (ISO-8859-1, CRLF). Testes em `engine/tests/test_vale_transporte.py`.
@@ -432,4 +432,4 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - `pytest --cov` não rodou aqui (sem pytest-cov); rodar no CI.
 - Demais requisitos do PRD de ajustes por cargo.
 - Checklist do ASG concluído (15/10/2026): mensalista 5x2 igual à recepção; novos AJ-17 (insalubridade configurável, base no salário contratual, laudo anexado), AJ-18 (EPI; uniforme para todos os cargos), AJ-19 (ASO e treinamentos para todos os cargos) e C-08 (cadastro do ASG).
-- PRD de estagiários adaptado ao programa em `docs/PRD-estagiarios.md` (15/10/2026), com 8 etapas de implementação (EST-01 a EST-09). Nada implementado ainda.
+- PRD de estagiários adaptado (EST-01 a EST-09). Em 15/10/2026 os PRDs de ajustes por cargo e de estagiários viraram um só, `docs/PRD-alteracoes.md`, com 21 etapas (0 a 20); etapa 1 feita em rascunho.
