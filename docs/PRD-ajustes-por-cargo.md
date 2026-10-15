@@ -258,7 +258,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Hoje:** as horas que faltam para completar 11h de descanso entre dias são pagas como hora extra (rubrica INTER).
 - **Correção do Ricardo:** pagar como hora extra de 50%, sem incidência de FGTS, INSS, férias e 13º.
 - **Mudança:** percentual da interjornada na Regra Sindical CCT (padrão 50%) e incidências da rubrica INTER configuráveis na folha.
-- **Atenção (jurídico):** a Reforma Trabalhista tornou indenizatório só o **intervalo de almoço** (art. 71, §4º). Para a interjornada, o TST trata o pagamento como hora extra de natureza salarial (OJ 355), com INSS, FGTS e reflexos. Tirar as incidências exige parecer do jurídico; até lá, manter com incidências.
+- **Atenção (jurídico):** a OJ 355 do TST manda pagar a interjornada por analogia ao art. 71, §4º. Depois da Reforma Trabalhista, esse parágrafo diz que o pagamento do intervalo é indenizatório, mas a lei não mudou o art. 66 e há decisões nos dois sentidos. Tirar as incidências exige parecer do jurídico; até lá, manter com incidências, que é o caminho mais seguro.
 - **Aceite:** descanso de 9h entre dias: 2h a 50% na rubrica INTER.
 - **Fonte:** CLT art. 66; OJ 355 SDI-1 TST. Origem: instrutor, item 11.
 
