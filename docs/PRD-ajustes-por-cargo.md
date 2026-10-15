@@ -11,7 +11,7 @@ Documento vivo. Cada cargo revisado (checklist de regras assinado por contador, 
 | Cargo | Checklist | Situação | Requisitos |
 | --- | --- | --- | --- |
 | Recepcionista (mensalista, escala 5x2) | Checklist de Regras: Recepcionista | Concluído em 15/10/2026 | AJ-01 a AJ-11 e C-01 a C-05 |
-| Instrutor de musculação (mensalista e horista) | Checklist de Regras: Instrutor de Musculação | Aguardando jurídico | Seção 5.2 (ainda sem número) |
+| Instrutor de musculação (horista) | Checklist de Regras: Instrutor de Musculação | Respondido em 15/10/2026; pendências com contador e jurídico | AJ-01, AJ-05, AJ-09 a AJ-11, AJ-12 a AJ-16 e C-01, C-06, C-07 |
 | Próximos cargos | — | A fazer | — |
 
 ## 2. Resumo dos requisitos
@@ -31,11 +31,18 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-09 | Escala flexível: troca de dias e rodízio de domingos | Código | Recepção | A fazer |
 | AJ-10 | Conferência do descanso semanal de 35h e de 7 dias seguidos | Código | Recepção | A fazer |
 | AJ-11 | Módulo de feriados nacionais, estaduais e municipais | Código | Recepção | A fazer |
+| AJ-12 | DSR do horista calculado no mês | Código | Instrutor horista | A fazer |
+| AJ-13 | DSR sobre hora extra e sobre adicional noturno em rubricas separadas | Código | Instrutor horista; todos | A fazer |
+| AJ-14 | Horista com dias fixos e escala de fim de semana | Código | Instrutor horista | A fazer |
+| AJ-15 | Interjornada em rubrica própria com incidências configuráveis | Código | Instrutor horista; todos | A fazer — depende do jurídico |
+| AJ-16 | Marcações duplicadas: ignorar sozinho ou só sinalizar | Código | Instrutor horista; todos | A fazer |
 | C-01 | Corrigir a Regra Sindical CCT da academia (ES) | Config | Todos da academia | A fazer |
 | C-02 | Cadastrar os perfis 5x2 da recepção | Config | Recepção | A fazer |
 | C-03 | Vale-refeição por dia trabalhado | Config | Recepção | A fazer |
 | C-04 | Desligar o intervalo reduzido de 30 min | Config | Todos da academia | A fazer |
 | C-05 | Esconder o tipo "Escala" e a "compensação semanal" até AJ-09 | Config | Todos | A fazer |
+| C-06 | Cadastro do instrutor horista | Config | Instrutor horista | A fazer |
+| C-07 | Empresa e feriados de Vila Velha/ES | Config | Todos da ES Fitness | A fazer |
 
 ## 3. Ajustes de configuração (sem programar)
 
@@ -67,6 +74,19 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - Origem: checklist da recepção, item 24.
 
 ## 4. Requisitos de alteração do programa
+
+### C-06 — Cadastro do instrutor horista
+- Perfil de Jornada tipo "Horista" com os dias fixos e as horas de cada dia (depende do AJ-14 para gerar falta).
+- Valor da hora-aula na Salary Structure Assignment: R$ 16,50 (piso da CCT: R$ 15,20).
+- Banco de horas desligado para o cargo (horista recebe por hora trabalhada).
+- CBO no cadastro: o contracheque usa 224120; confirmar com o contador.
+- Operacional (fora do programa): pedir aos líderes o número e a validade do CREF de todos os instrutores e cadastrar.
+- Origem: checklist do instrutor, itens 3, 9, 12 e 28.
+
+### C-07 — Empresa e feriados de Vila Velha/ES
+- O contracheque é da ES Fitness Ltda, em Vila Velha/ES (CNPJ 23.620.822/0002-51), e não de Vitória como nos dados de exemplo.
+- Cadastrar a empresa real e usar os feriados municipais de Vila Velha. O 08/09 (N. Sra. da Vitória) é feriado só de Vitória. O DSR de setembro/2026 no contracheque usou 5 dias de descanso (4 domingos + 07/09), o que confirma isso.
+- Origem: contracheque de setembro/2026.
 
 ### AJ-01 — Piso salarial por cargo e alerta de salário abaixo do piso
 - **Hoje:** o salário de cada um fica na Salary Structure Assignment (campo base) e pode ter qualquer valor, mas o programa não conhece o piso da CCT nem avisa quando o salário fica abaixo.
@@ -196,8 +216,58 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
   - Tabela de feriados estaduais e municipais por UF e município, com fonte (lei) e se a data é fixa ou móvel; gera as datas do ano automaticamente.
   - Datas da CCT (ex.: 27/07, Dia da Liberdade, se o jurídico confirmar que é folga) e pontos facultativos (Carnaval, Corpus Christi) entram como tipos separados, que a empresa escolhe se adota.
   - Aviso ao RH para revisar a lista nova antes de 1º de janeiro; não mexer em meses fechados.
+  - O RH pode incluir ou remover feriado manualmente a qualquer momento. Uma nova importação não apaga nem duplica o que foi incluído ou removido à mão (pedido do Ricardo no checklist do instrutor, item 26).
 - **Aceite:** gerar 2027 para Vitória/ES traz os nacionais, 13/04 (N. Sra. da Penha) e 08/09 (N. Sra. da Vitória), sem duplicar se rodar de novo.
-- **Fonte:** Lei 9.093/1995; Lei 662/1949; Lei 14.759/2023 (20/11). Origem: item 36.
+- **Fonte:** Lei 9.093/1995; Lei 662/1949; Lei 14.759/2023 (20/11). Origem: recepção, item 36; instrutor, item 26.
+
+### AJ-12 — DSR do horista calculado no mês
+- **Hoje:** o DSR do horista é calculado por semana: (horas normais da semana ÷ dias úteis da semana) × (domingos + feriados da semana).
+- **Correção do Ricardo:** DSR = soma das horas normais do mês ÷ nº de dias úteis do mês × (domingos e feriados do mês) × valor da hora-aula.
+- **Mudança:**
+  - Opção na Regra Sindical CCT: "DSR do horista: semanal / mensal", padrão mensal para a academia.
+  - Mensal: dias úteis = dias do mês menos domingos e feriados (sábado é útil); descanso = domingos + feriados do mês.
+  - Opção "incluir horas extras na base do DSR do horista" (padrão: não; o reflexo da hora extra vai no AJ-13).
+- **Conferência com o contracheque de setembro/2026** (81,47h, 25 dias úteis, 5 de descanso, R$ 16,50/h):
+  - Pela fórmula do Ricardo: 81,47 ÷ 25 × 5 = 16,29h × 16,50 = **R$ 268,85**.
+  - O contracheque paga R$ 301,79 de DSR (referência 17,29h). Esse valor bate com o DSR calculado sobre as horas normais **mais** as horas extras de 100% (81,47 + 10 = 91,47 ÷ 25 × 5 = 18,29h × 16,50). Além disso, o contracheque paga a rubrica 9189 "DSR variável sobre adicional" de R$ 33,00, que é o DSR sobre as mesmas horas extras (165,00 ÷ 25 × 5). **Possível pagamento em dobro de R$ 33,00 por mês**, a confirmar com o contador (conclusão por cálculo, não pelo sistema da folha).
+- **Aceite:** setembro/2026 com 81,47h normais, 25 dias úteis e 5 de descanso: DSR de 16,29h (R$ 268,85).
+- **Fonte:** Lei 605/1949, art. 7º, "b"; CCT cl. 8ª. Origem: instrutor, item 4.
+
+### AJ-13 — DSR sobre hora extra e sobre adicional noturno em rubricas separadas
+- **Hoje:** o programa calcula o reflexo de hora extra e de adicional noturno no DSR juntos, numa rubrica só (DSR_HE).
+- **No contracheque:** são duas rubricas: 9188 "DSR sob adicional noturno" (R$ 11,97) e 9189 "DSR variável sobre adicional" (R$ 33,00).
+- **Mudança:**
+  - Separar em DSR_HE (reflexo da hora extra) e DSR_ADN (reflexo do adicional noturno), cada uma com o mesmo cálculo: valor do mês ÷ dias úteis × (domingos + feriados).
+  - Mapa de rubricas configurável para os códigos da folha (Prosoft): HE100 → 163, ADN → 170, DSR_ADN → 9188, DSR_HE → 9189, HORAS → 2, DSR_HOR → 3.
+- **Aceite (setembro/2026):** adicional noturno R$ 59,86 → DSR_ADN = 59,86 ÷ 25 × 5 = R$ 11,97; hora extra R$ 165,00 → DSR_HE = R$ 33,00. Os dois batem com o contracheque.
+- **Fonte:** Súmula 172 TST; Lei 605/1949, art. 7º. Origem: instrutor, item 7 e contracheque.
+
+### AJ-14 — Horista com dias fixos e escala de fim de semana
+- **Hoje:** o perfil horista não tem dias previstos. Dia sem batida nunca vira falta, e todo trabalho em domingo ou feriado vira hora extra de 100%.
+- **Correção do Ricardo:** dia sem registro vira falta e desconta só as horas do dia (ex.: 4h). Nos fins de semana a escala é lançada à mão, porque hoje está parametrizada como folga. Não recebe hora extra sobre folga, pois trabalha por escala.
+- **Mudança:**
+  - Perfil "Horista" passa a aceitar dias e horários previstos (ex.: seg. a sex. 4h). Dia previsto sem batida gera falta das horas previstas daquele dia. Sem tolerância: paga as horas trabalhadas.
+  - Opção "falta do horista desconta DSR" (padrão: não). No DSR mensal (AJ-12) a falta já reduz o DSR, porque reduz as horas do mês.
+  - Fim de semana por escala: dias lançados na escala do mês (AJ-09) viram dias previstos daquele colaborador, e as horas trabalhadas neles são normais, sem hora extra.
+  - Hora extra do horista: só acima de 8h no dia, ou em feriado sem folga compensatória (AJ-03).
+- **Atenção (jurídico):** trabalho em domingo é normal só se houver um dia de repouso na semana; 7 dias seguidos de trabalho geram repouso em dobro (AJ-10). O contrato do fim de semana (intermitente ou horista com mínimo) continua com o jurídico.
+- **Aceite:** horista com seg. a sex. 4h que falta numa quarta: falta de 4h, sem perda do DSR. Sábado lançado na escala com 6h trabalhadas: 6h normais, sem hora extra.
+- **Fonte:** Lei 605/1949, art. 6º e 9º; CCT cl. 26ª. Origem: instrutor, itens 5, 8, 17 e 25.
+
+### AJ-15 — Interjornada em rubrica própria com incidências configuráveis
+- **Hoje:** as horas que faltam para completar 11h de descanso entre dias são pagas como hora extra (rubrica INTER).
+- **Correção do Ricardo:** pagar como hora extra de 50%, sem incidência de FGTS, INSS, férias e 13º.
+- **Mudança:** percentual da interjornada na Regra Sindical CCT (padrão 50%) e incidências da rubrica INTER configuráveis na folha.
+- **Atenção (jurídico):** a Reforma Trabalhista tornou indenizatório só o **intervalo de almoço** (art. 71, §4º). Para a interjornada, o TST trata o pagamento como hora extra de natureza salarial (OJ 355), com INSS, FGTS e reflexos. Tirar as incidências exige parecer do jurídico; até lá, manter com incidências.
+- **Aceite:** descanso de 9h entre dias: 2h a 50% na rubrica INTER.
+- **Fonte:** CLT art. 66; OJ 355 SDI-1 TST. Origem: instrutor, item 11.
+
+### AJ-16 — Marcações duplicadas: ignorar sozinho ou só sinalizar
+- **Hoje:** batidas com menos de 2 min de diferença são ignoradas automaticamente.
+- **Correção do Ricardo:** são excluídas manualmente como duplicadas.
+- **Mudança:** opção na Regra Sindical CCT "Marcações duplicadas: ignorar automaticamente / só sinalizar". Em "só sinalizar", o dia fica com inconsistência até o RH desconsiderar a batida por Tratamento de Ponto.
+- **Aceite:** com "só sinalizar", batidas 08:00 e 08:01 geram inconsistência e o dia não é apurado até o tratamento.
+- **Origem:** instrutor, item 18.
 
 ## 5. Cargos
 
@@ -206,13 +276,15 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Itens com correção → requisito:** 2 → AJ-01; 4 → C-02; 8 → AJ-02; 10 → AJ-03; 11 → AJ-04 e C-01; 14 → AJ-05; 18 → AJ-06; 19 → C-03; 20 → AJ-07; 21 → AJ-08; 24 → C-02, C-05 e AJ-09; 25 → AJ-09; 31 → C-04; 34 → AJ-10; 35 → AJ-09; 36 → AJ-11.
 - **Observação:** a correção do item 34 foi escrita na linha do item 35; foi tratada como item 34 (AJ-10). O item 35 (domingos de folga) foi coberto pela correção do item 24 (AJ-09).
 
-### 5.2 Instrutor de musculação — aguardando jurídico
-Achados do dossiê e do checklist do instrutor. Viram requisitos quando o checklist for concluído.
-- Comuns com a recepção: adicional noturno 25% (C-01/AJ-04), intervalo reduzido (C-04), sindicato e vigência da CCT (C-01), piso (AJ-01).
-- Jornada de exemplo 06–10h e 17–21h deixa só 9h de descanso entre dias (CLT exige 11h).
-- Falta o CBO no cadastro.
-- Horista com dias fixos: hoje não gera falta nos dias fixos, paga DSR mesmo com falta e trata todo domingo como hora extra de 100%. O Ricardo decidiu esperar o jurídico definir o contrato do fim de semana (intermitente ou horista com mínimo).
-- Piso horista R$ 15,20 + 1/6 de repouso (CCT cl. 5ª, b) e cl. 8ª).
+### 5.2 Instrutor de musculação — horista (respondido em 15/10/2026)
+- **Base:** checklist respondido pelo Ricardo e contracheque de setembro/2026 (ES Fitness, Vila Velha/ES; instrutor horista, R$ 16,50/h, admitido em 01/09/2026).
+- **Itens OK:** 6, 7, 15, 16, 20, 21, 23, 27 e 29.
+- **Não se aplicam ao horista:** 1, 2, 12, 13, 14 e 19.
+- **Itens com correção → requisito:** 3 → AJ-01 e C-06; 4 → AJ-12; 5 → AJ-14; 8 → AJ-14; 9 → AJ-05 e C-06; 10 → nenhum (4h por dia não exige intervalo; o programa já faz isso); 11 → AJ-15; 17 → AJ-14; 18 → AJ-16; 25 → AJ-14 e AJ-09; 26 → AJ-11; 28 → C-06 (tarefa operacional).
+- **Itens 22 e 24:** a resposta diz que o sistema só sinaliza interjornada. O programa novo já gera inconsistência para intervalo maior que 2h e para hora extra acima de 2h no dia; nenhuma mudança necessária. Se a frase se referia ao programa novo, rever com o Ricardo.
+- **Item 6 (adicional noturno):** marcado OK, mas o contracheque de setembro ainda paga 20% (R$ 59,86). A CCT exige 25% (R$ 74,83 em setembro, mais R$ 2,99 de reflexo no DSR). Ver C-01.
+- **Contracheque:** o DSR (código 3) parece já incluir as horas extras e a rubrica 9189 paga de novo o DSR sobre elas (R$ 33,00). Ver AJ-12.
+- **Ainda com o jurídico:** contrato do fim de semana (intermitente ou horista com mínimo) e incidências da interjornada (AJ-15).
 
 ### 5.x Modelo para o próximo cargo
 - Cargo, tipo de remuneração e escala.
@@ -229,4 +301,8 @@ Achados do dossiê e do checklist do instrutor. Viram requisitos quando o checkl
 | Prêmio | Atestado médico pode reduzir o prêmio? | AJ-07 |
 | Domingos | Confirmar a regra de domingos de folga (Portaria MTP 671/2021 e CLT art. 386) | AJ-09 |
 | 27/07 | O Dia da Liberdade da CCT (cl. 34ª) é folga? | AJ-11 |
-| Instrutor horista | Contrato do fim de semana: intermitente ou horista com mínimo de horas | 5.2 |
+| Instrutor horista | Contrato do fim de semana: intermitente ou horista com mínimo de horas | AJ-14 |
+| Interjornada | Pode ser paga sem INSS, FGTS, férias e 13º? | AJ-15 |
+| DSR do horista | O DSR (código 3) inclui as horas extras e a rubrica 9189 paga de novo? Base do DSR com ou sem HE? | AJ-12 |
+| Hora extra 100% | De onde vieram as 5h a 100% de setembro, se o horista não recebe HE em folga? | AJ-14 |
+| CBO | 224120 é o CBO correto para instrutor de musculação? | C-06 |
