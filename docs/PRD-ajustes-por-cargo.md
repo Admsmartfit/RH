@@ -82,7 +82,8 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - Perfil de Jornada tipo "Horista" com os dias fixos e as horas de cada dia (depende do AJ-14 para gerar falta).
 - Valor da hora-aula na Salary Structure Assignment: R$ 16,50 (piso da CCT: R$ 15,20).
 - Banco de horas desligado para o cargo (horista recebe por hora trabalhada).
-- CBO no cadastro: o contracheque usa 224120; confirmar com o contador.
+- Contrato horista com mínimo de horas e sem escala fixa: cadastrar o mínimo de cada um e lançar a escala do mês (AJ-09 e AJ-14).
+- CBO no cadastro: 224120 (confirmado em 15/10/2026).
 - Operacional (fora do programa): pedir aos líderes o número e a validade do CREF de todos os instrutores e cadastrar.
 - Origem: checklist do instrutor, itens 3, 9, 12 e 28.
 
@@ -116,20 +117,22 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Hoje:** na 5x2 o programa paga 100% em qualquer folga de segunda a sexta, 50% no sábado e 100% no domingo, sem saber qual folga é o repouso.
 - **Pedido do Ricardo:** "o ideal é o programa ter uma opção para parametrizar um ou outro".
 - **Mudança:**
-  - No Perfil de Jornada, campo "Dia do repouso semanal" (padrão: domingo).
+  - **Resposta do Ricardo (15/10/2026):** não existe repouso fixo para nenhum cargo; todos trabalham em escala. Por isso o repouso é marcado **na escala de cada semana**, não no perfil:
+    - Na escala do mês (AJ-09), cada folga da semana é marcada como "Repouso semanal" ou "Folga compensada". Toda semana precisa de exatamente um repouso.
+    - Padrão quando a escala não marca: o domingo, se for folga; se não, a primeira folga da semana. O padrão também é configurável no Perfil de Jornada.
   - Trabalho no dia do repouso: tipo de dia "Folga" (100%, não vai para o banco).
   - Trabalho na outra folga: novo tipo de dia "Folga compensada", com faixa de hora extra própria na CCT (padrão 50%, pode ir para o banco).
   - Incluir "Folga compensada" no Select de Faixa Hora Extra, nos defaults legais e no teste de defaults.
-- **Aceite:** perfil com folgas sáb/dom e repouso no domingo: 2h no sábado = 50%; 2h no domingo = 100%. Perfil com folgas dom/seg e repouso na segunda: 2h na segunda = 100%; 2h no domingo = 50%.
+- **Aceite:** semana com folgas sáb/dom e repouso no domingo: 2h no sábado = 50%; 2h no domingo = 100%. Semana seguinte com folgas dom/seg e repouso marcado na segunda: 2h na segunda = 100%; 2h no domingo = 50%.
 - **Fonte:** Lei 605/1949, art. 9º; Súmula 146 TST. Origem: item 8.
 
 ### AJ-03 — Folga compensatória de feriado trabalhado
 - **Hoje:** todo feriado trabalhado vira hora extra de 100%, sem como registrar uma folga dada no lugar.
 - **Pedido do Ricardo:** "preciso ser capaz de parametrizar isso no programa".
 - **Mudança:**
-  - Na Regra Sindical CCT, opção "Feriado trabalhado": pagar 100% / compensar com folga / escolher caso a caso.
+  - Na Regra Sindical CCT, opção "Feriado trabalhado": pagar 100% / compensar com folga / escolher caso a caso. **Padrão: pagar 100%** (resposta do Ricardo: raramente compensa com folga, mas precisa ter a opção).
   - Novo tipo de Tratamento de Ponto "Compensação de feriado", ligando o feriado trabalhado à data da folga: as horas do feriado viram horas normais e a data da folga não gera falta.
-  - Prazo para dar a folga parametrizável (padrão: mesma semana); passado o prazo sem folga, paga 100%.
+  - Prazo para dar a folga parametrizável (padrão: mesma semana, enquanto a empresa não definir outro); passado o prazo sem folga, paga 100%.
 - **Aceite:** 8h48 trabalhadas em 07/09 com folga em 09/09 aprovada: nenhuma hora extra e nenhuma falta em 09/09. Sem folga até o prazo: 8h48 a 100%.
 - **Fonte:** Lei 605/1949, art. 9º; Súmula 146 TST. Origem: item 10.
 
@@ -208,7 +211,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | SENÃO | — | pagar 100% |
 
 - **Aceite:** com o exemplo acima, colaborador com 2 atestados e nenhuma falta recebe 50%; com 1 falta recebe 0 (a regra 1 vem antes da 3); sem ocorrências recebe 100%. Trocar a ordem das regras 1 e 3 muda o resultado do primeiro caso só a partir da nova vigência.
-- **Atenção (jurídico):** prêmio reduzido por atestado médico pode ser visto como punição por doença. Confirmar antes de usar atestado como condição.
+- **Decisão da empresa (15/10/2026):** atestado médico pode reduzir o prêmio. A métrica "atestados" fica disponível nas regras. Risco registrado: há decisões que veem isso como punição por doença.
 - **Fonte:** CLT art. 457, §2º e §4º. Origem: item 20.
 
 ### AJ-08 — Custeio do benefício social da CCT e relatório
@@ -224,14 +227,14 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 
 ### AJ-09 — Escala flexível: troca de dias e rodízio de domingos
 - **Hoje:** o perfil é uma semana fixa; não há como registrar troca de dia entre colegas nem conferir folgas no domingo.
-- **Pedido do Ricardo:** há funcionário que trabalha todo sábado e domingo; homem precisa de 1 folga por mês no domingo e mulher de 2. Nessas datas ele troca os dias de trabalho com outro funcionário da recepção. "Preciso que a escala seja mais flexível."
+- **Pedido do Ricardo:** há funcionário que trabalha todo sábado e domingo. **Regra confirmada em 15/10/2026:** mulher que trabalha aos domingos tem a folga semanal no domingo a cada 15 dias (2 semanas); homem, a cada 3 semanas (Lei 10.101/2000). Nessas datas ele troca os dias de trabalho com outro funcionário da recepção. "Preciso que a escala seja mais flexível."
 - **Mudança:**
   - Novo DocType "Troca de Escala": data, colaborador que folga, colaborador que cobre, data de compensação de cada um, aprovação do gestor. Na apuração, a troca aprovada substitui o dia do perfil (vira dia de trabalho ou folga) para os dois colaboradores. Mudar o dia marca os dois para reapuração.
-  - Regra de domingos de folga por mês, parametrizável por empresa e por sexo (padrão: homens 1, mulheres 2).
-  - Inconsistência no fechamento do mês para quem não teve o número mínimo de domingos de folga.
+  - Regra de domingo de folga por periodicidade, parametrizável por empresa e por sexo: no máximo N semanas seguidas sem folga no domingo (padrão: mulheres 2, homens 3).
+  - Inconsistência para quem passar do limite, conferida em janela móvel (atravessa a virada do mês), e aviso na escala quando o próximo domingo de folga estiver vencendo.
   - Visão mensal da escala da recepção (calendário por colaborador) para o gerente planejar trocas e ver os domingos de folga.
-- **Aceite:** João trabalha sáb/dom; troca o domingo 18/10 com Maria (que folga sáb/dom) pela quarta 21/10: dia 18 é folga para João e trabalho para Maria; dia 21 é trabalho para João e folga para Maria; nenhum dos dois tem falta ou hora extra. Mulher sem 2 domingos de folga no mês gera inconsistência.
-- **Fonte:** CLT art. 67 e 386; Portaria MTP 671/2021 (regra de domingos a confirmar com o jurídico); CCT cl. 27ª (mudança de horário por acordo). Origem: itens 24, 25 e 35.
+- **Aceite:** João trabalha sáb/dom; troca o domingo 18/10 com Maria (que folga sáb/dom) pela quarta 21/10: dia 18 é folga para João e trabalho para Maria; dia 21 é trabalho para João e folga para Maria; nenhum dos dois tem falta ou hora extra. Mulher que trabalha dois domingos seguidos sem folga no segundo gera inconsistência; homem, no terceiro domingo seguido.
+- **Fonte:** CLT art. 67 e 386; Lei 10.101/2000, art. 6º, parágrafo único; Portaria MTP 671/2021; CCT cl. 27ª (mudança de horário por acordo). Origem: itens 24, 25 e 35.
 
 ### AJ-10 — Conferência do descanso semanal de 35h e de 7 dias seguidos
 - **Hoje:** existe o campo "descanso semanal mínimo" (35h) na CCT, mas nenhum cálculo usa; também não há aviso de 7 dias seguidos de trabalho.
@@ -249,7 +252,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Mudança:**
   - Rotina anual (dezembro) que baixa os feriados nacionais do ano seguinte de uma fonte pública (ex.: BrasilAPI) e cria a lista de cada empresa. Toda chamada externa passa por um cliente próprio, com modo mock para testes.
   - Tabela de feriados estaduais e municipais por UF e município, com fonte (lei) e se a data é fixa ou móvel; gera as datas do ano automaticamente.
-  - Datas da CCT (ex.: 27/07, Dia da Liberdade, se o jurídico confirmar que é folga) e pontos facultativos (Carnaval, Corpus Christi) entram como tipos separados, que a empresa escolhe se adota.
+  - Pontos facultativos (Carnaval, Corpus Christi) entram como tipo separado, que a empresa escolhe se adota. O 27/07 (Dia da Liberdade, CCT cl. 34ª) **não é folga** (resposta de 15/10/2026) e fica fora da lista.
   - Aviso ao RH para revisar a lista nova antes de 1º de janeiro; não mexer em meses fechados.
   - O RH pode incluir ou remover feriado manualmente a qualquer momento. Uma nova importação não apaga nem duplica o que foi incluído ou removido à mão (pedido do Ricardo no checklist do instrutor, item 26).
 - **Aceite:** gerar 2027 para Vitória/ES traz os nacionais, 13/04 (N. Sra. da Penha) e 08/09 (N. Sra. da Vitória), sem duplicar se rodar de novo.
@@ -261,11 +264,11 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Mudança:**
   - Opção na Regra Sindical CCT: "DSR do horista: semanal / mensal", padrão mensal para a academia.
   - Mensal: dias úteis = dias do mês menos domingos e feriados (sábado é útil); descanso = domingos + feriados do mês.
-  - Opção "incluir horas extras na base do DSR do horista" (padrão: não; o reflexo da hora extra vai no AJ-13).
+  - Opção "incluir horas extras na base do DSR do horista" (padrão: não). **Confirmado em 15/10/2026:** o DSR é calculado em duas partes, sem duplicidade: DSR sobre as horas normais (DSR_HOR, este requisito) e DSR sobre as horas extras (DSR_HE, AJ-13).
 - **Conferência com o contracheque de setembro/2026** (81,47h, 25 dias úteis, 5 de descanso, R$ 16,50/h):
   - Pela fórmula do Ricardo: 81,47 ÷ 25 × 5 = 16,29h × 16,50 = **R$ 268,85**.
   - O contracheque paga R$ 301,79 de DSR (referência 17,29h). Esse valor bate com o DSR calculado sobre as horas normais **mais** as horas extras de 100% (81,47 + 10 = 91,47 ÷ 25 × 5 = 18,29h × 16,50). Além disso, o contracheque paga a rubrica 9189 "DSR variável sobre adicional" de R$ 33,00, que é o DSR sobre as mesmas horas extras (165,00 ÷ 25 × 5). **Possível pagamento em dobro de R$ 33,00 por mês**, a confirmar com o contador (conclusão por cálculo, não pelo sistema da folha).
-- **Aceite:** setembro/2026 com 81,47h normais, 25 dias úteis e 5 de descanso: DSR de 16,29h (R$ 268,85).
+- **Aceite:** setembro/2026 com 81,47h normais, 25 dias úteis e 5 de descanso: DSR_HOR de 16,29h (R$ 268,85) e DSR_HE de R$ 33,00. Total R$ 301,85, contra R$ 334,79 pagos (301,79 + 33,00): o contador precisa tirar as horas extras da base do DSR (código 3) na folha.
 - **Fonte:** Lei 605/1949, art. 7º, "b"; CCT cl. 8ª. Origem: instrutor, item 4.
 
 ### AJ-13 — DSR sobre hora extra e sobre adicional noturno em rubricas separadas
@@ -278,22 +281,24 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Fonte:** Súmula 172 TST; Lei 605/1949, art. 7º. Origem: instrutor, item 7 e contracheque.
 
 ### AJ-14 — Horista com dias fixos e escala de fim de semana
+- **Contrato (resposta de 15/10/2026):** horista com mínimo de horas, **sem escala fixa**, e tudo parametrizável.
 - **Hoje:** o perfil horista não tem dias previstos. Dia sem batida nunca vira falta, e todo trabalho em domingo ou feriado vira hora extra de 100%.
 - **Correção do Ricardo:** dia sem registro vira falta e desconta só as horas do dia (ex.: 4h). Nos fins de semana a escala é lançada à mão, porque hoje está parametrizada como folga. Não recebe hora extra sobre folga, pois trabalha por escala.
 - **Mudança:**
-  - Perfil "Horista" passa a aceitar dias e horários previstos (ex.: seg. a sex. 4h). Dia previsto sem batida gera falta das horas previstas daquele dia. Sem tolerância: paga as horas trabalhadas.
+  - Os dias e horários previstos do horista vêm da escala do mês (AJ-09), não de uma semana fixa. O perfil "Horista" também aceita uma semana padrão (ex.: seg. a sex. 4h) para quem tiver.
+  - Mínimo de horas do contrato, parametrizável por colaborador: horas, período (semana ou mês) e se faltas injustificadas reduzem o mínimo. Trabalhou menos que o mínimo: o programa paga a diferença na rubrica HORAS. Dia previsto sem batida gera falta das horas previstas daquele dia. Sem tolerância: paga as horas trabalhadas.
   - Opção "falta do horista desconta DSR" (padrão: não). No DSR mensal (AJ-12) a falta já reduz o DSR, porque reduz as horas do mês.
   - Fim de semana por escala: dias lançados na escala do mês (AJ-09) viram dias previstos daquele colaborador, e as horas trabalhadas neles são normais, sem hora extra.
-  - Hora extra do horista: só acima de 8h no dia, ou em feriado sem folga compensatória (AJ-03).
-- **Atenção (jurídico):** trabalho em domingo é normal só se houver um dia de repouso na semana; 7 dias seguidos de trabalho geram repouso em dobro (AJ-10). O contrato do fim de semana (intermitente ou horista com mínimo) continua com o jurídico.
-- **Aceite:** horista com seg. a sex. 4h que falta numa quarta: falta de 4h, sem perda do DSR. Sábado lançado na escala com 6h trabalhadas: 6h normais, sem hora extra.
+  - Hora extra do horista: não recebe hora extra por trabalhar em folga ou fim de semana, porque trabalha por escala (confirmado em 15/10/2026). Só gera hora extra o que a lei obriga: acima de 8h no dia ou 44h na semana, e feriado trabalhado sem folga compensatória (AJ-03).
+- **Atenção (jurídico):** trabalho em domingo é normal só se houver um dia de repouso na semana; 7 dias seguidos de trabalho geram repouso em dobro (AJ-10).
+- **Aceite:** horista com mínimo de 80h no mês que trabalhou 72h sem faltas: recebe 80h (8h de complemento). Horista com 4h na escala da quarta que falta: falta de 4h, sem perda do DSR. Sábado lançado na escala com 6h trabalhadas: 6h normais, sem hora extra.
 - **Fonte:** Lei 605/1949, art. 6º e 9º; CCT cl. 26ª. Origem: instrutor, itens 5, 8, 17 e 25.
 
 ### AJ-15 — Interjornada em rubrica própria com incidências configuráveis
 - **Hoje:** as horas que faltam para completar 11h de descanso entre dias são pagas como hora extra (rubrica INTER).
 - **Correção do Ricardo:** pagar como hora extra de 50%, sem incidência de FGTS, INSS, férias e 13º.
-- **Mudança:** percentual da interjornada na Regra Sindical CCT (padrão 50%) e incidências da rubrica INTER configuráveis na folha.
-- **Atenção (jurídico):** a OJ 355 do TST manda pagar a interjornada por analogia ao art. 71, §4º. Depois da Reforma Trabalhista, esse parágrafo diz que o pagamento do intervalo é indenizatório, mas a lei não mudou o art. 66 e há decisões nos dois sentidos. Tirar as incidências exige parecer do jurídico; até lá, manter com incidências, que é o caminho mais seguro.
+- **Mudança:** percentual da interjornada na Regra Sindical CCT (padrão 50%) e incidências da rubrica INTER configuráveis na folha. **Decisão da empresa (15/10/2026):** pagar sem INSS, FGTS, férias e 13º (rubrica indenizatória).
+- **Atenção (jurídico):** a OJ 355 do TST manda pagar a interjornada por analogia ao art. 71, §4º. Depois da Reforma Trabalhista, esse parágrafo diz que o pagamento do intervalo é indenizatório, mas a lei não mudou o art. 66 e há decisões nos dois sentidos. A empresa decidiu tirar as incidências; o risco fica registrado. A opção continua configurável, para voltar atrás sem programar.
 - **Aceite:** descanso de 9h entre dias: 2h a 50% na rubrica INTER.
 - **Fonte:** CLT art. 66; OJ 355 SDI-1 TST. Origem: instrutor, item 11.
 
@@ -316,6 +321,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
   - Rubricas novas INSALUB e PERIC no Fechamento de Ponto. Tabela do salário mínimo por vigência.
   - Laudo: anexar o arquivo do laudo (PDF) na regra, com número, data e validade. Laudo vencido ou sem laudo: inconsistência no fechamento (alerta).
   - Base "salário base" usa o salário contratual vigente do colaborador (Salary Structure Assignment). Pagar sobre o salário contratual é mais favorável que sobre o mínimo e é permitido.
+- **Grau confirmado em 15/10/2026:** médio (20%).
 - **Aceite:** ASG mensalista com salário de R$ 1.800,00, insalubridade 20% sobre o salário base: R$ 360,00 no mês; com 1 falta injustificada: 360,00 − 12,00 = R$ 348,00. Regra com base no mínimo de R$ 1.621,00: R$ 324,20 no mês. Com 1 falta injustificada: 324,20 − 324,20 ÷ 30 = R$ 313,39. Tentar gravar periculosidade de 20%: recusado.
 - **Fonte:** CLT art. 189 a 195; NR-15; NR-16; Súmulas 80, 139 e 448 TST; OJ 47 SDI-1 TST. Origem: ASG, itens 2 a 4 e 6.
 
@@ -370,16 +376,27 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 
 ## 6. Pendências para jurídico e contador
 
+Respostas do Ricardo em 15/10/2026:
+
+| Assunto | Resposta | Requisito |
+| --- | --- | --- |
+| Repouso na 5x2 | Não há repouso fixo; todos trabalham em escala. O repouso é marcado na escala de cada semana. | AJ-02 |
+| Feriado | Paga 100% quase sempre; o programa precisa ter a opção de folga. | AJ-03 |
+| Prêmio | Atestado médico pode reduzir o prêmio. | AJ-07 |
+| Domingos | Mulher: folga no domingo a cada 15 dias. Homem: a cada 3 semanas (Lei 10.101/2000). | AJ-09 |
+| 27/07 | O Dia da Liberdade não é folga. | AJ-11 |
+| Instrutor horista | Horista com mínimo de horas, sem escala fixa, tudo parametrizável. | AJ-14 e C-06 |
+| Interjornada | Pode ser paga sem INSS, FGTS, férias e 13º. | AJ-15 |
+| DSR do horista | Separar o DSR das horas normais e o DSR das horas extras, sem duplicidade. | AJ-12 e AJ-13 |
+| Hora extra 100% | Horista não recebe hora extra por trabalhar em folga. | AJ-14 |
+| CBO | 224120 está correto. | C-06 |
+| ASG — adicional | Insalubridade em grau médio (20%). | AJ-17 |
+
+Ainda em aberto:
+
 | Assunto | Pergunta | Requisito |
 | --- | --- | --- |
-| Repouso na 5x2 | Qual folga é o repouso semanal por padrão (domingo ou a folga fixa da escala)? | AJ-02 |
-| Feriado | A empresa compensa feriado com folga ou paga 100%? Qual o prazo para a folga? | AJ-03 |
-| Prêmio | Atestado médico pode reduzir o prêmio? | AJ-07 |
-| Domingos | Confirmar a regra de domingos de folga (Portaria MTP 671/2021 e CLT art. 386) | AJ-09 |
-| 27/07 | O Dia da Liberdade da CCT (cl. 34ª) é folga? | AJ-11 |
-| Instrutor horista | Contrato do fim de semana: intermitente ou horista com mínimo de horas | AJ-14 |
-| Interjornada | Pode ser paga sem INSS, FGTS, férias e 13º? | AJ-15 |
-| DSR do horista | O DSR (código 3) inclui as horas extras e a rubrica 9189 paga de novo? Base do DSR com ou sem HE? | AJ-12 |
-| Hora extra 100% | De onde vieram as 5h a 100% de setembro, se o horista não recebe HE em folga? | AJ-14 |
-| CBO | 224120 é o CBO correto para instrutor de musculação? | C-06 |
-| ASG — adicional | Confirmado: insalubridade, com laudo. Conferir no laudo o grau (médio 20% ou máximo 40% para banheiros de uso público) e se o EPI neutraliza. | AJ-17 |
+| Prazo da folga de feriado | Quantos dias depois do feriado a folga pode ser dada? (padrão do programa: mesma semana) | AJ-03 |
+| Folha de setembro | O contador precisa tirar as horas extras da base do DSR (código 3), porque o DSR sobre elas já sai na rubrica 9189. | AJ-12 |
+| Hora extra 100% de setembro | As 5h a 100% parecem ser do feriado de 07/09, que paga 100% por lei. Confirmar. | AJ-03 e AJ-14 |
+| Horas extras do horista | Acima de 8h no dia ou 44h na semana a lei obriga hora extra, mesmo para horista. | AJ-14 |
