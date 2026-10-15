@@ -432,3 +432,4 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - `pytest --cov` não rodou aqui (sem pytest-cov); rodar no CI.
 - Demais requisitos do PRD de ajustes por cargo.
 - Checklist do ASG concluído (15/10/2026): mensalista 5x2 igual à recepção; novos AJ-17 (insalubridade configurável, base no salário contratual, laudo anexado), AJ-18 (EPI; uniforme para todos os cargos), AJ-19 (ASO e treinamentos para todos os cargos) e C-08 (cadastro do ASG).
+- PRD de estagiários adaptado ao programa em `docs/PRD-estagiarios.md` (15/10/2026), com 8 etapas de implementação (EST-01 a EST-09). Nada implementado ainda.

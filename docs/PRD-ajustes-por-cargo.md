@@ -13,6 +13,7 @@ Documento vivo. Cada cargo revisado (checklist de regras assinado por contador, 
 | Recepcionista (mensalista, escala 5x2) | Checklist de Regras: Recepcionista | Concluído em 15/10/2026 | AJ-01 a AJ-11 e C-01 a C-05 |
 | Auxiliar de serviços gerais (ASG, mensalista 5x2) | Checklist de Regras: Auxiliar de Serviços Gerais | Concluído em 15/10/2026 | AJ-17 a AJ-19, C-08 e os da recepção (seção 5.3) |
 | Instrutor de musculação (horista) | Checklist de Regras: Instrutor de Musculação | Respondido em 15/10/2026; pendências com contador e jurídico | AJ-01, AJ-05, AJ-09 a AJ-11, AJ-12 a AJ-16 e C-01, C-06, C-07 |
+| Estagiário (Lei 11.788/2008) | — (PRD próprio: `docs/PRD-estagiarios.md`) | PRD adaptado em 15/10/2026, dividido em 8 etapas | EST-01 a EST-09 (seção 5.4) |
 | Próximos cargos | — | A fazer | — |
 
 ## 2. Resumo dos requisitos
@@ -367,6 +368,11 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Itens aprovados sem mudança (X):** 1 e 4.
 - **Itens com correção → requisito:** 2 → AJ-17 (é insalubridade, a empresa tem o laudo); 3 → AJ-17 e C-08 (20% configurável, base no salário contratual, vigência desde o início do pagamento, todos os ASG); 5 → AJ-18 (uniforme para todos os cargos); 6 → AJ-17 (anexar o laudo); 7 → AJ-19 (para todos os cargos); 8 → AJ-18 e AJ-19 (alerta no fechamento).
 - **Cadastro:** C-08.
+
+### 5.4 Estagiário (PRD próprio)
+- **Base:** "PRD - Controle de Estagiários HRMS Secullum" enviado pelo Ricardo em 15/10/2026, adaptado ao programa em `docs/PRD-estagiarios.md` (cópia em `prd/PRD-estagiarios.md`).
+- **Requisitos:** EST-01 a EST-09, com plano de 8 etapas na seção 9 daquele documento.
+- **Usa daqui:** AJ-06 (auxílio-transporte com desconto 0%) e AJ-11 (feriados do ES).
 
 ### 5.x Modelo para o próximo cargo
 - Cargo, tipo de remuneração e escala.
