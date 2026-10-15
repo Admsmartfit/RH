@@ -32,7 +32,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-10 | Conferência do descanso semanal de 35h e de 7 dias seguidos | Código | Recepção | A fazer |
 | AJ-11 | Módulo de feriados nacionais, estaduais e municipais | Código | Recepção | A fazer |
 | AJ-12 | DSR do horista calculado no mês | Código | Instrutor horista | A fazer |
-| AJ-13 | DSR sobre hora extra e sobre adicional noturno em rubricas separadas | Código | Instrutor horista; todos | A fazer |
+| AJ-13 | DSR sobre hora extra e sobre adicional noturno em rubricas separadas | Código | Instrutor horista; todos | Feito em rascunho (branch claude/project-thread-fsnf1q) |
 | AJ-14 | Horista com dias fixos e escala de fim de semana | Código | Instrutor horista | A fazer |
 | AJ-15 | Interjornada em rubrica própria com incidências configuráveis | Código | Instrutor horista; todos | A fazer — depende do jurídico |
 | AJ-16 | Marcações duplicadas: ignorar sozinho ou só sinalizar | Código | Instrutor horista; todos | A fazer |

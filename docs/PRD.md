@@ -340,7 +340,8 @@ Cada regra abaixo é **parametrizável** na `Regra Sindical CCT` com o padrão l
 | HE50 | Horas Extras 50% | Earning | |
 | HE100 | Horas Extras 100% | Earning | |
 | ADN | Adicional Noturno | Earning | |
-| DSR_HE | DSR s/ HE e Adic. Noturno | Earning | Súmula 172 |
+| DSR_HE | DSR s/ Horas Extras | Earning | Súmula 172 |
+| DSR_ADN | DSR s/ Adicional Noturno | Earning | Súmula 172 (separado em 15/10/2026, AJ-13) |
 | DSR_HOR | DSR Horista | Earning | |
 | AULAS | Aulas (hora-aula × 4,5) | Earning | professor |
 | DSR_PROF | DSR Professor (1/6) | Earning | Súmula 351 |

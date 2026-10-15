@@ -14,6 +14,7 @@ _RUBRICAS_FOLHA = [
 	"HE100",
 	"ADN",
 	"DSR_HE",
+	"DSR_ADN",
 	"DSR_HOR",
 	"HORAS",
 	"AULAS",

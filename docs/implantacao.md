@@ -37,7 +37,7 @@ A instalação cria (fixtures):
 - os papéis **RH Ponto**, **RH Saúde**, **Gestor Ponto** e **Colaborador**;
 - os campos customizados de Employee e Company (aba Ponto);
 - o Leave Type **Atestado Médico**;
-- os **18 Salary Components** (HE50, HE100, ADN, DSR_HE, DSR_HOR, HORAS, AULAS, DSR_PROF, HATIV, JANELA,
+- os **19 Salary Components** (HE50, HE100, ADN, DSR_HE, DSR_ADN, DSR_HOR, HORAS, AULAS, DSR_PROF, HATIV, JANELA,
   INTRA_IND, INTER, BH_PAG, PREMIO, FALTA, ATRASO, DSR_DESC, VA_DESC);
 - o espaço de trabalho **Ponto**.
 

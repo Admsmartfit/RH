@@ -94,15 +94,18 @@ def valorar(
 		("ADN", m.noturno_ficto, adn, f"Adicional noturno {base.percentual_noturno:g}% sobre minutos fictos")
 	)
 
-	he_e_noturno = sum((b[2] for b in brutos), Decimal("0"))
-	brutos.append(
-		(
-			"DSR_HE",
-			0,
-			reflexo_dsr(he_e_noturno, dias_uteis=m.dias_uteis, dias_descanso=m.dias_descanso),
-			f"Reflexo no DSR (Súmula 172): {m.dias_descanso} domingos/feriados / {m.dias_uteis} dias úteis",
+	# Súmula 172: reflexos no DSR em rubricas separadas, como na folha (AJ-13)
+	he = sum((b[2] for b in brutos if b[0] in ("HE50", "HE100")), Decimal("0"))
+	proporcao = f"{m.dias_descanso} domingos/feriados / {m.dias_uteis} dias úteis"
+	for codigo, valor_mes, texto in (("DSR_HE", he, "horas extras"), ("DSR_ADN", adn, "adicional noturno")):
+		brutos.append(
+			(
+				codigo,
+				0,
+				reflexo_dsr(valor_mes, dias_uteis=m.dias_uteis, dias_descanso=m.dias_descanso),
+				f"Reflexo das {texto} no DSR (Súmula 172): {proporcao}",
+			)
 		)
-	)
 	brutos.append(("HORAS", m.horas_normais, horas(m.horas_normais), "Horas normais (horista/intermitente)"))
 	brutos.append(("DSR_HOR", m.dsr_horista, horas(m.dsr_horista), "DSR do horista"))
 	brutos.append(

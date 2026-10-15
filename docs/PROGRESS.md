@@ -417,3 +417,13 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Mascaramento de CPF/PIS em listagens para perfis não-RH (PRD 3.7).
 - CI no GitHub (repositório sem remoto) e primeiro commit.
 - Validações da Seção 13: ver `docs/checklist_validacao.md`.
+
+## Ajustes por cargo — `docs/PRD-ajustes-por-cargo.md` (15/10/2026)
+
+### Feito
+- **AJ-13:** reflexo no DSR (Súmula 172) separado em duas rubricas, como na folha: `DSR_HE` (só horas extras) e `DSR_ADN` (adicional noturno, Salary Component novo). Teste no engine com os números do contracheque de setembro/2026 do instrutor horista (DSR_HE R$ 33,00; DSR_ADN R$ 11,97).
+
+### Pendências
+- Rodar os testes Frappe (`payroll_handoff/test_fechamento.py`) no ambiente `docker/`; não rodaram neste ambiente.
+- Instalações existentes: o Salary Component `DSR s/ HE e Adicional Noturno` mantém o nome; só a descrição muda. Entra o novo `DSR s/ Adicional Noturno`.
+- Demais requisitos do PRD de ajustes por cargo.

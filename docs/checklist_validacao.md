@@ -83,13 +83,13 @@ Aprovado por: ____________ Data: ____/____/______
   vêm do Salary Component.
 - **VA/VR:** o valor é registrado (crédito no cartão, fora da folha); vai para a folha só a coparticipação
   (VA_DESC). O sistema avisa se a coparticipação passar de 20% (PAT).
-- Os 18 Salary Components são criados por fixture com `is_tax_applicable` básico; **INTRA_IND** está como
+- Os 19 Salary Components são criados por fixture com `is_tax_applicable` básico; **INTRA_IND** está como
   indenizatório.
 
 - [ ] Prêmio: liberalidade (art. 457 §2º, sem incidência) ou previsto em CCT/habitual? Configurar as
       incidências do PREMIO.
 - [ ] VA/VR: empresa inscrita no PAT? Forma de pagamento (cartão, pecúnia)? Incidências.
-- [ ] Revisar as incidências de INSS/FGTS/IRRF de **cada** Salary Component (HE50, HE100, ADN, DSR_HE, DSR_HOR,
+- [ ] Revisar as incidências de INSS/FGTS/IRRF de **cada** Salary Component (HE50, HE100, ADN, DSR_HE, DSR_ADN, DSR_HOR,
       HORAS, AULAS, DSR_PROF, HATIV, JANELA, INTRA_IND, INTER, BH_PAG, PREMIO, FALTA, ATRASO, DSR_DESC, VA_DESC).
 - [ ] Base do valor-hora: hoje é o `base` do Salary Structure Assignment ÷ divisor. Adicionais fixos (ex.:
       insalubridade) entram na base de HE?

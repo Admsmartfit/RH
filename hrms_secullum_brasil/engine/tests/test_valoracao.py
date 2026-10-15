@@ -36,10 +36,24 @@ def test_t6_adicional_noturno_sobre_480_minutos_fictos():
 	assert valores(MinutosPeriodo(noturno_ficto=480))["ADN"] == Decimal("16.00")  # 8h x 10 x 20%
 
 
-def test_reflexo_de_he_e_noturno_no_dsr():
+def test_reflexo_de_he_no_dsr():
 	v = valores(MinutosPeriodo(he_por_percentual={50: 1200}, dias_uteis=25, dias_descanso=5))
 	assert v["HE50"] == Decimal("300.00")
 	assert v["DSR_HE"] == Decimal("60.00")  # T18
+	assert "DSR_ADN" not in v
+
+
+def test_reflexos_de_he_e_noturno_no_dsr_em_rubricas_separadas():
+	# AJ-13, contracheque de setembro/2026 do instrutor horista: R$ 16,50/h, 25 dias úteis e 5 de descanso
+	horista = BaseValoracao(salario=Decimal("16.50"), divisor=1)
+	v = valores(
+		MinutosPeriodo(he_por_percentual={100: 300}, noturno_ficto=1088, dias_uteis=25, dias_descanso=5),
+		base=horista,
+	)
+	assert v["HE100"] == Decimal("165.00")
+	assert v["DSR_HE"] == Decimal("33.00")  # rubrica 9189 da folha
+	assert v["ADN"] == Decimal("59.84")
+	assert v["DSR_ADN"] == Decimal("11.97")  # rubrica 9188 da folha
 
 
 def test_falta_atraso_e_dsr_perdido():
