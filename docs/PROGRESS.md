@@ -431,3 +431,4 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Layout GVBus copiado do PRD do módulo; validar com upload de teste no portal. Confirmar como o portal recebe os dias de cada colaborador.
 - `pytest --cov` não rodou aqui (sem pytest-cov); rodar no CI.
 - Demais requisitos do PRD de ajustes por cargo.
+- Checklist do ASG concluído (15/10/2026): mensalista 5x2 igual à recepção; novos AJ-17 (insalubridade configurável, base no salário contratual, laudo anexado), AJ-18 (EPI; uniforme para todos os cargos), AJ-19 (ASO e treinamentos para todos os cargos) e C-08 (cadastro do ASG).
