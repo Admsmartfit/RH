@@ -26,7 +26,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-04 | Adicional noturno com mínimo legal e valor por cargo | Código | Recepção | A fazer |
 | AJ-05 | Banco de horas padrão por cargo | Código | Recepção | A fazer |
 | AJ-06 | Vale-transporte | Código | Recepção | A fazer |
-| AJ-07 | Prêmio com faixas de redução e novas métricas | Código | Recepção | A fazer — falta definir faixas |
+| AJ-07 | Prêmio com regras SE / E / ENTÃO e novas métricas | Código | Recepção | A fazer |
 | AJ-08 | Custeio do benefício social da CCT e relatório | Código | Recepção | A fazer |
 | AJ-09 | Escala flexível: troca de dias e rodízio de domingos | Código | Recepção | A fazer |
 | AJ-10 | Conferência do descanso semanal de 35h e de 7 dias seguidos | Código | Recepção | A fazer |
@@ -129,14 +129,30 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Aceite:** salário R$ 1.650,00, passagens R$ 10,00/dia, 22 dias: VT R$ 220,00, desconto R$ 99,00. Com passagens R$ 4,00/dia: VT R$ 88,00, desconto R$ 88,00.
 - **Fonte:** Lei 7.418/1985, art. 4º; Decreto 10.854/2021; CCT cl. 13ª. Origem: item 18.
 
-### AJ-07 — Prêmio com faixas de redução e novas métricas
+### AJ-07 — Prêmio com regras SE / E / ENTÃO e novas métricas
 - **Hoje:** o prêmio é tudo ou nada (atende as condições ou não) e as métricas são faltas, minutos de atraso, atestados, dias de atestado, dias trabalhados e hora extra.
-- **Pedido do Ricardo:** poder alterar o benefício e as regras; regras de atrasos consecutivos acima de um certo horário, faltas injustificadas e atestados que reduzem o benefício em degraus.
+- **Pedido do Ricardo:** poder alterar o valor e as regras do prêmio. As faixas ainda não estão definidas, então o sistema deve deixar o RH montar as regras no formato "SE atestados > 1 ENTÃO reduza para X", e assim sucessivamente.
 - **Mudança:**
-  - Faixas na Regra de Premiação: cada faixa tem condições e um percentual do prêmio (ex.: 100%, 50%, 0%). Vale a primeira faixa atendida, de cima para baixo.
-  - Novas métricas: "atrasos acima de N min" (quantidade de dias), "dias seguidos com atraso acima de N min" e "chegadas depois de HH:MM".
-  - Histórico de valor por vigência (já existe) para mudar o valor sem perder os meses anteriores.
-- **Falta definir (Ricardo):** as faixas reais. Exemplo a confirmar: 0 falta e até 2 atrasos = 100%; 1 atestado ou 3 a 4 atrasos = 50%; qualquer falta injustificada ou 3 dias seguidos com atraso acima de 10 min = 0%.
+  - Na Regra de Premiação, tabela "Regras", em que cada linha é uma regra com:
+    - Ordem (1, 2, 3…).
+    - SE: uma ou mais condições ligadas por E ou OU. Cada condição = métrica + operador (=, ≠, <, ≤, >, ≥) + valor. Ex.: "atestados > 1 E faltas injustificadas = 0".
+    - ENTÃO: o que acontece com o prêmio: "pagar X% do valor", "pagar R$ X" ou "não pagar".
+  - O programa testa as regras na ordem e aplica a **primeira** regra cujo SE for verdadeiro. Se nenhuma for verdadeira, paga o valor cheio (ou o que estiver em "SENÃO", configurável).
+  - O RH pode criar, mudar a ordem e desligar regras a qualquer momento. A mudança vale a partir do mês escolhido (vigência), sem alterar meses já fechados.
+  - Prévia na tela: "simular" um colaborador e um mês mostra qual regra seria aplicada e o valor.
+  - No fechamento, o espelho do prêmio mostra a regra aplicada e os números de cada métrica, para o colaborador entender o desconto.
+  - Métricas disponíveis (as atuais + novas): faltas injustificadas, atestados (quantidade), dias de atestado, minutos de atraso no mês, dias com atraso acima de N min, maior sequência de dias seguidos com atraso acima de N min, chegadas depois de HH:MM, dias trabalhados, minutos de hora extra. N e HH:MM são escolhidos dentro da própria condição.
+- **Exemplo de configuração** (ilustrativo, o RH define os valores reais):
+
+| Ordem | SE | ENTÃO |
+| --- | --- | --- |
+| 1 | faltas injustificadas ≥ 1 | não pagar |
+| 2 | dias seguidos com atraso acima de 10 min ≥ 3 | não pagar |
+| 3 | atestados > 1 | pagar 50% |
+| 4 | dias com atraso acima de 5 min ≥ 3 E dias com atraso acima de 5 min ≤ 4 | pagar 50% |
+| SENÃO | — | pagar 100% |
+
+- **Aceite:** com o exemplo acima, colaborador com 2 atestados e nenhuma falta recebe 50%; com 1 falta recebe 0 (a regra 1 vem antes da 3); sem ocorrências recebe 100%. Trocar a ordem das regras 1 e 3 muda o resultado do primeiro caso só a partir da nova vigência.
 - **Atenção (jurídico):** prêmio reduzido por atestado médico pode ser visto como punição por doença. Confirmar antes de usar atestado como condição.
 - **Fonte:** CLT art. 457, §2º e §4º. Origem: item 20.
 
@@ -210,7 +226,7 @@ Achados do dossiê e do checklist do instrutor. Viram requisitos quando o checkl
 | --- | --- | --- |
 | Repouso na 5x2 | Qual folga é o repouso semanal por padrão (domingo ou a folga fixa da escala)? | AJ-02 |
 | Feriado | A empresa compensa feriado com folga ou paga 100%? Qual o prazo para a folga? | AJ-03 |
-| Prêmio | Atestado médico pode reduzir o prêmio? Quais as faixas? | AJ-07 |
+| Prêmio | Atestado médico pode reduzir o prêmio? | AJ-07 |
 | Domingos | Confirmar a regra de domingos de folga (Portaria MTP 671/2021 e CLT art. 386) | AJ-09 |
 | 27/07 | O Dia da Liberdade da CCT (cl. 34ª) é folga? | AJ-11 |
 | Instrutor horista | Contrato do fim de semana: intermitente ou horista com mínimo de horas | 5.2 |
