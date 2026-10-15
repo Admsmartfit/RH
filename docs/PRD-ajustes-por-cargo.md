@@ -346,7 +346,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 
 ### 5.3 Auxiliar de serviços gerais (ASG) — mensalista 5x2 (em revisão)
 - **Base:** pedido do Ricardo em 15/10/2026: igual à recepção (mensalista, escala 5x2 fixa), vale-alimentação por dia trabalhado, prêmio, adicional de risco de 20% e entrega de EPI. Correção do Ricardo: o ASG nunca é horista.
-- **Checklist:** Checklist de Regras: Auxiliar de Serviços Gerais, com 38 itens (salário, ponto, saúde e segurança). Cada item diz se o programa já atende, se é só parametrizar ou qual requisito falta.
+- **Checklist:** Checklist de Regras: Auxiliar de Serviços Gerais, com 8 itens: só o que difere da recepção (adicional de insalubridade, EPI, laudo, ASO e treinamentos). O resto segue as respostas do checklist da recepção.
 - **Reaproveita:** C-02 (perfis 5x2), AJ-02, AJ-03, AJ-05, AJ-06 (VT), AJ-07 (prêmio), AJ-08, AJ-09, AJ-10, AJ-11, AJ-13, AJ-15, AJ-16, C-01 e C-03 (VA proporcional, como o VR).
 - **Não se aplica:** AJ-01 (piso): o Ricardo pediu para não conferir, pois sempre paga acima. AJ-12 e AJ-14 são só do horista.
 - **Novos:** AJ-17 (adicional de risco), AJ-18 (EPI e uniforme), AJ-19 (ASO e treinamentos).
