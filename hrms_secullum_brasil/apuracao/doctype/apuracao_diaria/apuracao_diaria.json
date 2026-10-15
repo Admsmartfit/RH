@@ -1,0 +1,369 @@
+{
+ "actions": [],
+ "autoname": "format:AP-{employee}-{data}",
+ "creation": "2026-10-15 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "department",
+  "gestor",
+  "column_break_id",
+  "data",
+  "status",
+  "tipo_dia",
+  "feriado",
+  "abonado",
+  "apurado_em",
+  "minutos_section",
+  "previsto",
+  "trabalhado",
+  "normais",
+  "atraso",
+  "falta",
+  "column_break_min",
+  "hora_extra",
+  "noturno_real",
+  "noturno_ficto",
+  "intrajornada_suprimida",
+  "interjornada_suprimida",
+  "he_banco",
+  "atraso_banco",
+  "aulas_previstas",
+  "aulas_dadas",
+  "aulas_nao_dadas",
+  "janela_minutos",
+  "recesso_escolar",
+  "he_faixas",
+  "marcacoes_section",
+  "marcacoes",
+  "marcacoes_ignoradas",
+  "tratamentos",
+  "column_break_reg",
+  "perfil_jornada",
+  "regra_cct",
+  "observacoes"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Filial",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_id",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Data",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Ok\nInconsistente\nTratado\nNao Apurado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tipo_dia",
+   "fieldtype": "Data",
+   "label": "Tipo de dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feriado",
+   "fieldtype": "Check",
+   "label": "Feriado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "abonado",
+   "fieldtype": "Check",
+   "label": "Abonado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "apurado_em",
+   "fieldtype": "Datetime",
+   "label": "Apurado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minutos_section",
+   "fieldtype": "Section Break",
+   "label": "Minutos"
+  },
+  {
+   "fieldname": "previsto",
+   "fieldtype": "Int",
+   "label": "Previsto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trabalhado",
+   "fieldtype": "Int",
+   "label": "Trabalhado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "normais",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Normais",
+   "read_only": 1
+  },
+  {
+   "fieldname": "atraso",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Atraso/saída antecipada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "falta",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Falta",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_min",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hora_extra",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Hora extra",
+   "read_only": 1
+  },
+  {
+   "fieldname": "noturno_real",
+   "fieldtype": "Int",
+   "label": "Noturno real",
+   "read_only": 1
+  },
+  {
+   "fieldname": "noturno_ficto",
+   "fieldtype": "Int",
+   "label": "Noturno ficto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "intrajornada_suprimida",
+   "fieldtype": "Int",
+   "label": "Intrajornada suprimida",
+   "read_only": 1
+  },
+  {
+   "fieldname": "interjornada_suprimida",
+   "fieldtype": "Int",
+   "label": "Interjornada suprimida",
+   "read_only": 1
+  },
+  {
+   "fieldname": "he_banco",
+   "fieldtype": "Int",
+   "label": "HE creditada no banco",
+   "read_only": 1
+  },
+  {
+   "fieldname": "atraso_banco",
+   "fieldtype": "Int",
+   "label": "Atraso debitado do banco",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_previstas",
+   "fieldtype": "Int",
+   "label": "Aulas previstas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_dadas",
+   "fieldtype": "Int",
+   "label": "Aulas dadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_nao_dadas",
+   "fieldtype": "Int",
+   "label": "Aulas não dadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "janela_minutos",
+   "fieldtype": "Int",
+   "label": "Janelas (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "recesso_escolar",
+   "fieldtype": "Check",
+   "label": "Recesso/férias escolares",
+   "read_only": 1
+  },
+  {
+   "fieldname": "he_faixas",
+   "fieldtype": "Table",
+   "label": "HE por faixa",
+   "options": "Apuracao HE Faixa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "marcacoes_section",
+   "fieldtype": "Section Break",
+   "label": "Marcações e regras"
+  },
+  {
+   "fieldname": "marcacoes",
+   "fieldtype": "Small Text",
+   "label": "Marcações consideradas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "marcacoes_ignoradas",
+   "fieldtype": "Small Text",
+   "label": "Marcações ignoradas (duplicadas)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tratamentos",
+   "fieldtype": "Small Text",
+   "label": "Tratamentos aplicados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_reg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "perfil_jornada",
+   "fieldtype": "Link",
+   "label": "Perfil de Jornada",
+   "options": "Perfil de Jornada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "regra_cct",
+   "fieldtype": "Link",
+   "label": "Regra Sindical CCT",
+   "options": "Regra Sindical CCT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacoes",
+   "fieldtype": "Small Text",
+   "label": "Observações",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Apuracao Diaria",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Colaborador"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "data",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

@@ -1,0 +1,255 @@
+{
+ "actions": [],
+ "autoname": "ESP-.YYYY.-.#####",
+ "creation": "2026-10-16 18:00:00.000000",
+ "default_print_format": "Espelho de Ponto",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "cpf",
+  "cargo",
+  "column_break_1",
+  "fechamento",
+  "versao",
+  "periodo_inicio",
+  "periodo_fim",
+  "status",
+  "dias_section",
+  "dias",
+  "totais_section",
+  "total_normais",
+  "total_faltas",
+  "total_atrasos",
+  "total_he",
+  "column_break_2",
+  "total_noturno_real",
+  "total_noturno_ficto",
+  "total_dsr_perdido",
+  "banco_horas",
+  "autenticidade_section",
+  "hash_espelho",
+  "hash_fechamento"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpf",
+   "fieldtype": "Data",
+   "label": "CPF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cargo",
+   "fieldtype": "Data",
+   "label": "Cargo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fechamento",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fechamento de Ponto",
+   "options": "Fechamento de Ponto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "versao",
+   "fieldtype": "Int",
+   "label": "Versão",
+   "read_only": 1
+  },
+  {
+   "fieldname": "periodo_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Período - início",
+   "read_only": 1
+  },
+  {
+   "fieldname": "periodo_fim",
+   "fieldtype": "Date",
+   "label": "Período - fim",
+   "read_only": 1
+  },
+  {
+   "default": "Vigente",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Vigente\nSubstituido",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "Dias"
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Table",
+   "label": "Dias",
+   "options": "Espelho Ponto Dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "totais_section",
+   "fieldtype": "Section Break",
+   "label": "Totais (h:mm)"
+  },
+  {
+   "fieldname": "total_normais",
+   "fieldtype": "Data",
+   "label": "Horas normais",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_faltas",
+   "fieldtype": "Data",
+   "label": "Faltas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_atrasos",
+   "fieldtype": "Data",
+   "label": "Atrasos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_he",
+   "fieldtype": "Small Text",
+   "label": "Horas extras por faixa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_noturno_real",
+   "fieldtype": "Data",
+   "label": "Noturnas (reais)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_noturno_ficto",
+   "fieldtype": "Data",
+   "label": "Noturnas (fictas)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_dsr_perdido",
+   "fieldtype": "Data",
+   "label": "DSR perdido",
+   "read_only": 1
+  },
+  {
+   "fieldname": "banco_horas",
+   "fieldtype": "Small Text",
+   "label": "Banco de horas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "autenticidade_section",
+   "fieldtype": "Section Break",
+   "label": "Autenticidade"
+  },
+  {
+   "fieldname": "hash_espelho",
+   "fieldtype": "Data",
+   "label": "Hash SHA-256 do espelho",
+   "length": 64,
+   "read_only": 1
+  },
+  {
+   "fieldname": "hash_fechamento",
+   "fieldtype": "Data",
+   "label": "Hash SHA-256 do fechamento",
+   "length": 64,
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-16 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Reports",
+ "name": "Espelho de Ponto",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Colaborador"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "periodo_inicio",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

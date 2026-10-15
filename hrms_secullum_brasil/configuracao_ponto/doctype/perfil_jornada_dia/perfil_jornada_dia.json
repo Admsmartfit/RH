@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "creation": "2026-10-14 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "dia_semana",
+  "entrada1",
+  "saida1",
+  "entrada2",
+  "saida2",
+  "entrada3",
+  "saida3",
+  "minutos_previstos"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "dia_semana",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Dia da semana",
+   "options": "Segunda-feira\nTerça-feira\nQuarta-feira\nQuinta-feira\nSexta-feira\nSábado\nDomingo",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "entrada1",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Entrada 1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "saida1",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Saída 1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "entrada2",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Entrada 2"
+  },
+  {
+   "columns": 1,
+   "fieldname": "saida2",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Saída 2"
+  },
+  {
+   "columns": 1,
+   "fieldname": "entrada3",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Entrada 3"
+  },
+  {
+   "columns": 1,
+   "fieldname": "saida3",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Saída 3"
+  },
+  {
+   "columns": 1,
+   "fieldname": "minutos_previstos",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Minutos previstos",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-14 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Perfil Jornada Dia",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

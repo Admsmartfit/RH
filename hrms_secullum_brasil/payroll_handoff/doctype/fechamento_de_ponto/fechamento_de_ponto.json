@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "autoname": "FP-.YYYY.-.#####",
+ "creation": "2026-10-16 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "periodo_inicio",
+  "periodo_fim",
+  "payroll_date",
+  "column_break_1",
+  "versao",
+  "motivo_reabertura",
+  "hash",
+  "fechado_por",
+  "fechado_em",
+  "totais_section",
+  "total_proventos",
+  "column_break_2",
+  "total_descontos",
+  "pendencias_section",
+  "pendencias",
+  "colaboradores_section",
+  "colaboradores",
+  "lancamentos_section",
+  "lancamentos",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "periodo_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Período - início",
+   "reqd": 1
+  },
+  {
+   "fieldname": "periodo_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Período - fim",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = fim do período.",
+   "fieldname": "payroll_date",
+   "fieldtype": "Date",
+   "label": "Data na folha (Additional Salary)"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "versao",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Versão",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.amended_from",
+   "fieldname": "motivo_reabertura",
+   "fieldtype": "Small Text",
+   "label": "Motivo da reabertura",
+   "mandatory_depends_on": "eval:doc.amended_from"
+  },
+  {
+   "fieldname": "hash",
+   "fieldtype": "Data",
+   "label": "Hash SHA-256 do período",
+   "length": 64,
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "fechado_por",
+   "fieldtype": "Link",
+   "label": "Fechado por",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fechado_em",
+   "fieldtype": "Datetime",
+   "label": "Fechado em",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "totais_section",
+   "fieldtype": "Section Break",
+   "label": "Totais"
+  },
+  {
+   "fieldname": "total_proventos",
+   "fieldtype": "Currency",
+   "label": "Total de proventos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_descontos",
+   "fieldtype": "Currency",
+   "label": "Total de descontos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pendencias_section",
+   "fieldtype": "Section Break",
+   "label": "Pendências que bloqueiam o fechamento"
+  },
+  {
+   "fieldname": "pendencias",
+   "fieldtype": "Small Text",
+   "label": "Pendências",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "colaboradores_section",
+   "fieldtype": "Section Break",
+   "label": "Colaboradores"
+  },
+  {
+   "fieldname": "colaboradores",
+   "fieldtype": "Table",
+   "label": "Colaboradores",
+   "options": "Fechamento Ponto Colaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lancamentos_section",
+   "fieldtype": "Section Break",
+   "label": "Lançamentos na folha"
+  },
+  {
+   "fieldname": "lancamentos",
+   "fieldtype": "Table",
+   "label": "Lançamentos",
+   "options": "Fechamento Ponto Lancamento",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Versão anterior",
+   "no_copy": 1,
+   "options": "Fechamento de Ponto",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-16 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Fechamento de Ponto",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

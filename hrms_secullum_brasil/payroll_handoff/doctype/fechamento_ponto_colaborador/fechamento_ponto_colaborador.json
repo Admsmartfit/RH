@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "creation": "2026-10-16 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "tipo_remuneracao",
+  "salario",
+  "divisor",
+  "valor_hora",
+  "normais",
+  "hora_extra",
+  "falta",
+  "proventos",
+  "descontos",
+  "espelho"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tipo_remuneracao",
+   "fieldtype": "Data",
+   "label": "Tipo",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "salario",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Salário vigente",
+   "read_only": 1
+  },
+  {
+   "fieldname": "divisor",
+   "fieldtype": "Int",
+   "label": "Divisor",
+   "read_only": 1
+  },
+  {
+   "fieldname": "valor_hora",
+   "fieldtype": "Float",
+   "label": "Valor-hora",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "normais",
+   "fieldtype": "Int",
+   "label": "Normais (min)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "hora_extra",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "HE paga (min)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "falta",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Falta (min)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "proventos",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Proventos",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "descontos",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Descontos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "espelho",
+   "fieldtype": "Link",
+   "label": "Espelho de Ponto",
+   "no_copy": 1,
+   "options": "Espelho de Ponto",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-16 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Fechamento Ponto Colaborador",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

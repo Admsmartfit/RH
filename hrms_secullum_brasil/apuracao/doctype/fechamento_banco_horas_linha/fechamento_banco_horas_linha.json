@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "categoria",
+  "minutos",
+  "acao",
+  "minutos_por_percentual",
+  "observacao"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "categoria",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Categoria",
+   "options": "Crédito vencido\nCrédito a vencer\nDébito vencido\nDébito a vencer",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "minutos",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Minutos",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "acao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Ação",
+   "options": "Pagar\nManter\nDescontar\nAbonar",
+   "reqd": 1
+  },
+  {
+   "fieldname": "minutos_por_percentual",
+   "fieldtype": "Small Text",
+   "label": "Minutos por percentual (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-15 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Fechamento Banco Horas Linha",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

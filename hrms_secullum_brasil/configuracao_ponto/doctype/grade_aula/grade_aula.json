@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 20:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "dia_semana",
+  "inicio",
+  "fim",
+  "turma",
+  "nivel_ensino"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "dia_semana",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Dia",
+   "options": "Segunda-feira\nTerça-feira\nQuarta-feira\nQuinta-feira\nSexta-feira\nSábado\nDomingo",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "inicio",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Início",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "fim",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Fim",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "turma",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Turma"
+  },
+  {
+   "columns": 2,
+   "fieldname": "nivel_ensino",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nível de ensino"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Grade Aula",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

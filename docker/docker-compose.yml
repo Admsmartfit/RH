@@ -1,0 +1,55 @@
+# Ambiente de DESENVOLVIMENTO do hrms_secullum_brasil (Frappe/ERPNext/HRMS v15).
+# Uso: veja docker/README.md. Não use em produção (senhas fixas de desenvolvimento).
+name: hrms-secullum-dev
+
+services:
+  mariadb:
+    image: mariadb:10.6
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: "123"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 30
+
+  redis-cache:
+    image: redis:7-alpine
+
+  redis-queue:
+    image: redis:7-alpine
+    volumes:
+      - redis-queue-data:/data
+
+  frappe:
+    image: frappe/bench:latest
+    command: sleep infinity
+    environment:
+      - SHELL=/bin/bash
+    working_dir: /workspace
+    volumes:
+      # O bench fica num volume do Docker (rápido); só o código do app vem do Windows.
+      - bench:/workspace
+      - ..:/workspace/src/hrms_secullum_brasil
+      - ./setup.sh:/workspace/setup.sh:ro
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+
+volumes:
+  mariadb-data:
+  redis-queue-data:
+  bench:

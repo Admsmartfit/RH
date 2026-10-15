@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "creation": "2026-10-16 14:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "metrica",
+  "operador",
+  "limite"
+ ],
+ "fields": [
+  {
+   "fieldname": "metrica",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Métrica",
+   "options": "faltas_injustificadas\nminutos_atraso\natestados\ndias_atestado\ndias_trabalhados\nminutos_hora_extra\naulas_nao_dadas",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operador",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Operador",
+   "options": "==\n!=\n<\n<=\n>\n>=",
+   "reqd": 1
+  },
+  {
+   "fieldname": "limite",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Limite"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-16 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Condicao Premiacao",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

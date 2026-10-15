@@ -1,0 +1,208 @@
+{
+ "actions": [],
+ "autoname": "INC-.YYYY.-.#####",
+ "creation": "2026-10-14 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "department",
+  "gestor",
+  "data",
+  "column_break_1",
+  "tipo",
+  "severidade",
+  "status",
+  "responsavel",
+  "detalhes_section",
+  "descricao",
+  "referencia_doctype",
+  "referencia_name",
+  "apuracao",
+  "resolvido_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Filial",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Data"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tipo",
+   "options": "marcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\naula_nao_registrada\ncref_vencido\nerro_sync_cadastro\nbatida_periodo_fechado\nconfiguracao_ausente\nbanco_horas_rescisao\nlimite_aulas_excedido",
+   "reqd": 1
+  },
+  {
+   "default": "Média",
+   "fieldname": "severidade",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Severidade",
+   "options": "Baixa\nMédia\nAlta"
+  },
+  {
+   "default": "Aberta",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Aberta\nResolvida"
+  },
+  {
+   "fieldname": "responsavel",
+   "fieldtype": "Link",
+   "label": "Responsável",
+   "options": "User"
+  },
+  {
+   "fieldname": "detalhes_section",
+   "fieldtype": "Section Break",
+   "label": "Detalhes"
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Small Text",
+   "label": "Descrição"
+  },
+  {
+   "fieldname": "referencia_doctype",
+   "fieldtype": "Link",
+   "label": "Tipo de documento de origem",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "referencia_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Documento de origem",
+   "options": "referencia_doctype"
+  },
+  {
+   "fieldname": "apuracao",
+   "fieldtype": "Link",
+   "label": "Apuração do dia",
+   "options": "Apuracao Diaria",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolvido_em",
+   "fieldtype": "Datetime",
+   "label": "Resolvida em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Inconsistencia de Ponto",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,38 @@
+[
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "RH Ponto",
+  "role_name": "RH Ponto",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "RH Saúde",
+  "role_name": "RH Saúde",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Gestor Ponto",
+  "role_name": "Gestor Ponto",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Colaborador",
+  "role_name": "Colaborador",
+  "two_factor_auth": 0
+ }
+]

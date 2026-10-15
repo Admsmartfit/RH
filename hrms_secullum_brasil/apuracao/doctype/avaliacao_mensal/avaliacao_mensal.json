@@ -1,0 +1,253 @@
+{
+ "actions": [],
+ "autoname": "format:AVM-{employee}-{mes}",
+ "creation": "2026-10-16 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "gestor",
+  "column_break_1",
+  "mes",
+  "periodo_fim",
+  "avaliado_em",
+  "metricas_section",
+  "dias_previstos",
+  "dias_trabalhados",
+  "faltas_injustificadas",
+  "minutos_atraso",
+  "minutos_hora_extra",
+  "column_break_2",
+  "atestados",
+  "dias_atestado",
+  "dias_afastamento",
+  "dias_ferias",
+  "dias_abono",
+  "aulas_nao_dadas",
+  "beneficios_section",
+  "beneficios",
+  "premios_section",
+  "premios"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mes",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Mês (1º dia)",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "periodo_fim",
+   "fieldtype": "Date",
+   "label": "Até",
+   "read_only": 1
+  },
+  {
+   "fieldname": "avaliado_em",
+   "fieldtype": "Datetime",
+   "label": "Avaliado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "metricas_section",
+   "fieldtype": "Section Break",
+   "label": "Métricas do mês"
+  },
+  {
+   "fieldname": "dias_previstos",
+   "fieldtype": "Int",
+   "label": "Dias previstos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_trabalhados",
+   "fieldtype": "Int",
+   "label": "Dias trabalhados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "faltas_injustificadas",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Faltas injustificadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minutos_atraso",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Atrasos (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minutos_hora_extra",
+   "fieldtype": "Int",
+   "label": "Hora extra (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "atestados",
+   "fieldtype": "Int",
+   "label": "Atestados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_atestado",
+   "fieldtype": "Int",
+   "label": "Dias de atestado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_afastamento",
+   "fieldtype": "Int",
+   "label": "Dias de afastamento",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_ferias",
+   "fieldtype": "Int",
+   "label": "Dias de férias",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_abono",
+   "fieldtype": "Int",
+   "label": "Dias abonados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_nao_dadas",
+   "fieldtype": "Int",
+   "label": "Aulas não dadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "beneficios_section",
+   "fieldtype": "Section Break",
+   "label": "Benefícios"
+  },
+  {
+   "fieldname": "beneficios",
+   "fieldtype": "Table",
+   "label": "Benefícios",
+   "options": "Avaliacao Beneficio",
+   "read_only": 1
+  },
+  {
+   "fieldname": "premios_section",
+   "fieldtype": "Section Break",
+   "label": "Prêmios"
+  },
+  {
+   "fieldname": "premios",
+   "fieldtype": "Table",
+   "label": "Prêmios",
+   "options": "Avaliacao Premio",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-16 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Avaliacao Mensal",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  },
+  {
+   "read": 1,
+   "role": "Colaborador"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "mes",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

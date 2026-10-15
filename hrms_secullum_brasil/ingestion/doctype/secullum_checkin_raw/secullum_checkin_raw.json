@@ -1,0 +1,268 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-14 21:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "department",
+  "gestor",
+  "data",
+  "data_hora",
+  "status",
+  "column_break_1",
+  "tipo_fonte",
+  "tipo_origem",
+  "equipamento",
+  "origem_id",
+  "funcionario_id_secullum",
+  "id_banco",
+  "controle_section",
+  "importado_em",
+  "data_inclusao_secullum",
+  "hash",
+  "chave_unica",
+  "column_break_2",
+  "employee_checkin",
+  "substituida_em",
+  "substituida_por",
+  "motivo_substituicao",
+  "payload_section",
+  "payload"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Filial",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Data",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "data_hora",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Data e hora",
+   "reqd": 1
+  },
+  {
+   "default": "Ativa",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Ativa\nSubstituida"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tipo_fonte",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo",
+   "options": "Original\nManual\nPreAssinalado\nDesconsiderado"
+  },
+  {
+   "fieldname": "tipo_origem",
+   "fieldtype": "Select",
+   "label": "Origem",
+   "options": "Desconhecido\nRelogioPonto\nIncluidoManualmente\nPreAssinalado\nCheckin\nCentralFuncionarioWeb\nCentralFuncionarioApp\nCentralFuncionarioAppOffline\nIntegracaoExterna"
+  },
+  {
+   "fieldname": "equipamento",
+   "fieldtype": "Data",
+   "label": "Equipamento"
+  },
+  {
+   "fieldname": "origem_id",
+   "fieldtype": "Data",
+   "label": "ID no Secullum (FonteDados)",
+   "length": 40,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "funcionario_id_secullum",
+   "fieldtype": "Data",
+   "label": "ID do funcionário no Secullum",
+   "length": 40
+  },
+  {
+   "fieldname": "id_banco",
+   "fieldtype": "Data",
+   "label": "Banco",
+   "length": 40
+  },
+  {
+   "fieldname": "controle_section",
+   "fieldtype": "Section Break",
+   "label": "Controle"
+  },
+  {
+   "fieldname": "importado_em",
+   "fieldtype": "Datetime",
+   "label": "Importado em"
+  },
+  {
+   "fieldname": "data_inclusao_secullum",
+   "fieldtype": "Datetime",
+   "label": "Incluído no Secullum em"
+  },
+  {
+   "fieldname": "hash",
+   "fieldtype": "Data",
+   "label": "Hash do registro",
+   "length": 64
+  },
+  {
+   "description": "employee|data_hora|origem_id enquanto a marcação está Ativa; vazia depois de substituída.",
+   "fieldname": "chave_unica",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Chave única (ativa)",
+   "length": 200,
+   "no_copy": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee_checkin",
+   "fieldtype": "Link",
+   "label": "Employee Checkin espelhado",
+   "options": "Employee Checkin"
+  },
+  {
+   "fieldname": "substituida_em",
+   "fieldtype": "Datetime",
+   "label": "Substituída em"
+  },
+  {
+   "fieldname": "substituida_por",
+   "fieldtype": "Link",
+   "label": "Substituída por",
+   "options": "Secullum Checkin Raw"
+  },
+  {
+   "fieldname": "motivo_substituicao",
+   "fieldtype": "Small Text",
+   "label": "Motivo da substituição"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "payload_section",
+   "fieldtype": "Section Break",
+   "label": "Registro original"
+  },
+  {
+   "fieldname": "payload",
+   "fieldtype": "Code",
+   "label": "Payload do Secullum",
+   "options": "JSON"
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-15 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Secullum Checkin Raw",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "data_hora",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

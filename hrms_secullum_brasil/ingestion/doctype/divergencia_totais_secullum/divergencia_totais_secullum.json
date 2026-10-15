@@ -1,0 +1,132 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-16 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "execucao",
+  "company",
+  "periodo_inicio",
+  "periodo_fim",
+  "employee",
+  "employee_name",
+  "column_break_1",
+  "categoria",
+  "minutos_frappe",
+  "minutos_secullum",
+  "diferenca"
+ ],
+ "fields": [
+  {
+   "fieldname": "execucao",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Execução",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "periodo_inicio",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Período - início",
+   "read_only": 1
+  },
+  {
+   "fieldname": "periodo_fim",
+   "fieldtype": "Date",
+   "label": "Período - fim",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "categoria",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Categoria",
+   "options": "normais\nhora_extra\nfalta\natraso\nnoturno_real",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minutos_frappe",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Frappe (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "minutos_secullum",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Secullum (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "diferenca",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Diferença (min)",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-16 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Divergencia Totais Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

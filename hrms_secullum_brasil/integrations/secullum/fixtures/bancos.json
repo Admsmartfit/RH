@@ -1,0 +1,5 @@
+[
+ {"id": 1001, "identificador": "6f9619ff-8b86-d011-b42d-00c04fc964ff", "clienteId": "3", "nome": "Banco Mock - Escolas PR"},
+ {"id": 1002, "identificador": "0e984725-c51c-4bf4-9960-e1c80e27aba0", "clienteId": "3", "nome": "Banco Mock - Academias ES"},
+ {"id": 1003, "identificador": "11111111-2222-3333-4444-555555555555", "clienteId": "1", "nome": "Outro produto Secullum"}
+]

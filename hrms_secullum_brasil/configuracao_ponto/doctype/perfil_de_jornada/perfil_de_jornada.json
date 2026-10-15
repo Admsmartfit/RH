@@ -1,0 +1,203 @@
+{
+ "actions": [],
+ "autoname": "PJ-.#####",
+ "creation": "2026-10-14 15:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "codigo",
+  "descricao",
+  "tipo",
+  "company",
+  "column_break_id",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "titulo",
+  "jornada_section",
+  "carga_semanal_minutos",
+  "divisor",
+  "column_break_jornada",
+  "compensacao_semanal",
+  "permite_intervalo_estendido",
+  "hora_virada_dia",
+  "numero_horario_secullum",
+  "dias_section",
+  "dias",
+  "minutos_semana_previstos"
+ ],
+ "fields": [
+  {
+   "description": "Versões do mesmo perfil (vigências diferentes) usam o mesmo código.",
+   "fieldname": "codigo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Código",
+   "reqd": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "label": "Descrição"
+  },
+  {
+   "default": "Fixa",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tipo",
+   "options": "Fixa\nEscala\nFragmentada\nProfessor\nHorista\nIntermitente",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = disponível para todas as empresas.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_id",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vigência - início",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = vigência em aberto.",
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "label": "Vigência - fim"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "read_only": 1
+  },
+  {
+   "fieldname": "jornada_section",
+   "fieldtype": "Section Break",
+   "label": "Jornada contratual"
+  },
+  {
+   "description": "Ex.: 2640 = 44h; 2400 = 40h.",
+   "fieldname": "carga_semanal_minutos",
+   "fieldtype": "Int",
+   "label": "Carga semanal (min)"
+  },
+  {
+   "default": "220",
+   "description": "Valor-hora = salário ÷ divisor.",
+   "fieldname": "divisor",
+   "fieldtype": "Int",
+   "label": "Divisor",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jornada",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "compensacao_semanal",
+   "fieldtype": "Check",
+   "label": "Apuração de HE por compensação semanal"
+  },
+  {
+   "default": "0",
+   "description": "Necessário para jornada fragmentada (Art. 71 CLT).",
+   "fieldname": "permite_intervalo_estendido",
+   "fieldtype": "Check",
+   "label": "Permite intervalo superior a 2h (acordo escrito ou CCT)"
+  },
+  {
+   "default": "0",
+   "description": "Marcações antes desta hora pertencem ao dia anterior. Ex.: 12 para turno 22:00-05:00.",
+   "fieldname": "hora_virada_dia",
+   "fieldtype": "Int",
+   "label": "Hora de virada do dia (0-23)",
+   "non_negative": 1
+  },
+  {
+   "description": "Número do cadastro de Horário no Ponto Secullum Web; enviado na sincronização dos colaboradores.",
+   "fieldname": "numero_horario_secullum",
+   "fieldtype": "Int",
+   "label": "Nº do horário no Secullum",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "Horário previsto"
+  },
+  {
+   "description": "Até 3 períodos por dia. Dia sem horário = folga.",
+   "fieldname": "dias",
+   "fieldtype": "Table",
+   "label": "Dias",
+   "options": "Perfil Jornada Dia"
+  },
+  {
+   "fieldname": "minutos_semana_previstos",
+   "fieldtype": "Int",
+   "label": "Total previsto na semana (min)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Perfil de Jornada",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "codigo,tipo",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

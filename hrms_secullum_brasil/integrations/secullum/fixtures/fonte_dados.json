@@ -1,0 +1,6 @@
+[
+ {"Id": 501, "FuncionarioId": "1", "FuncionarioPis": "17033259504", "FuncionarioCpf": "11144477735", "EquipamentoId": "1", "DiasAtras": 1, "DataInclusao": null, "Hora": "08:00", "Tipo": 0, "Origem": 1},
+ {"Id": 502, "FuncionarioId": "1", "FuncionarioPis": "17033259504", "FuncionarioCpf": "11144477735", "EquipamentoId": "1", "DiasAtras": 1, "DataInclusao": null, "Hora": "12:00", "Tipo": 0, "Origem": 1},
+ {"Id": 503, "FuncionarioId": "1", "FuncionarioPis": "17033259504", "FuncionarioCpf": "11144477735", "EquipamentoId": "1", "DiasAtras": 1, "DataInclusao": null, "Hora": "13:00", "Tipo": 0, "Origem": 1},
+ {"Id": 504, "FuncionarioId": "1", "FuncionarioPis": "17033259504", "FuncionarioCpf": "11144477735", "EquipamentoId": "1", "DiasAtras": 1, "DataInclusao": null, "Hora": "17:00", "Tipo": 0, "Origem": 1}
+]

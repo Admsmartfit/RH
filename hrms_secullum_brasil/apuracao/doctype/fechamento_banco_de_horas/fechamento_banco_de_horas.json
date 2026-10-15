@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "autoname": "FBH-.YYYY.-.#####",
+ "creation": "2026-10-15 15:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "data_referencia",
+  "column_break_1",
+  "total_pagar",
+  "total_descontar",
+  "linhas_section",
+  "linhas",
+  "observacoes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "data_referencia",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Data de referência do ciclo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_pagar",
+   "fieldtype": "Int",
+   "label": "Total a pagar (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_descontar",
+   "fieldtype": "Int",
+   "label": "Total a descontar (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "linhas_section",
+   "fieldtype": "Section Break",
+   "label": "Decisão por colaborador"
+  },
+  {
+   "description": "Crédito vencido: pagar. Crédito a vencer: pagar ou manter. Débito: descontar (se a CCT permitir), manter (a vencer) ou abonar.",
+   "fieldname": "linhas",
+   "fieldtype": "Table",
+   "label": "Linhas",
+   "options": "Fechamento Banco Horas Linha"
+  },
+  {
+   "fieldname": "observacoes",
+   "fieldtype": "Small Text",
+   "label": "Observações"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Fechamento Banco de Horas",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-15 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Fechamento Banco de Horas",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

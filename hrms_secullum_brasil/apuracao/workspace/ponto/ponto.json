@@ -1,0 +1,483 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"ponto00\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Ponto</b></span>\", \"col\": 12}}, {\"id\": \"ponto01\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Inconsistências abertas\", \"col\": 3}}, {\"id\": \"ponto02\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Alta severidade\", \"col\": 3}}, {\"id\": \"ponto03\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tratamentos pendentes\", \"col\": 3}}, {\"id\": \"ponto04\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dias a reapurar\", \"col\": 3}}, {\"id\": \"ponto05\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Apuração diária\", \"col\": 3}}, {\"id\": \"ponto06\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Marcações originais\", \"col\": 3}}, {\"id\": \"ponto07\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Erros de integração\", \"col\": 3}}, {\"id\": \"ponto08\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Configuração Secullum\", \"col\": 3}}, {\"id\": \"ponto09\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Alertas INSS pendentes\", \"col\": 3}}, {\"id\": \"ponto10\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fechamentos\", \"col\": 3}}, {\"id\": \"ponto20\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ponto21\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Inconsistências abertas\", \"col\": 6}}, {\"id\": \"ponto22\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Tratamentos pendentes\", \"col\": 6}}, {\"id\": \"ponto23\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e regras</b></span>\", \"col\": 12}}, {\"id\": \"ponto24\", \"type\": \"card\", \"data\": {\"card_name\": \"Regras\", \"col\": 3}}, {\"id\": \"ponto25\", \"type\": \"card\", \"data\": {\"card_name\": \"Integração Secullum\", \"col\": 3}}, {\"id\": \"ponto26\", \"type\": \"card\", \"data\": {\"card_name\": \"Apuração\", \"col\": 3}}, {\"id\": \"ponto27\", \"type\": \"card\", \"data\": {\"card_name\": \"Banco de horas\", \"col\": 3}}, {\"id\": \"ponto28\", \"type\": \"card\", \"data\": {\"card_name\": \"Saúde (RH Saúde)\", \"col\": 3}}, {\"id\": \"ponto29\", \"type\": \"card\", \"data\": {\"card_name\": \"Benefícios e prêmios\", \"col\": 3}}, {\"id\": \"ponto30\", \"type\": \"card\", \"data\": {\"card_name\": \"Fechamento e folha\", \"col\": 3}}]",
+ "creation": "2026-10-15 09:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "calendar",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Ponto",
+ "links": [
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regra Sindical CCT",
+   "link_count": 0,
+   "link_to": "Regra Sindical CCT",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Perfil de Jornada",
+   "link_count": 0,
+   "link_to": "Perfil de Jornada",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Holiday List",
+   "link_count": 0,
+   "link_to": "Holiday List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Grade de Aulas",
+   "link_count": 0,
+   "link_to": "Grade de Aulas",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuração da apuração",
+   "link_count": 0,
+   "link_to": "Configuracao Apuracao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Integração Secullum",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuração Secullum",
+   "link_count": 0,
+   "link_to": "Configuracao Secullum",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Secullum Sync Log",
+   "link_count": 0,
+   "link_to": "Secullum Sync Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Divergências de cadastro",
+   "link_count": 0,
+   "link_to": "Divergencia Cadastro Secullum",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Marcações originais",
+   "link_count": 0,
+   "link_to": "Secullum Checkin Raw",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Apuração",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Apuração diária",
+   "link_count": 0,
+   "link_to": "Apuracao Diaria",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tratamento de Ponto",
+   "link_count": 0,
+   "link_to": "Tratamento de Ponto",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Inconsistência de Ponto",
+   "link_count": 0,
+   "link_to": "Inconsistencia de Ponto",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reapuração pendente",
+   "link_count": 0,
+   "link_to": "Reapuracao Pendente",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "DSR semanal",
+   "link_count": 0,
+   "link_to": "DSR Semanal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Banco de horas",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Movimentos do banco",
+   "link_count": 0,
+   "link_to": "Banco de Horas Movimento",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fechamento Banco de Horas",
+   "link_count": 0,
+   "link_to": "Fechamento Banco de Horas",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saúde (RH Saúde)",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Atestados médicos",
+   "link_count": 0,
+   "link_to": "Atestado Medico",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alertas previdenciários",
+   "link_count": 0,
+   "link_to": "Alerta Previdenciario",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Benefícios e prêmios",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras de benefício (VA/VR)",
+   "link_count": 0,
+   "link_to": "Regra de Beneficio",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras de premiação",
+   "link_count": 0,
+   "link_to": "Regra de Premiacao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Avaliação mensal",
+   "link_count": 0,
+   "link_to": "Avaliacao Mensal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fechamento e folha",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fechamento de Ponto",
+   "link_count": 0,
+   "link_to": "Fechamento de Ponto",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Espelhos de ponto",
+   "link_count": 0,
+   "link_to": "Espelho de Ponto",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Divergência de totais (Secullum)",
+   "link_count": 0,
+   "link_to": "Divergencia Totais Secullum",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Additional Salary",
+   "link_count": 0,
+   "link_to": "Additional Salary",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-16 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Ponto",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [
+  {
+   "doctype": "Workspace Quick List",
+   "document_type": "Inconsistencia de Ponto",
+   "label": "Inconsistências abertas",
+   "quick_list_filter": "[[\"Inconsistencia de Ponto\", \"status\", \"=\", \"Aberta\", false]]"
+  },
+  {
+   "doctype": "Workspace Quick List",
+   "document_type": "Tratamento de Ponto",
+   "label": "Tratamentos pendentes",
+   "quick_list_filter": "[[\"Tratamento de Ponto\", \"docstatus\", \"=\", \"0\", false]]"
+  }
+ ],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "RH Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Gestor Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "RH Saúde"
+  }
+ ],
+ "sequence_id": 30.0,
+ "shortcuts": [
+  {
+   "color": "Red",
+   "doctype": "Workspace Shortcut",
+   "format": "{} abertas",
+   "label": "Inconsistências abertas",
+   "link_to": "Inconsistencia de Ponto",
+   "stats_filter": "{\"status\": \"Aberta\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doctype": "Workspace Shortcut",
+   "format": "{} altas",
+   "label": "Alta severidade",
+   "link_to": "Inconsistencia de Ponto",
+   "stats_filter": "{\"status\": \"Aberta\", \"severidade\": \"Alta\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doctype": "Workspace Shortcut",
+   "format": "{} pendentes",
+   "label": "Tratamentos pendentes",
+   "link_to": "Tratamento de Ponto",
+   "stats_filter": "{\"docstatus\": 0}",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doctype": "Workspace Shortcut",
+   "format": "{} na fila",
+   "label": "Dias a reapurar",
+   "link_to": "Reapuracao Pendente",
+   "stats_filter": "{\"status\": \"Pendente\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "label": "Apuração diária",
+   "link_to": "Apuracao Diaria",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Marcações originais",
+   "link_to": "Secullum Checkin Raw",
+   "stats_filter": "{\"status\": \"Ativa\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doctype": "Workspace Shortcut",
+   "format": "{} erros",
+   "label": "Erros de integração",
+   "link_to": "Secullum Sync Log",
+   "stats_filter": "{\"status\": \"Erro\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "doctype": "Workspace Shortcut",
+   "label": "Configuração Secullum",
+   "link_to": "Configuracao Secullum",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doctype": "Workspace Shortcut",
+   "format": "{} pendentes",
+   "label": "Alertas INSS pendentes",
+   "link_to": "Alerta Previdenciario",
+   "stats_filter": "{\"status\": \"Pendente\"}",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doctype": "Workspace Shortcut",
+   "label": "Fechamentos",
+   "link_to": "Fechamento de Ponto",
+   "type": "DocType"
+  }
+ ],
+ "title": "Ponto"
+}

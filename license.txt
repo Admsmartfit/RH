@@ -1,0 +1,4 @@
+Copyright (c) 2026 Pontevedra Holding. Todos os direitos reservados.
+
+Software proprietário de uso interno. Licença definitiva pendente de validação
+(ver docs/PROGRESS.md — o HRMS é GPLv3).

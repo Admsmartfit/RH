@@ -1,0 +1,228 @@
+{
+ "actions": [],
+ "autoname": "TRT-.YYYY.-.#####",
+ "creation": "2026-10-15 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "department",
+  "gestor",
+  "column_break_id",
+  "data",
+  "tipo",
+  "data_hora",
+  "marcacao",
+  "motivo_section",
+  "motivo",
+  "anexo",
+  "inconsistencia",
+  "aprovacao_section",
+  "aprovado_por",
+  "aprovado_em",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Filial",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_id",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Dia de trabalho",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tipo",
+   "options": "Inclusao de marcacao\nDesconsiderar marcacao\nAbono do dia",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Inclusao de marcacao'",
+   "fieldname": "data_hora",
+   "fieldtype": "Datetime",
+   "label": "Marcação a incluir",
+   "mandatory_depends_on": "eval:doc.tipo=='Inclusao de marcacao'"
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Desconsiderar marcacao'",
+   "fieldname": "marcacao",
+   "fieldtype": "Link",
+   "label": "Marcação a desconsiderar",
+   "mandatory_depends_on": "eval:doc.tipo=='Desconsiderar marcacao'",
+   "options": "Secullum Checkin Raw"
+  },
+  {
+   "fieldname": "motivo_section",
+   "fieldtype": "Section Break",
+   "label": "Justificativa"
+  },
+  {
+   "fieldname": "motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "anexo",
+   "fieldtype": "Attach",
+   "label": "Anexo"
+  },
+  {
+   "fieldname": "inconsistencia",
+   "fieldtype": "Link",
+   "label": "Inconsistência tratada",
+   "options": "Inconsistencia de Ponto"
+  },
+  {
+   "fieldname": "aprovacao_section",
+   "fieldtype": "Section Break",
+   "label": "Aprovação"
+  },
+  {
+   "fieldname": "aprovado_por",
+   "fieldtype": "Link",
+   "label": "Aprovado por",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aprovado_em",
+   "fieldtype": "Datetime",
+   "label": "Aprovado em",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Tratamento de Ponto",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-15 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Tratamento de Ponto",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

@@ -1,0 +1,200 @@
+[
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Horas Extras 50%",
+  "salary_component": "Horas Extras 50%",
+  "salary_component_abbr": "HE50",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Horas Extras 100%",
+  "salary_component": "Horas Extras 100%",
+  "salary_component_abbr": "HE100",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Adicional Noturno",
+  "salary_component": "Adicional Noturno",
+  "salary_component_abbr": "ADN",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Súmula 172 TST",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "DSR s/ HE e Adicional Noturno",
+  "salary_component": "DSR s/ HE e Adicional Noturno",
+  "salary_component_abbr": "DSR_HE",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "DSR Horista",
+  "salary_component": "DSR Horista",
+  "salary_component_abbr": "DSR_HOR",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Horista e intermitente",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Horas Normais",
+  "salary_component": "Horas Normais",
+  "salary_component_abbr": "HORAS",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Professor - Art. 320 CLT",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Aulas (hora-aula x 4,5)",
+  "salary_component": "Aulas (hora-aula x 4,5)",
+  "salary_component_abbr": "AULAS",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Súmula 351 TST",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "DSR Professor (1/6)",
+  "salary_component": "DSR Professor (1/6)",
+  "salary_component_abbr": "DSR_PROF",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Hora-Atividade",
+  "salary_component": "Hora-Atividade",
+  "salary_component_abbr": "HATIV",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Se remunerado pela CCT",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Janelas",
+  "salary_component": "Janelas",
+  "salary_component_abbr": "JANELA",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Indenizatório: sem INSS/FGTS (Art. 71, §4º)",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Intervalo Intrajornada Indenizado",
+  "salary_component": "Intervalo Intrajornada Indenizado",
+  "salary_component_abbr": "INTRA_IND",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "OJ 355 SDI-1 TST",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Interjornada (HE)",
+  "salary_component": "Interjornada (HE)",
+  "salary_component_abbr": "INTER",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Banco de Horas Pago",
+  "salary_component": "Banco de Horas Pago",
+  "salary_component_abbr": "BH_PAG",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Incidência a validar com o contador",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Prêmio Assiduidade",
+  "salary_component": "Prêmio Assiduidade",
+  "salary_component_abbr": "PREMIO",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Desconto Faltas",
+  "salary_component": "Desconto Faltas",
+  "salary_component_abbr": "FALTA",
+  "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Desconto Atrasos",
+  "salary_component": "Desconto Atrasos",
+  "salary_component_abbr": "ATRASO",
+  "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Desconto DSR",
+  "salary_component": "Desconto DSR",
+  "salary_component_abbr": "DSR_DESC",
+  "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Coparticipação do empregado",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-16 18:00:00.000000",
+  "name": "Desconto VA/VR",
+  "salary_component": "Desconto VA/VR",
+  "salary_component_abbr": "VA_DESC",
+  "type": "Deduction"
+ }
+]

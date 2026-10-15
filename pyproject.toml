@@ -1,0 +1,66 @@
+[project]
+name = "hrms_secullum_brasil"
+authors = [
+	{ name = "Pontevedra Holding", email = "adm@pontevedraholding.com" },
+]
+description = "Motor de pré-folha e gestão de ponto (CLT/CCT) para Frappe HRMS, integrado ao Secullum Ponto Web"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = []
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+# Versões de apps Frappe exigidas pelo bench (alvo fixado na Etapa 0: v15).
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0,<16.0.0"
+erpnext = ">=15.0.0,<16.0.0"
+hrms = ">=15.0.0,<16.0.0"
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+	"F",   # pyflakes
+	"E",   # pycodestyle errors
+	"W",   # pycodestyle warnings
+	"I",   # isort
+	"UP",  # pyupgrade
+	"B",   # flake8-bugbear
+	"RUF", # ruff
+]
+ignore = [
+	"E101", # indentação com tabs (convenção Frappe)
+	"W191", # idem
+	"E501", # comprimento de linha fica a cargo do formatter
+]
+typing-modules = ["frappe.types.DF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"
+docstring-code-format = true
+
+# ---------------------------------------------------------------- pytest
+# Os testes do engine e do cliente Secullum rodam sem bench: `pytest` na raiz do repositório.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations"]
+addopts = "-ra --strict-markers"
+
+# ---------------------------------------------------------------- coverage
+# Meta de cobertura do engine e do cliente Secullum: >= 90% (PRD, Seção 10).
+[tool.coverage.run]
+source = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations"]
+omit = ["*/tests/*"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_empty = true

@@ -1,0 +1,151 @@
+{
+ "actions": [],
+ "autoname": "GA-.#####",
+ "creation": "2026-10-15 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "column_break_1",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "aulas_semanais",
+  "titulo",
+  "aulas_section",
+  "aulas",
+  "recesso_section",
+  "recessos"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início do período letivo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fim do período letivo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "aulas_semanais",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Aulas por semana",
+   "read_only": 1
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_section",
+   "fieldtype": "Section Break",
+   "label": "Aulas"
+  },
+  {
+   "fieldname": "aulas",
+   "fieldtype": "Table",
+   "label": "Aulas",
+   "options": "Grade Aula"
+  },
+  {
+   "description": "Fora do período letivo e nos recessos não há falta de aula (Art. 322 CLT).",
+   "fieldname": "recesso_section",
+   "fieldtype": "Section Break",
+   "label": "Recessos escolares"
+  },
+  {
+   "fieldname": "recessos",
+   "fieldtype": "Table",
+   "label": "Recessos",
+   "options": "Grade Recesso"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Grade de Aulas",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

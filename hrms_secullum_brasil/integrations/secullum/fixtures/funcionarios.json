@@ -1,0 +1,15 @@
+[
+ {
+  "Id": 1,
+  "Nome": "Funcionario Somente no Secullum",
+  "NumeroFolha": "9001",
+  "Cpf": "11144477735",
+  "NumeroPis": "17033259504",
+  "Admissao": "2024-02-01T00:00:00",
+  "Demissao": null,
+  "EmpresaCnpjCpf": "11222333000181",
+  "HorarioNumero": 1,
+  "DepartamentoDescricao": "Administrativo",
+  "FuncaoDescricao": "Auxiliar Administrativo"
+ }
+]

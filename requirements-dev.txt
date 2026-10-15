@@ -1,0 +1,5 @@
+# Ferramentas de desenvolvimento (lint + testes do engine, sem bench).
+ruff==0.9.10
+pytest>=8.0,<9
+pytest-cov>=5.0,<7
+requests>=2.31,<3  # já incluso no Frappe; necessário para testar integrations/ sem bench

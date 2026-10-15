@@ -1,0 +1,282 @@
+{
+ "actions": [],
+ "autoname": "ATM-.YYYY.-.#####",
+ "creation": "2026-10-16 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "cpf",
+  "column_break_1",
+  "data_inicio",
+  "data_fim",
+  "dias",
+  "relacionado_ao_trabalho",
+  "leave_application",
+  "medico_section",
+  "cid",
+  "grupo_cid",
+  "correlacionado_com",
+  "anexo",
+  "column_break_2",
+  "medico_nome",
+  "medico_conselho",
+  "medico_numero",
+  "medico_uf",
+  "obs_section",
+  "observacoes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.cpf",
+   "fieldname": "cpf",
+   "fieldtype": "Data",
+   "label": "CPF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Início do afastamento",
+   "reqd": 1
+  },
+  {
+   "fieldname": "data_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fim do afastamento",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dias",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "relacionado_ao_trabalho",
+   "fieldtype": "Check",
+   "label": "Acidente/doença relacionada ao trabalho"
+  },
+  {
+   "fieldname": "leave_application",
+   "fieldtype": "Link",
+   "label": "Leave Application",
+   "no_copy": 1,
+   "options": "Leave Application",
+   "read_only": 1
+  },
+  {
+   "fieldname": "medico_section",
+   "fieldtype": "Section Break",
+   "label": "Dados médicos (somente RH Saúde)",
+   "permlevel": 1
+  },
+  {
+   "description": "Opcional: só quando consta no atestado, com consentimento do paciente.",
+   "fieldname": "cid",
+   "fieldtype": "Data",
+   "label": "CID",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "grupo_cid",
+   "fieldtype": "Data",
+   "label": "Grupo do CID",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Correlação manual feita pelo RH Saúde (atestados sem CID ou de grupos diferentes).",
+   "fieldname": "correlacionado_com",
+   "fieldtype": "Link",
+   "label": "Mesma doença que o atestado",
+   "options": "Atestado Medico",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "anexo",
+   "fieldtype": "Attach",
+   "label": "Atestado digitalizado",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "medico_nome",
+   "fieldtype": "Data",
+   "label": "Médico/dentista emitente",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "medico_conselho",
+   "fieldtype": "Select",
+   "label": "Conselho",
+   "options": "\nCRM\nCRO\nRMS",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "medico_numero",
+   "fieldtype": "Data",
+   "label": "Número no conselho",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "medico_uf",
+   "fieldtype": "Data",
+   "label": "UF do conselho",
+   "length": 2,
+   "permlevel": 1
+  },
+  {
+   "fieldname": "obs_section",
+   "fieldtype": "Section Break",
+   "label": "Observações"
+  },
+  {
+   "fieldname": "observacoes",
+   "fieldtype": "Small Text",
+   "label": "Observações"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Atestado Medico",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-16 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Atestado Medico",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Saúde",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Saúde",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "data_inicio",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1,
+ "track_views": 1
+}

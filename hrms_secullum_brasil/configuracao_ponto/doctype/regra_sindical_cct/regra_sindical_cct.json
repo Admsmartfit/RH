@@ -1,0 +1,518 @@
+{
+ "actions": [],
+ "autoname": "CCT-.#####",
+ "creation": "2026-10-14 15:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "identificacao_section",
+  "company",
+  "sindicato",
+  "uf",
+  "column_break_ident",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "titulo",
+  "cargos_section",
+  "cargos",
+  "jornada_tab",
+  "tolerancia_section",
+  "tolerancia_por_marcacao",
+  "tolerancia_diaria",
+  "column_break_tol",
+  "computar_todo_tempo_ao_exceder",
+  "compensar_atraso_com_he",
+  "duplicidade_minutos",
+  "he_section",
+  "limite_he_diaria",
+  "faixas_hora_extra",
+  "noturno_section",
+  "noturno_inicio",
+  "noturno_fim",
+  "minutos_hora_noturna",
+  "column_break_not",
+  "percentual_adicional_noturno",
+  "prorrogacao_noturna",
+  "intrajornada_section",
+  "jornada_sem_intervalo_ate",
+  "intervalo_curto",
+  "jornada_intervalo_curto_ate",
+  "percentual_indenizacao_intrajornada",
+  "column_break_intra",
+  "intervalo_minimo",
+  "intervalo_maximo",
+  "permite_reducao_intrajornada",
+  "intervalo_reduzido",
+  "interjornada_section",
+  "interjornada_minima",
+  "column_break_inter",
+  "descanso_semanal_minimo",
+  "dsr_banco_tab",
+  "dsr_section",
+  "dsr_perde_por_falta",
+  "dsr_perde_feriado_da_semana",
+  "column_break_dsr",
+  "dsr_perde_por_atraso",
+  "dsr_reflexo_he_noturno",
+  "banco_section",
+  "banco_modalidade",
+  "banco_prazo_meses",
+  "column_break_banco",
+  "banco_alerta_vencimento_dias",
+  "banco_permite_descontar_negativo",
+  "banco_debita_atrasos",
+  "professores_tab",
+  "professores_section",
+  "duracao_hora_aula",
+  "semanas_mes_professor",
+  "limite_aulas_dia",
+  "column_break_prof",
+  "percentual_hora_atividade",
+  "janela_remunerada",
+  "percentual_janela"
+ ],
+ "fields": [
+  {
+   "fieldname": "identificacao_section",
+   "fieldtype": "Section Break",
+   "label": "Identificação"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Versões da mesma CCT (uma por data-base) usam exatamente o mesmo nome.",
+   "fieldname": "sindicato",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sindicato / Convenção",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uf",
+   "fieldtype": "Select",
+   "label": "UF",
+   "options": "\nAC\nAL\nAP\nAM\nBA\nCE\nDF\nES\nGO\nMA\nMT\nMS\nMG\nPA\nPB\nPR\nPE\nPI\nRJ\nRN\nRS\nRO\nRR\nSC\nSP\nSE\nTO"
+  },
+  {
+   "fieldname": "column_break_ident",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vigência - início",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = vigência em aberto.",
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vigência - fim"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "read_only": 1
+  },
+  {
+   "description": "Vazio = vale para todos os cargos da empresa neste sindicato.",
+   "fieldname": "cargos_section",
+   "fieldtype": "Section Break",
+   "label": "Cargos"
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table",
+   "label": "Cargos",
+   "options": "Regra CCT Cargo"
+  },
+  {
+   "fieldname": "jornada_tab",
+   "fieldtype": "Tab Break",
+   "label": "Jornada"
+  },
+  {
+   "fieldname": "tolerancia_section",
+   "fieldtype": "Section Break",
+   "label": "Tolerância (Art. 58, §1º CLT)"
+  },
+  {
+   "default": "5",
+   "fieldname": "tolerancia_por_marcacao",
+   "fieldtype": "Int",
+   "label": "Tolerância por marcação (min)",
+   "reqd": 1
+  },
+  {
+   "default": "10",
+   "fieldname": "tolerancia_diaria",
+   "fieldtype": "Int",
+   "label": "Tolerância diária (min)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_tol",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "computar_todo_tempo_ao_exceder",
+   "fieldtype": "Check",
+   "label": "Ao exceder a tolerância diária, computar todo o tempo"
+  },
+  {
+   "default": "1",
+   "description": "Ligado: atraso e HE pelo saldo do dia (intervalo flexível). Desligado: cada marcação fora do previsto é computada separadamente.",
+   "fieldname": "compensar_atraso_com_he",
+   "fieldtype": "Check",
+   "label": "Compensar atraso com hora extra no mesmo dia"
+  },
+  {
+   "default": "2",
+   "fieldname": "duplicidade_minutos",
+   "fieldtype": "Int",
+   "label": "Ignorar marcações repetidas em menos de (min)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "he_section",
+   "fieldtype": "Section Break",
+   "label": "Horas extras"
+  },
+  {
+   "default": "120",
+   "description": "Art. 59 caput CLT: 2h/dia.",
+   "fieldname": "limite_he_diaria",
+   "fieldtype": "Int",
+   "label": "Alertar HE acima de (min/dia)"
+  },
+  {
+   "description": "Por tipo de dia, faixas contíguas a partir de 0 min; a última com Até = 0 (sem limite).",
+   "fieldname": "faixas_hora_extra",
+   "fieldtype": "Table",
+   "label": "Faixas de hora extra",
+   "options": "Faixa Hora Extra"
+  },
+  {
+   "fieldname": "noturno_section",
+   "fieldtype": "Section Break",
+   "label": "Adicional noturno (Art. 73 CLT)"
+  },
+  {
+   "default": "22:00:00",
+   "fieldname": "noturno_inicio",
+   "fieldtype": "Time",
+   "label": "Início do período noturno",
+   "reqd": 1
+  },
+  {
+   "default": "05:00:00",
+   "fieldname": "noturno_fim",
+   "fieldtype": "Time",
+   "label": "Fim do período noturno",
+   "reqd": 1
+  },
+  {
+   "default": "52.5",
+   "fieldname": "minutos_hora_noturna",
+   "fieldtype": "Float",
+   "label": "Duração da hora noturna (min)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_not",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "20",
+   "fieldname": "percentual_adicional_noturno",
+   "fieldtype": "Percent",
+   "label": "Adicional noturno",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "prorrogacao_noturna",
+   "fieldtype": "Check",
+   "label": "Prorrogação da jornada noturna (Súmula 60, II TST)"
+  },
+  {
+   "fieldname": "intrajornada_section",
+   "fieldtype": "Section Break",
+   "label": "Intervalo intrajornada (Art. 71 CLT)"
+  },
+  {
+   "default": "240",
+   "fieldname": "jornada_sem_intervalo_ate",
+   "fieldtype": "Int",
+   "label": "Jornada sem intervalo obrigatório até (min)",
+   "reqd": 1
+  },
+  {
+   "default": "15",
+   "fieldname": "intervalo_curto",
+   "fieldtype": "Int",
+   "label": "Intervalo para jornada de 4h a 6h (min)",
+   "reqd": 1
+  },
+  {
+   "default": "360",
+   "fieldname": "jornada_intervalo_curto_ate",
+   "fieldtype": "Int",
+   "label": "Intervalo curto vale para jornada até (min)",
+   "reqd": 1
+  },
+  {
+   "default": "50",
+   "fieldname": "percentual_indenizacao_intrajornada",
+   "fieldtype": "Percent",
+   "label": "Indenização do intervalo suprimido",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_intra",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "60",
+   "fieldname": "intervalo_minimo",
+   "fieldtype": "Int",
+   "label": "Intervalo mínimo acima de 6h (min)",
+   "reqd": 1
+  },
+  {
+   "default": "120",
+   "fieldname": "intervalo_maximo",
+   "fieldtype": "Int",
+   "label": "Intervalo máximo acima de 6h (min)",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "permite_reducao_intrajornada",
+   "fieldtype": "Check",
+   "label": "CCT permite reduzir o intervalo (Art. 611-A, III)"
+  },
+  {
+   "default": "30",
+   "depends_on": "eval:doc.permite_reducao_intrajornada",
+   "fieldname": "intervalo_reduzido",
+   "fieldtype": "Int",
+   "label": "Intervalo reduzido (min)"
+  },
+  {
+   "fieldname": "interjornada_section",
+   "fieldtype": "Section Break",
+   "label": "Interjornada e descanso semanal (Arts. 66 e 67 CLT)"
+  },
+  {
+   "default": "660",
+   "fieldname": "interjornada_minima",
+   "fieldtype": "Int",
+   "label": "Interjornada mínima (min)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_inter",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "2100",
+   "fieldname": "descanso_semanal_minimo",
+   "fieldtype": "Int",
+   "label": "Descanso semanal mínimo (min)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dsr_banco_tab",
+   "fieldtype": "Tab Break",
+   "label": "DSR e Banco de Horas"
+  },
+  {
+   "fieldname": "dsr_section",
+   "fieldtype": "Section Break",
+   "label": "DSR (Lei 605/1949)"
+  },
+  {
+   "default": "1",
+   "fieldname": "dsr_perde_por_falta",
+   "fieldtype": "Check",
+   "label": "Falta injustificada desconta o DSR da semana"
+  },
+  {
+   "default": "0",
+   "fieldname": "dsr_perde_feriado_da_semana",
+   "fieldtype": "Check",
+   "label": "Falta injustificada desconta também o feriado da semana"
+  },
+  {
+   "fieldname": "column_break_dsr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "dsr_perde_por_atraso",
+   "fieldtype": "Check",
+   "label": "Atraso desconta o DSR (tema controverso)"
+  },
+  {
+   "default": "1",
+   "fieldname": "dsr_reflexo_he_noturno",
+   "fieldtype": "Check",
+   "label": "Reflexo de HE e adicional noturno no DSR (Súmula 172 TST)"
+  },
+  {
+   "fieldname": "banco_section",
+   "fieldtype": "Section Break",
+   "label": "Banco de horas (Art. 59, §§2º, 5º e 6º CLT)"
+  },
+  {
+   "default": "Mensal",
+   "description": "Mensal: compensação no mesmo mês. Semestral: até 6 meses (acordo escrito). Anual: até 12 meses (CCT/ACT).",
+   "fieldname": "banco_modalidade",
+   "fieldtype": "Select",
+   "label": "Modalidade",
+   "options": "Mensal\nSemestral\nAnual",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "banco_prazo_meses",
+   "fieldtype": "Int",
+   "label": "Prazo de compensação (meses)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_banco",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "30",
+   "fieldname": "banco_alerta_vencimento_dias",
+   "fieldtype": "Int",
+   "label": "Alertar saldo a vencer com antecedência de (dias)"
+  },
+  {
+   "default": "0",
+   "fieldname": "banco_permite_descontar_negativo",
+   "fieldtype": "Check",
+   "label": "Permite descontar saldo negativo no fechamento"
+  },
+  {
+   "default": "1",
+   "fieldname": "banco_debita_atrasos",
+   "fieldtype": "Check",
+   "label": "Atrasos e saídas antecipadas debitam o banco"
+  },
+  {
+   "fieldname": "professores_tab",
+   "fieldtype": "Tab Break",
+   "label": "Professores"
+  },
+  {
+   "fieldname": "professores_section",
+   "fieldtype": "Section Break",
+   "label": "Professores (Arts. 318 a 322 CLT)"
+  },
+  {
+   "description": "Normalmente 45, 50 ou 60.",
+   "fieldname": "duracao_hora_aula",
+   "fieldtype": "Int",
+   "label": "Duração da hora-aula (min)"
+  },
+  {
+   "default": "4.5",
+   "fieldname": "semanas_mes_professor",
+   "fieldtype": "Float",
+   "label": "Semanas por mês (Art. 320 CLT)"
+  },
+  {
+   "description": "Alerta quando excedido (Art. 318).",
+   "fieldname": "limite_aulas_dia",
+   "fieldtype": "Int",
+   "label": "Limite de aulas por dia"
+  },
+  {
+   "fieldname": "column_break_prof",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "percentual_hora_atividade",
+   "fieldtype": "Percent",
+   "label": "Hora-atividade (% sobre as aulas)"
+  },
+  {
+   "default": "0",
+   "fieldname": "janela_remunerada",
+   "fieldtype": "Check",
+   "label": "Janelas entre aulas são remuneradas"
+  },
+  {
+   "depends_on": "eval:doc.janela_remunerada",
+   "fieldname": "percentual_janela",
+   "fieldtype": "Percent",
+   "label": "Valor da janela (% da hora-aula)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Regra Sindical CCT",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "sindicato,company,vigencia_inicio",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

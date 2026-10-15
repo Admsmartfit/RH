@@ -1,0 +1,230 @@
+{
+ "actions": [],
+ "autoname": "format:DSR-{employee}-{semana_inicio}",
+ "creation": "2026-10-15 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "gestor",
+  "column_break_1",
+  "semana_inicio",
+  "semana_fim",
+  "tipo_remuneracao",
+  "atualizado_em",
+  "dias_section",
+  "dias_uteis",
+  "dias_descanso",
+  "feriados",
+  "column_break_2",
+  "faltas_injustificadas",
+  "atraso_minutos",
+  "aulas_nao_dadas",
+  "dsr_section",
+  "dsr_perdido_minutos",
+  "column_break_3",
+  "minutos_normais",
+  "dsr_horista_minutos"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "semana_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Semana (segunda-feira)",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "semana_fim",
+   "fieldtype": "Date",
+   "label": "Até (domingo)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tipo_remuneracao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tipo de remuneração",
+   "read_only": 1
+  },
+  {
+   "fieldname": "atualizado_em",
+   "fieldtype": "Datetime",
+   "label": "Atualizado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "Dias"
+  },
+  {
+   "fieldname": "dias_uteis",
+   "fieldtype": "Int",
+   "label": "Dias úteis",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_descanso",
+   "fieldtype": "Int",
+   "label": "Domingos e feriados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feriados",
+   "fieldtype": "Int",
+   "label": "Feriados em dia útil",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "faltas_injustificadas",
+   "fieldtype": "Int",
+   "label": "Faltas injustificadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "atraso_minutos",
+   "fieldtype": "Int",
+   "label": "Atrasos (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aulas_nao_dadas",
+   "fieldtype": "Int",
+   "label": "Aulas não dadas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dsr_section",
+   "fieldtype": "Section Break",
+   "label": "DSR"
+  },
+  {
+   "fieldname": "dsr_perdido_minutos",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "DSR perdido (min) — mensalista",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "minutos_normais",
+   "fieldtype": "Int",
+   "label": "Minutos normais da semana",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dsr_horista_minutos",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "DSR (min) — horista",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "DSR Semanal",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  },
+  {
+   "read": 1,
+   "role": "Colaborador"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "semana_inicio",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

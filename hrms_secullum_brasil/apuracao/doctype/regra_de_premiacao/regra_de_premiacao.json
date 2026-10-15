@@ -1,0 +1,148 @@
+{
+ "actions": [],
+ "autoname": "PRM-.#####",
+ "creation": "2026-10-16 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "nome_premio",
+  "componente",
+  "valor",
+  "column_break_1",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "titulo",
+  "cargos_section",
+  "cargos",
+  "condicoes_section",
+  "combinacao",
+  "condicoes"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Ex.: Prêmio assiduidade.",
+   "fieldname": "nome_premio",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Prêmio",
+   "reqd": 1
+  },
+  {
+   "description": "Rubrica do Additional Salary (Etapa 10).",
+   "fieldname": "componente",
+   "fieldtype": "Link",
+   "label": "Salary Component",
+   "options": "Salary Component"
+  },
+  {
+   "fieldname": "valor",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Valor",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vigência - início",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = vigência em aberto.",
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "label": "Vigência - fim"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "read_only": 1
+  },
+  {
+   "description": "Vazio = todos os cargos da empresa.",
+   "fieldname": "cargos_section",
+   "fieldtype": "Section Break",
+   "label": "Cargos"
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table",
+   "label": "Cargos",
+   "options": "Regra CCT Cargo"
+  },
+  {
+   "fieldname": "condicoes_section",
+   "fieldtype": "Section Break",
+   "label": "Condições (métricas do mês)"
+  },
+  {
+   "default": "Todas",
+   "description": "Todas = E; Qualquer = OU.",
+   "fieldname": "combinacao",
+   "fieldtype": "Select",
+   "label": "Exigir",
+   "options": "Todas\nQualquer"
+  },
+  {
+   "fieldname": "condicoes",
+   "fieldtype": "Table",
+   "label": "Condições",
+   "options": "Condicao Premiacao"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-16 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Regra de Premiacao",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

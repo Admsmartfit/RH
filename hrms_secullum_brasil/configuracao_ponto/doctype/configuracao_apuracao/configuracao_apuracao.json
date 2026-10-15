@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "intermitente_section",
+  "habilitar_intermitente",
+  "cref_section",
+  "cref_alerta_dias",
+  "bloquear_cref_vencido",
+  "atestado_section",
+  "criar_leave_application",
+  "leave_type_atestado",
+  "leave_type_ferias"
+ ],
+ "fields": [
+  {
+   "fieldname": "intermitente_section",
+   "fieldtype": "Section Break",
+   "label": "Contrato intermitente (Art. 452-A)"
+  },
+  {
+   "default": "0",
+   "description": "Desligado: perfis Intermitente ficam como Não Apurado. Validar o uso com o jurídico antes de ligar.",
+   "fieldname": "habilitar_intermitente",
+   "fieldtype": "Check",
+   "label": "Apurar perfis do tipo Intermitente"
+  },
+  {
+   "fieldname": "cref_section",
+   "fieldtype": "Section Break",
+   "label": "Instrutores — CREF"
+  },
+  {
+   "default": "30",
+   "fieldname": "cref_alerta_dias",
+   "fieldtype": "Int",
+   "label": "Avisar vencimento do CREF com antecedência de (dias)"
+  },
+  {
+   "default": "0",
+   "description": "Ligado: CREF vencido gera inconsistência Alta (que bloqueia o Fechamento de Ponto). Desligado: Média.",
+   "fieldname": "bloquear_cref_vencido",
+   "fieldtype": "Check",
+   "label": "CREF vencido bloqueia o fechamento"
+  },
+  {
+   "fieldname": "atestado_section",
+   "fieldtype": "Section Break",
+   "label": "Atestados médicos"
+  },
+  {
+   "default": "1",
+   "fieldname": "criar_leave_application",
+   "fieldtype": "Check",
+   "label": "Gerar Leave Application ao submeter o atestado"
+  },
+  {
+   "default": "Atestado Médico",
+   "fieldname": "leave_type_atestado",
+   "fieldtype": "Link",
+   "label": "Leave Type do atestado",
+   "options": "Leave Type"
+  },
+  {
+   "description": "Para classificar dias de férias nos benefícios.",
+   "fieldname": "leave_type_ferias",
+   "fieldtype": "Link",
+   "label": "Leave Type de férias",
+   "options": "Leave Type"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-16 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Configuracao Apuracao",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "print": 1,
+   "read": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

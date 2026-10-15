@@ -1,0 +1,55 @@
+{
+ "actions": [],
+ "creation": "2026-10-16 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "atestado",
+  "data_inicio",
+  "data_fim",
+  "dias"
+ ],
+ "fields": [
+  {
+   "fieldname": "atestado",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Atestado",
+   "options": "Atestado Medico",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fim",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dias",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-16 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Alerta Previdenciario Atestado",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

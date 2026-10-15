@@ -1,0 +1,241 @@
+{
+ "actions": [],
+ "autoname": "APV-.YYYY.-.#####",
+ "creation": "2026-10-16 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "gestor",
+  "cpf",
+  "column_break_1",
+  "status",
+  "data_16_dia",
+  "soma_dias",
+  "chave",
+  "atestados_section",
+  "atestados",
+  "decisao_section",
+  "acao_tomada",
+  "decidido_por",
+  "decidido_em",
+  "s2230_section",
+  "grupo_cid",
+  "rascunho_s2230"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpf",
+   "fieldtype": "Data",
+   "label": "CPF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pendente",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pendente\nEncaminhado ao INSS\nDescartado\nCancelado"
+  },
+  {
+   "fieldname": "data_16_dia",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "16º dia (encaminhar ao INSS)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "soma_dias",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dias somados da mesma doença",
+   "read_only": 1
+  },
+  {
+   "fieldname": "chave",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Chave da cadeia",
+   "no_copy": 1,
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "atestados_section",
+   "fieldtype": "Section Break",
+   "label": "Atestados da cadeia"
+  },
+  {
+   "fieldname": "atestados",
+   "fieldtype": "Table",
+   "label": "Atestados",
+   "options": "Alerta Previdenciario Atestado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decisao_section",
+   "fieldtype": "Section Break",
+   "label": "Decisão do RH"
+  },
+  {
+   "fieldname": "acao_tomada",
+   "fieldtype": "Small Text",
+   "label": "Ação tomada",
+   "mandatory_depends_on": "eval:['Encaminhado ao INSS','Descartado'].includes(doc.status)"
+  },
+  {
+   "fieldname": "decidido_por",
+   "fieldtype": "Link",
+   "label": "Decidido por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decidido_em",
+   "fieldtype": "Datetime",
+   "label": "Decidido em",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "s2230_section",
+   "fieldtype": "Section Break",
+   "label": "Rascunho do afastamento (eSocial S-2230)",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "grupo_cid",
+   "fieldtype": "Data",
+   "label": "Grupo do CID",
+   "permlevel": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Rascunho para o RH/contabilidade conferir; não é transmitido ao eSocial.",
+   "fieldname": "rascunho_s2230",
+   "fieldtype": "Code",
+   "label": "Dados para o S-2230",
+   "options": "JSON",
+   "permlevel": 1,
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-16 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Alerta Previdenciario",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Saúde",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Saúde",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "data_16_dia",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

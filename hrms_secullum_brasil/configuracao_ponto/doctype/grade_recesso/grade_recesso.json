@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 20:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "inicio",
+  "fim",
+  "descricao"
+ ],
+ "fields": [
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fim",
+   "reqd": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Descrição"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-15 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Grade Recesso",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
