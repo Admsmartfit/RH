@@ -421,9 +421,13 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 ## Ajustes por cargo — `docs/PRD-ajustes-por-cargo.md` (15/10/2026)
 
 ### Feito
+- **AJ-06 (parte 1, engine):** `engine/vale_transporte.py` — dias de trabalho do mês (perfil + trocas de escala), sugestão de passes (feriados, ausências, acerto do mês anterior, abono em lote), desconto de 6% limitado ao benefício, média histórica e travas (alerta ≥ 15%, trava dura > 30%), validação ERR-01/ERR-02 e arquivo GVBus de 27 campos (ISO-8859-1, CRLF). Testes em `engine/tests/test_vale_transporte.py`.
 - **AJ-13:** reflexo no DSR (Súmula 172) separado em duas rubricas, como na folha: `DSR_HE` (só horas extras) e `DSR_ADN` (adicional noturno, Salary Component novo). Teste no engine com os números do contracheque de setembro/2026 do instrutor horista (DSR_HE R$ 33,00; DSR_ADN R$ 11,97).
 
 ### Pendências
 - Rodar os testes Frappe (`payroll_handoff/test_fechamento.py`) no ambiente `docker/`; não rodaram neste ambiente.
 - Instalações existentes: o Salary Component `DSR s/ HE e Adicional Noturno` mantém o nome; só a descrição muda. Entra o novo `DSR s/ Adicional Noturno`.
+- AJ-06 parte 2 (Frappe): Custom Fields do colaborador (CartãoGV, RG, tarifas), tabela de tarifas, DocType de carga mensal com edição em lote, aprovação e log, exportação e rubricas VT/VT_DESC no Fechamento.
+- Layout GVBus copiado do PRD do módulo; validar com upload de teste no portal. Confirmar como o portal recebe os dias de cada colaborador.
+- `pytest --cov` não rodou aqui (sem pytest-cov); rodar no CI.
 - Demais requisitos do PRD de ajustes por cargo.

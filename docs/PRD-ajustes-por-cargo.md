@@ -25,7 +25,7 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 | AJ-03 | Folga compensatória de feriado trabalhado | Código | Recepção | A fazer |
 | AJ-04 | Adicional noturno com mínimo legal e valor por cargo | Código | Recepção | A fazer |
 | AJ-05 | Banco de horas padrão por cargo | Código | Recepção | A fazer |
-| AJ-06 | Vale-transporte | Código | Recepção | A fazer |
+| AJ-06 | Vale-transporte com sugestão de passes e carga GVBus | Código | Todos | Cálculo e arquivo feitos em rascunho; telas a fazer |
 | AJ-07 | Prêmio com regras SE / E / ENTÃO e novas métricas | Código | Recepção | A fazer |
 | AJ-08 | Custeio do benefício social da CCT e relatório | Código | Recepção | A fazer |
 | AJ-09 | Escala flexível: troca de dias e rodízio de domingos | Código | Recepção | A fazer |
@@ -137,17 +137,39 @@ Legenda do tipo: **Código** = muda o programa; **Config** = só cadastro/parame
 - **Aceite:** recepcionista novo nasce com banco ligado se o cargo estiver marcado; desligar no colaborador faz o atraso descontar em folha.
 - **Fonte:** CCT cl. 22ª; CLT art. 59, §2º. Origem: item 14.
 
-### AJ-06 — Vale-transporte
+### AJ-06 — Vale-transporte com sugestão de passes e carga GVBus
 - **Hoje:** o programa só trata vale-alimentação e vale-refeição.
-- **Pedido do Ricardo:** "tenho que ser capaz de lançar o vale-transporte".
+- **Pedido do Ricardo:** "tenho que ser capaz de lançar o vale-transporte" (recepção, item 18) e incluir o módulo descrito no "PRD - Módulo de Gestão, Sugestão e Carga de Vale-Transporte GVBus" (v2.0), adaptado ao programa.
+- **O que muda em relação ao PRD GVBus, para caber no programa:**
+  - **Escala:** o PRD GVBus usa tipos genéricos (5x2, 6x1, 12x36, híbrido). Aqui os dias de trabalho do mês saem do **Perfil de Jornada vigente** de cada um, das **trocas de escala** (AJ-09) e da escala de fim de semana do horista (AJ-14). Dia sem horário no perfil é folga. 12x36 e híbrido ficam para quando existirem no programa.
+  - **Feriados:** da lista de feriados da empresa (AJ-11), que já tem nacionais, estaduais e municipais da sede.
+  - **Afastamentos e ausências:** férias, licenças e atestados aprovados que já estão no programa.
+  - **Acerto do mês anterior** (não está no PRD GVBus): dias pagos e não trabalhados no mês anterior (faltas, atestados, férias, afastamentos) são abatidos da carga seguinte, porque o vale-transporte é só para o deslocamento real (Lei 7.418/1985, art. 1º).
+  - **Desconto em folha** (não está no PRD GVBus): 6% do salário base, limitado ao valor do benefício, nas rubricas VT e VT_DESC do Fechamento de Ponto.
+  - **Travas:** o PRD GVBus fala em tolerância padrão de 20% e em faixas de 15% a 30%. Aqui viram dois parâmetros: "alerta a partir de" (padrão 15%) e "trava dura acima de" (padrão 30%).
 - **Mudança:**
-  - Novo tipo "VT" em Regra de Benefício.
-  - Por colaborador: valor das passagens por dia (ida e volta, uma ou mais conduções) e opção de recusa com declaração anexada.
-  - Valor do mês = passagens por dia × dias de trabalho previstos na escala do mês, menos dias de falta, atestado, férias e afastamento do mês anterior (acerto).
-  - Desconto em folha: 6% do salário base, limitado ao valor do benefício.
-  - Rubricas VT (crédito) e VT_DESC (desconto), entregues pelo Fechamento de Ponto.
-- **Aceite:** salário R$ 1.650,00, passagens R$ 10,00/dia, 22 dias: VT R$ 220,00, desconto R$ 99,00. Com passagens R$ 4,00/dia: VT R$ 88,00, desconto R$ 88,00.
-- **Fonte:** Lei 7.418/1985, art. 4º; Decreto 10.854/2021; CCT cl. 13ª. Origem: item 18.
+  - **Cadastro do colaborador** (Custom Fields): usa VT (sim/não, com declaração de recusa anexada), número do CartãoGV, RG com órgão emissor, tarifa 1 e quantidade diária, tarifa 2 e quantidade diária. Endereço, bairro, município e CEP para o arquivo. CPF e RG ficam com acesso restrito ao RH (LGPD).
+  - **Tabela de tarifas** por empresa, com vigência: código GVBus (ex.: "A") e valor da passagem.
+  - **Carga de VT do mês** (DocType novo, um por empresa e mês, com uma linha por colaborador):
+    1. **Sugestão:** dias de trabalho previstos no mês de destino (perfil + trocas − feriados − férias/afastamentos já lançados) menos o acerto do mês anterior. Valor = dias × (qtd. tarifa 1 × valor tarifa 1 + qtd. tarifa 2 × valor tarifa 2).
+    2. **Média histórica:** média das cargas confirmadas dos últimos 3 a 6 meses (parâmetro; padrão 3). Sem histórico, não há trava.
+    3. **Variação:** (valor do mês − média) ÷ média. A partir de 15%: alerta e motivo obrigatório (lista: horas extras autorizadas, troca de escala, ajuste retroativo, outro). Acima de 30%: trava dura; a linha só entra no arquivo depois da aprovação do Gestor de DP, com justificativa.
+    4. **Edição em lote:** filtros por empresa, centro de custo, cargo, perfil de jornada e nome/CPF; selecionar todos; ações: mudar tarifa, mudar quantidade diária, abonar ou descontar dias (recesso, ponte), marcar inatividade com data.
+    5. **Validação:** sem CPF válido, RG ou CartãoGV, a linha fica vermelha e fora do arquivo (ERR-01, ERR-02).
+    6. **Exportação:** arquivo texto para o portal recargaonline.gvbus.org.br no layout de 27 campos separados por ";", sem cabeçalho, ISO-8859-1, quebra de linha CRLF, nome GVBUS_CARGA_[CNPJ]_[AAAAMM]_[DD].txt.
+    7. **Confirmação:** depois da compra no portal, o RH confirma a carga; ela passa a contar na média e gera VT/VT_DESC no Fechamento de Ponto.
+  - **Log imutável** de toda edição em lote, aprovação e confirmação: usuário, data e hora, valor anterior, valor novo e justificativa (Version do Frappe + registro próprio para ações em lote).
+  - **Engine** (Python puro, com testes): `engine/vale_transporte.py` com dias previstos, sugestão, desconto de 6%, variação sobre a média e geração das linhas do arquivo.
+- **Aceite:**
+  - Recepcionista 5x2 (seg. a sex.), outubro/2026 em Vila Velha, 2 passagens de R$ 5,00 por dia: 22 dias úteis − 1 feriado (12/10) = 21 dias → R$ 210,00. Com 1 falta em setembro: 20 dias → R$ 200,00.
+  - Salário R$ 1.650,00 e VT R$ 200,00: desconto R$ 99,00. VT R$ 80,00: desconto R$ 80,00.
+  - Média R$ 200,00: carga de R$ 220,00 (10%) passa; R$ 240,00 (20%) pede motivo; R$ 270,00 (35%) trava até aprovação.
+  - Linha sem CartãoGV não entra no arquivo; o arquivo tem 27 campos por linha e abre no portal sem erro.
+- **A confirmar antes de usar:**
+  - O layout de 27 campos veio do PRD GVBus; validar com um upload de teste no portal.
+  - O arquivo leva só a quantidade **diária** de passagens, não os dias do mês. Confirmar no portal como se informa a quantidade de dias de cada colaborador no pedido; se for um número único para todos, a sugestão por colaborador vira um relatório de conferência.
+  - O RG é obrigatório no layout; hoje o programa não guarda RG.
+- **Fonte:** Lei 7.418/1985, art. 1º e 4º; Decreto 10.854/2021; CCT cl. 13ª; PRD GVBus v2.0. Origem: recepção, item 18.
 
 ### AJ-07 — Prêmio com regras SE / E / ENTÃO e novas métricas
 - **Hoje:** o prêmio é tudo ou nada (atende as condições ou não) e as métricas são faltas, minutos de atraso, atestados, dias de atestado, dias trabalhados e hora extra.
