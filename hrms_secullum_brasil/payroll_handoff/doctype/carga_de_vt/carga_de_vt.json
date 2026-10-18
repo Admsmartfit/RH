@@ -1,0 +1,148 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "ano",
+  "mes",
+  "column_break_status",
+  "status",
+  "total",
+  "confirmado_por",
+  "linhas_section",
+  "linhas",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ano",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Ano (uso)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mes",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Mês (uso)",
+   "options": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Rascunho",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Rascunho\nArquivo emitido\nConfirmada\nCancelada",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmado_por",
+   "fieldtype": "Link",
+   "label": "Confirmado por",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "linhas_section",
+   "fieldtype": "Section Break",
+   "label": "Colaboradores",
+   "description": "'Gerar sugestão' calcula dias e valores; os dias são editáveis. Variação a partir de 15% sobre a média pede motivo; acima de 30% trava até a liberação do Gestor de DP. Confirmar (Enviar) depois da compra no portal: a carga passa a contar na média e gera VT/VT_DESC no Fechamento de Ponto."
+  },
+  {
+   "fieldname": "linhas",
+   "fieldtype": "Table",
+   "label": "Linhas",
+   "options": "Carga de VT Linha"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Carga de VT",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Carga de VT",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Gestor DP",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "format:CVT-{company}-{ano}-{mes}",
+ "naming_rule": "Expression",
+ "is_submittable": 1,
+ "track_changes": 1
+}

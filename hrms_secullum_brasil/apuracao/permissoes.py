@@ -99,6 +99,26 @@ def condicao_espelho(user=None):
 	return _condicao("Espelho de Ponto", user)
 
 
+def condicao_escala(user=None):
+	return _condicao("Escala Mensal", user)
+
+
+def condicao_troca(user=None):
+	return _condicao("Troca de Escala", user)
+
+
+def condicao_entrega_epi(user=None):
+	return _condicao("Entrega de EPI", user)
+
+
+def condicao_tce(user=None):
+	return _condicao("Termo de Compromisso de Estagio", user)
+
+
+def condicao_relatorio_estagio(user=None):
+	return _condicao("Relatorio de Estagio", user)
+
+
 def tem_permissao(doc, ptype=None, user=None, debug=False):
 	"""Hook has_permission: nega o documento de colaborador fora da visibilidade do usuário."""
 	visiveis = employees_visiveis(user)

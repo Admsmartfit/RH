@@ -133,6 +133,8 @@ class TestFechamentoDePonto(FrappeTestCase):
 		self.assertEqual(flt(lanc["FALTA"].valor), 80.0)  # 480 min x R$ 10
 		self.assertEqual(flt(lanc["DSR_DESC"].valor), 73.33)  # 440 min: DSR da semana da falta
 		self.assertEqual(flt(lanc["DSR_HE"].valor), 4.62)  # 30,00 / 26 dias úteis x 4 domingos
+		self.assertEqual(lanc["DSR_HE"].codigo_folha, "9189")  # AJ-13: código da rubrica na folha
+		self.assertNotIn("DSR_ADN", lanc)  # sem adicional noturno no período
 		self.assertEqual(lanc["FALTA"].tipo, "Deduction")
 		[colab] = [c for c in doc.colaboradores if c.employee == self.employee]
 		self.assertEqual((flt(colab.salario), colab.divisor, flt(colab.valor_hora)), (2200.0, 220, 10.0))
@@ -364,7 +366,7 @@ class TestFechamentoDePonto(FrappeTestCase):
 		ganhos = {e.salary_component: flt(e.amount) for e in slip.earnings}
 		descontos = {d.salary_component: flt(d.amount) for d in slip.deductions}
 		self.assertEqual(ganhos.get("Horas Extras 50%"), 30.0)
-		self.assertEqual(ganhos.get("DSR s/ HE e Adicional Noturno"), 4.62)
+		self.assertEqual(ganhos.get("DSR s/ Horas Extras"), 4.62)
 		self.assertEqual(descontos.get("Desconto Faltas"), 80.0)
 		self.assertEqual(descontos.get("Desconto DSR"), 73.33)
 

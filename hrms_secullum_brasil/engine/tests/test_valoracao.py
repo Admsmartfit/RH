@@ -7,6 +7,7 @@ intermitente na rubrica HORAS.
 
 from decimal import Decimal
 
+from hrms_secullum_brasil.engine.dsr import reflexo_dsr
 from hrms_secullum_brasil.engine.valoracao import BaseValoracao, MinutosPeriodo, valorar
 
 BASE = BaseValoracao(salario=Decimal("2200.00"), divisor=220)
@@ -40,6 +41,24 @@ def test_reflexo_de_he_e_noturno_no_dsr():
 	v = valores(MinutosPeriodo(he_por_percentual={50: 1200}, dias_uteis=25, dias_descanso=5))
 	assert v["HE50"] == Decimal("300.00")
 	assert v["DSR_HE"] == Decimal("60.00")  # T18
+	assert "DSR_ADN" not in v  # sem adicional noturno, sem reflexo dele
+
+
+def test_aj13_dsr_da_he_e_do_adicional_noturno_em_rubricas_separadas():
+	# contracheque de setembro/2026: valor-hora R$ 16,50; 5h a 100% = R$ 165,00; 25 dias úteis e 5 de descanso
+	base = BaseValoracao(salario=Decimal("3630.00"), divisor=220)
+	v = valores(
+		MinutosPeriodo(he_por_percentual={100: 300}, noturno_ficto=480, dias_uteis=25, dias_descanso=5), base
+	)
+	assert v["HE100"] == Decimal("165.00")
+	assert v["DSR_HE"] == Decimal("33.00")  # rubrica 9189
+	assert v["ADN"] == Decimal("26.40")  # 8h x 16,50 x 20%
+	assert v["DSR_ADN"] == Decimal("5.28")  # só sobre o adicional noturno
+
+
+def test_aj13_aceite_dsr_adn_de_setembro():
+	# adicional noturno de R$ 59,86 no mês, 25 dias úteis e 5 de descanso: R$ 11,97 (rubrica 9188)
+	assert reflexo_dsr(Decimal("59.86"), dias_uteis=25, dias_descanso=5) == Decimal("11.97")
 
 
 def test_falta_atraso_e_dsr_perdido():
@@ -51,6 +70,13 @@ def test_intervalos_indenizados():
 	v = valores(MinutosPeriodo(intrajornada=30, interjornada=180))
 	assert v["INTRA_IND"] == Decimal("7.50")  # 30 min com acréscimo de 50%
 	assert v["INTER"] == Decimal("45.00")  # 3h pagas como HE 50%
+
+
+def test_aj10_descanso_semanal_suprimido_junto_da_inter():
+	v = valorar(BASE, MinutosPeriodo(interjornada=120, descanso_semanal=180))
+	inter = next(lanc for lanc in v if lanc.codigo == "INTER")
+	assert (inter.minutos_base, inter.valor) == (300, Decimal("75.00"))  # 5h a 50%
+	assert "180 min de descanso semanal" in inter.descricao
 
 
 def test_banco_de_horas_pago_com_percentual_da_formacao():
@@ -109,3 +135,46 @@ def test_arredondamento_so_no_valor_final_da_rubrica():
 
 def test_divisor_zero_nao_quebra():
 	assert BaseValoracao(salario=Decimal("1000"), divisor=0).valor_hora == Decimal("0")
+
+
+def test_aj06_vt_informativo_e_desconto_de_6_porcento():
+	base = BaseValoracao(salario=Decimal("1650.00"), divisor=220)
+	v = valores(MinutosPeriodo(vale_transporte=Decimal("200.00")), base)
+	assert (v["VT"], v["VT_DESC"]) == (Decimal("200.00"), Decimal("99.00"))
+	assert valores(MinutosPeriodo(vale_transporte=Decimal("80.00")), base)["VT_DESC"] == Decimal("80.00")
+
+
+def test_aj06_vt_do_estagiario_sem_desconto():
+	base = BaseValoracao(salario=Decimal("1200.00"), divisor=220, vt_percentual=0)
+	v = valores(MinutosPeriodo(vale_transporte=Decimal("200.00")), base)
+	assert "VT_DESC" not in v and v["VT"] == Decimal("200.00")
+
+
+def test_aj06_vt_do_horista_sobre_as_horas_pagas():
+	base = BaseValoracao(salario=Decimal("16.50"), divisor=1, horista=True)
+	v = valores(MinutosPeriodo(horas_normais=80 * 60, vale_transporte=Decimal("200.00")), base)
+	assert v["VT_DESC"] == Decimal("79.20")  # 6% de R$ 1.320,00
+
+
+def test_est09_bolsa_com_falta_e_atraso_so_bolsa_desc():
+	base = BaseValoracao(
+		salario=Decimal("0"), divisor=1, estagio=True, bolsa=Decimal("1200.00"), carga_semanal_estagio=1800
+	)
+	minutos = MinutosPeriodo(
+		falta=360, faltas_dias=1, atraso=30, he_por_percentual={50: 120}, noturno_ficto=60
+	)
+	assert valores(minutos, base) == {"BOLSA_DESC": Decimal("44.00")}
+
+
+def test_est09_estagiario_sem_ocorrencias_nao_gera_nada():
+	base = BaseValoracao(
+		salario=Decimal("0"), divisor=1, estagio=True, bolsa=Decimal("1200.00"), carga_semanal_estagio=1800
+	)
+	assert valorar(base, MinutosPeriodo()) == []
+
+
+def test_est09_auxilio_transporte_com_desconto_zero():
+	base = BaseValoracao(
+		salario=Decimal("0"), divisor=1, estagio=True, bolsa=Decimal("1200.00"), vt_percentual=0
+	)
+	assert valores(MinutosPeriodo(vale_transporte=Decimal("150.00")), base) == {"VT": Decimal("150.00")}

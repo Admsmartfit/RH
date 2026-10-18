@@ -15,6 +15,10 @@
   "titulo",
   "cargos_section",
   "cargos",
+  "regras_section",
+  "regras",
+  "senao_acao",
+  "senao_valor",
   "condicoes_section",
   "combinacao",
   "condicoes"
@@ -87,6 +91,32 @@
    "options": "Regra CCT Cargo"
   },
   {
+   "fieldname": "regras_section",
+   "fieldtype": "Section Break",
+   "label": "Regras (SE / ENTÃO)",
+   "description": "Testadas pela ordem: vale a primeira regra verdadeira. Sem regras, vale o formato antigo (condições abaixo: paga o valor cheio ou nada)."
+  },
+  {
+   "fieldname": "regras",
+   "fieldtype": "Table",
+   "label": "Regras",
+   "options": "Regra Premiacao Regra"
+  },
+  {
+   "default": "Pagar percentual",
+   "fieldname": "senao_acao",
+   "fieldtype": "Select",
+   "label": "SENÃO",
+   "options": "Pagar percentual\nPagar valor\nNão pagar"
+  },
+  {
+   "default": "100",
+   "depends_on": "eval:doc.senao_acao!='Não pagar'",
+   "fieldname": "senao_valor",
+   "fieldtype": "Float",
+   "label": "SENÃO: % ou R$"
+  },
+  {
    "fieldname": "condicoes_section",
    "fieldtype": "Section Break",
    "label": "Condições (métricas do mês)"
@@ -107,7 +137,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-16 14:00:00.000000",
+ "modified": "2026-10-16 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Regra de Premiacao",

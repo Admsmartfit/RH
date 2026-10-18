@@ -83,14 +83,14 @@ Aprovado por: ____________ Data: ____/____/______
   vêm do Salary Component.
 - **VA/VR:** o valor é registrado (crédito no cartão, fora da folha); vai para a folha só a coparticipação
   (VA_DESC). O sistema avisa se a coparticipação passar de 20% (PAT).
-- Os 18 Salary Components são criados por fixture com `is_tax_applicable` básico; **INTRA_IND** está como
-  indenizatório.
+- Os 26 Salary Components são criados por fixture; as incidências padrão (campos "Incide INSS / FGTS /
+  férias e 13º") deixam **INTER, INTRA_IND, VA_DESC, VT, VT_DESC, DESC_EPI, BOLSA_DESC e RECESSO_EST** sem INSS/FGTS.
 
 - [ ] Prêmio: liberalidade (art. 457 §2º, sem incidência) ou previsto em CCT/habitual? Configurar as
       incidências do PREMIO.
 - [ ] VA/VR: empresa inscrita no PAT? Forma de pagamento (cartão, pecúnia)? Incidências.
-- [ ] Revisar as incidências de INSS/FGTS/IRRF de **cada** Salary Component (HE50, HE100, ADN, DSR_HE, DSR_HOR,
-      HORAS, AULAS, DSR_PROF, HATIV, JANELA, INTRA_IND, INTER, BH_PAG, PREMIO, FALTA, ATRASO, DSR_DESC, VA_DESC).
+- [ ] Revisar as incidências de INSS/FGTS/IRRF de **cada** Salary Component (as 26 rubricas,
+      inclusive VT, VT_DESC, INSALUB, PERIC, DESC_EPI, BOLSA_DESC e RECESSO_EST).
 - [ ] Base do valor-hora: hoje é o `base` do Salary Structure Assignment ÷ divisor. Adicionais fixos (ex.:
       insalubridade) entram na base de HE?
 - [ ] Intermitente: proporcionais por convocação (férias 1/12, terço 1/36, 13º 1/12, DSR 1/6).
@@ -169,3 +169,29 @@ Aprovado por: ____________ Data: ____/____/______
 - [ ] **Mascaramento de CPF/PIS** em listagens para perfis não-RH (PRD 3.7): ainda não implementado.
 - [ ] **CI no GitHub**: o repositório ainda não tem remoto.
 - [ ] **Conferência visual** do painel "Ponto" e do PDF do espelho por um usuário do RH.
+
+---
+
+## Itens do PRD de alterações (`docs/PRD-alteracoes.md`)
+
+Decisões tomadas com o negócio em 15 a 18/10/2026 que ainda precisam de jurídico ou contador:
+
+- [ ] **Interjornada sem INSS, FGTS, férias e 13º (AJ-15):** a empresa decidiu tirar as incidências; há decisões
+      nos dois sentidos (OJ 355 × art. 71, §4º). Configurável no Salary Component INTER.
+- [ ] **Descanso semanal de 35h (AJ-10):** a diferença vai na rubrica INTER, com as mesmas incidências.
+- [ ] **7 dias seguidos (OJ 410):** as horas do 7º dia são pagas a 100%. Confirmar a forma de pagamento.
+- [ ] **Atestado reduz o prêmio (AJ-07):** risco de ser visto como punição por doença.
+- [ ] **DSR do horista (AJ-12):** o contador deve tirar as horas extras da base do DSR (código 3) na folha, porque
+      o DSR sobre elas já sai na rubrica 9189 (DSR_HE). Aceite de setembro: R$ 268,84 com minutos exatos
+      (R$ 268,85 no PRD, com as horas arredondadas).
+- [ ] **Horista (AJ-14):** HE só acima de 8h/dia, 44h/semana ou em feriado; fim de semana e folga por escala são
+      normais. Contrato do fim de semana (intermitente ou horista com mínimo) ainda com o jurídico.
+- [ ] **Prazo da folga de feriado (AJ-03):** padrão "mesma semana" até a empresa definir.
+- [ ] **Domingo escalado = dia útil (AJ-02):** HE em domingo de trabalho da escala vai a 50%; o 100% fica para o
+      repouso semanal trabalhado.
+- [ ] **Insalubridade (AJ-17):** grau médio (20%) sobre o salário contratual do ASG; laudo anexado.
+- [ ] **Estagiário (EST):** hora excedente não paga (vira inconsistência Alta); falta desconta 1/30 da bolsa;
+      IRRF sobre a bolsa; proporção no quadro só como aviso; relatório semestral pendente com severidade Média.
+- [ ] **Arquivo GVBus (AJ-06):** falta o layout de 27 campos e um upload de teste no portal.
+- [ ] **Feriados (AJ-11):** RH cadastra os estaduais e municipais de cada filial em Feriado Regional (inclusive
+      Vila Velha) e roda a geração do ano.

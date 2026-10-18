@@ -20,6 +20,7 @@ from hrms_secullum_brasil.engine.banco_horas import (
 	Lancamento,
 	Resumo,
 	lancamentos_do_dia,
+	participa_na_data,
 	recalcular,
 	resumir,
 	vencimento,
@@ -39,15 +40,21 @@ class ConfigBanco:
 	permite_descontar: bool = d.BANCO_PERMITE_DESCONTAR_SALDO_NEGATIVO
 
 
-def participa(employee: str) -> bool:
-	return bool(
-		cint(
-			memo(
-				("participa_banco", employee),
-				lambda: frappe.db.get_value("Employee", employee, "participa_banco_horas"),
-			)
-		)
+def participa(employee: str, data) -> bool:
+	"""Participa do banco na data? A opção vale a partir de `banco_horas_desde` (AJ-05)."""
+	situacao = memo(
+		("participa_banco", employee),
+		lambda: frappe.db.get_value(
+			"Employee",
+			employee,
+			["participa_banco_horas", "banco_horas_desde", "tipo_remuneracao"],
+			as_dict=True,
+		),
 	)
+	if not situacao or situacao.tipo_remuneracao == "Estagiario":  # EST-04: estagiário nunca tem banco
+		return False
+	desde = getdate(situacao.banco_horas_desde) if situacao.banco_horas_desde else None
+	return participa_na_data(bool(cint(situacao.participa_banco_horas)), desde, getdate(data))
 
 
 def config_banco(employee: str, data) -> ConfigBanco:
@@ -85,7 +92,7 @@ def atualizar_dia(employee: str, data, resultado: ResultadoDia | None, apuracao:
 	if existentes:
 		frappe.db.delete(MOVIMENTO, {"name": ["in", [m.name for m in existentes]]})
 
-	if not resultado or not resultado.apurado or not participa(employee):
+	if not resultado or not resultado.apurado or not participa(employee, data):
 		if not adiar_banco(employee):
 			recalcular_colaborador(employee)
 		return 0, 0

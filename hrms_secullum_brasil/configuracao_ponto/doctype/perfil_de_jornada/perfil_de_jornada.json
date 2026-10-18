@@ -19,6 +19,7 @@
   "column_break_jornada",
   "compensacao_semanal",
   "permite_intervalo_estendido",
+  "repouso_semanal_padrao",
   "hora_virada_dia",
   "numero_horario_secullum",
   "dias_section",
@@ -107,7 +108,8 @@
    "default": "0",
    "fieldname": "compensacao_semanal",
    "fieldtype": "Check",
-   "label": "Apuração de HE por compensação semanal"
+   "label": "Apuração de HE por compensação semanal",
+   "hidden": 1
   },
   {
    "default": "0",
@@ -115,6 +117,14 @@
    "fieldname": "permite_intervalo_estendido",
    "fieldtype": "Check",
    "label": "Permite intervalo superior a 2h (acordo escrito ou CCT)"
+  },
+  {
+   "default": "Domingo, se for folga; senão a primeira folga",
+   "fieldname": "repouso_semanal_padrao",
+   "fieldtype": "Select",
+   "label": "Repouso semanal padrão",
+   "options": "Domingo, se for folga; senão a primeira folga\nSegunda-feira\nTerça-feira\nQuarta-feira\nQuinta-feira\nSexta-feira\nSábado\nDomingo",
+   "description": "Quando a Escala do Mês não marca qual folga é o repouso. As outras folgas são 'Folga compensada'."
   },
   {
    "default": "0",
@@ -151,7 +161,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-15 09:00:00.000000",
+ "modified": "2026-10-15 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Perfil de Jornada",

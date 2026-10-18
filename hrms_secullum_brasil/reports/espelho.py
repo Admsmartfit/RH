@@ -38,6 +38,19 @@ def _ocorrencias(employee: str, inicio, fim) -> dict:
 	return por_dia
 
 
+def _premios_do_mes(employee: str, inicio) -> str | None:
+	"""AJ-07: regra aplicada e números de cada métrica, para o colaborador entender o valor do prêmio."""
+	nome = frappe.db.get_value("Avaliacao Mensal", {"employee": employee, "mes": inicio}, "name")
+	if not nome:
+		return None
+	linhas = []
+	for p in frappe.get_doc("Avaliacao Mensal", nome).premios:
+		titulo = frappe.db.get_value("Regra de Premiacao", p.regra, "nome_premio") or p.regra
+		linhas.append(f"{titulo}: R$ {flt(p.valor):.2f} ({p.regra_aplicada or ''})")
+		linhas += [f"  {linha}" for linha in (p.detalhe or "").splitlines()]
+	return "\n".join(linhas) or None
+
+
 def gerar_espelho(fechamento, employee: str) -> str:
 	inicio, fim = getdate(fechamento.periodo_inicio), getdate(fechamento.periodo_fim)
 	emp = frappe.db.get_value(
@@ -100,6 +113,7 @@ def gerar_espelho(fechamento, employee: str) -> str:
 			f"Débitos {hhmm(debitos)} | Saldo atual {hhmm(atual)}"
 		),
 	}
+	totais["premios"] = _premios_do_mes(employee, inicio)
 	conteudo = json.dumps(
 		{"employee": employee, "periodo": [str(inicio), str(fim)], "dias": dias, "totais": totais},
 		sort_keys=True,

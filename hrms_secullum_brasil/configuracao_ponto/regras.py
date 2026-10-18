@@ -116,9 +116,14 @@ def get_regra_vigente(employee: str, data) -> Document | None:
 	da regra informada. Sem `regra_cct`: busca entre todas as CCTs da empresa do colaborador.
 	Em ambos os casos a regra precisa valer para o cargo (designation) do colaborador.
 	"""
-	data = getdate(data)
-	emp = _dados_colaborador(employee)
+	return regra_vigente_para(_dados_colaborador(employee), data)
 
+
+def regra_vigente_para(emp, data) -> Document | None:
+	"""Como `get_regra_vigente`, a partir dos dados do cadastro (name, company, designation, regra_cct): serve
+	também para um Employee em edição, antes de salvar (ex.: troca de cargo)."""
+	data = getdate(data)
+	employee = emp.name
 	if emp.regra_cct:
 		escopo = memo(
 			("cct_escopo", emp.regra_cct),

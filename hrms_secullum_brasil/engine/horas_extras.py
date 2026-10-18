@@ -8,9 +8,21 @@ from hrms_secullum_brasil.engine.defaults_legais import FaixaHE
 from hrms_secullum_brasil.engine.models import MinutosFaixa
 
 
-def tipo_do_dia(dia: date, *, feriado: bool, folga: bool) -> str:
+def tipo_do_dia(dia: date, *, feriado: bool, folga: bool, repouso: bool | None = None) -> str:
+	"""Tipo do dia para a faixa de HE.
+
+	`repouso` vem da escala (AJ-02): True = a folga é o repouso semanal; False = folga compensada (ou dia de
+	trabalho). Com escala, domingo escalado para trabalho é dia útil (decisão de 15/10/2026). Sem a
+	informação (None), vale a regra antiga: domingo, sábado e folga pelo dia da semana.
+	"""
 	if feriado:
 		return d.TIPO_DIA_FERIADO
+	if repouso is not None:
+		if folga:
+			if not repouso:
+				return d.TIPO_DIA_FOLGA_COMPENSADA
+			return d.TIPO_DIA_DOMINGO if dia.weekday() == 6 else d.TIPO_DIA_FOLGA
+		return d.TIPO_DIA_SABADO if dia.weekday() == 5 else d.TIPO_DIA_UTIL
 	if dia.weekday() == 6:
 		return d.TIPO_DIA_DOMINGO
 	if dia.weekday() == 5:

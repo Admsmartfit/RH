@@ -3,3 +3,5 @@ Ingestion
 Apuracao
 Payroll Handoff
 Reports
+Seguranca Trabalho
+Estagio

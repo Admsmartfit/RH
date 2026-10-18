@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "carga",
+  "employee",
+  "acao",
+  "usuario",
+  "momento",
+  "anterior",
+  "novo",
+  "justificativa"
+ ],
+ "fields": [
+  {
+   "fieldname": "carga",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Carga de VT",
+   "options": "Carga de VT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "acao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Ação",
+   "read_only": 1
+  },
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "label": "Usuário",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "momento",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Data e hora",
+   "read_only": 1
+  },
+  {
+   "fieldname": "anterior",
+   "fieldtype": "Small Text",
+   "label": "Valor anterior",
+   "read_only": 1
+  },
+  {
+   "fieldname": "novo",
+   "fieldtype": "Small Text",
+   "label": "Valor novo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "justificativa",
+   "fieldtype": "Small Text",
+   "label": "Justificativa",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Log Carga VT",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Gestor DP",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "hash",
+ "in_create": 1
+}

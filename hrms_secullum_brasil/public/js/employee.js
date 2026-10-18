@@ -1,6 +1,7 @@
 // Lista os outros vínculos (registros Employee) da mesma pessoa, identificada pelo CPF (PRD, 4.3).
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
+		mostrar_salario_e_piso(frm);
 		const campo = frm.fields_dict.pessoa_cpf_vinculos;
 		if (!campo) return;
 		const $wrapper = campo.$wrapper.empty();
@@ -37,3 +38,17 @@ frappe.ui.form.on("Employee", {
 			});
 	},
 });
+
+// AJ-01: salário vigente e piso do cargo (CCT), lado a lado.
+function mostrar_salario_e_piso(frm) {
+	if (frm.is_new()) return;
+	frappe
+		.call("hrms_secullum_brasil.configuracao_ponto.cargo.salario_e_piso", { employee: frm.doc.name })
+		.then(({ message: r }) => {
+			if (!r || (r.salario === null && r.piso === null)) return;
+			const moeda = (v) => (v === null ? __("não cadastrado") : format_currency(v, "BRL"));
+			frm.dashboard.add_indicator(__("Salário vigente: {0}", [moeda(r.salario)]), r.aviso ? "red" : "green");
+			frm.dashboard.add_indicator(__("Piso do cargo: {0}", [moeda(r.piso)]), "blue");
+			if (r.aviso) frm.dashboard.set_headline_alert(frappe.utils.escape_html(r.aviso), "orange");
+		});
+}

@@ -13,7 +13,13 @@ from itertools import pairwise
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.horas_extras import tipo_do_dia
 from hrms_secullum_brasil.engine.models import ALTA, BAIXA, MEDIA, Inconsistencia, RegraApuracao, ResultadoDia
-from hrms_secullum_brasil.engine.pareamento import minutos_relativos, parear, remover_duplicadas, truncar
+from hrms_secullum_brasil.engine.pareamento import (
+	inconsistencia_duplicadas,
+	minutos_relativos,
+	parear,
+	remover_duplicadas,
+	truncar,
+)
 
 CENTAVO = Decimal("0.01")
 
@@ -100,12 +106,12 @@ def apurar_dia_professor(entrada: EntradaProfessor) -> ResultadoDia:
 		(truncar(m) for m in entrada.marcacoes), regra.duplicidade_minutos
 	)
 	resultado.marcacoes_consideradas, resultado.marcacoes_ignoradas = consideradas, ignoradas
-	if ignoradas:
-		resultado.inconsistencias.append(
-			Inconsistencia(
-				"marcacao_duplicada", BAIXA, f"{len(ignoradas)} marcação(ões) duplicada(s) ignorada(s)."
-			)
-		)
+	duplicadas = inconsistencia_duplicadas(ignoradas, regra.duplicidade_minutos, regra.ignorar_duplicadas)
+	if duplicadas:
+		resultado.inconsistencias.append(Inconsistencia(*duplicadas))
+		if not regra.ignorar_duplicadas:
+			resultado.apurado = False
+			return resultado
 	pares_dt = parear(consideradas)
 	if pares_dt is None:
 		resultado.apurado = False

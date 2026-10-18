@@ -7,6 +7,8 @@ frappe.ui.form.on("Fechamento de Ponto", {
 					frm.dirty();
 					if (frm.doc.pendencias) {
 						frappe.msgprint({ title: __("Pendências que bloqueiam o fechamento"), indicator: "orange", message: frm.doc.pendencias.replace(/\n/g, "<br>") });
+					} else if (frm.doc.avisos) {
+						frappe.msgprint({ title: __("Avisos (não bloqueiam)"), indicator: "blue", message: frm.doc.avisos.replace(/\n/g, "<br>") });
 					}
 				})
 			);

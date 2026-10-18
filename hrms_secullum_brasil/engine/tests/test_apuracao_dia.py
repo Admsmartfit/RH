@@ -22,6 +22,18 @@ def test_marcacao_duplicada_e_ignorada_e_sinalizada():
 	assert r.tipos_inconsistencia() == ["marcacao_duplicada"]
 
 
+def test_aj16_so_sinalizar_duplicada_deixa_o_dia_sem_apuracao():
+	r = apurar("08:00", "08:01", "12:00", "13:00", "17:00", regra=RegraApuracao(ignorar_duplicadas=False))
+	assert not r.apurado
+	assert (r.normais, r.falta) == (0, 0)
+	assert [(i.tipo, i.severidade) for i in r.inconsistencias] == [("marcacao_duplicada", "Alta")]
+
+
+def test_aj16_so_sinalizar_sem_duplicada_apura_normalmente():
+	r = apurar("08:00", "12:00", "13:00", "17:00", regra=RegraApuracao(ignorar_duplicadas=False))
+	assert r.apurado and r.normais == 480 and r.inconsistencias == []
+
+
 def test_atraso_gera_desconto_e_inconsistencia():
 	r = apurar("08:30", "12:00", "13:00", "17:00")
 	assert (r.atraso, r.normais, r.hora_extra) == (30, 450, 0)

@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "column_break_trein",
+  "tipo_treinamento",
+  "data",
+  "validade",
+  "certificado"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_trein",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tipo_treinamento",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Treinamento",
+   "options": "Tipo de Treinamento",
+   "reqd": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "validade",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Válido até",
+   "read_only": 1
+  },
+  {
+   "fieldname": "certificado",
+   "fieldtype": "Attach",
+   "label": "Certificado"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Seguranca Trabalho",
+ "name": "Treinamento Realizado",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "TRE-.#####",
+ "naming_rule": "Expression (old style)",
+ "track_changes": 1
+}

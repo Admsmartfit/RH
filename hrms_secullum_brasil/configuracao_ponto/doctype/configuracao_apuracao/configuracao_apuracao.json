@@ -12,7 +12,18 @@
   "atestado_section",
   "criar_leave_application",
   "leave_type_atestado",
-  "leave_type_ferias"
+  "leave_type_ferias",
+  "feriados_section",
+  "feriados_modo_mock",
+  "custeio_section",
+  "emails_custeio_cct",
+  "vt_section",
+  "vt_alerta_pct",
+  "vt_trava_pct",
+  "vt_meses_media",
+  "vt_descontos",
+  "epi_section",
+  "epi_prazo_primeira_entrega"
  ],
  "fields": [
   {
@@ -69,11 +80,74 @@
    "fieldtype": "Link",
    "label": "Leave Type de férias",
    "options": "Leave Type"
+  },
+  {
+   "fieldname": "feriados_section",
+   "fieldtype": "Section Break",
+   "label": "Feriados"
+  },
+  {
+   "default": "0",
+   "fieldname": "feriados_modo_mock",
+   "fieldtype": "Check",
+   "label": "Feriados nacionais em modo mock (sem chamar a BrasilAPI)"
+  },
+  {
+   "fieldname": "custeio_section",
+   "fieldtype": "Section Break",
+   "label": "Custeio da CCT"
+  },
+  {
+   "fieldname": "emails_custeio_cct",
+   "fieldtype": "Small Text",
+   "label": "E-mails do relatório de contribuições da CCT",
+   "description": "Separados por vírgula (RH e financeiro). Vazio: usuários com o papel RH Ponto."
+  },
+  {
+   "fieldname": "vt_section",
+   "fieldtype": "Section Break",
+   "label": "Vale-transporte"
+  },
+  {
+   "default": "15",
+   "fieldname": "vt_alerta_pct",
+   "fieldtype": "Percent",
+   "label": "Pede motivo a partir de (variação sobre a média)"
+  },
+  {
+   "default": "30",
+   "fieldname": "vt_trava_pct",
+   "fieldtype": "Percent",
+   "label": "Trava acima de"
+  },
+  {
+   "default": "3",
+   "fieldname": "vt_meses_media",
+   "fieldtype": "Int",
+   "label": "Meses na média histórica (3 a 6)"
+  },
+  {
+   "fieldname": "vt_descontos",
+   "fieldtype": "Table",
+   "label": "Desconto em folha por tipo de colaborador",
+   "options": "VT Desconto Tipo",
+   "description": "Sem linha para o tipo: 6% (Lei 7.418/1985). Estagiário: 0% (Lei 11.788, art. 12)."
+  },
+  {
+   "fieldname": "epi_section",
+   "fieldtype": "Section Break",
+   "label": "EPI e uniforme"
+  },
+  {
+   "default": "5",
+   "fieldname": "epi_prazo_primeira_entrega",
+   "fieldtype": "Int",
+   "label": "Prazo para a primeira entrega após a admissão (dias)"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-16 14:00:00.000000",
+ "modified": "2026-10-18 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",

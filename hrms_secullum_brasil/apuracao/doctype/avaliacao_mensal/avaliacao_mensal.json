@@ -74,7 +74,8 @@
    "fieldtype": "Link",
    "label": "Gestor",
    "options": "Employee",
-   "read_only": 1
+   "read_only": 1,
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "column_break_1",
@@ -205,7 +206,7 @@
  ],
  "in_create": 1,
  "links": [],
- "modified": "2026-10-16 14:00:00.000000",
+ "modified": "2026-10-18 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Avaliacao Mensal",

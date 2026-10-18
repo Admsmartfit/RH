@@ -75,7 +75,8 @@
    "in_standard_filter": 1,
    "label": "Gestor",
    "options": "Employee",
-   "read_only": 1
+   "read_only": 1,
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "data",
@@ -94,7 +95,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tipo",
-   "options": "marcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\naula_nao_registrada\ncref_vencido\nerro_sync_cadastro\nbatida_periodo_fechado\nconfiguracao_ausente\nbanco_horas_rescisao\nlimite_aulas_excedido",
+   "options": "marcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\naula_nao_registrada\ncref_vencido\nerro_sync_cadastro\nbatida_periodo_fechado\nconfiguracao_ausente\nbanco_horas_rescisao\nlimite_aulas_excedido\ndomingos_sem_folga\nsete_dias_seguidos\ndescanso_semanal\nepi_sem_entrega\nepi_troca_vencida\nepi_ca_vencido\nepi_devolucao_pendente\naso_vencido\ntreinamento_vencido\nexcesso_jornada_estagio\nexcesso_semanal_estagio\ntce_vencido\nrelatorio_estagio_pendente\nseguro_estagio_vencido",
    "reqd": 1
   },
   {
@@ -158,7 +159,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-15 20:00:00.000000",
+ "modified": "2026-10-18 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Inconsistencia de Ponto",

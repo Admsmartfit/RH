@@ -1,0 +1,38 @@
+[
+ {
+  "doctype": "Feriado Regional",
+  "name": "FER-CARNAVAL-SEG",
+  "descricao": "Carnaval (segunda-feira)",
+  "categoria": "Ponto facultativo",
+  "abrangencia": "Nacional",
+  "tipo_data": "Móvel",
+  "dias_apos_pascoa": -48,
+  "ativo": 1,
+  "lei": "Ponto facultativo federal (portaria anual)",
+  "modified": "2026-10-15 15:00:00.000000"
+ },
+ {
+  "doctype": "Feriado Regional",
+  "name": "FER-CARNAVAL-TER",
+  "descricao": "Carnaval (terça-feira)",
+  "categoria": "Ponto facultativo",
+  "abrangencia": "Nacional",
+  "tipo_data": "Móvel",
+  "dias_apos_pascoa": -47,
+  "ativo": 1,
+  "lei": "Ponto facultativo federal (portaria anual)",
+  "modified": "2026-10-15 15:00:00.000000"
+ },
+ {
+  "doctype": "Feriado Regional",
+  "name": "FER-CORPUS-CHRISTI",
+  "descricao": "Corpus Christi",
+  "categoria": "Ponto facultativo",
+  "abrangencia": "Nacional",
+  "tipo_data": "Móvel",
+  "dias_apos_pascoa": 60,
+  "ativo": 1,
+  "lei": "Ponto facultativo federal (portaria anual)",
+  "modified": "2026-10-15 15:00:00.000000"
+ }
+]

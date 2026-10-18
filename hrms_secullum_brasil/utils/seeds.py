@@ -276,8 +276,8 @@ def criar_exemplos() -> dict:
 		[],
 		banco_modalidade="Anual",
 		banco_prazo_meses=12,
-		permite_reducao_intrajornada=1,
-		intervalo_reduzido=30,
+		percentual_adicional_noturno=25,  # C-01 (CCT ES cl. 12ª)
+		permite_reducao_intrajornada=0,  # C-04
 	)
 	perfil_instrutor = _perfil(
 		academia,
@@ -339,11 +339,15 @@ def criar_exemplos() -> dict:
 		{
 			"company": academia,
 			"tipo": "VR",
-			"descricao": "Vale-refeição (exemplo)",
+			"descricao": "Vale-refeição por dia trabalhado (exemplo)",
 			"vigencia_inicio": date(ANO, 1, 1),
-			"modo": "Fixo",
-			"valor_mensal": 550,
+			"modo": "Proporcional",  # C-03
+			"valor_dia": 25,
+			"desconta_falta": 1,
+			"desconta_atestado": 1,
 			"desconta_ferias": 1,
+			"desconta_afastamento": 1,
+			"desconta_abono": 1,
 		},
 	)
 	_get_or_insert(

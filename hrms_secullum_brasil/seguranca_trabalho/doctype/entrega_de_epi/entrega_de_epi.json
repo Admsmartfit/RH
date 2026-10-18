@@ -1,0 +1,255 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 16:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "department",
+  "gestor",
+  "column_break_entrega",
+  "data",
+  "tipo",
+  "motivo",
+  "itens_section",
+  "itens",
+  "confirmacao_section",
+  "ficha_assinada",
+  "confirmado_pelo_colaborador",
+  "confirmado_em",
+  "dano_section",
+  "dano_doloso",
+  "valor_desconto",
+  "justificativa_desconto",
+  "decidido_por",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Filial (estoque)",
+   "options": "Branch"
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1,
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "column_break_entrega",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Data",
+   "reqd": 1
+  },
+  {
+   "default": "Entrega",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Movimento",
+   "options": "Entrega\nDevolução",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Entrega'",
+   "default": "Admissão",
+   "fieldname": "motivo",
+   "fieldtype": "Select",
+   "label": "Motivo",
+   "options": "Admissão\nTroca\nPerda\nDano"
+  },
+  {
+   "fieldname": "itens_section",
+   "fieldtype": "Section Break",
+   "label": "Itens"
+  },
+  {
+   "fieldname": "itens",
+   "fieldtype": "Table",
+   "label": "Itens",
+   "options": "Entrega EPI Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "confirmacao_section",
+   "fieldtype": "Section Break",
+   "label": "Confirmação do colaborador"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "ficha_assinada",
+   "fieldtype": "Attach",
+   "label": "Ficha assinada (PDF)"
+  },
+  {
+   "fieldname": "confirmado_pelo_colaborador",
+   "fieldtype": "Check",
+   "label": "Confirmado pelo colaborador no sistema",
+   "read_only": 1,
+   "no_copy": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "confirmado_em",
+   "fieldtype": "Datetime",
+   "label": "Confirmado em",
+   "read_only": 1,
+   "no_copy": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "depends_on": "eval:doc.motivo=='Dano'",
+   "fieldname": "dano_section",
+   "fieldtype": "Section Break",
+   "label": "Dano doloso (exceção: desconto em folha)",
+   "description": "Nunca há desconto de EPI/uniforme em folha, salvo dano doloso com decisão registrada do RH."
+  },
+  {
+   "fieldname": "dano_doloso",
+   "fieldtype": "Check",
+   "label": "Dano doloso — decisão do RH"
+  },
+  {
+   "depends_on": "eval:doc.dano_doloso",
+   "fieldname": "valor_desconto",
+   "fieldtype": "Currency",
+   "label": "Valor do desconto",
+   "non_negative": 1
+  },
+  {
+   "depends_on": "eval:doc.dano_doloso",
+   "fieldname": "justificativa_desconto",
+   "fieldtype": "Small Text",
+   "label": "Justificativa da decisão"
+  },
+  {
+   "fieldname": "decidido_por",
+   "fieldtype": "Link",
+   "label": "Decidido por",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Entrega de EPI",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 22:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Seguranca Trabalho",
+ "name": "Entrega de EPI",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Colaborador",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "EPI-.#####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "track_changes": 1
+}

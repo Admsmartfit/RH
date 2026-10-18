@@ -4,6 +4,8 @@ from collections import defaultdict
 from collections.abc import Iterable
 from datetime import date, datetime, timedelta
 
+from hrms_secullum_brasil.engine.models import ALTA, BAIXA
+
 
 def truncar(marcacao: datetime) -> datetime:
 	"""Segundos são truncados (PRD, 5.13)."""
@@ -26,6 +28,25 @@ def remover_duplicadas(
 		else:
 			consideradas.append(marcacao)
 	return consideradas, ignoradas
+
+
+def inconsistencia_duplicadas(ignoradas: list[datetime], janela_minutos: int, ignorar: bool):
+	"""AJ-16: ignorando, só sinaliza (Baixa); no modo "só sinalizar", o dia não é apurado (Alta) até o RH
+	desconsiderar a batida por Tratamento de Ponto. Devolve (tipo, severidade, mensagem) ou None."""
+	if not ignoradas:
+		return None
+	if ignorar:
+		return (
+			"marcacao_duplicada",
+			BAIXA,
+			f"{len(ignoradas)} marcação(ões) a menos de {janela_minutos} min da anterior ignorada(s).",
+		)
+	return (
+		"marcacao_duplicada",
+		ALTA,
+		f"{len(ignoradas)} marcação(ões) a menos de {janela_minutos} min da anterior: desconsidere a duplicada "
+		"por Tratamento de Ponto (dia não apurado).",
+	)
 
 
 def parear(marcacoes: list[datetime]) -> list[tuple[datetime, datetime]] | None:

@@ -34,13 +34,24 @@
  },
  {
   "depends_on_payment_days": 0,
-  "description": "Súmula 172 TST",
+  "description": "Súmula 172 TST: reflexo das horas extras no DSR",
   "doctype": "Salary Component",
   "is_tax_applicable": 1,
-  "modified": "2026-10-16 18:00:00.000000",
-  "name": "DSR s/ HE e Adicional Noturno",
-  "salary_component": "DSR s/ HE e Adicional Noturno",
+  "modified": "2026-10-15 12:00:00.000000",
+  "name": "DSR s/ Horas Extras",
+  "salary_component": "DSR s/ Horas Extras",
   "salary_component_abbr": "DSR_HE",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Súmula 172 TST: reflexo do adicional noturno no DSR",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-15 12:00:00.000000",
+  "name": "DSR s/ Adicional Noturno",
+  "salary_component": "DSR s/ Adicional Noturno",
+  "salary_component_abbr": "DSR_ADN",
   "type": "Earning"
  },
  {
@@ -196,5 +207,83 @@
   "salary_component": "Desconto VA/VR",
   "salary_component_abbr": "VA_DESC",
   "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-18 10:00:00.000000",
+  "name": "Vale-Transporte",
+  "salary_component": "Vale-Transporte",
+  "salary_component_abbr": "VT",
+  "type": "Earning",
+  "do_not_include_in_total": 1,
+  "description": "Informativo: valor carregado no cartão (AJ-06)"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-18 10:00:00.000000",
+  "name": "Desconto Vale-Transporte",
+  "salary_component": "Desconto Vale-Transporte",
+  "salary_component_abbr": "VT_DESC",
+  "type": "Deduction",
+  "description": "6% do salário base, limitado ao benefício (Lei 7.418/1985)"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "CLT art. 192 (AJ-17)",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-18 14:00:00.000000",
+  "name": "Adicional de Insalubridade",
+  "salary_component": "Adicional de Insalubridade",
+  "salary_component_abbr": "INSALUB",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "CLT art. 193 (AJ-17)",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-18 14:00:00.000000",
+  "name": "Adicional de Periculosidade",
+  "salary_component": "Adicional de Periculosidade",
+  "salary_component_abbr": "PERIC",
+  "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Só dano doloso com decisão do RH (CLT art. 462, §1º) — AJ-18",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-18 16:00:00.000000",
+  "name": "Desconto Dano EPI",
+  "salary_component": "Desconto Dano EPI",
+  "salary_component_abbr": "DESC_EPI",
+  "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Faltas (1/30) e atrasos da bolsa-auxílio (EST-09)",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-10-19 01:00:00.000000",
+  "name": "Desconto Bolsa Estágio",
+  "salary_component": "Desconto Bolsa Estágio",
+  "salary_component_abbr": "BOLSA_DESC",
+  "type": "Deduction"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Recesso proporcional na rescisão do estágio (EST-06/EST-09)",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 1,
+  "modified": "2026-10-19 01:00:00.000000",
+  "name": "Recesso de Estágio Proporcional",
+  "salary_component": "Recesso de Estágio Proporcional",
+  "salary_component_abbr": "RECESSO_EST",
+  "type": "Earning"
  }
 ]

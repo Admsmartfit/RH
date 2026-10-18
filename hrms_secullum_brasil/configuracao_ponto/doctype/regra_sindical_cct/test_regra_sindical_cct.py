@@ -58,7 +58,7 @@ class TestRegraSindicalCCT(FrappeTestCase):
 		self.assertEqual(minutos_do_dia(cct.noturno_fim), 5 * 60)
 		self.assertEqual(
 			{f.tipo_dia: f.percentual for f in cct.faixas_hora_extra},
-			{"Útil": 50, "Sábado": 50, "Domingo": 100, "Feriado": 100, "Folga": 100},
+			{"Útil": 50, "Sábado": 50, "Domingo": 100, "Feriado": 100, "Folga": 100, "Folga compensada": 50},
 		)
 
 	def test_titulo_com_vigencia(self):

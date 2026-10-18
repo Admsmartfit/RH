@@ -1,0 +1,185 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "tipo",
+  "percentual",
+  "base_calculo",
+  "epi_neutraliza",
+  "column_break_vig",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "titulo",
+  "laudo_section",
+  "laudo_arquivo",
+  "laudo_numero",
+  "column_break_laudo",
+  "laudo_data",
+  "laudo_validade",
+  "quem_section",
+  "cargos",
+  "colaboradores"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Insalubridade",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo",
+   "options": "Insalubridade\nPericulosidade",
+   "reqd": 1
+  },
+  {
+   "default": "20",
+   "fieldname": "percentual",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Percentual",
+   "reqd": 1,
+   "description": "Periculosidade: sempre 30%. Insalubridade: 10, 20 ou 40% (grau do laudo)."
+  },
+  {
+   "default": "Salário base",
+   "fieldname": "base_calculo",
+   "fieldtype": "Select",
+   "label": "Base de cálculo",
+   "options": "Salário mínimo vigente\nSalário base\nPiso da CCT",
+   "reqd": 1
+  },
+  {
+   "fieldname": "epi_neutraliza",
+   "fieldtype": "Check",
+   "label": "O EPI neutraliza o risco (laudo)",
+   "description": "Marcado: o adicional não é pago enquanto o laudo atestar a neutralização."
+  },
+  {
+   "fieldname": "column_break_vig",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "label": "Vigência: início",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "label": "Vigência: fim"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Título"
+  },
+  {
+   "fieldname": "laudo_section",
+   "fieldtype": "Section Break",
+   "label": "Laudo"
+  },
+  {
+   "fieldname": "laudo_arquivo",
+   "fieldtype": "Attach",
+   "label": "Laudo (PDF)"
+  },
+  {
+   "fieldname": "laudo_numero",
+   "fieldtype": "Data",
+   "label": "Número"
+  },
+  {
+   "fieldname": "column_break_laudo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "laudo_data",
+   "fieldtype": "Date",
+   "label": "Data"
+  },
+  {
+   "fieldname": "laudo_validade",
+   "fieldtype": "Date",
+   "label": "Validade"
+  },
+  {
+   "fieldname": "quem_section",
+   "fieldtype": "Section Break",
+   "label": "Quem recebe",
+   "description": "Todos os colaboradores dos cargos listados e os colaboradores listados."
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table",
+   "label": "Cargos",
+   "options": "Regra CCT Cargo"
+  },
+  {
+   "fieldname": "colaboradores",
+   "fieldtype": "Table",
+   "label": "Colaboradores",
+   "options": "Adicional Risco Colaborador"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Regra de Adicional de Risco",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Saúde",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "ARISCO-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "titulo",
+ "track_changes": 1
+}

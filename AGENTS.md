@@ -40,7 +40,7 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Defaults legais** vivem em `engine/defaults_legais.py`. O `default` de cada campo no JSON do DocType deve repetir o valor; `engine/tests/test_defaults_legais.py` falha se divergirem.
 - **Regras com vigência:** usar `configuracao_ponto/regras.py` (`validar_sem_sobreposicao`, `get_regra_vigente`, `get_perfil_vigente`). Nunca resolver vigência com SQL ad hoc.
 - **Classe do controller:** nome do DocType sem espaços, preservando maiúsculas/minúsculas (`Perfil de Jornada` → `PerfildeJornada`).
-- **API Secullum:** referência em `docs/secullum_api.md`. Toda chamada passa por `SecullumClient`; nunca use `requests` direto fora de `integrations/secullum/client.py`. Testes Frappe usam o modo mock (`Configuracao Secullum.modo_mock`).
+- **API Secullum:** referência em `docs/secullum_api.md`. Toda chamada passa por `SecullumClient`; nunca use `requests` direto fora dos clientes de `integrations/` (`secullum/client.py`, `feriados/client.py`). Testes Frappe usam o modo mock (`Configuracao Secullum.modo_mock`).
 - **Marcação original (`Secullum Checkin Raw`) é imutável:** nunca use `doc.save()`/`delete_doc` nela. Só `ingestion/coleta_batidas.py` muda os campos de controle (status, substituição, espelho) via `frappe.db.set_value`. Correções do RH vão para Tratamento de Ponto (Etapa 5).
 - **Período fechado:** consulte `apuracao/periodos.py` (`periodo_fechado`, `fechado_ate`) antes de alterar qualquer dado de ponto de um dia.
 - **Mudou o dado de um dia → `apuracao/reapuracao.py:marcar_para_reapuracao`.**
@@ -54,6 +54,8 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Folha:** valores só pelo `engine/valoracao.py` e Additional Salary só pelo Fechamento de Ponto (`payroll_handoff/fechamento.py`). Período fechado = `Company.ponto_fechado_ate`, mantido por `atualizar_trava`; regras com vigência chamam `validar_edicao_em_periodo_fechado` no `validate`.
 - **Testes que usam rotinas do HRMS** (Payroll Entry, `get_payroll_entry`) podem fazer `frappe.db.commit()`: neutralize com `patch.object(frappe.db, "commit")`.
 - **Desempenho / modo lote** (`apuracao/lote.py`): leituras repetidas por dia (Employee, perfil/CCT vigentes, feriados, configurações) passam por `lote.memo`/`lote.documento`/`lote.valor_single`, que só fazem cache dentro de `modo_lote()` (fila de reapuração). Fora dele tudo é lido na hora. Efeitos por semana/colaborador (DSR, recálculo do banco) usam `adiar_semana`/`adiar_banco` e são concluídos em `servico._concluir_colaborador`. Nova leitura no caminho de `reapurar_dia` → memoize ou pré-carregue na `janela()`; meça com `utils/carga.py` (meta: 500 × 31 em < 5 min).
+- **Parâmetros do cargo** (piso, noturno, banco padrão) vêm de `configuracao_ponto/cargo.py`; participação no banco é sempre por data (`banco_horas.participa(employee, data)`, que respeita `banco_horas_desde`).
+- **Jornada do dia:** sempre por `configuracao_ponto/escala.py:dia_da_escala` (Escala Mensal com as trocas, senão o perfil). Troca de Escala nunca é lida na apuração: ao ser aprovada, ela grava na Escala Mensal.
 - **Erros operacionais** (sync, coleta) viram `Inconsistencia de Ponto` via `apuracao/inconsistencias.py`; jobs não devem levantar exceção por erro de negócio.
 
 ## Convenções de código

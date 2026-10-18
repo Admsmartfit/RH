@@ -16,6 +16,7 @@
   "tipo",
   "data_hora",
   "marcacao",
+  "data_folga",
   "motivo_section",
   "motivo",
   "anexo",
@@ -77,7 +78,8 @@
    "in_standard_filter": 1,
    "label": "Gestor",
    "options": "Employee",
-   "read_only": 1
+   "read_only": 1,
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "column_break_id",
@@ -97,7 +99,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tipo",
-   "options": "Inclusao de marcacao\nDesconsiderar marcacao\nAbono do dia",
+   "options": "Inclusao de marcacao\nDesconsiderar marcacao\nAbono do dia\nCompensação de feriado",
    "reqd": 1
   },
   {
@@ -114,6 +116,14 @@
    "label": "Marcação a desconsiderar",
    "mandatory_depends_on": "eval:doc.tipo=='Desconsiderar marcacao'",
    "options": "Secullum Checkin Raw"
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Compensação de feriado'",
+   "fieldname": "data_folga",
+   "fieldtype": "Date",
+   "label": "Data da folga compensatória",
+   "mandatory_depends_on": "eval:doc.tipo=='Compensação de feriado'",
+   "description": "O 'Dia de trabalho' é o feriado trabalhado; nesta data o colaborador folga sem falta."
   },
   {
    "fieldname": "motivo_section",
@@ -169,7 +179,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-15 09:00:00.000000",
+ "modified": "2026-10-18 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Tratamento de Ponto",

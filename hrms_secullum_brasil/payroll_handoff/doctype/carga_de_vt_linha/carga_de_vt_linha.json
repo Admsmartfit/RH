@@ -1,0 +1,242 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "designation",
+  "department",
+  "perfil_jornada",
+  "column_break_tarifas",
+  "tarifa1",
+  "qtd_tarifa1",
+  "tarifa2",
+  "qtd_tarifa2",
+  "valor_dia",
+  "dias_section",
+  "dias_previstos",
+  "acerto_anterior",
+  "dias_sugeridos",
+  "valor_sugerido",
+  "column_break_dias",
+  "dias",
+  "valor",
+  "inativo_desde",
+  "datas_previstas",
+  "travas_section",
+  "media",
+  "variacao",
+  "situacao",
+  "pendencias",
+  "column_break_travas",
+  "motivo",
+  "justificativa",
+  "aprovado_dp",
+  "aprovado_por"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.designation",
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Cargo",
+   "options": "Designation",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.perfil_jornada",
+   "fieldname": "perfil_jornada",
+   "fieldtype": "Link",
+   "label": "Perfil de Jornada",
+   "options": "Perfil de Jornada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tarifas",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tarifa1",
+   "fieldtype": "Link",
+   "label": "Tarifa 1",
+   "options": "Tarifa VT"
+  },
+  {
+   "fieldname": "qtd_tarifa1",
+   "fieldtype": "Int",
+   "label": "Qtd. diária 1"
+  },
+  {
+   "fieldname": "tarifa2",
+   "fieldtype": "Link",
+   "label": "Tarifa 2",
+   "options": "Tarifa VT"
+  },
+  {
+   "fieldname": "qtd_tarifa2",
+   "fieldtype": "Int",
+   "label": "Qtd. diária 2"
+  },
+  {
+   "fieldname": "valor_dia",
+   "fieldtype": "Currency",
+   "label": "Valor por dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "Dias e valor"
+  },
+  {
+   "fieldname": "dias_previstos",
+   "fieldtype": "Int",
+   "label": "Dias previstos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "acerto_anterior",
+   "fieldtype": "Int",
+   "label": "Acerto do mês anterior",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_sugeridos",
+   "fieldtype": "Int",
+   "label": "Dias sugeridos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "valor_sugerido",
+   "fieldtype": "Currency",
+   "label": "Valor sugerido",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_dias",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dias",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "valor",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Valor",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inativo_desde",
+   "fieldtype": "Date",
+   "label": "Inativo a partir de"
+  },
+  {
+   "fieldname": "datas_previstas",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Datas carregadas"
+  },
+  {
+   "fieldname": "travas_section",
+   "fieldtype": "Section Break",
+   "label": "Média e travas"
+  },
+  {
+   "fieldname": "media",
+   "fieldtype": "Currency",
+   "label": "Média histórica",
+   "read_only": 1
+  },
+  {
+   "fieldname": "variacao",
+   "fieldtype": "Percent",
+   "label": "Variação sobre a média",
+   "read_only": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Situação",
+   "options": "OK\nPede motivo\nTravada\nErro de cadastro\nInativo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pendencias",
+   "fieldtype": "Small Text",
+   "label": "Pendências de cadastro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_travas",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "motivo",
+   "fieldtype": "Select",
+   "label": "Motivo da variação",
+   "options": "\nHoras extras autorizadas\nTroca de escala\nAjuste retroativo\nOutro"
+  },
+  {
+   "fieldname": "justificativa",
+   "fieldtype": "Small Text",
+   "label": "Justificativa"
+  },
+  {
+   "fieldname": "aprovado_dp",
+   "fieldtype": "Check",
+   "label": "Liberado pelo Gestor de DP"
+  },
+  {
+   "fieldname": "aprovado_por",
+   "fieldtype": "Link",
+   "label": "Liberado por",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Carga de VT Linha",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1,
+ "row_format": "Dynamic"
+}

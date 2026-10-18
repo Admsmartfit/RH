@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome_treinamento",
+  "validade_meses",
+  "cargos_section",
+  "cargos"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_treinamento",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Treinamento",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "12",
+   "fieldname": "validade_meses",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Validade (meses)",
+   "non_negative": 1,
+   "description": "0 = não vence."
+  },
+  {
+   "fieldname": "cargos_section",
+   "fieldtype": "Section Break",
+   "label": "Cargos",
+   "description": "Vazio: todos os cargos."
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table",
+   "label": "Cargos",
+   "options": "Regra CCT Cargo"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Seguranca Trabalho",
+ "name": "Tipo de Treinamento",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:nome_treinamento",
+ "naming_rule": "By fieldname"
+}

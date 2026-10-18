@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, getdate
+from frappe.utils import cint, flt, formatdate, getdate, today
 
 from hrms_secullum_brasil.apuracao.adaptador import eh_feriado, lista_de_feriados
 from hrms_secullum_brasil.apuracao.beneficios import avaliar_colaborador
@@ -16,6 +16,8 @@ from hrms_secullum_brasil.apuracao.doctype.fechamento_banco_de_horas.fechamento_
 	minutos_pagos,
 )
 from hrms_secullum_brasil.apuracao.previdenciario import alertas_pendentes
+from hrms_secullum_brasil.configuracao_ponto.adicional_risco import adicional_do_colaborador
+from hrms_secullum_brasil.configuracao_ponto.cargo import aviso_piso_colaborador, percentual_noturno
 from hrms_secullum_brasil.configuracao_ponto.regras import (
 	RegraAmbiguaError,
 	get_perfil_vigente,
@@ -23,7 +25,10 @@ from hrms_secullum_brasil.configuracao_ponto.regras import (
 )
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.dsr import contar_dias
+from hrms_secullum_brasil.engine.feriados import fim_do_prazo_da_folga
 from hrms_secullum_brasil.engine.valoracao import BaseValoracao, LancamentoValorado, MinutosPeriodo, valorar
+from hrms_secullum_brasil.estagio.tce import get_tce_vigente
+from hrms_secullum_brasil.payroll_handoff.vale_transporte import percentual_desconto, vt_do_mes
 
 FECHAMENTO = "Fechamento de Ponto"
 CAMPOS_APURACAO = (
@@ -110,10 +115,47 @@ def pendencias(company: str, inicio, fim) -> list[str]:
 	):
 		mensagens.append(_("Há dias aguardando reapuração no período. Aguarde a fila processar."))
 
+	aguardando = feriados_aguardando_folga(colaboradores, inicio, fim)
+	if aguardando:
+		mensagens.append(
+			_('Feriado trabalhado aguardando a folga compensatória (CCT "Compensar com folga"): {0}').format(
+				"; ".join(aguardando)
+			)
+		)
+
 	sem_salario = [e for e in colaboradores if salario_vigente(e, fim) is None]
 	if sem_salario:
 		mensagens.append(_("Sem Salary Structure Assignment vigente: {0}").format(", ".join(sem_salario)))
 	return mensagens
+
+
+def feriados_aguardando_folga(colaboradores: list[str], inicio, fim) -> list[str]:
+	"""AJ-03: no modo "Compensar com folga", o feriado trabalhado sem compensação só vira HE 100% depois do
+	prazo; até lá, o fechamento espera (o RH lança a Compensação de feriado ou aguarda o prazo)."""
+	hoje = getdate(today())
+	itens = []
+	for ap in frappe.get_all(
+		"Apuracao Diaria",
+		filters={
+			"employee": ["in", colaboradores or [""]],
+			"data": ["between", [inicio, fim]],
+			"tipo_dia": d.TIPO_DIA_FERIADO,
+			"trabalhado": [">", 0],
+			"feriado_compensado": 0,
+		},
+		fields=["employee", "employee_name", "data"],
+	):
+		cct = _cct(ap.employee, ap.data)
+		if not cct or cct.get("feriado_trabalhado") != d.FERIADO_COMPENSAR:
+			continue
+		prazo = fim_do_prazo_da_folga(getdate(ap.data), cint(cct.get("prazo_folga_feriado_dias")))
+		if prazo >= hoje:
+			itens.append(
+				_("{0} em {1} (prazo até {2})").format(
+					ap.employee_name or ap.employee, formatdate(ap.data), formatdate(prazo)
+				)
+			)
+	return itens
 
 
 # ------------------------------------------------------------------ consolidação e valoração
@@ -149,7 +191,29 @@ def _percentual_he_util(cct) -> float:
 		for faixa in sorted(cct.faixas_hora_extra, key=lambda f: cint(f.de_min)):
 			if faixa.tipo_dia == d.TIPO_DIA_UTIL:
 				return flt(faixa.percentual)
-	return 50
+	return d.PERCENTUAL_MINIMO_HE
+
+
+def _complemento_minimo(emp, docs, dsr, horas_normais: int) -> int:
+	"""AJ-14: horas que faltaram para o mínimo do contrato (mês, ou soma das semanas que terminam no mês)."""
+	if not flt(emp.get("minimo_horas")):
+		return 0
+	if emp.get("minimo_periodo") == "Semana":
+		return sum(cint(s.complemento_minimo_minutos) for s in dsr)
+	minimo = round(flt(emp.minimo_horas) * 60)
+	if cint(emp.get("faltas_reduzem_minimo")):
+		minimo -= sum(cint(a.falta) for a in docs)
+	return max(0, minimo - horas_normais)
+
+
+def desconto_epi(employee: str, inicio, fim) -> Decimal:
+	"""AJ-18: descontos por dano doloso de EPI/uniforme decididos pelo RH no período."""
+	valores = frappe.get_all(
+		"Entrega de EPI",
+		filters={"employee": employee, "docstatus": 1, "dano_doloso": 1, "data": ["between", [inicio, fim]]},
+		pluck="valor_desconto",
+	)
+	return Decimal(str(sum(flt(v) for v in valores)))
 
 
 def apuracoes(employee: str, inicio, fim) -> list:
@@ -177,7 +241,15 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 	dsr = frappe.get_all(
 		"DSR Semanal",
 		filters={"employee": employee, "semana_fim": ["between", [inicio, fim]]},
-		fields=["dsr_perdido_minutos", "dsr_horista_minutos"],
+		fields=[
+			"dsr_perdido_minutos",
+			"dsr_horista_minutos",
+			"descanso_suprimido_minutos",
+			"he_semanal_minutos",
+			"complemento_minimo_minutos",
+			"dias_descanso",
+			"faltas_injustificadas",
+		],
 	)
 	lista = lista_de_feriados(emp)
 	uteis, descanso = contar_dias(
@@ -196,31 +268,68 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		)
 		aulas_semanais = cint(grade[0].aulas_semanais) if grade else 0
 
+	horista = tipo in HORISTAS
+	horas_normais = sum(cint(a.normais) for a in docs) if horista else 0
+	he_semanal = sum(cint(s.he_semanal_minutos) for s in dsr) if horista else 0
+	complemento = 0
+	dsr_mensal = horista and cct and cct.get("dsr_horista_modo") == d.DSR_HORISTA_MENSAL
+	if horista:
+		# AJ-14: acima de 44h na semana é HE (faixa de dia útil); o resto continua normal
+		horas_normais -= he_semanal
+		if he_semanal:
+			he_pagas[_percentual_he_util(cct)] += he_semanal
+		complemento = _complemento_minimo(emp, docs, dsr, horas_normais)
+	descanso_dsr = descanso
+	if dsr_mensal and cint(cct.get("falta_horista_desconta_dsr")):
+		descanso_dsr -= sum(cint(s.dias_descanso) for s in dsr if cint(s.faltas_injustificadas))
+
 	minutos = MinutosPeriodo(
 		he_por_percentual=dict(he_pagas),
 		noturno_ficto=sum(cint(a.noturno_ficto) for a in docs),
 		intrajornada=sum(cint(a.intrajornada_suprimida) for a in docs),
 		interjornada=sum(cint(a.interjornada_suprimida) for a in docs),
+		descanso_semanal=sum(cint(s.descanso_suprimido_minutos) for s in dsr),  # AJ-10
 		falta=sum(cint(a.falta) for a in docs),
 		atraso=sum(cint(a.atraso) - cint(a.atraso_banco) for a in docs),
 		dsr_perdido=sum(cint(s.dsr_perdido_minutos) for s in dsr),
 		dsr_horista=sum(cint(s.dsr_horista_minutos) for s in dsr),
-		horas_normais=sum(cint(a.normais) for a in docs) if tipo in HORISTAS else 0,
+		horas_normais=horas_normais,
+		complemento_minimo=complemento,
+		dsr_horista_mensal=bool(dsr_mensal),
+		dsr_horista_base=(
+			horas_normais
+			+ complemento
+			+ (sum(he_pagas.values()) if dsr_mensal and cint(cct.get("dsr_horista_inclui_he")) else 0)
+		)
+		if dsr_mensal
+		else 0,
 		banco_pago_por_percentual=banco,
 		dias_uteis=uteis,
-		dias_descanso=descanso,
+		dias_descanso=descanso_dsr if dsr_mensal else descanso,
+		vale_transporte=vt_do_mes(employee, emp.company, inicio),  # AJ-06
+		faltas_dias=sum(1 for a in docs if cint(a.falta) and not cint(a.abonado)),  # AJ-17
+		desconto_epi=desconto_epi(employee, inicio, fim),  # AJ-18: só dano doloso
 		aulas_semanais=aulas_semanais,
 		aulas_nao_dadas=sum(cint(a.aulas_nao_dadas) for a in docs),
 		janela=sum(cint(a.janela_minutos) for a in docs),
 	)
+	salario = salario_vigente(employee, fim) or Decimal("0")
+	risco, avisos_risco = adicional_do_colaborador(employee, fim, salario)  # AJ-17
+	tce = (
+		(get_tce_vigente(employee, fim) or get_tce_vigente(employee, inicio))
+		if tipo == "Estagiario"
+		else None
+	)
 	base = BaseValoracao(
-		salario=salario_vigente(employee, fim) or Decimal("0"),
+		salario=salario,
 		divisor=_divisor(emp, fim),
-		percentual_noturno=flt(cct.percentual_adicional_noturno) if cct else d.PERCENTUAL_ADICIONAL_NOTURNO,
+		percentual_noturno=percentual_noturno(cct, emp.designation),  # AJ-04: o do cargo, se houver
 		percentual_intrajornada=flt(cct.percentual_indenizacao_intrajornada)
 		if cct
 		else d.PERCENTUAL_INDENIZACAO_INTRAJORNADA,
-		percentual_interjornada=_percentual_he_util(cct),
+		percentual_interjornada=flt(cct.percentual_interjornada)
+		if cct
+		else d.PERCENTUAL_INTERJORNADA,  # AJ-15
 		valor_hora_aula=Decimal(str(flt(emp.valor_hora_aula))) if professor else None,
 		semanas_mes=flt(cct.semanas_mes_professor)
 		if cct and flt(cct.semanas_mes_professor)
@@ -229,6 +338,13 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		janela_remunerada=bool(cint(cct.janela_remunerada)) if cct else False,
 		percentual_janela=flt(cct.percentual_janela) if cct else 0,
 		duracao_hora_aula=cint(cct.duracao_hora_aula) if cct else 0,
+		horista=horista,
+		vt_percentual=percentual_desconto(tipo),
+		adicional_risco=risco.valor_mensal if risco else Decimal("0"),
+		codigo_risco=risco.codigo if risco else "",
+		estagio=tce is not None,  # EST-09: só BOLSA_DESC
+		bolsa=Decimal(str(flt(tce.bolsa))) if tce else Decimal("0"),
+		carga_semanal_estagio=cint(tce.carga_semanal) if tce else 0,
 	)
 	info = {
 		"tipo_remuneracao": tipo,
@@ -236,6 +352,7 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		"hora_extra": sum(he_pagas.values()),
 		"falta": minutos.falta,
 		"apuracoes": docs,
+		"avisos": avisos_risco,
 	}
 	return base, minutos, info
 
@@ -266,11 +383,25 @@ def calcular(doc) -> None:
 	inicio, fim = getdate(doc.periodo_inicio), getdate(doc.periodo_fim)
 	doc.set("colaboradores", [])
 	doc.set("lancamentos", [])
+	avisos = []
 	mes_inteiro = inicio.day == 1 and (fim + timedelta(days=1)).day == 1 and inicio.month == fim.month
 	for employee in colaboradores_do_periodo(doc.company, inicio, fim):
 		if mes_inteiro:
 			avaliar_colaborador(employee, inicio.year, inicio.month)
 		base, minutos, info = consolidar(employee, inicio, fim)
+		aviso = aviso_piso_colaborador(employee, base.salario, fim)  # AJ-01: alerta, não bloqueia
+		for tipo, texto in (
+			("aso_vencido", "ASO vencido"),
+			("treinamento_vencido", "treinamento vencido"),
+		):  # AJ-19
+			if frappe.db.exists(
+				"Inconsistencia de Ponto", {"employee": employee, "tipo": tipo, "status": "Aberta"}
+			):
+				avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {texto}")
+		for aviso_risco in info.get("avisos") or []:  # AJ-17: laudo vencido ou ausente
+			avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {aviso_risco}")
+		if aviso:
+			avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {aviso}")
 		premios, coparticipacao = premios_e_coparticipacao(employee, inicio, fim)
 		lancamentos: list[LancamentoValorado] = valorar(
 			base, minutos, premios=premios, coparticipacao=coparticipacao
@@ -289,6 +420,9 @@ def calcular(doc) -> None:
 					"employee": employee,
 					"codigo": lanc.codigo,
 					"salary_component": nome_componente,
+					"codigo_folha": frappe.get_cached_value(
+						"Salary Component", nome_componente, "codigo_folha"
+					),
 					"tipo": tipo,
 					"minutos_base": lanc.minutos_base,
 					"valor": lanc.valor,
@@ -312,6 +446,7 @@ def calcular(doc) -> None:
 		)
 	doc.total_proventos = sum(flt(c.proventos) for c in doc.colaboradores)
 	doc.total_descontos = sum(flt(c.descontos) for c in doc.colaboradores)
+	doc.avisos = "\n".join(avisos) or None
 
 
 # ------------------------------------------------------------------ hash

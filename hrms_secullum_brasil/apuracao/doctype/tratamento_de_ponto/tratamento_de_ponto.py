@@ -7,10 +7,20 @@ dia. O tratamento nunca altera a Secullum Checkin Raw: só muda o que entra no c
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import date_diff, get_datetime, getdate, now_datetime
+from frappe.utils import cint, date_diff, formatdate, get_datetime, getdate, now_datetime
 
-from hrms_secullum_brasil.apuracao.adaptador import DESCONSIDERAR, INCLUSAO, RAW
+from hrms_secullum_brasil.apuracao.adaptador import (
+	COMPENSACAO,
+	DESCONSIDERAR,
+	INCLUSAO,
+	RAW,
+	eh_feriado,
+	lista_de_feriados,
+)
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
+from hrms_secullum_brasil.configuracao_ponto.regras import RegraAmbiguaError, get_regra_vigente
+from hrms_secullum_brasil.engine import defaults_legais as d
+from hrms_secullum_brasil.engine.feriados import erros_compensacao
 
 
 class TratamentodePonto(Document):
@@ -20,9 +30,13 @@ class TratamentodePonto(Document):
 			self._validar_inclusao()
 		elif self.tipo == DESCONSIDERAR:
 			self._validar_desconsideracao()
+		elif self.tipo == COMPENSACAO:
+			self._validar_compensacao()
 		else:
 			self.data_hora = None
 			self.marcacao = None
+		if self.tipo != COMPENSACAO:
+			self.data_folga = None
 		self._validar_duplicidade()
 
 	def before_cancel(self):
@@ -63,6 +77,30 @@ class TratamentodePonto(Document):
 		if abs(date_diff(getdate(raw.data), getdate(self.data))) > 1:
 			frappe.throw(_("A marcação {0} não pertence a este dia de trabalho.").format(self.marcacao))
 
+	def _validar_compensacao(self):
+		"""AJ-03: o dia de trabalho é o feriado trabalhado; a folga vem depois, dentro do prazo da CCT."""
+		self.data_hora = None
+		self.marcacao = None
+		if not self.data_folga:
+			frappe.throw(_("Informe a data da folga compensatória."))
+		cct = _cct(self.employee, self.data)
+		modo = (cct.get("feriado_trabalhado") if cct else None) or d.FERIADO_TRABALHADO_PADRAO
+		if modo == d.FERIADO_PAGAR:
+			frappe.throw(
+				_(
+					"A Regra Sindical CCT do colaborador manda pagar o feriado trabalhado a 100%: não há compensação."
+				)
+			)
+		if periodo_fechado(self.employee, self.data_folga):
+			frappe.throw(_("O ponto do dia da folga ({0}) está fechado.").format(formatdate(self.data_folga)))
+		prazo = cint(cct.get("prazo_folga_feriado_dias")) if cct else d.PRAZO_FOLGA_FERIADO_DIAS
+		emp = frappe.get_doc("Employee", self.employee)
+		erros = erros_compensacao(
+			getdate(self.data), getdate(self.data_folga), prazo, eh_feriado(lista_de_feriados(emp), self.data)
+		)
+		if erros:
+			frappe.throw(erros, title=_("Compensação de feriado inválida"), as_list=True)
+
 	def _validar_duplicidade(self):
 		filtros = {
 			"name": ["!=", self.name],
@@ -83,3 +121,12 @@ class TratamentodePonto(Document):
 		from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 
 		reapurar_dia(self.employee, self.data)
+		if self.tipo == COMPENSACAO and self.data_folga:
+			reapurar_dia(self.employee, self.data_folga)
+
+
+def _cct(employee: str, data):
+	try:
+		return get_regra_vigente(employee, data)
+	except RegraAmbiguaError:
+		return None

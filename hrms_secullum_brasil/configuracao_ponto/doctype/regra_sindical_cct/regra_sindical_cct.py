@@ -38,6 +38,7 @@ class RegraSindicalCCT(Document):
 		self.titulo = titulo_com_vigencia(self.sindicato, self.vigencia_inicio, self.vigencia_fim)
 		self._validar_parametros()
 		self._validar_cargos()
+		self._validar_parametros_cargo()
 		validar_sem_sobreposicao(
 			self,
 			carregar_regras_cct(
@@ -54,6 +55,39 @@ class RegraSindicalCCT(Document):
 	def _validar_cargos(self):
 		if len(self._cargos()) != len(self.cargos):
 			frappe.throw(_("Há cargos repetidos na tabela de cargos."))
+
+	def _validar_parametros_cargo(self):
+		"""AJ-01, AJ-04 e AJ-05: piso, adicional noturno e banco padrão por cargo."""
+		erros = []
+		vistos = set()
+		escopo = self._cargos()
+		minimo_noturno = max(
+			flt(self.percentual_adicional_noturno), defaults_legais.PERCENTUAL_ADICIONAL_NOTURNO
+		)
+		for linha in self.parametros_cargo:
+			if linha.designation in vistos:
+				erros.append(_("Cargo {0} repetido nos parâmetros por cargo.").format(linha.designation))
+			vistos.add(linha.designation)
+			if escopo and linha.designation not in escopo:
+				erros.append(_("Cargo {0} não está na lista de cargos desta CCT.").format(linha.designation))
+			if (
+				flt(linha.percentual_noturno) and flt(linha.percentual_noturno) < minimo_noturno
+			):  # vazio ou 0 = o da CCT
+				erros.append(
+					_(
+						"Adicional noturno do cargo {0} ({1}%) menor que o mínimo de {2}% (Art. 73 CLT e CCT)."
+					).format(linha.designation, flt(linha.percentual_noturno), minimo_noturno)
+				)
+			if (
+				flt(linha.valor_piso)
+				and linha.tipo_piso == "Mensalista"
+				and not flt(linha.carga_referencia_horas)
+			):
+				erros.append(
+					_("Informe a carga semanal de referência do piso do cargo {0}.").format(linha.designation)
+				)
+		if erros:
+			frappe.throw(erros, title=_("Parâmetros por cargo inválidos"), as_list=True)
 
 	def _validar_parametros(self):
 		faixas = [

@@ -1,0 +1,321 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 21:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "department",
+  "instituicao",
+  "agente",
+  "curso",
+  "nivel_ensino",
+  "column_break_tce",
+  "obrigatorio",
+  "pcd",
+  "vigencia_inicio",
+  "vigencia_fim",
+  "tce_anterior",
+  "titulo",
+  "jornada_section",
+  "carga_diaria",
+  "carga_semanal",
+  "reduz_dia_de_prova",
+  "column_break_bolsa",
+  "bolsa",
+  "auxilio_transporte",
+  "auxilio_transporte_base",
+  "supervisao_section",
+  "supervisor",
+  "seguradora",
+  "apolice",
+  "column_break_seguro",
+  "seguro_fim",
+  "seguro_valor",
+  "tce_assinado",
+  "calendario_section",
+  "calendario",
+  "saldo_recesso",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Estagiário",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Departamento",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "instituicao",
+   "fieldtype": "Link",
+   "label": "Instituição de ensino",
+   "options": "Instituicao de Ensino",
+   "reqd": 1
+  },
+  {
+   "fieldname": "agente",
+   "fieldtype": "Link",
+   "label": "Agente de integração",
+   "options": "Agente de Integracao"
+  },
+  {
+   "fieldname": "curso",
+   "fieldtype": "Data",
+   "label": "Curso"
+  },
+  {
+   "fieldname": "nivel_ensino",
+   "fieldtype": "Select",
+   "label": "Nível de ensino",
+   "options": "Superior\nProfissional de nível médio\nMédio regular\nEducação especial\nFundamental EJA",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_tce",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "obrigatorio",
+   "fieldtype": "Check",
+   "label": "Estágio obrigatório"
+  },
+  {
+   "fieldname": "pcd",
+   "fieldtype": "Check",
+   "label": "Pessoa com deficiência"
+  },
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início",
+   "reqd": 1
+  },
+  {
+   "fieldname": "vigencia_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Fim previsto",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tce_anterior",
+   "fieldtype": "Link",
+   "label": "Termo aditivo de (TCE anterior)",
+   "options": "Termo de Compromisso de Estagio"
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Título"
+  },
+  {
+   "fieldname": "jornada_section",
+   "fieldtype": "Section Break",
+   "label": "Jornada e bolsa"
+  },
+  {
+   "fieldname": "carga_diaria",
+   "fieldtype": "Int",
+   "label": "Carga diária (min)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "carga_semanal",
+   "fieldtype": "Int",
+   "label": "Carga semanal (min)",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "reduz_dia_de_prova",
+   "fieldtype": "Check",
+   "label": "Dia de prova reduz a jornada à metade"
+  },
+  {
+   "fieldname": "column_break_bolsa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bolsa",
+   "fieldtype": "Currency",
+   "label": "Bolsa-auxílio mensal"
+  },
+  {
+   "fieldname": "auxilio_transporte",
+   "fieldtype": "Currency",
+   "label": "Auxílio-transporte"
+  },
+  {
+   "default": "Mensal",
+   "fieldname": "auxilio_transporte_base",
+   "fieldtype": "Select",
+   "label": "Auxílio-transporte por",
+   "options": "Mensal\nDia"
+  },
+  {
+   "fieldname": "supervisao_section",
+   "fieldtype": "Section Break",
+   "label": "Supervisão e seguro"
+  },
+  {
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "label": "Supervisor",
+   "options": "Employee",
+   "reqd": 1,
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "seguradora",
+   "fieldtype": "Data",
+   "label": "Seguradora"
+  },
+  {
+   "fieldname": "apolice",
+   "fieldtype": "Data",
+   "label": "Apólice"
+  },
+  {
+   "fieldname": "column_break_seguro",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "seguro_fim",
+   "fieldtype": "Date",
+   "label": "Seguro válido até"
+  },
+  {
+   "fieldname": "seguro_valor",
+   "fieldtype": "Currency",
+   "label": "Valor segurado"
+  },
+  {
+   "fieldname": "tce_assinado",
+   "fieldtype": "Attach",
+   "label": "TCE assinado"
+  },
+  {
+   "fieldname": "calendario_section",
+   "fieldtype": "Section Break",
+   "label": "Calendário acadêmico"
+  },
+  {
+   "fieldname": "calendario",
+   "fieldtype": "Table",
+   "label": "Calendário",
+   "options": "Calendario Academico Estagio",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "saldo_recesso",
+   "fieldtype": "Float",
+   "label": "Saldo de recesso (dias)",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Corrige",
+   "no_copy": 1,
+   "options": "Termo de Compromisso de Estagio",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Estagio",
+ "name": "Termo de Compromisso de Estagio",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Colaborador",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "TCE-.#####",
+ "naming_rule": "Expression (old style)",
+ "is_submittable": 1,
+ "title_field": "titulo",
+ "track_changes": 1
+}

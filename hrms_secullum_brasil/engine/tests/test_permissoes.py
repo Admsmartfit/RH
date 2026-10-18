@@ -61,7 +61,11 @@ def test_colaborador_so_le(nome):
 		)
 
 
-@pytest.mark.parametrize("nome", sorted(DOCTYPES))
+# Exceção decidida em 15/10/2026 (AJ-09): o gestor aprova as trocas de escala da própria equipe.
+GESTOR_APROVA = {"Troca de Escala"}
+
+
+@pytest.mark.parametrize("nome", sorted(set(DOCTYPES) - GESTOR_APROVA))
 def test_gestor_nunca_submete_nem_cancela(nome):
 	for p in permissoes(nome, "Gestor Ponto"):
 		assert not p.get("submit") and not p.get("cancel") and not p.get("amend"), nome
@@ -113,3 +117,13 @@ def test_configuracoes_sao_single_e_so_rh():
 	for nome in ("Configuracao Secullum", "Configuracao Apuracao"):
 		assert DOCTYPES[nome].get("issingle") == 1
 		assert {p["role"] for p in DOCTYPES[nome]["permissions"]} == {"System Manager", "RH Ponto"}
+
+
+@pytest.mark.parametrize("nome", sorted(DOCTYPES))
+def test_links_secundarios_para_employee_ignoram_user_permission(nome):
+	"""O HRMS cria User Permission de Employee para o usuário do colaborador; um segundo link para Employee
+	(gestor, supervisor, cobrindo) esconderia os registros do próprio colaborador. A visibilidade por linha é
+	do app (permission_query_conditions)."""
+	for f in DOCTYPES[nome]["fields"]:
+		if f.get("fieldtype") == "Link" and f.get("options") == "Employee" and f["fieldname"] != "employee":
+			assert f.get("ignore_user_permissions"), (nome, f["fieldname"])

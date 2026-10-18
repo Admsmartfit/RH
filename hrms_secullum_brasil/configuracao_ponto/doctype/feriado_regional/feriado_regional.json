@@ -1,0 +1,149 @@
+{
+ "actions": [],
+ "autoname": "FER-.#####",
+ "creation": "2026-10-15 15:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "descricao",
+  "categoria",
+  "abrangencia",
+  "uf",
+  "municipio",
+  "column_break_data",
+  "tipo_data",
+  "dia",
+  "mes",
+  "dias_apos_pascoa",
+  "lei",
+  "ativo"
+ ],
+ "fields": [
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Descrição",
+   "reqd": 1
+  },
+  {
+   "default": "Feriado",
+   "fieldname": "categoria",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Categoria",
+   "options": "Feriado\nPonto facultativo",
+   "reqd": 1,
+   "description": "Ponto facultativo só entra na lista da empresa que o adotar (Empresa → Pontos facultativos adotados)."
+  },
+  {
+   "default": "Municipal",
+   "fieldname": "abrangencia",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Abrangência",
+   "options": "Nacional\nEstadual\nMunicipal",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.abrangencia!='Nacional'",
+   "fieldname": "uf",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "UF",
+   "options": "\nAC\nAL\nAP\nAM\nBA\nCE\nDF\nES\nGO\nMA\nMT\nMS\nMG\nPA\nPB\nPR\nPE\nPI\nRJ\nRN\nRS\nRO\nRR\nSC\nSP\nSE\nTO"
+  },
+  {
+   "depends_on": "eval:doc.abrangencia=='Municipal'",
+   "fieldname": "municipio",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Município"
+  },
+  {
+   "fieldname": "column_break_data",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Fixa",
+   "fieldname": "tipo_data",
+   "fieldtype": "Select",
+   "label": "Data",
+   "options": "Fixa\nMóvel",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo_data=='Fixa'",
+   "fieldname": "dia",
+   "fieldtype": "Int",
+   "label": "Dia"
+  },
+  {
+   "depends_on": "eval:doc.tipo_data=='Fixa'",
+   "fieldname": "mes",
+   "fieldtype": "Int",
+   "label": "Mês"
+  },
+  {
+   "depends_on": "eval:doc.tipo_data=='Móvel'",
+   "fieldname": "dias_apos_pascoa",
+   "fieldtype": "Int",
+   "label": "Dias depois da Páscoa",
+   "description": "Negativo = antes (Carnaval: -48 e -47; Corpus Christi: 60; N. Sra. da Penha: 8)."
+  },
+  {
+   "fieldname": "lei",
+   "fieldtype": "Data",
+   "label": "Fonte (lei)"
+  },
+  {
+   "default": "1",
+   "fieldname": "ativo",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Ativo"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Feriado Regional",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "search_fields": "descricao,uf,municipio",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "descricao",
+ "track_changes": 1
+}

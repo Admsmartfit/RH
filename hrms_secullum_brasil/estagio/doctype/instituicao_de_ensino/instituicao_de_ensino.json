@@ -1,0 +1,93 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 21:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome",
+  "cnpj",
+  "uf",
+  "municipio",
+  "column_break_ie",
+  "contato",
+  "email_relatorios"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "cnpj",
+   "fieldtype": "Data",
+   "label": "CNPJ"
+  },
+  {
+   "fieldname": "uf",
+   "fieldtype": "Select",
+   "label": "UF",
+   "options": "\nAC\nAL\nAP\nAM\nBA\nCE\nDF\nES\nGO\nMA\nMT\nMS\nMG\nPA\nPB\nPR\nPE\nPI\nRJ\nRN\nRS\nRO\nRR\nSC\nSP\nSE\nTO"
+  },
+  {
+   "fieldname": "municipio",
+   "fieldtype": "Data",
+   "label": "Município"
+  },
+  {
+   "fieldname": "column_break_ie",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contato",
+   "fieldtype": "Data",
+   "label": "Contato"
+  },
+  {
+   "fieldname": "email_relatorios",
+   "fieldtype": "Data",
+   "label": "E-mail para os relatórios",
+   "options": "Email"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 21:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Estagio",
+ "name": "Instituicao de Ensino",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:nome",
+ "naming_rule": "By fieldname"
+}

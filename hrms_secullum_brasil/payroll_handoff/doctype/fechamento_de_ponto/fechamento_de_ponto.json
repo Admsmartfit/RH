@@ -21,6 +21,7 @@
   "total_descontos",
   "pendencias_section",
   "pendencias",
+  "avisos",
   "colaboradores_section",
   "colaboradores",
   "lancamentos_section",
@@ -133,6 +134,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "avisos",
+   "fieldtype": "Small Text",
+   "label": "Avisos (não bloqueiam)",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
    "fieldname": "colaboradores_section",
    "fieldtype": "Section Break",
    "label": "Colaboradores"
@@ -168,7 +176,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-16 18:00:00.000000",
+ "modified": "2026-10-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Payroll Handoff",
  "name": "Fechamento de Ponto",

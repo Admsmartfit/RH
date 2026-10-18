@@ -1,0 +1,102 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "data",
+  "dia_semana",
+  "situacao",
+  "entrada1",
+  "saida1",
+  "entrada2",
+  "saida2",
+  "entrada3",
+  "saida3",
+  "troca",
+  "observacao"
+ ],
+ "fields": [
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Data",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dia_semana",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Dia",
+   "read_only": 1
+  },
+  {
+   "default": "Trabalho",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Situação",
+   "options": "Trabalho\nRepouso semanal\nFolga compensada",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entrada1",
+   "fieldtype": "Time",
+   "label": "Entrada 1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "saida1",
+   "fieldtype": "Time",
+   "label": "Saída 1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "entrada2",
+   "fieldtype": "Time",
+   "label": "Entrada 2"
+  },
+  {
+   "fieldname": "saida2",
+   "fieldtype": "Time",
+   "label": "Saída 2",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "entrada3",
+   "fieldtype": "Time",
+   "label": "Entrada 3"
+  },
+  {
+   "fieldname": "saida3",
+   "fieldtype": "Time",
+   "label": "Saída 3"
+  },
+  {
+   "fieldname": "troca",
+   "fieldtype": "Link",
+   "label": "Troca de escala",
+   "options": "Troca de Escala",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Data",
+   "label": "Observação"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-15 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Escala Mensal Dia",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1,
+ "row_format": "Dynamic"
+}

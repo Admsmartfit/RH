@@ -10,13 +10,17 @@ automaticamente por `engine/tests/test_permissoes.py`; mudou uma permissão, rod
 
 1. **Colaborador** só lê, e só os próprios registros (apuração, banco de horas, DSR, avaliação mensal, espelho).
 2. **Gestor Ponto** vê a si e a toda a sua hierarquia (`reports_to`); cria e edita tratamentos (que ficam pendentes)
-   e inconsistências; **não aprova, não fecha, não reabre**; não vê atestados, alertas do INSS, fechamentos,
-   configurações nem logs de integração.
+   e inconsistências; **não aprova tratamentos, não fecha, não reabre**; não vê atestados, alertas do INSS,
+   fechamentos, configurações nem logs de integração. **Exceção (AJ-09):** aprova as Trocas de Escala da
+   própria equipe e edita a Escala do Mês da equipe.
 3. **RH Ponto** opera o ponto: regras, tratamentos (aprova), fechamentos (fecha e reabre), banco de horas,
    configurações. Registra datas de atestados, **sem** ver CID nem anexos.
 4. **RH Saúde** é o único papel de negócio com acesso ao nível 1 (CID, anexo, médico) de atestados e alertas, e
    o único (com System Manager) que abre os anexos de atestado.
-5. Restrição por **departamento**: User Permission nativo do Frappe sobre Department (os DocTypes por
+5. **Gestor DP** libera cargas de VT travadas (acima de 30% da média). **CPF, RG e CartãoGV** do colaborador
+   ficam no nível 2 do Employee (só RH Ponto, RH Saúde, HR Manager e System Manager). O resultado do **ASO** fica
+   no nível 1 (RH Saúde).
+6. Restrição por **departamento**: User Permission nativo do Frappe sobre Department (os DocTypes por
    colaborador têm o campo `department`).
 
 ## Matriz
@@ -36,16 +40,34 @@ automaticamente por `engine/tests/test_permissoes.py`; mudou uma permissão, rod
 | Regra de Premiacao | Apuracao | LECX | — | — | — | LECX |  |
 | Tratamento de Ponto | Apuracao | LECXSCa | — | LECX | — | LECXSCa | filtro por colaborador |
 | Configuracao Apuracao | Configuracao Ponto | LEC | — | — | — | LEC | configuração |
+| Escala Mensal | Configuracao Ponto | LECX | — | LECX | L | LECX | filtro por colaborador |
+| Feriado Regional | Configuracao Ponto | LECX | — | — | — | LECX |  |
 | Grade de Aulas | Configuracao Ponto | LECX | — | L | — | LECX | filtro por colaborador |
 | Perfil de Jornada | Configuracao Ponto | LECX | — | L | — | LECX |  |
+| Regra de Adicional de Risco | Configuracao Ponto | LECX | L | — | — | LECX |  |
 | Regra Sindical CCT | Configuracao Ponto | LECX | — | L | — | LECX |  |
+| Salario Minimo | Configuracao Ponto | LECX | — | — | — | LECX |  |
+| Troca de Escala | Configuracao Ponto | LECXSCa | — | LECXSCa | L | LECXSCa | filtro por colaborador |
+| Agente de Integracao | Estagio | LECX | — | — | — | LECX |  |
+| Instituicao de Ensino | Estagio | LECX | — | — | — | LECX |  |
+| Relatorio de Estagio | Estagio | LECX | — | L | L | LECX | filtro por colaborador |
+| Termo de Compromisso de Estagio | Estagio | LECXSCa | — | L | L | LECXSCa | filtro por colaborador |
 | Configuracao Secullum | Ingestion | LEC | — | — | — | LEC | configuração |
 | Divergencia Cadastro Secullum | Ingestion | L | — | — | — | LX |  |
 | Divergencia Totais Secullum | Ingestion | L | — | — | — | LX |  |
 | Secullum Checkin Raw | Ingestion | L | — | L | — | L | filtro por colaborador |
 | Secullum Sync Log | Ingestion | L | — | — | — | LX |  |
+| Carga de VT | Payroll Handoff | LECXSCa | — | — | — | LECXSCa |  |
 | Fechamento de Ponto | Payroll Handoff | LECXSCa | — | — | — | LECXSCa |  |
+| Log Carga VT | Payroll Handoff | L | — | — | — | L |  |
+| Tarifa VT | Payroll Handoff | LECX | — | — | — | LECX |  |
 | Espelho de Ponto | Reports | L | — | L | L | LX | filtro por colaborador |
+| ASO | Seguranca Trabalho | LECX | LECX +N1 | — | — | LECX +N1 | campos de saúde em N1 |
+| Entrada de EPI | Seguranca Trabalho | LECXSCa | — | — | — | LECXSCa |  |
+| Entrega de EPI | Seguranca Trabalho | LECXSCa | — | L | L | LECXSCa | filtro por colaborador |
+| Item de Seguranca | Seguranca Trabalho | LECX | — | — | — | LECX |  |
+| Tipo de Treinamento | Seguranca Trabalho | LECX | — | — | — | LECX |  |
+| Treinamento Realizado | Seguranca Trabalho | LECX | — | — | — | LECX |  |
 
 ## Revisão da Etapa 11
 

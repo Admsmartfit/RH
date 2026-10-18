@@ -7,17 +7,28 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, date_diff, getdate, now_datetime, today
 
-from hrms_secullum_brasil.apuracao.adaptador import Contexto, montar_entrada
+from hrms_secullum_brasil.apuracao.adaptador import Contexto, dias_trabalhados, montar_entrada
 from hrms_secullum_brasil.apuracao.banco_horas import atualizar_dia, recalcular_colaborador
 from hrms_secullum_brasil.apuracao.dsr import atualizar_semana
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
-from hrms_secullum_brasil.apuracao.lote import adiar_semana, consultar, definir_janela, modo_lote, silenciar
+from hrms_secullum_brasil.apuracao.lote import (
+	adiar_semana,
+	ativo,
+	consultar,
+	definir_janela,
+	documento,
+	modo_lote,
+	silenciar,
+)
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
 from hrms_secullum_brasil.apuracao.reapuracao import marcar_para_reapuracao
+from hrms_secullum_brasil.configuracao_ponto.escala import conferir_domingos
 from hrms_secullum_brasil.engine.apuracao_dia import apurar_dia
 from hrms_secullum_brasil.engine.dsr import inicio_da_semana
+from hrms_secullum_brasil.engine.estagio import excesso_semanal
 from hrms_secullum_brasil.engine.models import ALTA, BAIXA, Inconsistencia, ResultadoDia
 from hrms_secullum_brasil.engine.professor import apurar_dia_professor
+from hrms_secullum_brasil.estagio.tce import get_tce_vigente
 
 APURACAO = "Apuracao Diaria"
 INCONSISTENCIA = "Inconsistencia de Ponto"
@@ -39,6 +50,7 @@ TIPOS_DA_APURACAO = {
 	"configuracao_ausente",
 	"aula_nao_registrada",
 	"limite_aulas_excedido",
+	"sete_dias_seguidos",
 }
 
 
@@ -61,6 +73,8 @@ def reapurar_dia(employee: str, data) -> str | None:
 	nome = _gravar(ctx, resultado)
 	if not adiar_semana(employee, data):
 		atualizar_semana(employee, data)
+		conferir_domingos(employee, inicio_da_semana(getdate(data)))
+		conferir_semana_estagio(employee, inicio_da_semana(getdate(data)))
 	return nome
 
 
@@ -95,6 +109,10 @@ def _gravar(ctx: Contexto, resultado: ResultadoDia | None) -> str:
 			bool((ctx.entrada or ctx.entrada_professor) and (ctx.entrada or ctx.entrada_professor).feriado)
 		),
 		"abonado": int(bool(ctx.entrada and ctx.entrada.abonado)),
+		"feriado_compensado": int(
+			bool(ctx.entrada and ctx.entrada.feriado and ctx.entrada.feriado_compensado)
+		),
+		"excesso_estagio": resultado.excesso_estagio if resultado else 0,  # EST-04
 		"recesso_escolar": int(bool(ctx.entrada_professor and ctx.entrada_professor.recesso)),
 		"status": _status(ctx, resultado, inconsistencias),
 	}
@@ -140,6 +158,12 @@ def _gravar(ctx: Contexto, resultado: ResultadoDia | None) -> str:
 			if (linha.tipo_dia, linha.percentual) in no_banco:
 				linha.db_set("banco", 1, update_modified=False)
 	_sincronizar_inconsistencias(ctx, doc.name, inconsistencias)
+	if ativo():  # AJ-10: dias trabalhados do lote (7º dia seguido)
+		trabalhados = dias_trabalhados(ctx.employee, ctx.data)
+		if resultado and resultado.trabalhado > 0:
+			trabalhados.add(ctx.data)
+		else:
+			trabalhados.discard(ctx.data)
 	return doc.name
 
 
@@ -211,10 +235,40 @@ def processar_reapuracoes_pendentes(limite: int = 5000, employees: list[str] | N
 	return len(pendentes)
 
 
+def conferir_semana_estagio(employee: str, segunda) -> None:
+	"""EST-04: trabalhado na semana acima da carga semanal do TCE = inconsistência Alta no domingo."""
+	emp = documento("Employee", employee)
+	if emp.get("tipo_remuneracao") != "Estagiario":
+		return
+	segunda = getdate(segunda)
+	domingo = segunda + timedelta(days=6)
+	tce = get_tce_vigente(employee, segunda) or get_tce_vigente(employee, domingo)
+	trabalhado = sum(
+		cint(a.trabalhado)
+		for a in consultar(
+			"Apuracao Diaria", {"employee": employee, "data": ["between", [segunda, domingo]]}, ["trabalhado"]
+		)
+	)
+	excesso = excesso_semanal(trabalhado, cint(tce.carga_semanal)) if tce else 0
+	if excesso:
+		registrar_inconsistencia(
+			employee,
+			"excesso_semanal_estagio",
+			f"Semana de estágio com {trabalhado // 60}h{trabalhado % 60:02d}, {excesso} min acima do TCE "
+			"(risco de vínculo CLT).",
+			severidade=ALTA,
+			data=domingo,
+		)
+	else:
+		resolver_inconsistencias(employee, "excesso_semanal_estagio", domingo)
+
+
 def _concluir_colaborador(lote: dict, employee: str) -> None:
 	semanas = {inicio_da_semana(getdate(d)) for e, d in lote["semanas"] if e == employee}
 	for segunda in sorted(semanas):
 		atualizar_semana(employee, segunda)
+		conferir_domingos(employee, segunda)  # AJ-09
+		conferir_semana_estagio(employee, segunda)  # EST-04
 	if employee in lote["bancos"]:
 		recalcular_colaborador(employee)
 	lote["semanas"] = {(e, d) for e, d in lote["semanas"] if e != employee}

@@ -27,7 +27,13 @@
   "dsr_perdido_minutos",
   "column_break_3",
   "minutos_normais",
-  "dsr_horista_minutos"
+  "dsr_horista_minutos",
+  "he_semanal_minutos",
+  "complemento_minimo_minutos",
+  "descanso_section",
+  "maior_descanso_minutos",
+  "column_break_descanso",
+  "descanso_suprimido_minutos"
  ],
  "fields": [
   {
@@ -71,7 +77,8 @@
    "fieldtype": "Link",
    "label": "Gestor",
    "options": "Employee",
-   "read_only": 1
+   "read_only": 1,
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "column_break_1",
@@ -178,11 +185,45 @@
    "in_list_view": 1,
    "label": "DSR (min) — horista",
    "read_only": 1
+  },
+  {
+   "fieldname": "he_semanal_minutos",
+   "fieldtype": "Int",
+   "label": "HE acima de 44h na semana (horista)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "complemento_minimo_minutos",
+   "fieldtype": "Int",
+   "label": "Complemento do mínimo semanal (horista)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descanso_section",
+   "fieldtype": "Section Break",
+   "label": "Descanso semanal (35h)"
+  },
+  {
+   "fieldname": "maior_descanso_minutos",
+   "fieldtype": "Int",
+   "label": "Maior descanso seguido (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_descanso",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "descanso_suprimido_minutos",
+   "fieldtype": "Int",
+   "label": "Descanso suprimido (min)",
+   "read_only": 1,
+   "description": "Diferença até o mínimo da CCT (35h), paga como extra na rubrica INTER (Súmula 110)."
   }
  ],
  "in_create": 1,
  "links": [],
- "modified": "2026-10-15 20:00:00.000000",
+ "modified": "2026-10-18 22:30:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "DSR Semanal",

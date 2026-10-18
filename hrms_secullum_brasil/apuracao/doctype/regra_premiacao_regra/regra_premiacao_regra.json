@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "creation": "2026-10-16 11:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "ordem",
+  "descricao",
+  "combinacao",
+  "acao",
+  "valor",
+  "ativa"
+ ],
+ "fields": [
+  {
+   "fieldname": "ordem",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Ordem",
+   "reqd": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Descrição"
+  },
+  {
+   "default": "Todas",
+   "fieldname": "combinacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "SE (condições)",
+   "options": "Todas\nQualquer",
+   "description": "Todas = E; Qualquer = OU."
+  },
+  {
+   "default": "Não pagar",
+   "fieldname": "acao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "ENTÃO",
+   "options": "Pagar percentual\nPagar valor\nNão pagar",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.acao!='Não pagar'",
+   "fieldname": "valor",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "% ou R$"
+  },
+  {
+   "default": "1",
+   "fieldname": "ativa",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Ativa"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-16 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Regra Premiacao Regra",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

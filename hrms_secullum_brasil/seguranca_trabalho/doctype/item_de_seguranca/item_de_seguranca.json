@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 16:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome_item",
+  "tipo",
+  "ca_numero",
+  "ca_validade",
+  "column_break_item",
+  "prazo_troca_dias",
+  "valor",
+  "ativo",
+  "cargos_section",
+  "cargos"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_item",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "EPI",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tipo",
+   "options": "EPI\nUniforme",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo=='EPI'",
+   "fieldname": "ca_numero",
+   "fieldtype": "Data",
+   "label": "Número do CA"
+  },
+  {
+   "depends_on": "eval:doc.tipo=='EPI'",
+   "fieldname": "ca_validade",
+   "fieldtype": "Date",
+   "label": "Validade do CA"
+  },
+  {
+   "fieldname": "column_break_item",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "prazo_troca_dias",
+   "fieldtype": "Int",
+   "label": "Troca a cada (dias)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "valor",
+   "fieldtype": "Currency",
+   "label": "Valor unitário",
+   "description": "Referência para dano doloso (desconto só com decisão do RH)."
+  },
+  {
+   "default": "1",
+   "fieldname": "ativo",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Ativo"
+  },
+  {
+   "fieldname": "cargos_section",
+   "fieldtype": "Section Break",
+   "label": "Cargos que recebem",
+   "description": "Vazio: todos os cargos (ex.: uniforme)."
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table",
+   "label": "Cargos",
+   "options": "Regra CCT Cargo"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Seguranca Trabalho",
+ "name": "Item de Seguranca",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:nome_item",
+ "naming_rule": "By fieldname",
+ "track_changes": 1
+}

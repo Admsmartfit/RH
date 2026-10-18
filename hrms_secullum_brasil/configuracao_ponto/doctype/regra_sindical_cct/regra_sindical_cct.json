@@ -15,6 +15,8 @@
   "titulo",
   "cargos_section",
   "cargos",
+  "parametros_cargo_section",
+  "parametros_cargo",
   "jornada_tab",
   "tolerancia_section",
   "tolerancia_por_marcacao",
@@ -23,8 +25,11 @@
   "computar_todo_tempo_ao_exceder",
   "compensar_atraso_com_he",
   "duplicidade_minutos",
+  "duplicadas_modo",
   "he_section",
   "limite_he_diaria",
+  "feriado_trabalhado",
+  "prazo_folga_feriado_dias",
   "faixas_hora_extra",
   "noturno_section",
   "noturno_inicio",
@@ -45,6 +50,7 @@
   "intervalo_reduzido",
   "interjornada_section",
   "interjornada_minima",
+  "percentual_interjornada",
   "column_break_inter",
   "descanso_semanal_minimo",
   "dsr_banco_tab",
@@ -54,6 +60,9 @@
   "column_break_dsr",
   "dsr_perde_por_atraso",
   "dsr_reflexo_he_noturno",
+  "dsr_horista_modo",
+  "dsr_horista_inclui_he",
+  "falta_horista_desconta_dsr",
   "banco_section",
   "banco_modalidade",
   "banco_prazo_meses",
@@ -61,6 +70,11 @@
   "banco_alerta_vencimento_dias",
   "banco_permite_descontar_negativo",
   "banco_debita_atrasos",
+  "custeio_section",
+  "custeio_valor_trabalhador",
+  "custeio_dia_vencimento",
+  "column_break_custeio",
+  "custeio_inicio",
   "professores_tab",
   "professores_section",
   "duracao_hora_aula",
@@ -138,6 +152,18 @@
    "options": "Regra CCT Cargo"
   },
   {
+   "fieldname": "parametros_cargo_section",
+   "fieldtype": "Section Break",
+   "label": "Parâmetros por cargo",
+   "description": "Piso salarial, adicional noturno e banco de horas padrão de cada cargo (opcional)."
+  },
+  {
+   "fieldname": "parametros_cargo",
+   "fieldtype": "Table",
+   "label": "Parâmetros por cargo",
+   "options": "Regra CCT Parametro Cargo"
+  },
+  {
    "fieldname": "jornada_tab",
    "fieldtype": "Tab Break",
    "label": "Jornada"
@@ -186,6 +212,14 @@
    "non_negative": 1
   },
   {
+   "default": "Ignorar automaticamente",
+   "fieldname": "duplicadas_modo",
+   "fieldtype": "Select",
+   "label": "Marcações duplicadas",
+   "options": "Ignorar automaticamente\nSó sinalizar",
+   "description": "Só sinalizar: o dia fica sem apuração até o RH desconsiderar a batida por Tratamento de Ponto."
+  },
+  {
    "fieldname": "he_section",
    "fieldtype": "Section Break",
    "label": "Horas extras"
@@ -196,6 +230,23 @@
    "fieldname": "limite_he_diaria",
    "fieldtype": "Int",
    "label": "Alertar HE acima de (min/dia)"
+  },
+  {
+   "default": "Pagar em dobro",
+   "fieldname": "feriado_trabalhado",
+   "fieldtype": "Select",
+   "label": "Feriado trabalhado",
+   "options": "Pagar em dobro\nCompensar com folga\nEscolher caso a caso",
+   "description": "Pagar em dobro (Súmula 146 — HE de feriado, 100% por padrão): não aceita compensação. Caso a caso: paga em dobro, salvo Compensação de feriado lançada no prazo. Compensar com folga: as horas aguardam a folga e só são pagas em dobro se o prazo passar."
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.feriado_trabalhado!='Pagar em dobro'",
+   "fieldname": "prazo_folga_feriado_dias",
+   "fieldtype": "Int",
+   "label": "Prazo para dar a folga (dias)",
+   "non_negative": 1,
+   "description": "0 = até o domingo da semana do feriado."
   },
   {
    "description": "Por tipo de dia, faixas contíguas a partir de 0 min; a última com Até = 0 (sem limite).",
@@ -324,6 +375,14 @@
    "reqd": 1
   },
   {
+   "default": "50",
+   "fieldname": "percentual_interjornada",
+   "fieldtype": "Percent",
+   "label": "Percentual da interjornada suprimida",
+   "reqd": 1,
+   "description": "Horas que faltam para as 11h de descanso, pagas como extra na rubrica INTER (OJ 355)."
+  },
+  {
    "fieldname": "column_break_inter",
    "fieldtype": "Column Break"
   },
@@ -373,6 +432,26 @@
    "label": "Reflexo de HE e adicional noturno no DSR (Súmula 172 TST)"
   },
   {
+   "default": "Semanal",
+   "fieldname": "dsr_horista_modo",
+   "fieldtype": "Select",
+   "label": "DSR do horista",
+   "options": "Semanal\nMensal",
+   "description": "Mensal: horas normais do mês / dias úteis do mês x (domingos + feriados do mês)."
+  },
+  {
+   "default": "0",
+   "fieldname": "dsr_horista_inclui_he",
+   "fieldtype": "Check",
+   "label": "Incluir horas extras na base do DSR do horista"
+  },
+  {
+   "default": "0",
+   "fieldname": "falta_horista_desconta_dsr",
+   "fieldtype": "Check",
+   "label": "Falta do horista desconta o DSR da semana"
+  },
+  {
    "fieldname": "banco_section",
    "fieldtype": "Section Break",
    "label": "Banco de horas (Art. 59, §§2º, 5º e 6º CLT)"
@@ -414,6 +493,33 @@
    "fieldname": "banco_debita_atrasos",
    "fieldtype": "Check",
    "label": "Atrasos e saídas antecipadas debitam o banco"
+  },
+  {
+   "fieldname": "custeio_section",
+   "fieldtype": "Section Break",
+   "label": "Custeio do benefício social",
+   "description": "Contribuição mensal da empresa por trabalhador (nunca é descontada do empregado). Relatório 'Contribuicoes da CCT', enviado por e-mail todo dia 1º."
+  },
+  {
+   "fieldname": "custeio_valor_trabalhador",
+   "fieldtype": "Currency",
+   "label": "Valor por trabalhador",
+   "non_negative": 1
+  },
+  {
+   "default": "10",
+   "fieldname": "custeio_dia_vencimento",
+   "fieldtype": "Int",
+   "label": "Dia do vencimento"
+  },
+  {
+   "fieldname": "column_break_custeio",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custeio_inicio",
+   "fieldtype": "Date",
+   "label": "Início da cobrança"
   },
   {
    "fieldname": "professores_tab",
@@ -466,7 +572,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-15 15:00:00.000000",
+ "modified": "2026-10-19 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra Sindical CCT",

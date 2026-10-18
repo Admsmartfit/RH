@@ -3,12 +3,14 @@
 import frappe
 from frappe import _
 
+from hrms_secullum_brasil.configuracao_ponto.cargo import aplicar_banco_padrao
 from hrms_secullum_brasil.engine.documentos import cpf_valido, pis_valido, somente_digitos
 
 
 def validate(doc, method=None):
 	_normalizar_documentos(doc)
 	_validar_empresa_das_regras(doc)
+	aplicar_banco_padrao(doc)  # AJ-05
 
 
 def _normalizar_documentos(doc):

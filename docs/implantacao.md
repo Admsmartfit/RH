@@ -34,12 +34,27 @@ Em site já existente: `bench --site <site> install-app hrms_secullum_brasil` e 
 
 A instalação cria (fixtures):
 
-- os papéis **RH Ponto**, **RH Saúde**, **Gestor Ponto** e **Colaborador**;
+- os papéis **RH Ponto**, **RH Saúde**, **Gestor Ponto**, **Colaborador** e **Gestor DP** (libera cargas de VT
+  travadas);
 - os campos customizados de Employee e Company (aba Ponto);
-- o Leave Type **Atestado Médico**;
-- os **18 Salary Components** (HE50, HE100, ADN, DSR_HE, DSR_HOR, HORAS, AULAS, DSR_PROF, HATIV, JANELA,
-  INTRA_IND, INTER, BH_PAG, PREMIO, FALTA, ATRASO, DSR_DESC, VA_DESC);
-- o espaço de trabalho **Ponto**.
+- os Leave Types **Atestado Médico** e **Recesso de Estagio**;
+- os pontos facultativos nacionais (Carnaval e Corpus Christi, em Feriado Regional) e os agentes de integração
+  CIEE-ES e IEL-ES;
+- os **26 Salary Components** (HE50, HE100, ADN, DSR_HE, DSR_ADN, DSR_HOR, HORAS, AULAS, DSR_PROF, HATIV, JANELA,
+  INTRA_IND, INTER, BH_PAG, PREMIO, FALTA, ATRASO, DSR_DESC, VA_DESC, VT, VT_DESC, INSALUB, PERIC, DESC_EPI,
+  BOLSA_DESC, RECESSO_EST), com o "Código na folha" (Prosoft)
+  e as incidências (INSS, FGTS, férias/13º) editáveis;
+- o espaço de trabalho **Ponto** e os módulos **Seguranca Trabalho** (EPI, uniforme, ASO, treinamentos) e
+  **Estagio** (TCE, recesso, relatórios).
+
+**Permissões do Employee:** o `after_migrate` copia as permissões padrão do Employee para Custom DocPerm e
+cria o nível 2 (CPF, RG, CartãoGV) só para RH Ponto, RH Saúde, HR Manager e System Manager. Mudanças futuras do
+HRMS nas permissões padrão do Employee não entram sozinhas: revise no Role Permission Manager.
+
+**Salary Structure "Estágio"** (EST-09): crie uma estrutura com a Bolsa-auxílio (Earning, base = bolsa do TCE)
+e o Auxílio-transporte, IRRF pela tabela mensal e **sem** INSS, FGTS, 13º e férias. O Fechamento de Ponto
+gera para o estagiário só BOLSA_DESC (faltas e atrasos), VT informativo e, no fim do estágio, o RH lança o
+RECESSO_EST quando houver saldo de recesso remunerado.
 
 **Atualizações:** `bench update --pull` ou `git pull` no app, seguido de `bench --site <site> migrate` e
 `bench restart`.

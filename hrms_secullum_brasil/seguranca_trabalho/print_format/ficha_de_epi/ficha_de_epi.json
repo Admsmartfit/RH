@@ -1,0 +1,22 @@
+{
+ "align_labels_right": 0,
+ "creation": "2026-10-18 16:00:00.000000",
+ "custom_format": 1,
+ "default_print_language": "pt-BR",
+ "disabled": 0,
+ "doc_type": "Entrega de EPI",
+ "docstatus": 0,
+ "doctype": "Print Format",
+ "font_size": 12,
+ "html": "<style>.ficha td, .ficha th { border: 1px solid #999; padding: 4px; font-size: 11px; } .ficha { width: 100%; border-collapse: collapse; }</style>\n<h3>Ficha de EPI e uniforme</h3>\n<p><b>Colaborador:</b> {{ doc.employee_name }} ({{ doc.employee }}) &nbsp; <b>Empresa:</b> {{ doc.company or \"\" }} &nbsp; <b>Filial:</b> {{ doc.branch or \"\" }}</p>\n{% set entregas = frappe.get_all(\"Entrega de EPI\", filters={\"employee\": doc.employee, \"docstatus\": 1}, fields=[\"name\", \"data\", \"tipo\", \"motivo\"], order_by=\"data asc\") %}\n<table class=\"ficha\">\n<tr><th>Data</th><th>Movimento</th><th>Motivo</th><th>Item</th><th>Qtd.</th><th>CA</th></tr>\n{% for e in entregas %}{% for i in frappe.get_all(\"Entrega EPI Item\", filters={\"parent\": e.name, \"parenttype\": \"Entrega de EPI\"}, fields=[\"item\", \"quantidade\", \"ca_numero\"]) %}\n<tr><td>{{ frappe.utils.formatdate(e.data) }}</td><td>{{ e.tipo }}</td><td>{{ e.motivo or \"\" }}</td><td>{{ i.item }}</td><td>{{ i.quantidade }}</td><td>{{ i.ca_numero or \"\" }}</td></tr>\n{% endfor %}{% endfor %}\n</table>\n<p style=\"font-size: 11px; margin-top: 12px;\">Declaro ter recebido os equipamentos acima, gratuitamente, e o treinamento sobre o seu uso, guarda e conservação (NR-6, item 6.6.1). Comprometo-me a usá-los e a comunicar qualquer alteração que os torne impróprios.</p>\n<p style=\"margin-top: 40px;\">______________________________<br>{{ doc.employee_name }}</p>\n",
+ "modified": "2026-10-18 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Seguranca Trabalho",
+ "name": "Ficha de EPI",
+ "owner": "Administrator",
+ "print_format_builder": 0,
+ "print_format_type": "Jinja",
+ "raw_printing": 0,
+ "show_section_headings": 0,
+ "standard": "Yes"
+}

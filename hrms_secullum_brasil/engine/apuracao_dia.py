@@ -5,36 +5,55 @@ from hrms_secullum_brasil.engine.horas_extras import distribuir_em_faixas, tipo_
 from hrms_secullum_brasil.engine.intervalos import interjornada_suprimida, intrajornada
 from hrms_secullum_brasil.engine.models import ALTA, BAIXA, MEDIA, EntradaDia, Inconsistencia, ResultadoDia
 from hrms_secullum_brasil.engine.noturno import minutos_fictos, minutos_noturnos
-from hrms_secullum_brasil.engine.pareamento import minutos_relativos, parear, remover_duplicadas, truncar
+from hrms_secullum_brasil.engine.pareamento import (
+	inconsistencia_duplicadas,
+	minutos_relativos,
+	parear,
+	remover_duplicadas,
+	truncar,
+)
 from hrms_secullum_brasil.engine.tolerancia import apurar_saldo
 
 
 def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	regra = entrada.regra
-	previsto = 0 if entrada.feriado else entrada.jornada.minutos
+	setimo_dia = entrada.setimo_dia and bool(entrada.marcacoes)
+	previsto = 0 if entrada.feriado or setimo_dia else entrada.jornada.minutos
 	resultado = ResultadoDia(
 		data=entrada.data,
 		tipo_dia=tipo_do_dia(
-			entrada.data, feriado=entrada.feriado, folga=entrada.jornada.folga and not entrada.horista
+			entrada.data,
+			feriado=entrada.feriado,
+			folga=entrada.jornada.folga and not entrada.horista,
+			repouso=None if entrada.horista else entrada.repouso,
 		),
 		previsto=previsto,
 	)
+	if setimo_dia:
+		# AJ-10 / OJ 410: 7º dia seguido de trabalho é pago em dobro — todas as horas como HE de repouso
+		if not entrada.feriado:
+			resultado.tipo_dia = d.TIPO_DIA_FOLGA
+		resultado.inconsistencias.append(
+			Inconsistencia(
+				"sete_dias_seguidos",
+				ALTA,
+				"7º dia seguido de trabalho sem repouso: horas pagas em dobro (OJ 410 SDI-1 TST).",
+			)
+		)
 	consideradas, ignoradas = remover_duplicadas(
 		(truncar(m) for m in entrada.marcacoes), regra.duplicidade_minutos
 	)
 	resultado.marcacoes_consideradas = consideradas
 	resultado.marcacoes_ignoradas = ignoradas
-	if ignoradas:
-		resultado.inconsistencias.append(
-			Inconsistencia(
-				"marcacao_duplicada",
-				BAIXA,
-				f"{len(ignoradas)} marcação(ões) a menos de {regra.duplicidade_minutos} min da anterior ignorada(s).",
-			)
-		)
+	duplicadas = inconsistencia_duplicadas(ignoradas, regra.duplicidade_minutos, regra.ignorar_duplicadas)
+	if duplicadas:
+		resultado.inconsistencias.append(Inconsistencia(*duplicadas))
+		if not regra.ignorar_duplicadas:
+			resultado.apurado = False
+			return resultado
 
 	if not consideradas:
-		if entrada.horista:
+		if entrada.horista and not entrada.horista_escalado:
 			resultado.previsto = 0
 			return resultado
 		if entrada.abonado:
@@ -55,7 +74,18 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	pares = [(minutos_relativos(e, entrada.data), minutos_relativos(s, entrada.data)) for e, s in pares_dt]
 	resultado.trabalhado = sum(s - e for e, s in pares)
 
-	if entrada.horista and resultado.tipo_dia not in (d.TIPO_DIA_DOMINGO, d.TIPO_DIA_FERIADO):
+	if entrada.horista and entrada.horista_escalado and not setimo_dia:
+		# AJ-14: horista por escala não ganha HE por trabalhar em folga ou fim de semana; só acima de 8h no dia
+		# (44h na semana: DSR Semanal) ou em feriado sem folga compensatória. Sem tolerância: paga o trabalhado.
+		feriado_pago = entrada.feriado and not entrada.feriado_compensado
+		resultado.tipo_dia = tipo_do_dia(entrada.data, feriado=feriado_pago, folga=False, repouso=False)
+		normais = 0 if feriado_pago else min(resultado.trabalhado, d.JORNADA_DIARIA_MAXIMA_MIN)
+		previsto, atraso, hora_extra = normais, 0, resultado.trabalhado - normais
+	elif (
+		entrada.horista
+		and not setimo_dia
+		and resultado.tipo_dia not in (d.TIPO_DIA_DOMINGO, d.TIPO_DIA_FERIADO)
+	):
 		# sem jornada prevista: o trabalhado é a jornada do dia, até o limite legal de 8h
 		previsto = resultado.previsto = min(resultado.trabalhado, d.JORNADA_DIARIA_MAXIMA_MIN)
 		atraso, hora_extra = 0, resultado.trabalhado - previsto
@@ -63,6 +93,9 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 		atraso, hora_extra = apurar_saldo(
 			pares, entrada.jornada.periodos, resultado.trabalhado, previsto, regra
 		)
+	elif entrada.feriado and entrada.feriado_compensado:
+		# AJ-03: feriado trabalhado com folga compensatória: as horas viram normais, sem HE
+		previsto, atraso, hora_extra = resultado.trabalhado, 0, 0
 	else:
 		atraso, hora_extra = 0, resultado.trabalhado  # folga ou feriado: todo o tempo é extra
 	if entrada.abonado:
@@ -103,4 +136,33 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 				f"Descanso entre jornadas {resultado.interjornada_suprimida} min abaixo do mínimo de {regra.interjornada_minima} min.",
 			)
 		)
+	if entrada.estagio:
+		_aplicar_estagio(resultado, entrada)
 	return resultado
+
+
+SEM_EFEITO_NO_ESTAGIO = ("he_acima_limite", "intrajornada", "interjornada")
+
+
+def _aplicar_estagio(resultado: ResultadoDia, entrada: EntradaDia) -> None:
+	"""EST-04: o que passa do previsto (ou da carga diária do TCE) não é hora extra nem banco: fica em
+	`excesso_estagio` com inconsistência Alta (risco de vínculo CLT). Sem intervalo indenizado nem
+	interjornada paga; o noturno fica só para conferência. Atraso e falta continuam (descontam a bolsa)."""
+	excesso = resultado.hora_extra
+	limite = entrada.limite_diario_estagio
+	if limite and resultado.normais > limite:
+		excesso += resultado.normais - limite
+		resultado.normais = limite
+	resultado.hora_extra = 0
+	resultado.he_faixas = []
+	resultado.intrajornada_suprimida = resultado.interjornada_suprimida = 0
+	resultado.inconsistencias = [i for i in resultado.inconsistencias if i.tipo not in SEM_EFEITO_NO_ESTAGIO]
+	if excesso > 0:
+		resultado.excesso_estagio = excesso
+		resultado.inconsistencias.append(
+			Inconsistencia(
+				"excesso_jornada_estagio",
+				ALTA,
+				f"Jornada de estágio passou do limite do TCE em {excesso} min (risco de vínculo CLT).",
+			)
+		)

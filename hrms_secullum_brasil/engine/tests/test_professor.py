@@ -79,6 +79,11 @@ class TestApuracaoDoDia:
 		assert r.aulas_dadas == 3
 		assert r.tipos_inconsistencia() == ["marcacao_duplicada"]
 
+	def test_aj16_professor_com_duplicada_so_sinalizada(self):
+		r = apurar("07:30", "07:31", "10:50", regra=RegraApuracao(ignorar_duplicadas=False))
+		assert not r.apurado
+		assert [(i.tipo, i.severidade) for i in r.inconsistencias] == [("marcacao_duplicada", "Alta")]
+
 	def test_todas_as_aulas_dadas(self):
 		r = apurar("07:30", "10:50")
 		assert (r.aulas_previstas, r.aulas_dadas, r.aulas_nao_dadas) == (3, 3, 0)

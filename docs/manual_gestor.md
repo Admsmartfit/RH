@@ -8,7 +8,8 @@ e justificar**.
 
 | Pode | Não pode |
 |---|---|
-| Ver apuração diária, marcações, banco de horas e DSR da equipe | Aprovar tratamentos |
+| Aprovar as trocas de escala da equipe | Aprovar tratamentos de ponto |
+| Ver apuração diária, marcações, banco de horas, DSR e a escala da equipe | Ver ASO, CPF, RG ou CartãoGV |
 | Ver e comentar inconsistências da equipe | Fechar ou reabrir o mês |
 | Criar tratamentos (inclusão de marcação, desconsideração, abono) | Ver atestados, CID ou alertas do INSS |
 | Ver os espelhos de ponto da equipe | Alterar regras, CCTs ou perfis de jornada |
@@ -42,6 +43,17 @@ e justificar**.
 Não use o abono para atestado médico: entregue o atestado ao RH, que lança com os dados de saúde protegidos.
 
 Não é possível criar tratamentos para dias de um mês já fechado. Fale com o RH.
+
+## Escala e trocas
+
+- **Relatório "Escala do Mes"**: o calendário da equipe (horário, R = repouso, FC = folga compensada, F = feriado),
+  para planejar as trocas e os domingos de folga.
+- **Troca de Escala → Novo**: uma linha por colaborador e dia (quem folga, quem trabalha e cobrindo quem). O horário
+  de quem é coberto é copiado. Se alguém perder o repouso da semana, o sistema marca outra folga como repouso.
+- Você **aprova** (Enviar) as trocas da sua equipe — é a única aprovação do gestor no sistema. O sistema avisa
+  sobre descanso curto, 7 dias seguidos e domingos sem folga, mas não impede: decida com cuidado.
+- Mulheres folgam no domingo pelo menos a cada 2 semanas; homens, a cada 3. Domingos seguidos acima do limite
+  viram inconsistência.
 
 ## Banco de horas da equipe
 

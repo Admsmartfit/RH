@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "creation": "2026-10-18 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "vigencia_inicio",
+  "valor",
+  "fonte"
+ ],
+ "fields": [
+  {
+   "fieldname": "vigencia_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "A partir de",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "valor",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Salário mínimo",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "fonte",
+   "fieldtype": "Data",
+   "label": "Fonte (decreto)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-18 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Salario Minimo",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "format:SM-{vigencia_inicio}",
+ "naming_rule": "Expression",
+ "track_changes": 1
+}

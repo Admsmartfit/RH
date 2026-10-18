@@ -154,3 +154,30 @@ def lancamentos_do_dia(
 		else:
 			pagar.append(faixa)
 	return dict(creditos), (atraso if debita_atrasos else 0), pagar
+
+
+# ------------------------------------------------------------------ participação com vigência (AJ-05)
+
+
+def participa_na_data(participa: bool, desde: date | None, data: date) -> bool:
+	"""A situação atual vale a partir de `desde`; antes dela, valia a oposta (mudança ainda não em vigor)."""
+	if desde and data < desde:
+		return not participa
+	return participa
+
+
+def nova_vigencia_banco(
+	participava: bool, desde_anterior: date | None, participa: bool, hoje: date, admissao: bool = False
+) -> date | None:
+	"""Data a partir da qual a nova situação vale (AJ-05: mudança no meio do mês vale no mês seguinte).
+
+	Na admissão vale desde o início (devolve None = sempre). Sem mudança, mantém a data anterior. Voltar atrás
+	antes de a mudança entrar em vigor desfaz a mudança: a situação volta a valer sempre (None).
+	"""
+	if admissao:
+		return None
+	if participa == participava:
+		return desde_anterior
+	if desde_anterior and desde_anterior > hoje:
+		return None
+	return adicionar_meses(hoje.replace(day=1), 1)

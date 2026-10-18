@@ -126,12 +126,129 @@ Botão **Espelhos de ponto** no fechamento enviado. Cada espelho tem os dias, os
 espaço para assinatura e o código de verificação (hash) no rodapé. É um relatório **gerencial**: o espelho
 oficial é o do Secullum.
 
+## Escala do mês e trocas de escala
+
+**Escala Mensal** (uma por colaborador e mês): cada dia é **Trabalho** (com horário), **Repouso semanal** ou
+**Folga compensada**.
+
+1. Crie a escala (Escala Mensal → Novo: colaborador, ano e mês) e clique em **Preencher pelo perfil**. Ajuste os
+   dias.
+2. **Toda semana precisa de exatamente um repouso semanal.** Trabalho no repouso paga 100%; trabalho na folga
+   compensada paga 50% (e pode ir ao banco). Domingo escalado para trabalho é dia normal.
+3. Ao salvar, o sistema **avisa, sem impedir**: descanso menor que 11h entre dois dias, jornada de mais de 6h sem
+   1h de intervalo, 7º dia seguido de trabalho e domingos seguidos (mulher: folga no domingo a cada 2 semanas;
+   homem, a cada 3 — ajustável na Empresa).
+
+**Troca de Escala:** uma linha por colaborador e dia — quem folga, quem trabalha (cobrindo alguém ou não) e o
+horário. Exemplo: João folga no domingo 18 (linha "Folga compensada"), Maria trabalha no domingo 18 cobrindo João
+(horário de João é copiado); João trabalha na quarta 21 cobrindo Maria; Maria folga na quarta 21.
+
+- Se a troca tirar o repouso de alguém, o sistema inclui sozinho uma linha marcando outra folga da semana como
+  repouso (você vê a linha antes de aprovar).
+- **Aprovar = Enviar** (RH ou o gestor da equipe). A Escala do Mês dos envolvidos muda e os dias são reapurados.
+  **Cancelar** desfaz a troca.
+
+**Relatório "Escala do Mes":** calendário de todos (horário, R = repouso, FC = folga compensada, F = feriado).
+
+## Feriados
+
+- **Feriado Regional:** cadastre os feriados **estaduais e municipais** de cada filial (data fixa ou móvel, em
+  dias depois da Páscoa — ex.: N. Sra. da Penha = 8) e os pontos facultativos.
+- **Empresa → Pontos facultativos adotados:** Carnaval, Corpus Christi ou outros, só se a empresa der folga.
+- A lista de feriados de cada empresa recebe os feriados do ano **todo 1º de dezembro** (nacionais da BrasilAPI +
+  os seus regionais). Você recebe um aviso para revisar antes de 1º de janeiro. Para gerar à mão: peça à TI
+  (`gerar_feriados`).
+- Pode incluir ou remover feriados na lista a qualquer momento: o que você remover não volta na próxima geração.
+  Período fechado não aceita mudança.
+- **Feriado trabalhado** (Regra Sindical CCT): "Pagar em dobro" (padrão; HE de feriado a 100%), "Escolher caso a caso" ou "Compensar com
+  folga". Nos dois últimos, lance um Tratamento de Ponto **Compensação de feriado** (dia de trabalho = feriado;
+  data da folga dentro do prazo): as horas do feriado viram normais e a folga não gera falta.
+
+## Opções da CCT por cargo
+
+Regra Sindical CCT → **Parâmetros por cargo**: piso (mensalista ou horista, com a carga de referência), adicional
+noturno do cargo (nunca menos que 20% nem que o da CCT) e banco de horas padrão.
+
+- Salário abaixo do piso proporcional: aviso na estrutura salarial, no Fechamento de Ponto e no cadastro.
+- Admissão ou troca de cargo: o colaborador recebe o banco padrão do cargo. Mudar a opção no meio do mês vale a
+  partir do mês seguinte (campo "Banco de horas: situação vale a partir de").
+- Marcações duplicadas: "Ignorar automaticamente" (padrão) ou "Só sinalizar" (o dia fica sem apuração até você
+  desconsiderar a batida).
+- Custeio do benefício social: valor por trabalhador, vencimento e início. O relatório **Contribuicoes da CCT**
+  chega por e-mail todo dia 1º (Configuração Apuração → e-mails).
+
+## Horista com escala
+
+Perfil "Horista" com semana padrão ou Escala do Mês: dia previsto sem batida = falta das horas do dia (vai à folha
+só como quantidade); fim de semana e folga trabalhados = horas normais; HE só acima de 8h/dia, 44h/semana ou em
+feriado. **Mínimo de horas** no cadastro do colaborador (por mês ou semana): a diferença é paga em HORAS.
+
+## Prêmio com regras SE / ENTÃO
+
+Regra de Premiacao → **Regras**: cada linha tem a ordem, "Todas (E)" ou "Qualquer (OU)" e o que fazer (pagar %,
+pagar R$ ou não pagar). As condições ficam na tabela de condições com o **Regra nº**. Vale a **primeira regra
+verdadeira**; se nenhuma valer, vale o **SENÃO**. Use **Simular** para ver, de um colaborador e um mês, qual regra
+seria aplicada. O espelho de ponto mostra a regra aplicada e as métricas.
+
+Métricas novas: dias com atraso acima de N min, maior sequência de dias de trabalho com atraso acima de N min e
+chegadas depois de HH:MM (N ou HH:MM na coluna "N / horário").
+
+## Vale-transporte
+
+1. Cadastro do colaborador → Vale-transporte: usa VT, CartãoGV, RG, tarifas e passagens por dia. Tarifas em
+   **Tarifa VT** (com vigência).
+2. **Carga de VT** (empresa e mês de uso) → **Gerar sugestão**: dias da escala menos feriados, férias e
+   afastamentos já lançados, menos os dias não trabalhados da carga anterior.
+3. Ajuste os dias (com justificativa) ou use **Editar em lote**. Tudo fica no Log Carga VT.
+4. Aumento a partir de 15% sobre a média: escolha o motivo. Acima de 30%: o **Gestor DP** libera. Linha sem CPF,
+   RG ou CartãoGV fica fora.
+5. Depois da compra no portal GVBus, **Confirme** (Enviar). O desconto de 6% (0% para estagiário) e o VT
+   informativo vão para o Fechamento de Ponto.
+
+O arquivo para o portal GVBus ainda depende do layout oficial.
+
+## Insalubridade e periculosidade
+
+**Regra de Adicional de Risco:** tipo, percentual (periculosidade sempre 30%; insalubridade 10, 20 ou 40%), base
+(salário mínimo — cadastre em **Salario Minimo** —, salário do colaborador ou piso da CCT), cargos e/ou
+colaboradores, laudo (arquivo, número, validade) e "EPI neutraliza". Os dois adicionais não se acumulam (vale o
+maior); falta desconta 1/30 por dia; entra na base da hora extra. Laudo vencido: aviso no fechamento.
+
+## EPI e uniforme
+
+- **Item de Seguranca:** EPI (CA e validade) ou uniforme, troca a cada N dias, cargos (vazio = todos).
+- **Entrada de EPI** dá entrada no estoque da filial; **Entrega de EPI** baixa (ou devolve). O colaborador confirma
+  o recebimento no sistema ou você anexa a **Ficha de EPI** assinada (imprimir pela entrega).
+- Alertas diários (inconsistência Média + aviso a você e ao gestor): sem entrega 5 dias depois da admissão, troca
+  vencida, CA vencido, devolução pendente na demissão.
+- Nunca há desconto de EPI/uniforme, salvo **dano doloso** marcado por você com valor e justificativa (DESC_EPI).
+
+## ASO e treinamentos
+
+- **ASO:** tipo, data e próximo vencimento (vazio = 1 ano). Resultado, médico e arquivo só para o **RH Saúde**.
+- **Tipo de Treinamento** (validade em meses, cargos) e **Treinamento Realizado**.
+- Aviso 30 dias antes de vencer; vencido = inconsistência Média e aviso no fechamento (não bloqueia).
+
+## Estagiários
+
+1. Cadastre a **Instituicao de Ensino** (o agente CIEE-ES ou IEL-ES já existe).
+2. **Termo de Compromisso de Estagio:** nível de ensino, carga diária e semanal (até 6h/30h ou 4h/20h), bolsa,
+   auxílio-transporte, supervisor (máx. 10 estagiários), seguro e calendário acadêmico (provas, férias escolares,
+   suspensões). Enviar o TCE torna o colaborador "Estagiario" e o tira do banco de horas. Aditivo: novo TCE com
+   "Termo aditivo de" (limite de 24 meses, salvo PcD; exige os relatórios semestrais em dia).
+3. Apuração: sem hora extra, banco ou DSR. O que passa do TCE vira **inconsistência Alta** (risco de vínculo);
+   dia de prova = metade da jornada.
+4. **Recesso:** Leave Application do tipo "Recesso de Estagio" (2,5 dias por mês; saldo no TCE).
+5. **Relatório de Estagio** a cada 6 meses (aviso no 5º mês). Alertas: TCE vencendo (30/15/5 dias), TCE vencido
+   com batida, seguro vencido.
+6. Folha: só **BOLSA_DESC** (falta = bolsa/30; atraso por minuto). Use a Salary Structure "Estágio".
+
 ## Cadastros e regras (RH Ponto)
 
 | Cadastro | Para quê |
 |---|---|
 | Regra Sindical CCT | Percentuais de HE, tolerância, noturno, intervalos, DSR, banco de horas, professor |
-| Perfil de Jornada | Horário previsto por dia da semana (Fixa, Escala, Fragmentada, Professor, Horista, Intermitente) |
+| Perfil de Jornada | Horário previsto por dia da semana (Fixa, Escala, Fragmentada, Professor, Horista, Intermitente) e o repouso semanal padrão |
 | Grade de Aulas | Aulas dos professores |
 | Holiday List | Feriados nacionais, estaduais e **municipais** de cada filial (Empresa → "Feriados do ponto") |
 | Colaborador (aba Ponto) | CPF, perfil, CCT, banco de horas, tipo de remuneração, valor da hora-aula, CREF |

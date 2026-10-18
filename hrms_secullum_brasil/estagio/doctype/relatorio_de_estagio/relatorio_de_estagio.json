@@ -1,0 +1,145 @@
+{
+ "actions": [],
+ "autoname": "REL-EST-.#####",
+ "creation": "2026-10-19 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tce",
+  "employee",
+  "employee_name",
+  "periodo_inicio",
+  "periodo_fim",
+  "column_break_rel",
+  "relatorio_estagiario",
+  "avaliacao_supervisor",
+  "avaliacao_anexo",
+  "data_entrega",
+  "enviado_instituicao"
+ ],
+ "fields": [
+  {
+   "fieldname": "tce",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Termo de Compromisso",
+   "options": "Termo de Compromisso de Estagio",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "tce.employee",
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Estagiário",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "tce.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "periodo_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Período: início",
+   "reqd": 1
+  },
+  {
+   "fieldname": "periodo_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Período: fim",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_rel",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "relatorio_estagiario",
+   "fieldtype": "Attach",
+   "label": "Relatório do estagiário"
+  },
+  {
+   "fieldname": "avaliacao_supervisor",
+   "fieldtype": "Small Text",
+   "label": "Avaliação do supervisor"
+  },
+  {
+   "fieldname": "avaliacao_anexo",
+   "fieldtype": "Attach",
+   "label": "Avaliação (anexo)"
+  },
+  {
+   "fieldname": "data_entrega",
+   "fieldtype": "Date",
+   "label": "Data de entrega"
+  },
+  {
+   "fieldname": "enviado_instituicao",
+   "fieldtype": "Check",
+   "label": "Enviado à instituição de ensino"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Estagio",
+ "name": "Relatorio de Estagio",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Colaborador",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

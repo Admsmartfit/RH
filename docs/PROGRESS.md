@@ -417,3 +417,345 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Mascaramento de CPF/PIS em listagens para perfis não-RH (PRD 3.7).
 - CI no GitHub (repositório sem remoto) e primeiro commit.
 - Validações da Seção 13: ver `docs/checklist_validacao.md`.
+
+---
+
+# PRD de alterações (`docs/PRD-alteracoes.md`)
+
+## Alterações — Etapa 0: cadastros da ES Fitness (15/10/2026)
+
+### Feito
+- Script idempotente `utils/config_es_fitness.py:aplicar` (C-01, C-03, C-04, C-07) e guia de conferência para o RH em `docs/etapa0_rh.md`.
+- **C-07:** empresa ES Fitness Ltda (Vila Velha/ES, CNPJ 23.620.822/0002-51) e Holiday List 2026-2027 com os feriados nacionais e o estadual N. Sra. da Penha (data móvel: Páscoa + 8).
+- **C-01/C-04:** Regra Sindical CCT "SENALBA-ES × SINDELIVRE-ES 2026/2027": vigência 01/05/2026 a 30/04/2027, adicional noturno 25%, banco anual de 12 meses, sem redução do intervalo.
+- **C-03:** VR proporcional, descontando falta, atestado, férias, afastamento e abono. Para a ES Fitness, o script só cria a regra se receber o valor do dia (`valor_dia_vr`).
+- A academia de exemplo (seeds e site) recebeu as mesmas correções.
+
+### Decisões (15/10/2026)
+1. Etapa 0 feita por **script + guia** para o RH conferir.
+2. **Feriados municipais de Vila Velha** são cadastrados à mão pelo RH; o script não inventa datas.
+3. Ausências que tiram o dia do VR: falta, atestado, férias, afastamento e abono.
+
+### Pendências
+- RH: feriados municipais de Vila Velha e valor diário do VR da ES Fitness.
+- CCT cl. 22ª (banco de horas pago a 50% na rescisão) não é opção do programa; precisa de requisito novo no PRD de alterações.
+- CCT cl. 23ª (intervalo > 2h): continua liberado por Perfil de Jornada ("Permite intervalo estendido").
+- O PRD pede cópia em `prd/PRD-alteracoes.md` na pasta do projeto: essa pasta não existe neste ambiente.
+
+## Alterações — Etapa 1: DSR em duas rubricas e engine do VT (15/10/2026)
+
+### Feito
+- **AJ-13:** o reflexo no DSR (Súmula 172) sai em duas rubricas, **DSR_HE** (horas extras) e **DSR_ADN** (adicional noturno, novo Salary Component "DSR s/ Adicional Noturno").
+  - O componente antigo "DSR s/ HE e Adicional Noturno" foi renomeado para "DSR s/ Horas Extras" pelo patch `patches/renomear_dsr_he.py` (mantém os vínculos de Additional Salary já gerados).
+  - Aceite de setembro/2026: HE de R$ 165,00 → DSR_HE R$ 33,00; adicional noturno de R$ 59,86 → DSR_ADN R$ 11,97.
+- **Código da rubrica na folha (Prosoft):** novo campo "Código na folha" no Salary Component, preenchido no `after_migrate` só quando vazio (HE100 163, ADN 170, DSR_ADN 9188, DSR_HE 9189, HORAS 2, DSR_HOR 3). Aparece em cada lançamento do Fechamento de Ponto.
+- **AJ-06, parte 1:** `engine/vale_transporte.py` com dias previstos do mês, acerto do mês anterior, sugestão de carga, desconto de 6% limitado ao benefício (0% para estagiário), média das últimas cargas, travas de 15%/30% e pendências de cadastro (CPF, RG, CartãoGV). Todos os aceites do AJ-06 que não dependem do arquivo estão em `engine/tests/test_vale_transporte.py`.
+- Testes: 552 pytest (engine 99%) e 140 Frappe verdes.
+
+### Decisões (15/10/2026)
+1. A branch `claude/project-thread-fsnf1q` não estava disponível: AJ-13 e o engine do VT foram refeitos do zero.
+2. A geração das linhas do arquivo GVBus fica para quando o layout de 27 campos for enviado (até a Etapa 9).
+3. O mapa de códigos da folha é um campo do Salary Component (editável pelo RH), não uma tabela separada.
+4. As travas do VT valem só para **aumento** em relação à média; queda não trava (confirmado em 15/10/2026).
+
+### Pendências
+- Layout do arquivo GVBus (27 campos).
+
+## Alterações — Etapa 2: opções da CCT e do cargo (15/10/2026)
+
+### Feito
+- **Tabela "Parâmetros por cargo" na Regra Sindical CCT** (child `Regra CCT Parametro Cargo`): piso (mensalista R$/mês ou horista R$/hora), carga semanal de referência, adicional noturno do cargo e banco de horas padrão. Validações: cargo repetido, cargo fora da lista de cargos da CCT, noturno abaixo de 20% ou do percentual da CCT, piso mensalista sem carga de referência.
+- **AJ-01 (piso):** `engine/piso.py` (piso proporcional = piso x carga do perfil / carga de referência; horista sem proporção). Alerta laranja ao salvar a Salary Structure Assignment; "Avisos (não bloqueiam)" no Fechamento de Ponto; salário vigente e piso lado a lado no cadastro do colaborador.
+- **AJ-04 (noturno por cargo):** a valoração usa o percentual do cargo, se preenchido, senão o da CCT (`configuracao_ponto/cargo.py:percentual_noturno`).
+- **AJ-05 (banco padrão por cargo):** na admissão e na troca de cargo o colaborador recebe o padrão do cargo. Toda mudança da opção grava "Banco de horas: situação vale a partir de" (`banco_horas_desde`) = 1º dia do mês seguinte; até lá vale a situação anterior. Voltar atrás antes de a mudança valer desfaz a mudança. `banco_horas.participa(employee, data)` passou a receber a data.
+- **AJ-15 (interjornada):** percentual próprio na CCT (padrão 50%), no lugar do percentual de HE de dia útil. Campos "Incide INSS / FGTS / férias e 13º" no Salary Component para as rubricas do app; o padrão é aplicado uma vez por componente (INTER, INTRA_IND e VA_DESC sem incidência; as demais com) e depois vale o que o RH mudar.
+- **AJ-16 (duplicadas):** opção "Marcações duplicadas: Ignorar automaticamente / Só sinalizar" na CCT. Só sinalizar: inconsistência Alta e dia sem apuração até o tratamento (também no ramo do professor).
+- `configuracao_ponto/regras.py:regra_vigente_para` resolve a CCT a partir dos dados do cadastro em edição (troca de cargo antes de salvar).
+- Testes: 570 pytest (engine 99%) e 152 Frappe verdes (12 novos em `configuracao_ponto/test_parametros_cargo.py`).
+
+### Decisões (15/10/2026)
+1. Parâmetros por cargo numa tabela própria da CCT, e não na `Regra CCT Cargo` (essa tabela também é usada por Benefício e Prêmio).
+2. AJ-05: mudança da opção (manual ou por troca de cargo) vale a partir do 1º dia do mês seguinte; na admissão, desde o início; o padrão do cargo vem da CCT vigente na data do cadastro.
+3. AJ-15: incidências em campos do Salary Component (para as fórmulas do contador e a exportação); IRRF continua no campo nativo.
+4. AJ-16: duplicada no modo "só sinalizar" é inconsistência Alta (bloqueia o fechamento até o tratamento).
+
+### Pendências
+- Cadastrar os pisos e o banco padrão de cada cargo na CCT da ES Fitness (RH).
+- Contador: conferir as incidências padrão das 19 rubricas.
+
+## Alterações — Etapa 3: feriados (15/10/2026)
+
+### Feito
+- **AJ-11 (módulo de feriados):**
+  - `integrations/feriados/client.py`: cliente da BrasilAPI (retry em 429/5xx e rede, modo mock com fixture). Modo mock também por "Feriados nacionais em modo mock" na Configuracao Apuracao.
+  - DocType **Feriado Regional** (estadual, municipal ou ponto facultativo; data fixa ou móvel = dias depois da Páscoa; fonte/lei). Fixtures dos pontos facultativos nacionais: Carnaval (segunda e terça) e Corpus Christi.
+  - Empresa → **Pontos facultativos adotados**: só esses entram na lista da empresa.
+  - `apuracao/feriados.py:gerar_feriados(ano, company)` (RH): inclui na lista de feriados do ponto de cada empresa os nacionais obrigatórios + estaduais da UF + municipais do município + facultativos adotados. Não duplica, não traz de volta o que o RH removeu (`Holiday List.datas_removidas`), não mexe em período fechado. Cria a lista "Feriados - {empresa}" se não houver.
+  - Job anual (1º/12, 06:00): feriados do ano seguinte + aviso ao RH Ponto para revisar antes de 1º de janeiro.
+  - Holiday List: incluir/remover feriado em período fechado é recusado; dias alterados até hoje são marcados para reapuração.
+  - Engine `engine/feriados.py`: Páscoa (Meeus), datas fixas/móveis, classificação da fonte (Carnaval e Corpus Christi = ponto facultativo; domingo de Páscoa ignorado), novos sem duplicar.
+- **AJ-03 (folga de feriado trabalhado):**
+  - CCT: "Feriado trabalhado" (Pagar 100% — padrão / Compensar com folga / Escolher caso a caso) e "Prazo para dar a folga (dias)" (0 = até o domingo da semana do feriado).
+  - Tratamento de Ponto tipo **Compensação de feriado** (dia de trabalho = feriado; "Data da folga compensatória"): recusado se a CCT manda pagar 100%, se a folga sai do prazo ou se o dia não é feriado. Aprovar reapura os dois dias.
+  - Apuração: feriado compensado → horas normais, sem HE (`Apuracao Diaria.feriado_compensado`); dia da folga abonado (sem falta).
+  - Fechamento: no modo "Compensar com folga", feriado trabalhado sem compensação e ainda dentro do prazo é pendência bloqueante; depois do prazo, paga 100%.
+- Testes: 599 pytest (engine 99%) e 161 Frappe verdes (9 novos em `apuracao/test_feriados.py`).
+
+### Decisões (15/10/2026)
+1. Estaduais e municipais são cadastrados pelo RH (Feriado Regional); o programa não traz datas regionais prontas. N. Sra. da Penha é data móvel (Páscoa + 8): 05/04 em 2027 (o aceite do PRD foi corrigido).
+2. Carnaval e Corpus Christi são pontos facultativos (só para a empresa que adotar); o domingo de Páscoa da BrasilAPI é ignorado.
+3. Mudança de feriado em período fechado é recusada (reabrir o fechamento).
+4. AJ-03: Pagar 100% recusa compensação; Caso a caso paga 100% salvo compensação no prazo; Compensar com folga segura o fechamento até a folga ou o fim do prazo.
+5. Uma lista de feriados por empresa, que vai acumulando os anos (o vínculo da empresa não muda na virada do ano).
+
+### Pendências
+- Prazo da folga de feriado: a empresa ainda vai definir (padrão: mesma semana).
+- RH: cadastrar os feriados estaduais/municipais de cada filial em Feriado Regional e rodar `gerar_feriados`.
+
+## Alterações — Etapa 4: escala do mês, trocas e repouso semanal (15/10/2026)
+
+### Feito
+- **Escala Mensal** (por colaborador e mês, `ESC-{employee}-{ano}-{mm}`): cada dia é Trabalho (com horários), Repouso semanal ou Folga compensada. Botão "Preencher pelo perfil". Toda semana inteira precisa de exatamente um repouso (erro). Avisos que não impedem: interjornada < 11h, jornada > 6h sem 1h de intervalo, 7º dia seguido de trabalho, domingos seguidos (próximo domingo precisa ser de folga). Mudança em período fechado é recusada; dias alterados até hoje são reapurados.
+- **Troca de Escala** (submetível): linhas livres por colaborador e dia (troca entre dois, cobertura por outro colaborador ou folga sem cobertura). Quem cobre cumpre o horário do colaborador coberto (ou o horário informado). Se uma semana perde o repouso, a troca inclui uma linha marcando outra folga como repouso (ajuste automático, visível). Aprovar muda a Escala do Mês dos envolvidos (guardando a situação anterior); cancelar desfaz. Avisos de descanso e domingos simulando a escala com a troca.
+- **Aprovação:** RH ou o Gestor Ponto da equipe (exceção registrada em `engine/tests/test_permissoes.py` e `docs/permissoes.md`).
+- **Apuração:** a jornada do dia vem da Escala Mensal (com as trocas) e, sem ela, do Perfil de Jornada (`configuracao_ponto/escala.py:dia_da_escala`).
+- **AJ-02:** novo tipo de dia **Folga compensada** (faixa padrão 50%, pode ir para o banco; patch `faixa_folga_compensada` incluiu a faixa nas CCTs existentes). Folga que é o repouso: Domingo/Folga (100%); a outra folga: Folga compensada. Domingo escalado para trabalho é dia útil. Sem escala, o repouso é o domingo, se for folga, senão a primeira folga da semana (ou o dia configurado em "Repouso semanal padrão" no perfil).
+- **Domingos (AJ-09):** pelas batidas, inconsistência Média `domingos_sem_folga` quando os domingos trabalhados seguidos chegam ao limite (mulheres 2, homens 3 — campos na Empresa); resolve quando a pessoa folga.
+- **Relatório "Escala do Mes"**: calendário por colaborador (horário, R, FC, F), respeitando a equipe do gestor.
+- **C-05:** "Apuração de HE por compensação semanal" escondida no perfil (ainda não muda o cálculo); o tipo "Escala" passa a usar a Escala do Mês.
+- Testes: 624 pytest (engine 99%) e 168 Frappe verdes (7 novos em `configuracao_ponto/test_escala.py`). Carga 500 × 31: 223 s (meta < 300 s mantida).
+
+### Decisões (15/10/2026)
+1. O gestor aprova as trocas da própria equipe (o RH também).
+2. Troca flexível: qualquer colaborador pode cobrir, ou ninguém; o sistema avisa (interjornada, intervalo, 7 dias, domingos), mas não impede.
+3. HE em domingo escalado para trabalho segue a faixa de dia útil; o 100% fica para o repouso semanal trabalhado.
+4. Domingos seguidos: inconsistência Média pelas batidas e aviso na escala.
+5. Horista continua com a regra antiga de tipo de dia até a Etapa 6 (AJ-14).
+
+### Pendências
+- RH: cadastrar os perfis 5x2 (C-02) e gerar as escalas do mês da recepção.
+
+## Alterações — Etapa 5: descanso semanal de 35h e 7 dias seguidos (15/10/2026)
+
+### Feito
+- `engine/descanso_semanal.py`: maior descanso seguido da semana (segunda a domingo, atravessando folgas e a virada da semana), diferença até o mínimo da CCT (`descanso_semanal_minimo`, 35h) e 7º dia seguido.
+- **DSR Semanal** ganhou "Maior descanso seguido" e "Descanso suprimido"; abaixo de 35h abre a inconsistência Média `descanso_semanal` no domingo (resolve sozinha quando corrigido).
+- **Pagamento (Súmula 110):** a diferença é paga na rubrica **INTER**, com o percentual da interjornada da CCT e as mesmas incidências; a memória de cálculo mostra as duas parcelas.
+- **7º dia seguido (OJ 410):** as horas do 7º dia de trabalho seguido viram HE de 100% (tipo de dia "Folga") e abrem a inconsistência Alta `sete_dias_seguidos`.
+- Desempenho: as batidas do lote são pré-carregadas com 9 dias de margem (o descanso lê a semana e a vizinhança). Carga 500 × 31: 226 s (sem a margem: 375 s).
+- Testes: 633 pytest (engine 99%) e 171 Frappe verdes (3 novos em `apuracao/test_descanso_semanal.py`).
+
+### Decisões (15/10/2026)
+1. Descanso semanal suprimido pago junto da INTER (mesma natureza e incidências da interjornada).
+2. 7 dias seguidos: o 7º dia é pago a 100% e gera inconsistência Alta.
+
+### Pendências
+- Se um dia anterior for reapurado e deixar de ter trabalho, os 6 dias seguintes não são reapurados automaticamente (o 7º dia pode ficar desatualizado até a próxima reapuração do período).
+
+## Alterações — Etapa 6: horista com escala e mínimo de horas (16/10/2026)
+
+### Feito
+- **AJ-14 — horista com escala** (Escala do Mês no mês ou semana padrão no Perfil de Jornada "Horista"):
+  - dia previsto sem batida = falta das horas previstas (inconsistência Média); sem tolerância (paga o trabalhado; meia jornada não vira falta);
+  - folga e fim de semana trabalhados = horas normais; HE só acima de 8h no dia, acima de 44h na semana (`DSR Semanal.he_semanal_minutos`, faixa de dia útil) ou em feriado sem folga compensatória (AJ-03);
+  - **FALTA informativa**: vai ao Fechamento de Ponto e ao Additional Salary com a quantidade (minutos) e valor R$ 0,00 (as horas não trabalhadas já não são pagas; a falta conta para DSR e férias na folha);
+  - **mínimo de horas** no colaborador (horas, por mês ou semana, "faltas reduzem o mínimo"): a diferença é paga em HORAS, com a memória de cálculo. Mínimo semanal entra no mês em que a semana termina.
+  - Horista **sem** escala nem semana padrão continua como antes (domingo trabalhado = HE 100%).
+- **AJ-12 — DSR do horista:** CCT "DSR do horista: Semanal (padrão) / Mensal", "Incluir HE na base" (padrão não) e "Falta do horista desconta o DSR" (padrão não). Mensal: horas normais do mês (+ complemento do mínimo) / dias úteis do mês x (domingos + feriados), sem arredondar os minutos no meio.
+- **C-06:** o script da ES Fitness liga o DSR mensal na CCT SENALBA/SINDELIVRE.
+- Testes: 649 pytest (engine 99%) e 177 Frappe verdes (6 novos em `apuracao/test_horista_escala.py`). Carga 500 × 31: 239 s.
+
+### Decisões (16/10/2026)
+1. Falta do horista: HORAS paga só o trabalhado e a FALTA vai com valor zero (só a quantidade).
+2. Regra nova de HE só para horista com escala ou semana padrão; os demais mantêm o resultado antigo.
+3. DSR do horista semanal por padrão; mensal ligado só na CCT da ES Fitness.
+4. Mínimo semanal: a semana entra no mês em que termina.
+
+### Pendências
+- AJ-12, aceite de setembro/2026: o PRD dá R$ 268,85 com as horas arredondadas (81,47h); com os minutos exatos (81h28 = 81,4667h) o programa dá R$ 268,84.
+- Contador: tirar as horas extras da base do DSR (código 3) na folha de setembro (PRD de alterações, seção 8).
+
+## Alterações — Etapa 7: prêmio com regras SE / E / ENTÃO (16/10/2026)
+
+### Feito
+- **Regra de Premiacao → "Regras (SE / ENTÃO)"** (child `Regra Premiacao Regra`): ordem, descrição, SE = Todas (E) ou Qualquer (OU), ENTÃO = Pagar percentual / Pagar valor / Não pagar, ativa. **SENÃO** configurável (padrão: pagar 100%). Vale a primeira regra verdadeira pela ordem.
+- **Condições** ganharam "Regra nº" (a que regra pertencem; vazio = formato antigo, tudo ou nada) e "N / horário".
+- **Métricas novas** (`engine/premiacao.py`): dias com atraso acima de N min, maior sequência de dias de trabalho seguidos com atraso acima de N min (folga, feriado e dia abonado não quebram nem contam), chegadas depois de HH:MM.
+- **Simular** (botão na Regra de Premiacao): colaborador e mês → regra aplicada, valor, detalhe de cada regra e valor de cada métrica.
+- **Avaliação Mensal** grava a regra aplicada; o **Espelho de Ponto** mostra os prêmios do mês com a regra aplicada e os números das métricas.
+- Mudança de regras vale a partir da nova vigência (a Regra de Premiacao já é versionada por vigência; meses fechados não mudam).
+- Regras antigas (sem a tabela de regras) continuam iguais.
+- Testes: 660 pytest (engine 99%) e 183 Frappe verdes (6 novos em `apuracao/test_premio_regras.py`).
+
+### Decisões (16/10/2026)
+1. Um conector por regra (todas = E ou qualquer = OU); para misturar, cria-se outra regra na ordem.
+2. "Dias seguidos" com atraso = dias de trabalho seguidos.
+3. Atestado pode reduzir o prêmio (decisão da empresa no PRD; risco registrado).
+
+## Alterações — Etapa 8: custeio do benefício social da CCT (18/10/2026)
+
+### Feito
+- `engine/custeio_cct.py`: quem conta no mês de referência (vínculo no mês; afastado pelo INSS até o 12º mês; estagiário fora), total, vencimento (mês seguinte, dia da CCT) e início da cobrança.
+- **Regra Sindical CCT → "Custeio do benefício social"**: valor por trabalhador, dia do vencimento, início da cobrança.
+- **Relatório "Contribuicoes da CCT"** (Reports): por empresa e CCT, trabalhadores do mês de referência (padrão: mês anterior), valor, total e vencimento.
+- **E-mail todo dia 1º** (07:00) com o relatório da folha anterior para os e-mails de "Configuração Apuração → Custeio da CCT" (vazio: usuários RH Ponto). A verba nunca vira desconto em folha.
+- Script da ES Fitness: R$ 26,00 por trabalhador, vencimento dia 10, cobrança a partir de 10/08/2026.
+- Testes: 665 pytest (engine 99%) e 186 Frappe verdes (3 novos em `apuracao/test_custeio_cct.py`).
+
+### Decisões (16/10/2026)
+1. Contagem pelo cadastro ativo no mês de referência (inclui afastados), tirando os afastados pelo INSS (Alerta Previdenciário "Encaminhado ao INSS", desde o 16º dia) há mais de 12 meses.
+2. Só empregados CLT: estagiário (tipo de remuneração "Estagiario" ou tipo de emprego "Intern") não conta; aprendiz conta.
+
+### Pendências
+- O tipo de emprego "Intern" do HRMS tira o colaborador da contagem: conferir o cadastro dos empregados.
+
+## Alterações — Etapa 9: vale-transporte, telas e folha (18/10/2026)
+
+### Feito
+- **Colaborador → Vale-transporte**: usa VT, declaração de recusa, CartãoGV, RG e órgão emissor, tarifa 1/2 e passagens por dia. **CPF, RG e CartãoGV no nível de permissão 2** (só RH Ponto, RH Saúde, HR Manager e System Manager; o `after_migrate` cria as permissões copiando as do Employee para Custom DocPerm).
+- **Tarifa VT** (por empresa, código GVBus, valores com vigência).
+- **Carga de VT** (por empresa e mês de uso, submetível = confirmar depois da compra no portal):
+  - "Gerar sugestão": dias de trabalho do mês (Escala do Mês ou perfil, sem feriados e sem ausências já lançadas) menos o acerto do mês anterior (dias da carga anterior em que a pessoa não trabalhou); valor = dias x tarifas vigentes.
+  - Média das últimas cargas confirmadas (3 a 6 meses, Configuração Apuração); aumento a partir de 15% pede motivo; acima de 30% trava até a liberação do **Gestor DP** (papel novo). Queda não trava.
+  - Sem CPF válido, RG ou CartãoGV: "Erro de cadastro" (fora do arquivo e do total). "Inativo a partir de" limita os dias.
+  - Dias editáveis com justificativa; **edição em lote** (filtros por cargo, departamento, perfil, nome/CPF ou linhas selecionadas): mudar tarifa, passagens por dia, abonar/descontar dias, inativar. Tudo no **Log Carga VT** (usuário, data, valor anterior, novo e justificativa), além do histórico de versões.
+  - Cancelar uma carga de mês com o ponto fechado é recusado.
+- **Folha:** VT (informativo, componente fora do total) e **VT_DESC** (percentual por tipo de colaborador na Configuração Apuração; padrão 6%, estagiário 0%; horista: sobre as horas pagas no mês), a partir da carga confirmada do mês.
+- "Emitir arquivo GVBus" avisa que o layout está pendente (`payroll_handoff/vale_transporte.py:linhas_do_arquivo`).
+- Testes: 678 pytest e 194 Frappe verdes (8 novos em `payroll_handoff/test_vale_transporte.py`).
+
+### Decisões (18/10/2026)
+1. Arquivo GVBus fica para quando o layout chegar.
+2. VT informativo + VT_DESC na folha.
+3. Papel novo **Gestor DP** libera as cargas travadas; o RH Ponto edita e confirma.
+4. CPF, RG e CartãoGV restritos ao RH por nível de permissão.
+
+### Pendências
+- Layout do arquivo GVBus (27 campos) e endereço/CEP do colaborador para o arquivo.
+- As permissões do Employee passaram a ser Custom DocPerm (cópia das padrão): mudanças futuras do HRMS nas permissões do Employee não entram sozinhas.
+
+## Alterações — Etapa 10: adicional de insalubridade ou periculosidade (18/10/2026)
+
+### Feito
+- `engine/adicional_risco.py`: validação (periculosidade só 30%; insalubridade 10/20/40% ou aviso), valor mensal, 1/30 por dia de falta (mensalista), horas pagas / 220 (horista), sem acumular (vale o maior), EPI que neutraliza = sem pagamento.
+- **Regra de Adicional de Risco** (vigência, cargos e/ou colaboradores, tipo, percentual, base = salário mínimo vigente / salário base / piso da CCT, laudo com arquivo, número, data e validade, "EPI neutraliza"). **Salario Minimo** com vigência.
+- **Folha:** rubricas **INSALUB** e **PERIC**; o adicional entra no valor-hora da HE, do adicional noturno, do banco pago e da interjornada (OJ 47). Laudo vencido ou ausente: aviso no Fechamento de Ponto.
+- Aceites: R$ 1.800,00 a 20% = R$ 360,00 (1 falta: R$ 348,00); mínimo R$ 1.621,00 = R$ 324,20 (1 falta: R$ 313,39); periculosidade de 20% recusada.
+- Testes: engine 590+ e 6 Frappe novos em `configuracao_ponto/test_adicional_risco.py`.
+
+### Decisões (18/10/2026)
+1. "EPI neutraliza" marcado: o adicional não é pago.
+
+### Pendências
+- RH: cadastrar o salário mínimo vigente e a regra de insalubridade do ASG com o laudo (C-08).
+
+## Alterações — Etapa 11: EPI e uniforme (18/10/2026)
+
+### Feito
+- **Módulo novo `Seguranca Trabalho`** (`seguranca_trabalho/`, em `modules.txt`).
+- **Item de Seguranca** (EPI ou uniforme; CA e validade; troca a cada N dias; valor; cargos — vazio = todos).
+- **Entrega de EPI** (submetível; entrega ou devolução; motivo admissão/troca/perda/dano; filial do estoque). Confirmação pelo colaborador no sistema ("Confirmar recebimento", só o próprio usuário) ou ficha assinada anexada. **Ficha de EPI** (print format) com o histórico e a declaração da NR-6.
+- **Entrada de EPI** (submetível) e estoque por filial = entradas − entregas + devoluções (aviso na entrega sem saldo).
+- **Alertas diários** (`seguranca_trabalho/alertas.py:verificar_epi`): sem primeira entrega após N dias da admissão (Configuração Apuração, padrão 5), troca vencida (no dia N+1), CA vencido e devolução pendente na demissão. Cada um é inconsistência Média (some quando resolvida) e notificação ao RH e ao gestor na primeira vez.
+- **Desconto só por dano doloso:** na entrega por dano, o RH marca "Dano doloso" com valor e justificativa (decisão registrada) → rubrica **DESC_EPI** no fechamento. Sem isso, nunca há desconto.
+- Gestor vê as entregas da equipe; colaborador vê as próprias (filtros de linha).
+- Testes: 7 Frappe em `seguranca_trabalho/test_epi.py` + engine `engine/epi.py`.
+
+### Decisões (18/10/2026)
+1. Estoque por filial (Branch). 2. Confirmação por PDF assinado ou pelo colaborador no sistema. 3. Alertas = notificação + inconsistência Média. 4. Desconto por dano doloso com decisão registrada (DESC_EPI).
+
+## Alterações — Etapa 12: ASO e treinamentos (18/10/2026)
+
+### Feito
+- **ASO** (admissional, periódico, retorno, mudança de risco, demissional; data; próximo vencimento — vazio sugere 1 ano; resultado, médico, CRM e anexo em **permlevel 1**, só RH Saúde e System Manager).
+- **Tipo de Treinamento** (validade em meses, cargos — vazio = todos) e **Treinamento Realizado** (validade calculada; certificado).
+- **Alertas diários** (`verificar_aso_treinamentos`): aviso único ao RH e ao gestor 30 dias antes do vencimento; vencido = inconsistência Média `aso_vencido` / `treinamento_vencido` (some com o novo registro) e linha nos "Avisos (não bloqueiam)" do Fechamento de Ponto.
+- Testes: 5 Frappe em `seguranca_trabalho/test_aso.py` + engine `engine/aso.py`.
+
+### Decisões (18/10/2026)
+1. ASO vencido não bloqueia o fechamento (aviso). 2. Vencimento informado pelo RH (PCMSO), com sugestão de 1 ano.
+
+## Alterações — Etapa 13: estágio, regras puras (18/10/2026)
+
+### Feito
+- `engine/estagio.py` (100% de cobertura) e constantes em `engine/defaults_legais.py`: limites por nível de ensino (6h/30h superior, profissional de nível médio e médio regular; 4h/20h educação especial e fundamental EJA), erros do TCE (carga diária/semanal, cadeia de aditivos acima de 24 meses salvo PcD, não obrigatório sem bolsa ou auxílio-transporte, supervisor com mais de 10, fim antes do início), aviso de seguro, dia de prova (metade da jornada, para baixo), meses completos e saldo de recesso (2,5 dias/mês), datas de alerta (30/15/5), relatórios semestrais devidos, proporção no quadro (art. 17) e desconto da bolsa (dia = bolsa/30; minuto = bolsa/(carga semanal x 5)/60).
+- Todos os testes mínimos da etapa no `engine/tests/test_estagio.py`.
+
+## Alterações — Etapa 14: estágio no motor de apuração (18/10/2026)
+
+### Feito
+- `EntradaDia.estagio`, `EntradaDia.limite_diario_estagio` e `ResultadoDia.excesso_estagio`. Com a flag: o que passa do previsto (ou da carga diária do TCE) vai para `excesso_estagio`, nunca HE nem banco, com inconsistência Alta `excesso_jornada_estagio`; sem intervalo indenizado nem interjornada paga; noturno só registrado; atraso e falta normais. Sem a flag, nada muda.
+- Tipos novos no Select de Inconsistencia de Ponto: `excesso_jornada_estagio`, `excesso_semanal_estagio`, `tce_vencido`, `relatorio_estagio_pendente`, `seguro_estagio_vencido`.
+- Testes em `engine/tests/test_apuracao_estagio.py` (651 pytest no total).
+
+## Alterações — Etapa 15: estágio, módulo e cadastros (18/10/2026)
+
+### Feito
+- **Módulo novo `Estagio`** (`estagio/`): Instituicao de Ensino, Agente de Integracao (fixtures CIEE-ES e IEL-ES), **Termo de Compromisso de Estagio** (submetível; nível de ensino, obrigatório, PcD, vigência, carga diária/semanal, dia de prova, bolsa, auxílio-transporte, supervisor, seguro, TCE assinado, termo aditivo por `tce_anterior`) e a filha **Calendario Academico Estagio** (prova, férias escolares, suspensão de calendário com "abonar os dias").
+- Validações pelo engine (Etapa 13) e sem sobreposição de TCEs do mesmo estagiário; `estagio/tce.py:get_tce_vigente(employee, data)`.
+- Ao submeter: o colaborador vira "Estagiario" (nova opção do tipo de remuneração), tipo de emprego "Intern", e sai do banco de horas na hora.
+- **EST-03:** perfil com dia acima da carga diária ou semana acima da semanal do TCE é recusado (no submit do TCE e ao trocar o perfil do estagiário); perfis Horista, Professor e Intermitente não servem para estagiário.
+- Gestor vê os TCEs da equipe; colaborador vê só o próprio.
+- **Correção encontrada nos testes:** o HRMS cria User Permission de Employee para o usuário do colaborador, e um segundo link para Employee (gestor, supervisor, cobrindo) escondia os registros do próprio colaborador. Todos esses links passaram a ignorar a User Permission (a visibilidade por linha é do app); teste em `engine/tests/test_permissoes.py` e regressão em `apuracao/test_visibilidade.py`.
+- Testes: 7 Frappe em `estagio/test_tce.py`.
+
+## Alterações — Etapa 16: apuração do estagiário no Frappe (18/10/2026)
+
+### Feito
+- Adaptador: estagiário ("Estagiario") com TCE vigente → `EntradaDia.estagio` e limite diário do TCE (TCE em `lote.memo`). Dia de prova (calendário do TCE, com "reduz a jornada") = primeira metade da jornada prevista; suspensão de calendário marcada para abonar = dia abonado.
+- `Apuracao Diaria.excesso_estagio`; semana acima da carga semanal do TCE = inconsistência Alta `excesso_semanal_estagio` no domingo.
+- Estagiário não gera DSR Semanal nem Banco de Horas Movimento. Mudar o calendário acadêmico (TCE submetido) reapura os dias afetados.
+- Testes: 5 Frappe em `estagio/test_apuracao_estagio.py`. Carga 500 × 31: 211 s.
+
+## Alterações — Etapa 17: recesso do estagiário (18/10/2026)
+
+### Feito
+- Leave Type **Recesso de Estagio** (fixture). `estagio/recesso.py`: saldo = 2,5 dias por mês completo da cadeia de TCEs − recessos aprovados; Leave Application acima do saldo é recusada; fora das férias escolares do calendário, aviso; sem bolsa, aviso de recesso não remunerado. Saldo somente leitura no TCE, atualizado ao aprovar/cancelar. O dia aprovado já fica abonado na apuração.
+- Testes: 3 Frappe em `estagio/test_recesso.py`.
+
+## Alterações — Etapa 18: relatórios semestrais e alertas do estágio (18/10/2026)
+
+### Feito
+- DocType **Relatorio de Estagio** (TCE, período, relatório do estagiário, avaliação do supervisor, entrega, enviado à instituição).
+- Job diário `estagio/alertas.py:verificar_estagios`: TCE vencendo em 30/15/5 dias (notificação ao RH e ao supervisor), TCE vencido com batida (`tce_vencido`, Alta), seguro vencido (`seguro_estagio_vencido`, Alta), relatório no 5º mês (aviso) e semestre vencido sem relatório (`relatorio_estagio_pendente`), cadeia chegando a 24 meses (aviso 60 dias antes), TCE encerrado com saldo de recesso (aviso para pagar o proporcional). Erros viram log.
+- Termo aditivo recusado se houver relatório semestral vencido sem anexo na cadeia. Proporção no quadro (art. 17): aviso na gravação do TCE.
+- Testes: 5 Frappe em `estagio/test_alertas_estagio.py`.
+
+### Decisões (18/10/2026)
+1. `relatorio_estagio_pendente` com severidade **Média** (não bloqueia o fechamento) — o PRD não define; confirmar.
+
+## Alterações — Etapa 19: folha do estagiário (18/10/2026)
+
+### Feito
+- `engine/valoracao.py`, ramo de estágio: só **BOLSA_DESC** (falta = bolsa/30; atraso = bolsa/(carga semanal x 5)/60) e o VT (com 0% de desconto). Nunca HE, ADN, DSR, banco, intrajornada ou interjornada.
+- O Fechamento de Ponto usa a bolsa e a carga semanal do TCE vigente. Salary Components novos: **BOLSA_DESC** e **RECESSO_EST** (26 no total); Salary Structure "Estágio" documentada em `docs/implantacao.md`.
+- Aceite: bolsa R$ 1.200,00, 1 falta e 30 min de atraso → BOLSA_DESC R$ 44,00 e nenhuma outra rubrica (`estagio/test_folha_estagio.py`).
+
+### Pendências
+- RECESSO_EST (recesso proporcional no fim do estágio) é lançado pelo RH a partir do aviso do job diário.
+
+## Alterações — Etapa 20: documentação final (18/10/2026)
+
+### Feito
+- `docs/manual_rh.md`: escala do mês e trocas, feriados, opções da CCT por cargo, horista com escala, prêmio SE/ENTÃO, vale-transporte, insalubridade, EPI e uniforme, ASO e treinamentos, estagiários.
+- `docs/manual_gestor.md`: escala e trocas (aprovação do gestor).
+- `docs/implantacao.md`: papéis, fixtures, 26 Salary Components, permissões do Employee (nível 2), Salary Structure "Estágio".
+- `docs/checklist_validacao.md`: decisões do PRD de alterações a validar com jurídico e contador.
+- `docs/permissoes.md`: matriz regenerada (41 DocTypes).
+- Situação final: 806 pytest (engine 99%) e 234 testes Frappe verdes; carga 500 × 31 em 211 s.
+
+### Pendências gerais do PRD de alterações
+- Layout do arquivo GVBus (27 campos).
+- C-02: o RH cadastra os perfis 5x2 e as escalas do mês; C-07: feriados municipais de Vila Velha; C-03: valor diário do VR.
+- Confirmar: severidade de `relatorio_estagio_pendente` (Média).
+
+## Documentação de regras por cargo e ambiente de teste no Windows (18/10/2026)
+
+### Feito
+- `docs/regras_por_cargo.md`: todas as regras e parâmetros. A **Regra padrão para todos os cargos** fica numa única seção (cadastro, marcações, HE, feriados, noturno, intervalos, escala, faltas/DSR, banco, atestados, benefícios, VT, saúde e segurança, fechamento), com valor legal x ES Fitness e onde muda. Depois, só as diferenças de recepcionista, ASG, instrutor horista, estagiário, professor, outros mensalistas e intermitente.
+- `docs/manual_teste_windows.md`: passo a passo com 14 cenários de batida conferidos (setembro/2026), correção, fechamento com os valores esperados (proventos R$ 2.162,85, descontos R$ 132,00, 12 Additional Salary) e testes de tela das demais funções.
+- `utils/demo.py`: cenário de teste da ES Fitness (um colaborador por cargo, estrutura salarial "TESTE ES Fitness"; horista com base = valor da hora e divisor 1), batidas simuladas e `limpar_teste` (só com developer_mode). `docker/teste.ps1`: atalhos `ligar`, `iniciar`, `preparar`, `bater`, `semana`, `apurar`, `limpar`, `feriados`, `alertas`, `migrar`, `testes`, `desligar`.
+- Correções achadas no teste: opção "Pagar 100%" do feriado trabalhado virou **"Pagar em dobro"** (o migrate dobrava o `%` no default da coluna; patch `feriado_pagar_em_dobro`); noturno do cargo vazio (recarregado como 0) não bloqueia mais o salvamento da CCT.
+- Testes: 709 pytest do engine (cobertura 99%) e 235 testes Frappe verdes; ruff limpo.
+- Teste completo sem o Secullum: `utils/demo.py` passou a 8 colaboradores (2 recepcionistas diurnos, 1 noturno, 2 ASG, 2 instrutores horistas, 1 estagiária) e `gerar_agosto` (`t agosto`) cria agosto/2026 inteiro (530 batidas, 24 inconsistências, 5 Altas) com ocorrências roteirizadas. Conferido: depois dos tratamentos do manual, fechamento de agosto com proventos R$ 4.303,57 e descontos R$ 436,00. A integração Secullum fica desligada (`ativo` = 0): sem coleta, sem envio de cadastro e sem reconciliação.
+- Observação do teste: intervalo de almoço de 58–59 min ou jornada de 4h02 sem pausa já geram inconsistência e indenização (não há tolerância no intervalo). Confirmar com o jurídico se a empresa quer tolerância.

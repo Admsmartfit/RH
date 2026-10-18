@@ -28,6 +28,13 @@ DEFAULTS_CCT = {
 	"computar_todo_tempo_ao_exceder": d.COMPUTAR_TODO_TEMPO_AO_EXCEDER,
 	"compensar_atraso_com_he": d.COMPENSAR_ATRASO_COM_HE,
 	"duplicidade_minutos": d.DUPLICIDADE_MIN,
+	"duplicadas_modo": d.DUPLICADAS_MODO_PADRAO,
+	"percentual_interjornada": d.PERCENTUAL_INTERJORNADA,
+	"feriado_trabalhado": d.FERIADO_TRABALHADO_PADRAO,
+	"prazo_folga_feriado_dias": d.PRAZO_FOLGA_FERIADO_DIAS,
+	"dsr_horista_modo": d.DSR_HORISTA_MODO_PADRAO,
+	"dsr_horista_inclui_he": d.DSR_HORISTA_INCLUI_HE,
+	"falta_horista_desconta_dsr": d.FALTA_HORISTA_DESCONTA_DSR,
 	"limite_he_diaria": d.LIMITE_HE_DIARIA_MIN,
 	"noturno_inicio": d.NOTURNO_INICIO,
 	"noturno_fim": d.NOTURNO_FIM,
@@ -106,4 +113,5 @@ def test_faixas_padrao_do_banco_so_dia_util_e_sabado():
 	assert {f.tipo_dia for f in d.FAIXAS_HE_PADRAO if f.vai_para_banco} == {
 		d.TIPO_DIA_UTIL,
 		d.TIPO_DIA_SABADO,
+		d.TIPO_DIA_FOLGA_COMPENSADA,
 	}

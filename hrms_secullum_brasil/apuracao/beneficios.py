@@ -8,6 +8,7 @@ Ponto (Etapa 10) transforma em Additional Salary (prêmios e coparticipação).
 import calendar
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal
 
 import frappe
 from frappe import _
@@ -22,7 +23,18 @@ from hrms_secullum_brasil.engine.beneficios import (
 	RegraBeneficio,
 	calcular_beneficio,
 )
-from hrms_secullum_brasil.engine.premiacao import Condicao, avaliar_premio
+from hrms_secullum_brasil.engine.jornada_prevista import minutos_do_dia
+from hrms_secullum_brasil.engine.premiacao import (
+	METRICAS_COM_PARAMETRO,
+	PAGAR_PERCENTUAL,
+	Acao,
+	Condicao,
+	DiaPremio,
+	RegraPremio,
+	aplicar_regras,
+	avaliar_premio,
+	valor_metrica,
+)
 from hrms_secullum_brasil.engine.vigencia import RegraComVigencia, Vigencia, selecionar_vigentes
 
 AVALIACAO = "Avaliacao Mensal"
@@ -164,6 +176,91 @@ def regra_beneficio_do_doc(doc) -> RegraBeneficio:
 # ------------------------------------------------------------------ avaliação
 
 
+def dias_do_premio(employee: str, inicio: date, fim: date) -> list[DiaPremio]:
+	"""Dias do mês para as métricas com parâmetro do prêmio (AJ-07): atraso e primeira entrada."""
+	dias = []
+	for ap in frappe.get_all(
+		"Apuracao Diaria",
+		filters={"employee": employee, "data": ["between", [inicio, fim]]},
+		fields=["data", "previsto", "abonado", "feriado", "atraso", "marcacoes"],
+		order_by="data asc",
+	):
+		primeira = (ap.marcacoes or "").split(",")[0].strip()
+		hora = primeira.split(" ")[-1] if primeira else ""
+		dias.append(
+			DiaPremio(
+				getdate(ap.data),
+				bool(cint(ap.previsto)) and not cint(ap.abonado) and not cint(ap.feriado),
+				cint(ap.atraso),
+				minutos_do_dia(hora) if ":" in hora else None,
+			)
+		)
+	return dias
+
+
+def avaliar_regra_premio(regra, metricas: dict, dias: list[DiaPremio]) -> dict:
+	"""Uma Regra de Premiacao no mês: regras SE/ENTÃO (AJ-07) ou, sem elas, o formato antigo (tudo ou nada)."""
+	ativas = [r for r in regra.get("regras") or [] if cint(r.ativa)]
+	if ativas:
+		regras = [
+			RegraPremio(
+				cint(r.ordem),
+				tuple(
+					Condicao(c.metrica, c.operador, flt(c.limite), c.parametro)
+					for c in regra.condicoes
+					if cint(c.regra) == cint(r.ordem)
+				),
+				r.acao,
+				flt(r.valor),
+				r.combinacao or "Todas",
+			)
+			for r in ativas
+		]
+		senao = Acao(regra.senao_acao or PAGAR_PERCENTUAL, flt(regra.senao_valor))
+		resultado = aplicar_regras(regras, senao, Decimal(str(flt(regra.valor))), metricas, dias)
+		return {
+			"regra": regra.name,
+			"aprovado": int(resultado.valor > 0),
+			"regra_aplicada": resultado.regra,
+			"valor": float(resultado.valor),
+			"componente": regra.componente,
+			"detalhe": "\n".join(resultado.detalhe),
+		}
+	condicoes = tuple(
+		Condicao(c.metrica, c.operador, flt(c.limite), c.parametro)
+		for c in regra.condicoes
+		if not cint(c.regra)
+	)
+	aprovado, detalhes = avaliar_premio(condicoes, metricas, regra.combinacao or "Todas", dias)
+	return {
+		"regra": regra.name,
+		"aprovado": int(aprovado),
+		"regra_aplicada": "Todas as condições" if aprovado else "Condições não atendidas",
+		"valor": flt(regra.valor) if aprovado else 0,
+		"componente": regra.componente,
+		"detalhe": "\n".join(f"{'✔' if d.atendida else '✘'} {d.texto}" for d in detalhes),
+	}
+
+
+@frappe.whitelist()
+def simular_premio(regra: str, employee: str, ano: int, mes: int) -> dict:
+	"""AJ-07: qual regra seria aplicada para o colaborador no mês, e o valor (não grava nada)."""
+	frappe.only_for(("System Manager", "RH Ponto"))
+	inicio, fim = periodo_do_mes(cint(ano), cint(mes))
+	_dias, metricas = metricas_do_mes(employee, inicio, fim)
+	doc = frappe.get_doc("Regra de Premiacao", regra)
+	dias = dias_do_premio(employee, inicio, fim)
+	resultado = avaliar_regra_premio(doc, metricas, dias)
+	for condicao in doc.condicoes:
+		if condicao.metrica in METRICAS_COM_PARAMETRO and condicao.parametro:
+			chave = f"{condicao.metrica}({condicao.parametro})"
+			metricas[chave] = valor_metrica(
+				Condicao(condicao.metrica, condicao.operador, 0, condicao.parametro), metricas, dias
+			)
+	resultado["metricas"] = metricas
+	return resultado
+
+
 def avaliar_colaborador(employee: str, ano: int, mes: int) -> str | None:
 	inicio, fim = periodo_do_mes(ano, mes)
 	if not frappe.db.exists("Apuracao Diaria", {"employee": employee, "data": ["between", [inicio, fim]]}):
@@ -186,18 +283,9 @@ def avaliar_colaborador(employee: str, ano: int, mes: int) -> str | None:
 		)
 
 	premios = []
+	dias_mes = dias_do_premio(employee, inicio, fim)
 	for regra in regras_vigentes("Regra de Premiacao", emp.company, fim, emp.designation):
-		condicoes = tuple(Condicao(c.metrica, c.operador, flt(c.limite)) for c in regra.condicoes)
-		aprovado, detalhes = avaliar_premio(condicoes, metricas, regra.combinacao or "Todas")
-		premios.append(
-			{
-				"regra": regra.name,
-				"aprovado": int(aprovado),
-				"valor": flt(regra.valor) if aprovado else 0,
-				"componente": regra.componente,
-				"detalhe": "\n".join(f"{'✔' if d.atendida else '✘'} {d.texto}" for d in detalhes),
-			}
-		)
+		premios.append(avaliar_regra_premio(regra, metricas, dias_mes))
 
 	nome = f"AVM-{employee}-{inicio.isoformat()}"
 	doc = frappe.get_doc(AVALIACAO, nome) if frappe.db.exists(AVALIACAO, nome) else frappe.new_doc(AVALIACAO)

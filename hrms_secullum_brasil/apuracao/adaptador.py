@@ -10,14 +10,18 @@ from datetime import date, datetime, timedelta
 import frappe
 from frappe.utils import cint, flt, getdate
 
-from hrms_secullum_brasil.apuracao.lote import ativo, documento, janela, memo, valor_single
+from hrms_secullum_brasil.apuracao.lote import ativo, consultar, documento, janela, memo, valor_single
+from hrms_secullum_brasil.configuracao_ponto.escala import dia_da_escala, horista_escalado, jornada_do_perfil
 from hrms_secullum_brasil.configuracao_ponto.regras import (
 	RegraAmbiguaError,
 	get_perfil_vigente,
 	get_regra_vigente,
 )
+from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.defaults_legais import FaixaHE
-from hrms_secullum_brasil.engine.jornada_prevista import minutos_do_dia, montar_periodos
+from hrms_secullum_brasil.engine.descanso_semanal import setimo_dia_seguido
+from hrms_secullum_brasil.engine.estagio import periodos_dia_de_prova
+from hrms_secullum_brasil.engine.jornada_prevista import minutos_do_dia
 from hrms_secullum_brasil.engine.models import (
 	MEDIA,
 	EntradaDia,
@@ -26,12 +30,16 @@ from hrms_secullum_brasil.engine.models import (
 	RegraApuracao,
 )
 from hrms_secullum_brasil.engine.professor import Aula, EntradaProfessor
+from hrms_secullum_brasil.estagio.tce import get_tce_vigente
 
 RAW = "Secullum Checkin Raw"
 TRATAMENTO = "Tratamento de Ponto"
 INCLUSAO = "Inclusao de marcacao"
 DESCONSIDERAR = "Desconsiderar marcacao"
 ABONO = "Abono do dia"
+COMPENSACAO = "Compensação de feriado"  # AJ-03
+ESTAGIARIO = "Estagiario"  # EST-04
+MARGEM_DIAS = 9  # pré-carga das batidas além da janela do lote (semana do descanso semanal + virada)
 
 DIAS_SEMANA = (
 	"Segunda-feira",
@@ -70,6 +78,7 @@ def regra_de_cct(cct) -> RegraApuracao:
 		computar_todo_tempo_ao_exceder=bool(cint(cct.computar_todo_tempo_ao_exceder)),
 		compensar_atraso_com_he=bool(cint(cct.compensar_atraso_com_he)),
 		duplicidade_minutos=cint(cct.duplicidade_minutos),
+		ignorar_duplicadas=cct.get("duplicadas_modo") != d.DUPLICADAS_SINALIZAR,
 		limite_he_diaria=cint(cct.limite_he_diaria),
 		faixas_he=tuple(
 			FaixaHE(
@@ -97,17 +106,8 @@ def regra_de_cct(cct) -> RegraApuracao:
 
 
 def jornada_do_dia(perfil, data: date) -> JornadaPrevista:
-	nome_dia = DIAS_SEMANA[data.weekday()]
-	linha = next((linha for linha in perfil.dias if linha.dia_semana == nome_dia), None)
-	periodos = []
-	if linha:
-		periodos, _ = montar_periodos(
-			[
-				(minutos_do_dia(linha.get(f"entrada{n}")), minutos_do_dia(linha.get(f"saida{n}")))
-				for n in (1, 2, 3)
-			]
-		)
-	return JornadaPrevista(tuple(periodos), bool(cint(perfil.permite_intervalo_estendido)))
+	"""Jornada da semana fixa do perfil (sem a Escala do Mês)."""
+	return jornada_do_perfil(perfil, data)
 
 
 # ------------------------------------------------------------------ feriados
@@ -151,9 +151,10 @@ def janela_do_dia(data: date, hora_virada: int) -> tuple[datetime, datetime]:
 
 
 def _carregar_marcacoes(employees: tuple[str, ...], periodo) -> dict:
-	"""Batidas ativas e tratamentos de marcação dos colaboradores no período do lote (uma consulta de cada)."""
-	inicio = datetime.combine(periodo[0] - timedelta(days=1), datetime.min.time())
-	fim = datetime.combine(periodo[1] + timedelta(days=2), datetime.min.time())
+	"""Batidas ativas e tratamentos de marcação dos colaboradores no período do lote (uma consulta de cada),
+	com MARGEM_DIAS antes e depois: o descanso semanal (AJ-10) lê a semana inteira e a vizinhança."""
+	inicio = datetime.combine(periodo[0] - timedelta(days=MARGEM_DIAS), datetime.min.time())
+	fim = datetime.combine(periodo[1] + timedelta(days=MARGEM_DIAS + 1), datetime.min.time())
 	return {
 		"raws": frappe.get_all(
 			RAW,
@@ -176,7 +177,10 @@ def _carregar_marcacoes(employees: tuple[str, ...], periodo) -> dict:
 				"docstatus": 1,
 				"tipo": INCLUSAO,
 				"employee": ["in", list(employees)],
-				"data": ["between", [periodo[0] - timedelta(days=1), periodo[1] + timedelta(days=1)]],
+				"data": [
+					"between",
+					[periodo[0] - timedelta(days=MARGEM_DIAS), periodo[1] + timedelta(days=MARGEM_DIAS)],
+				],
 			},
 			fields=["name", "data", "data_hora"],
 		),
@@ -187,7 +191,11 @@ def marcacoes(employees: list[str], data: date, hora_virada: int) -> tuple[list[
 	"""(marcações do dia de trabalho, tratamentos aplicados)."""
 	inicio, fim = janela_do_dia(data, hora_virada)
 	periodo = janela()
-	if ativo() and periodo and periodo[0] - timedelta(days=1) <= data <= periodo[1]:
+	if (
+		ativo()
+		and periodo
+		and periodo[0] - timedelta(days=MARGEM_DIAS) <= data <= periodo[1] + timedelta(days=MARGEM_DIAS - 1)
+	):
 		chave = tuple(sorted(employees))
 		dados = memo(("marcacoes", chave), lambda: _carregar_marcacoes(chave, periodo))
 		raws = [r for r in dados["raws"] if inicio <= r.data_hora < fim]
@@ -255,7 +263,35 @@ def _carregar_abonos(employee: str, periodo) -> dict:
 			},
 			fields=["name", "from_date", "to_date"],
 		),
+		"compensacoes": frappe.get_all(
+			TRATAMENTO,
+			filters={"docstatus": 1, "tipo": COMPENSACAO, "employee": employee},
+			or_filters=[["data", "between", [inicio, fim]], ["data_folga", "between", [inicio, fim]]],
+			fields=["name", "data", "data_folga"],
+		),
 	}
+
+
+def _compensacoes(employee: str, data: date) -> list:
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		return memo(("abonos", employee), lambda: _carregar_abonos(employee, periodo))["compensacoes"]
+	return frappe.get_all(
+		TRATAMENTO,
+		filters={"docstatus": 1, "tipo": COMPENSACAO, "employee": employee},
+		or_filters=[["data", "=", data], ["data_folga", "=", data]],
+		fields=["name", "data", "data_folga"],
+	)
+
+
+def compensacoes_do_feriado(employee: str, data: date) -> list[str]:
+	"""AJ-03: compensações aprovadas cujo feriado trabalhado é `data`."""
+	return [c.name for c in _compensacoes(employee, data) if getdate(c.data) == data]
+
+
+def folgas_compensatorias(employee: str, data: date) -> list[str]:
+	"""AJ-03: compensações aprovadas cuja folga cai em `data` (o dia é abonado)."""
+	return [c.name for c in _compensacoes(employee, data) if c.data_folga and getdate(c.data_folga) == data]
 
 
 def abonos_do_dia(employee: str, data: date) -> list[str]:
@@ -319,6 +355,29 @@ def ativo_na_data(emp, data: date) -> bool:
 	return (admissao is None or admissao <= data) and (demissao is None or data <= demissao)
 
 
+def dias_trabalhados(employee: str, data: date) -> set[date]:
+	"""Dias com trabalho nos 6 dias anteriores (AJ-10). No modo lote, um conjunto por colaborador que o
+	`_gravar` mantém atualizado enquanto os dias são apurados em ordem."""
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		return memo(
+			("trabalhados", employee),
+			lambda: _carregar_trabalhados(employee, periodo[0] - timedelta(days=6), periodo[1]),
+		)
+	return _carregar_trabalhados(employee, data - timedelta(days=6), data - timedelta(days=1))
+
+
+def _carregar_trabalhados(employee: str, inicio: date, fim: date) -> set[date]:
+	return {
+		getdate(a.data)
+		for a in consultar(
+			"Apuracao Diaria",
+			{"employee": employee, "data": ["between", [inicio, fim]], "trabalhado": [">", 0]},
+			["data"],
+		)
+	}
+
+
 # ------------------------------------------------------------------ montagem
 
 
@@ -335,7 +394,7 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		ctx.motivo_nao_apurado = "Sem Perfil de Jornada vigente na data."
 		return ctx
 	ctx.perfil = perfil.name
-	jornada = jornada_do_dia(perfil, data)
+	jornada, repouso = dia_da_escala(employee, data, perfil)  # AJ-02/AJ-09: escala do mês ou perfil
 	if perfil.tipo == "Intermitente" and not cint(
 		valor_single("Configuracao Apuracao", "habilitar_intermitente")
 	):
@@ -367,8 +426,9 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	hora_virada = cint(perfil.hora_virada_dia)
 	do_dia, tratamentos = marcacoes([employee], data, hora_virada)
 	anteriores, _ = marcacoes(vinculos_na_empresa(emp), data - timedelta(days=1), hora_virada)
-	abonos = abonos_do_dia(employee, data)
-	ctx.tratamentos = tratamentos + abonos
+	abonos = abonos_do_dia(employee, data) + folgas_compensatorias(employee, data)
+	compensado = compensacoes_do_feriado(employee, data)
+	ctx.tratamentos = tratamentos + abonos + compensado
 	if perfil.tipo == PROFESSOR:
 		aulas, recesso = grade
 		ctx.entrada_professor = EntradaProfessor(
@@ -381,6 +441,10 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 			limite_aulas_dia=cint(cct.limite_aulas_dia) if cct else None,
 		)
 		return ctx
+	estagio, limite_estagio = emp.get("tipo_remuneracao") == ESTAGIARIO, 0
+	if estagio:
+		jornada, limite_estagio, abono_estagio = _dia_do_estagiario(employee, data, jornada)
+		abonos += abono_estagio
 	ctx.entrada = EntradaDia(
 		data=data,
 		marcacoes=tuple(do_dia),
@@ -388,10 +452,36 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		regra=regra,
 		feriado=eh_feriado(lista_de_feriados(emp), data),
 		abonado=bool(abonos),
+		feriado_compensado=bool(compensado),
+		repouso=repouso,
+		setimo_dia=bool(do_dia) and setimo_dia_seguido(data, dias_trabalhados(employee, data)),
 		marcacoes_dia_anterior=tuple(anteriores),
 		horista=perfil.tipo in HORISTAS,
+		horista_escalado=perfil.tipo in HORISTAS and horista_escalado(employee, data, perfil),
+		estagio=estagio,
+		limite_diario_estagio=limite_estagio,
 	)
 	return ctx
+
+
+def _dia_do_estagiario(employee: str, data: date, jornada: JornadaPrevista):
+	"""EST-04/EST-05: limite diário do TCE vigente; dia de prova = metade da jornada; suspensão de calendário
+	marcada para abonar = dia abonado. Devolve (jornada, limite diário, abonos)."""
+	tce = memo(("tce", employee, data), lambda: get_tce_vigente(employee, data))
+	if not tce:
+		return jornada, 0, []
+	limite = cint(tce.carga_diaria)
+	for evento in tce.calendario:
+		if not getdate(evento.data_inicio) <= data <= getdate(evento.data_fim):
+			continue
+		if evento.tipo == "Prova" and cint(tce.reduz_dia_de_prova):
+			jornada = JornadaPrevista(
+				periodos_dia_de_prova(jornada.periodos), jornada.permite_intervalo_estendido
+			)
+			limite = jornada.minutos
+		elif evento.tipo == "Suspensão de calendário" and cint(evento.abonar_dias):
+			return jornada, limite, [tce.name]
+	return jornada, limite, []
 
 
 def grade_do_dia(employee: str, data: date):

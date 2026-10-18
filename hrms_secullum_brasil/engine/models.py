@@ -46,6 +46,7 @@ class RegraApuracao:
 	computar_todo_tempo_ao_exceder: bool = d.COMPUTAR_TODO_TEMPO_AO_EXCEDER
 	compensar_atraso_com_he: bool = d.COMPENSAR_ATRASO_COM_HE
 	duplicidade_minutos: int = d.DUPLICIDADE_MIN
+	ignorar_duplicadas: bool = d.DUPLICADAS_MODO_PADRAO == d.DUPLICADAS_IGNORAR  # AJ-16
 	limite_he_diaria: int = d.LIMITE_HE_DIARIA_MIN
 	faixas_he: tuple[FaixaHE, ...] = d.FAIXAS_HE_PADRAO
 	noturno_inicio: int = minutos_do_dia(d.NOTURNO_INICIO)
@@ -72,6 +73,12 @@ class EntradaDia:
 	abonado: bool = False  # atestado/abono aprovado para o dia inteiro
 	marcacoes_dia_anterior: tuple[datetime, ...] = ()  # para a interjornada (inclui outros vínculos do CPF)
 	horista: bool = False  # horista/intermitente: sem jornada prevista; até 8h no dia é normal
+	feriado_compensado: bool = False  # AJ-03: feriado trabalhado com folga compensatória aprovada
+	repouso: bool | None = None  # AJ-02: True = repouso semanal; False = folga compensada/trabalho
+	setimo_dia: bool = False  # AJ-10: 7º dia seguido de trabalho (OJ 410: pago em dobro)
+	horista_escalado: bool = False  # AJ-14: horista com escala do mês ou semana padrão no perfil
+	estagio: bool = False  # EST-04: estagiário — sem HE, banco, DSR nem adicional pago
+	limite_diario_estagio: int = 0  # EST-04: carga diária do TCE (minutos)
 
 
 @dataclass(frozen=True)
@@ -102,6 +109,7 @@ class ResultadoDia:
 	aulas_dadas: int = 0
 	aulas_nao_dadas: int = 0
 	janela_minutos: int = 0
+	excesso_estagio: int = 0  # EST-04: minutos acima do previsto/limite do TCE (nunca HE)
 	marcacoes_consideradas: list[datetime] = field(default_factory=list)
 	marcacoes_ignoradas: list[datetime] = field(default_factory=list)
 	inconsistencias: list[Inconsistencia] = field(default_factory=list)

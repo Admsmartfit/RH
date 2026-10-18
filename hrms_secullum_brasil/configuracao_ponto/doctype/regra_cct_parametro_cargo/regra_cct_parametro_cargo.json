@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "creation": "2026-10-15 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "designation",
+  "tipo_piso",
+  "valor_piso",
+  "carga_referencia_horas",
+  "percentual_noturno",
+  "banco_padrao"
+ ],
+ "fields": [
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cargo",
+   "options": "Designation",
+   "reqd": 1
+  },
+  {
+   "default": "Mensalista",
+   "fieldname": "tipo_piso",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Tipo do piso",
+   "options": "Mensalista\nHorista"
+  },
+  {
+   "fieldname": "valor_piso",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Piso (R$/mês ou R$/hora)",
+   "non_negative": 1
+  },
+  {
+   "default": "44",
+   "depends_on": "eval:doc.tipo_piso=='Mensalista'",
+   "fieldname": "carga_referencia_horas",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Carga semanal de referência (h)",
+   "non_negative": 1,
+   "description": "O piso vale para esta carga; para outra carga, o programa calcula o piso proporcional."
+  },
+  {
+   "fieldname": "percentual_noturno",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Adicional noturno do cargo",
+   "description": "Em branco: usa o da CCT. Nunca menor que 20% nem que o da CCT."
+  },
+  {
+   "default": "0",
+   "fieldname": "banco_padrao",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Banco de horas por padrão",
+   "description": "Ao admitir ou trocar para este cargo, o colaborador recebe esta opção (pode ser mudada no cadastro dele)."
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-15 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Regra CCT Parametro Cargo",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
