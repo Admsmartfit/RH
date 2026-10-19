@@ -67,6 +67,34 @@ comandos, abra **outra** janela do PowerShell e repita o passo 1.2 (o `cd` e a f
 
 > Se a página não abrir, espere 1 minuto (o `t iniciar` ainda está subindo) e atualize.
 
+### 1.5 Português e menu enxuto (já feito neste computador)
+
+```powershell
+t brasil     # idioma português, Brasil, R$, fuso de São Paulo, datas dd/mm/aaaa, números 1.234,56
+t enxugar    # esconde do menu o que o ponto não usa
+```
+
+Depois de rodar, **saia e entre de novo** no sistema (ou aperte Ctrl+Shift+R) para a tela recarregar em português.
+
+**O que o `t enxugar` esconde do menu lateral (para todos):** Início, Contabilidade (e Contas a Pagar/Receber,
+Relatórios Financeiros), Compras, Vendas, Estoque, Ativos, Produção, Qualidade, Projetos, Suporte, CRM, Site,
+Ferramentas, Configurações do ERPNext, Integrações, Build, Recrutamento, Ciclo de Vida, Desempenho, Turnos e
+Frequência e Reembolso de Despesas. **Ficam:** Ponto, RH, Licenças, Folha de Pagamento e Usuários. Nada é
+apagado: `t mostrar` traz tudo de volta.
+
+**Esconder ou mostrar um item por conta própria, na tela:**
+
+- **Um espaço do menu, para todos:** no menu lateral, clique em **Editar** (embaixo) → no espaço desejado use o
+  ícone de olho para esconder ou mostrar → **Salvar**.
+- **Um módulo inteiro, só para alguns usuários** (ex.: Estágio ou Segurança do Trabalho para quem não usa):
+  **Perfil de Módulos → "Ponto (usuários)"** → marque ou desmarque os módulos → salve. Depois, em cada usuário
+  (**User** → aba **Configurações** → **Perfil de Módulos**), escolha "Ponto (usuários)". Os módulos bloqueados
+  somem do menu, da busca e dos atalhos da tela Ponto **para esse usuário**.
+- **Um atalho dentro da tela Ponto:** abra o espaço Ponto → **Editar** → apague o cartão ou o atalho → **Salvar**.
+
+> O **Administrator** sempre vê todos os módulos (o bloqueio por perfil não vale para ele). Para ver o sistema
+> como os usuários verão, crie um usuário de teste com o papel **RH Ponto** e o perfil "Ponto (usuários)".
+
 ---
 
 ## Parte 2 — Preparar a empresa de teste

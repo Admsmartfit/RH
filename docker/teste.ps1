@@ -11,6 +11,9 @@
 #   apurar      apura um dia sem batida (gera a falta):  apurar recepcao 2026-10-07
 #   agosto      gera o mês de agosto/2026 inteiro (batidas e apuração) dos 8 colaboradores de teste
 #   limpar      apaga batidas, apurações e fechamentos dos colaboradores de teste (recomeçar do zero)
+#   brasil      idioma português, Brasil, R$, fuso de São Paulo e formatos de data/número
+#   enxugar     esconde do menu o que o ponto não usa (compras, vendas, estoque...) e cria o Perfil de Módulos
+#   mostrar     volta a mostrar no menu o que o "enxugar" escondeu
 #   feriados    gera os feriados de 2027 de todas as empresas
 #   alertas     roda agora os alertas diários (EPI, ASO, estágio, CREF, banco de horas)
 #   migrar      aplica as atualizações do sistema (depois de mudar o código)
@@ -43,6 +46,9 @@ switch ($acao) {
 	"apurar" { Bench "execute hrms_secullum_brasil.utils.demo.apurar_env" }
 	"agosto" { Bench "execute hrms_secullum_brasil.utils.demo.gerar_agosto" }
 	"limpar" { Bench "execute hrms_secullum_brasil.utils.demo.limpar_teste" }
+	"brasil" { Bench "execute hrms_secullum_brasil.utils.localizacao.aplicar_brasil" }
+	"enxugar" { Bench "execute hrms_secullum_brasil.utils.localizacao.ocultar_recursos" }
+	"mostrar" { Bench "execute hrms_secullum_brasil.utils.localizacao.mostrar_tudo" }
 	"feriados" { Bench "execute hrms_secullum_brasil.apuracao.feriados.gerar_ano_seguinte" }
 	"alertas" {
 		foreach ($job in @(

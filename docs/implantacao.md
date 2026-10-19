@@ -61,6 +61,12 @@ RECESSO_EST quando houver saldo de recesso remunerado.
 
 ## 3. Configuração inicial (nesta ordem)
 
+0. **Idioma e menu:** `bench --site <site> execute hrms_secullum_brasil.utils.localizacao.aplicar_brasil` (pt-BR,
+   Brasil, BRL, America/Sao_Paulo, dd/mm/aaaa, 1.234,56; usuários em português com o espaço Ponto como página
+   inicial) e `...localizacao.ocultar_recursos` (esconde do menu os espaços do ERPNext que o ponto não usa e cria o
+   Perfil de Módulos "Ponto (usuários)"; `...localizacao.mostrar_tudo` desfaz). As traduções que faltavam no
+   ERPNext/HRMS e os nomes acentuados das telas do app ficam em `hrms_secullum_brasil/translations/pt-BR.csv`.
+   Depois de atualizar o ERPNext/HRMS, rode `ocultar_recursos` de novo (a atualização pode reexibir um espaço).
 1. **Empresas (Company):** moeda BRL; campos da aba Ponto: **UF**, **Município** e **Feriados do ponto** (Holiday
    List do ano com feriados nacionais, estaduais e municipais, conferidos pelo RH: checklist item 10).
 2. **Configuração Secullum:** URLs (já preenchidas), usuário, senha e identificador do banco. Primeiro deixe
@@ -92,6 +98,10 @@ RECESSO_EST quando houver saldo de recesso remunerado.
 | Responsável pela saúde ocupacional | RH Saúde | Único que vê CID e anexos de atestado (LGPD art. 11) |
 | Gestores | Gestor Ponto | Usuário **vinculado ao Employee** (`user_id`) do gestor |
 | Colaboradores (opcional) | Colaborador | Usuário vinculado ao próprio Employee; só leitura dos próprios dados |
+
+Para os usuários comuns, escolha o **Perfil de Módulos "Ponto (usuários)"** no cadastro do User (aba
+Configurações): ele bloqueia contabilidade, compras, vendas, estoque etc. Para tirar também um módulo do app de
+quem não usa (ex.: Estágio, Segurança do Trabalho), marque-o no perfil.
 
 Para restringir um analista a um departamento: User Permission em **Department**. A matriz completa está em
 `docs/permissoes.md`.
