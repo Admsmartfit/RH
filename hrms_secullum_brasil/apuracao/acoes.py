@@ -132,6 +132,7 @@ def salvar_cartao(
 	fim=None,
 	simular=0,
 	enviar_secullum=None,
+	anexo: str | None = None,
 ) -> dict:
 	"""CP-02: grava as correções do cartão ponto num pedido só (cada dia num savepoint e reapurado uma vez).
 	`simular=1` só devolve o resumo do que seria feito (o texto do Salvar)."""
@@ -144,4 +145,5 @@ def salvar_cartao(
 		bool(int(simular or 0)),
 		*cartao_ponto.periodo(inicio, fim, competencia),
 		enviar=enviar_secullum,
+		anexo=anexo,
 	)

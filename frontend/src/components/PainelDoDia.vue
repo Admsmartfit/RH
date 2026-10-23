@@ -94,10 +94,12 @@ const props = defineProps({
 const emit = defineEmits(["fechar", "sugestao"]);
 const raiz = ref(null);
 
-const EDITAM_A_GRADE = new Set(["incluir", "desconsiderar", "abonar", "editar"]);
-const SO_RH = new Set(["jornada_fragmentada", "reenviar"]);
+const EDITAM_A_GRADE = new Set(["incluir", "desconsiderar", "abonar", "editar", "incluir_intervalo"]);
+const SO_RH = new Set(["jornada_fragmentada", "reenviar", "ciente", "reenviar_whatsapp"]);
+// docs/PRD-monitoramento-horistas.md: imprimir o termo vale para RH e gestor (o gestor colhe a assinatura)
+const TODOS = new Set(["termo"]);
 const editaGrade = (s) => EDITAM_A_GRADE.has(s.acao);
-const usavel = (s) => EDITAM_A_GRADE.has(s.acao) || (SO_RH.has(s.acao) && props.rh);
+const usavel = (s) => EDITAM_A_GRADE.has(s.acao) || TODOS.has(s.acao) || (SO_RH.has(s.acao) && props.rh);
 
 watch(
 	() => props.dia?.data,

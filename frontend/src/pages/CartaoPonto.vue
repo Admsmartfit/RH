@@ -307,6 +307,7 @@ import { mensagem } from "@/utils/erros";
 import { dataBR, nomeDaCompetencia } from "@/utils/tempo";
 
 const ACOES = "hrms_secullum_brasil.apuracao.acoes";
+const MOTIVO_TERMO = "Intervalo não registrado — termo assinado";
 const TOTAIS = [
 	{ campo: "previsto", rotulo: "Previsto", minutos: true },
 	{ campo: "trabalhado", rotulo: "Trabalhado", minutos: true },
@@ -576,6 +577,27 @@ async function aplicarSugestao(s, inconsistencia) {
 	} else if (s.acao === "reenviar") {
 		const r = await executar("hrms_secullum_brasil.ingestion.envio_cartao.reenviar", { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = r === "Enviado" ? "Correção enviada ao Secullum." : `Envio: ${r}.`;
+	} else if (s.acao === "incluir_intervalo") {
+		// docs/PRD-monitoramento-horistas.md (MH-06): nada pré-preenchido; os horários vêm do termo assinado
+		const e = edicaoDe(d);
+		const livre = e.celulas.findIndex((c) => !c);
+		if (livre < 0 || livre + 1 >= e.celulas.length) return (aviso.value = "Não há duas colunas livres no dia.");
+		await nextTick();
+		mover(linha, livre);
+		aviso.value = `Digite o início e o fim do intervalo do termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado.`;
+	} else if (s.acao === "termo") {
+		const alerta = inconsistencia.referencia_doctype === "Alerta Horista" ? inconsistencia.referencia_name : null;
+		if (!alerta) return (aviso.value = "O termo sai do alerta do mês (inconsistência Horista além de 4 h sem intervalo).");
+		window.open(
+			`/printview?doctype=${encodeURIComponent("Alerta Horista")}&name=${encodeURIComponent(alerta)}&format=${encodeURIComponent("Termo de Ajuste de Intervalo")}&trigger_print=1`
+		);
+	} else if (s.acao === "ciente") {
+		if (!window.confirm("Sem termo assinado: o intervalo que faltou é pago como indenização. Confirmar?")) return;
+		const r = await executar("hrms_secullum_brasil.apuracao.monitoramento_horistas.ciente", { inconsistencia: inconsistencia.name });
+		if (r) aviso.value = "Ciente registrado: a indenização do intervalo será paga.";
+	} else if (s.acao === "reenviar_whatsapp") {
+		const r = await executar("hrms_secullum_brasil.apuracao.whatsapp.reenviar", { inconsistencia: inconsistencia.name });
+		if (r) aviso.value = `WhatsApp: ${r}.`;
 	}
 }
 
@@ -622,8 +644,8 @@ async function abrirSalvar() {
 	}
 }
 
-function salvar({ motivo, enviarSecullum }) {
-	return call(`${ACOES}.salvar_cartao`, { ...pedido(), motivo, enviar_secullum: enviarSecullum ? 1 : 0 });
+function salvar({ motivo, enviarSecullum, anexo }) {
+	return call(`${ACOES}.salvar_cartao`, { ...pedido(), motivo, enviar_secullum: enviarSecullum ? 1 : 0, anexo });
 }
 
 function concluirSalvar(resposta) {

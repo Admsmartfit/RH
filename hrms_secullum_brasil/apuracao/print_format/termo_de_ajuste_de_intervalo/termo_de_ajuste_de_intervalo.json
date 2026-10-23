@@ -1,0 +1,22 @@
+{
+ "align_labels_right": 0,
+ "creation": "2026-10-23 12:00:00.000000",
+ "custom_format": 1,
+ "default_print_language": "pt-BR",
+ "disabled": 0,
+ "doc_type": "Alerta Horista",
+ "docstatus": 0,
+ "doctype": "Print Format",
+ "font_size": 12,
+ "html": "<style>\n.termo { font-size: 12px; line-height: 1.5; } .termo table { width: 100%; border-collapse: collapse; margin: 10px 0; }\n.termo td, .termo th { border: 1px solid #555; padding: 6px; text-align: center; } .assinatura { margin-top: 48px; }\n</style>\n{% set emp = frappe.db.get_value(\"Employee\", doc.employee, [\"employee_name\", \"cpf\", \"designation\", \"company\", \"branch\"], as_dict=True) %}\n<div class=\"termo\">\n<h3 style=\"text-align:center\">SOLICITAÇÃO DE AJUSTE DE PONTO E DECLARAÇÃO DE INTERVALO INTRAJORNADA</h3>\n<p><b>Colaborador(a):</b> {{ emp.employee_name }}<br>\n<b>CPF:</b> {{ emp.cpf or \"\" }} &nbsp;|&nbsp; <b>Cargo:</b> {{ emp.designation or \"\" }}<br>\n<b>Unidade:</b> {{ emp.branch or emp.company or \"\" }}</p>\n<p>Declaro para os devidos fins legais e trabalhistas que, no(s) dia(s) e horário(s) abaixo discriminados,\n<b>usufruí regularmente do meu intervalo intrajornada para descanso e/ou alimentação no interior ou exterior da\nunidade</b>, deixando de registrar as respectivas marcações no relógio de ponto eletrônico por motivo de esquecimento\ninvoluntário:</p>\n<table>\n<tr><th>Data da ocorrência</th><th>Horário de início do intervalo</th><th>Horário de retorno do intervalo</th><th>Total da pausa</th></tr>\n{% for d in doc.dias %}\n<tr><td>{{ frappe.utils.formatdate(d.data, \"dd/MM/yyyy\") }}</td><td>____ : ____</td><td>____ : ____</td><td>______ min</td></tr>\n{% endfor %}\n</table>\n<p>Diante do exposto, por refletir a exata verdade dos fatos, solicito ao setor de Recursos Humanos a <b>inclusão manual\ndestas marcações</b> no sistema de controle de jornada, a fim de regularizar meu espelho de ponto mensal.</p>\n<p>Declaro, ainda, estar ciente de que:</p>\n<ol>\n<li>A minha jornada contratual é de até 4 horas contínuas, não devendo ser ultrapassada sem prévia autorização da coordenação;</li>\n<li>Conforme a lei (Art. 71, § 2º da CLT), o intervalo intrajornada não é computado na jornada de trabalho efetiva e não é remunerado;</li>\n<li>O registro pontual e correto de todas as entradas, saídas e pausas no relógio de ponto é de minha inteira\nresponsabilidade, estando sujeito(a) a medidas disciplinares (advertências e suspensões) em caso de reincidência neste esquecimento.</li>\n</ol>\n<p class=\"assinatura\">_______________________________, _____ de ______________________ de {{ doc.competencia[:4] }}.<br><i>(Localidade)</i></p>\n<p class=\"assinatura\">______________________________________________________<br><b>Assinatura do(a) colaborador(a)</b></p>\n<p class=\"assinatura\">______________________________________________________<br><b>Assinatura do(a) gestor(a)</b></p>\n</div>\n",
+ "modified": "2026-10-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Termo de Ajuste de Intervalo",
+ "owner": "Administrator",
+ "print_format_builder": 0,
+ "print_format_type": "Jinja",
+ "raw_printing": 0,
+ "show_section_headings": 0,
+ "standard": "Yes"
+}

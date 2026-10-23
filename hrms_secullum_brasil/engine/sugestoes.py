@@ -19,6 +19,11 @@ JORNADA_FRAGMENTADA = "jornada_fragmentada"  # libera o cargo na CCT (CP-06)
 DESK = "desk"  # corrigir um cadastro no Desk
 SECULLUM = "secullum"  # o dado vem do Secullum: corrigir lá
 REENVIAR = "reenviar"  # manda de novo ao Secullum a correção que falhou (CP-10)
+# docs/PRD-monitoramento-horistas.md
+INCLUIR_INTERVALO = "incluir_intervalo"  # duas células livres para o intervalo do termo assinado (MH-06)
+TERMO = "termo"  # imprime o Termo de Ajuste de Intervalo (MH-05)
+CIENTE = "ciente"  # RH ciente: não há termo, paga a indenização (DH-3)
+REENVIAR_WHATSAPP = "reenviar_whatsapp"
 
 Par = tuple[int, int]
 
@@ -37,6 +42,7 @@ class ContextoDia:
 	previsto: tuple[Par, ...] = ()
 	duplicidade_minutos: int = d.DUPLICIDADE_MIN
 	intervalo_minimo: int = d.INTERVALO_MINIMO_MIN
+	horista: bool = False
 
 
 @dataclass(frozen=True)
@@ -161,6 +167,22 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 		"O colaborador não está mais no Secullum.",
 		(Sugestao(SECULLUM, "Conferir no Secullum se foi excluído ou transferido"),),
 	),
+	"excesso_jornada_horista": (
+		"O horista passou de 4h sem registrar o intervalo no limite de vezes do mês. Se a pausa foi feita, colha o "
+		"termo assinado e inclua o intervalo de cada dia no cartão; sem termo, o intervalo é pago como indenização.",
+		(
+			Sugestao(TERMO, "Imprimir o termo de ajuste"),
+			Sugestao(EDITAR, "Incluir os intervalos no cartão"),
+			Sugestao(CIENTE, "Ciente: pagar a indenização"),
+		),
+	),
+	"whatsapp_nao_enviado": (
+		"O aviso pelo WhatsApp não foi entregue (sem celular, número inválido ou a Evolution API não respondeu).",
+		(
+			Sugestao(REENVIAR_WHATSAPP, "Reenviar o WhatsApp"),
+			Sugestao(DESK, "Conferir o celular no cadastro"),
+		),
+	),
 	"envio_cartao_secullum": (
 		"A correção foi gravada no programa, mas o Secullum recusou ou não respondeu. O cálculo do programa já vale.",
 		(Sugestao(REENVIAR, "Reenviar ao Secullum"), Sugestao(SECULLUM, "Corrigir direto no Secullum")),
@@ -258,10 +280,15 @@ def _intrajornada(contexto: ContextoDia) -> Orientacao:
 	texto = "O intervalo de almoço ficou menor que o mínimo"
 	if intervalos:
 		texto += f": {min(intervalos)} min (mínimo {contexto.intervalo_minimo})"
-	return Orientacao(
-		texto + ".",
-		(CORRIGIR_BATIDA, Sugestao(MANTER, "Manter: o intervalo que faltou é pago (CLT, art. 71, § 4º)")),
-	)
+	elif minutos:
+		texto = "Passou do limite da jornada sem registrar intervalo"
+	sugestoes = [
+		CORRIGIR_BATIDA,
+		Sugestao(MANTER, "Manter: o intervalo que faltou é pago (CLT, art. 71, § 4º)"),
+	]
+	if contexto.horista:  # MH-06: a pausa feita e não registrada entra pelo termo assinado
+		sugestoes.insert(0, Sugestao(INCLUIR_INTERVALO, "Incluir o intervalo do termo assinado"))
+	return Orientacao(texto + ".", tuple(sugestoes))
 
 
 def orientar_varios(tipos: Sequence[str], contexto: ContextoDia | None = None) -> dict[str, Orientacao]:

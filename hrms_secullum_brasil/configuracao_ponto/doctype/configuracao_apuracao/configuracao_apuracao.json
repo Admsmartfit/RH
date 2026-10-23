@@ -23,7 +23,21 @@
   "vt_meses_media",
   "vt_descontos",
   "epi_section",
-  "epi_prazo_primeira_entrega"
+  "epi_prazo_primeira_entrega",
+  "horistas_section",
+  "monitorar_horistas",
+  "horista_tolerancia_intrajornada_min",
+  "horista_limite_ocorrencias_mes",
+  "horistas_col",
+  "avisar_gestor",
+  "whatsapp_section",
+  "whatsapp_envio",
+  "evolution_url",
+  "evolution_apikey",
+  "evolution_instancia",
+  "whatsapp_col",
+  "mensagem_horista",
+  "mensagem_gestor"
  ],
  "fields": [
   {
@@ -143,11 +157,98 @@
    "fieldname": "epi_prazo_primeira_entrega",
    "fieldtype": "Int",
    "label": "Prazo para a primeira entrega após a admissão (dias)"
+  },
+  {
+   "fieldname": "horistas_section",
+   "fieldtype": "Section Break",
+   "label": "Monitoramento de horistas",
+   "description": "Dias de horista além de 4h sem intervalo registrado (docs/PRD-monitoramento-horistas.md)."
+  },
+  {
+   "default": "1",
+   "fieldname": "monitorar_horistas",
+   "fieldtype": "Check",
+   "label": "Monitorar horistas"
+  },
+  {
+   "default": "15",
+   "fieldname": "horista_tolerancia_intrajornada_min",
+   "fieldtype": "Int",
+   "label": "Tolerância intrajornada (minutos)",
+   "non_negative": 1,
+   "description": "Minutos além das 4h que contam como ocorrência (esqueceu de registrar a pausa). Acima disso é jornada estendida."
+  },
+  {
+   "default": "4",
+   "fieldname": "horista_limite_ocorrencias_mes",
+   "fieldtype": "Int",
+   "label": "Limite de ocorrências no mês",
+   "non_negative": 1,
+   "description": "Ao chegar a este número (e a cada múltiplo dele) o programa abre a inconsistência para o RH e avisa pelo WhatsApp."
+  },
+  {
+   "fieldname": "horistas_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "avisar_gestor",
+   "fieldtype": "Check",
+   "label": "Avisar também o gestor (Reporta a)"
+  },
+  {
+   "fieldname": "whatsapp_section",
+   "fieldtype": "Section Break",
+   "label": "WhatsApp (Evolution API)"
+  },
+  {
+   "default": "Desligado",
+   "fieldname": "whatsapp_envio",
+   "fieldtype": "Select",
+   "label": "Envio de WhatsApp",
+   "options": "Desligado\nLigado",
+   "description": "Desligado: nada sai; a mensagem fica registrada como não enviada. Faça o primeiro teste com o botão Enviar mensagem de teste."
+  },
+  {
+   "depends_on": "eval:doc.whatsapp_envio=='Ligado'",
+   "fieldname": "evolution_url",
+   "fieldtype": "Data",
+   "label": "URL da Evolution API",
+   "description": "Ex.: http://servidor-evolution:8080"
+  },
+  {
+   "depends_on": "eval:doc.whatsapp_envio=='Ligado'",
+   "fieldname": "evolution_apikey",
+   "fieldtype": "Password",
+   "label": "Chave da API (apikey)"
+  },
+  {
+   "depends_on": "eval:doc.whatsapp_envio=='Ligado'",
+   "fieldname": "evolution_instancia",
+   "fieldtype": "Data",
+   "label": "Instância",
+   "description": "Ex.: RH_NOTIFICACOES"
+  },
+  {
+   "fieldname": "whatsapp_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mensagem_horista",
+   "fieldtype": "Small Text",
+   "label": "Mensagem ao horista",
+   "description": "Marcadores: {primeiro_nome}, {ocorrencias}, {limite}, {dias}. Em branco: o texto padrão do RH."
+  },
+  {
+   "fieldname": "mensagem_gestor",
+   "fieldtype": "Small Text",
+   "label": "Mensagem ao gestor",
+   "description": "Marcadores: {primeiro_nome} (do gestor), {colaborador}, {ocorrencias}, {dias}. Em branco: o texto padrão."
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-18 16:00:00.000000",
+ "modified": "2026-10-23 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",

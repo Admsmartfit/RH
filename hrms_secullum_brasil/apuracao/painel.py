@@ -225,6 +225,7 @@ def resumo(competencia: str, company=None, branch=None, department=None) -> dict
 		},
 		"banco_a_vencer": _banco_a_vencer(filtros),
 		"alertas_inss": _alertas_inss(filtros),
+		"horistas_no_limite": _horistas_no_limite(filtros, f"{inicio.year}-{inicio.month:02d}"),
 		"inconsistencias": _inconsistencias_por_severidade(filtros, inicio, fim),
 		"reapuracao": _fila_reapuracao(filtros, inicio, fim),
 		"secullum": _ultimo_sync(),
@@ -269,6 +270,24 @@ def _banco_a_vencer(filtros: dict) -> dict | None:
 		"colaboradores": cint(linha.colaboradores),
 		"primeiro_vencimento": str(linha.primeiro) if linha.primeiro else None,
 	}
+
+
+def _horistas_no_limite(filtros: dict, competencia: str) -> dict | None:
+	"""docs/PRD-monitoramento-horistas.md (MH-07): horistas no limite de dias além de 4h sem intervalo no mês."""
+	doctype = "Alerta Horista"
+	if not _pode_ler(doctype):
+		return None
+	condicoes = _filtros(doctype, **filtros)
+	if condicoes is None:
+		return {"no_limite": 0, "itens": []}
+	itens = frappe.get_list(
+		doctype,
+		filters={**condicoes, "competencia": competencia, "situacao": "No limite"},
+		fields=["name", "employee", "employee_name", "ocorrencias"],
+		order_by="ocorrencias desc",
+		limit_page_length=0,
+	)
+	return {"no_limite": len(itens), "itens": [dict(i) for i in itens[:20]]}
 
 
 def _alertas_inss(filtros: dict) -> dict | None:

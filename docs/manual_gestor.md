@@ -64,6 +64,14 @@ Não use o abono para atestado médico: entregue o atestado ao RH, que lança co
 
 Não é possível criar tratamentos para dias de um mês já fechado. Fale com o RH.
 
+## Horista que passou de 4h sem registrar a pausa
+
+Se o RH ligou o aviso ao gestor, você recebe um WhatsApp quando alguém da equipe chega ao limite do mês. Se a pausa foi
+feita e só não foi registrada: imprima o **termo de ajuste** (no cartão ponto, painel do dia → "Imprimir o termo de
+ajuste"), peça ao colaborador para preencher os horários e assinar, assine também e entregue ao RH (ou inclua o
+intervalo no cartão com o motivo "Intervalo não registrado — termo assinado" e o termo anexado: fica para o RH
+aprovar).
+
 ## Escala e trocas
 
 - **Relatório "Escala do Mes"**: o calendário da equipe (horário, R = repouso, FC = folga compensada, F = feriado),

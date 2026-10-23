@@ -53,6 +53,12 @@
 					</label>
 				</fieldset>
 
+				<label v-if="exigeTermo" class="mt-4 flex flex-col text-sm font-medium">
+					Termo de ajuste assinado (foto ou PDF)
+					<input ref="campoTermo" type="file" accept="image/*,application/pdf" required class="mt-1 text-sm font-normal" @change="escolherTermo" />
+					<span class="mt-1 text-xs font-normal text-texto-suave">Obrigatório para incluir o intervalo esquecido. Fica anexado em cada correção do dia.</span>
+				</label>
+
 				<label v-if="envio === 'Perguntar ao salvar'" class="mt-4 flex items-start gap-2 text-sm">
 					<input v-model="enviarSecullum" type="checkbox" class="mt-1" />
 					<span>
@@ -94,6 +100,7 @@ import { mensagem } from "@/utils/erros";
 import { dataBR } from "@/utils/tempo";
 
 const CHAVE_MOTIVO = "ponto-cartao-ultimo-motivo";
+const MOTIVO_TERMO = "Intervalo não registrado — termo assinado"; // docs/PRD-monitoramento-horistas.md, DH-8
 
 const props = defineProps({
 	aberto: { type: Boolean, default: false },
@@ -111,6 +118,27 @@ const enviarSecullum = ref(true);
 const erro = ref("");
 const enviando = ref(false);
 const campoMotivo = ref(null);
+const arquivoTermo = ref(null);
+const exigeTermo = computed(() => motivo.value.trim() === MOTIVO_TERMO);
+
+function escolherTermo(evento) {
+	arquivoTermo.value = evento.target.files?.[0] || null;
+}
+
+// envia o termo como arquivo privado e devolve o endereço para o campo Anexo dos tratamentos
+async function enviarTermo() {
+	const dados = new FormData();
+	dados.append("file", arquivoTermo.value, arquivoTermo.value.name);
+	dados.append("is_private", "1");
+	const resposta = await fetch("/api/method/upload_file", {
+		method: "POST",
+		body: dados,
+		headers: { "X-Frappe-CSRF-Token": window.csrf_token },
+	});
+	const corpo = await resposta.json().catch(() => ({}));
+	if (!resposta.ok || !corpo.message?.file_url) throw new Error("Não foi possível enviar o termo.");
+	return corpo.message.file_url;
+}
 
 const sugestoesDeMotivo = computed(() => [
 	...(props.motivos.batida || []),
@@ -140,6 +168,7 @@ watch(
 	async (aberto) => {
 		if (!aberto) return;
 		erro.value = "";
+		arquivoTermo.value = null;
 		motivo.value = lembrado();
 		enviarSecullum.value = true;
 		await nextTick();
@@ -159,7 +188,9 @@ async function confirmar() {
 	enviando.value = true;
 	erro.value = "";
 	try {
-		const resposta = await props.enviar({ motivo: motivo.value.trim(), enviarSecullum: enviarSecullum.value });
+		if (exigeTermo.value && !arquivoTermo.value) throw new Error("Anexe o termo de ajuste assinado.");
+		const anexo = exigeTermo.value ? await enviarTermo() : undefined;
+		const resposta = await props.enviar({ motivo: motivo.value.trim(), enviarSecullum: enviarSecullum.value, anexo });
 		try {
 			window.localStorage.setItem(CHAVE_MOTIVO, motivo.value.trim());
 		} catch {

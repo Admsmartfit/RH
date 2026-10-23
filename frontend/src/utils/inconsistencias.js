@@ -34,6 +34,8 @@ export const TIPOS = {
 	colaborador_nao_encontrado_secullum: "Colaborador não encontrado no Secullum",
 	alteracao_periodo_fechado: "Alteração do Secullum em período fechado",
 	envio_cartao_secullum: "Correção não enviada ao Secullum",
+	excesso_jornada_horista: "Horista além de 4 h sem intervalo",
+	whatsapp_nao_enviado: "WhatsApp não enviado",
 };
 
 export const nomeDoTipo = (tipo) => TIPOS[tipo] || tipo;

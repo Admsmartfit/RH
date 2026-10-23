@@ -456,6 +456,16 @@ A tela nova de trabalho do ponto (cockpit, central de inconsistências com linha
    - **Fechamento:** Fechamento de Ponto de agosto → **O que impede fechar** → **Abrir no cartão**.
 5. Testes automáticos da tela (com o `t iniciar` ligado): `t testes-tela` (uns 3 minutos; 50 testes, com o cartão ponto).
 
+### 7.11B Monitoramento de horistas
+
+No site de testes os testes automáticos cobrem tudo (`apuracao/test_monitoramento_horistas.py`). No site de operação:
+1. Configuração Apuração → Monitoramento de horistas: ligue, tolerância 15, limite 4. Deixe o WhatsApp **Desligado**.
+2. Rode a contagem na hora (sem esperar as 19h), no PowerShell:
+   `docker exec hrms-secullum-dev-frappe-1 bash -lc "cd /workspace/frappe-bench-16 && bench --site ponto.localhost execute hrms_secullum_brasil.apuracao.monitoramento_horistas.verificar"`
+3. Veja os **Alerta Horista** do mês, a inconsistência "Horista além de 4 h sem intervalo" na central e o card no
+   Cockpit. Imprima um termo. Regularize um dia no cartão com o motivo do termo e um arquivo qualquer: o alerta baixa.
+4. WhatsApp: preencha URL, chave e instância e use **Enviar mensagem de teste** para o seu celular. Só então ligue.
+
 ### 7.11A Envio das correções ao Secullum (site de operação — com o RH)
 
 1. **Configuração Secullum → Envio de correções de ponto ao Secullum = Perguntar ao salvar.**

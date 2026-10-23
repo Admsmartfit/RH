@@ -88,6 +88,25 @@
 				</CardNumero>
 
 				<CardNumero
+					v-if="r.horistas_no_limite"
+					titulo="Horistas além de 4 h sem intervalo"
+					:icone="AlertTriangle"
+					:rota="{ name: 'Inconsistencias', query: { ...route.query, status: undefined, tipo: 'excesso_jornada_horista' } }"
+					rotulo-link="Ver na central"
+					:destaque="r.horistas_no_limite.no_limite ? 'alerta' : ''"
+				>
+					<span data-testid="horistas-no-limite">{{ r.horistas_no_limite.no_limite }}</span>
+					<template #detalhe>
+						<ul v-if="r.horistas_no_limite.itens.length" class="mt-1 space-y-0.5">
+							<li v-for="h in r.horistas_no_limite.itens.slice(0, 3)" :key="h.name">
+								{{ h.employee_name }} — {{ h.ocorrencias }} dia(s)
+							</li>
+						</ul>
+						<span v-else>Nenhum horista no limite do mês.</span>
+					</template>
+				</CardNumero>
+
+				<CardNumero
 					titulo="Inconsistências abertas"
 					:icone="AlertTriangle"
 					:rota="{ name: 'Inconsistencias', query: { ...route.query, status: undefined } }"

@@ -279,6 +279,35 @@ folha do cargo**:
 
 Para editar o cargo é preciso o papel **HR User** ou **HR Manager** (além do RH Ponto).
 
+## Horistas além de 4h sem intervalo (monitoramento)
+
+Quando o horista passa de 4h sem registrar a pausa (ex.: 08:00–12:12), a lei manda pagar o intervalo de 15 min como
+indenização. Se a pausa foi feita e só não foi registrada, ela pode entrar no ponto **com o termo assinado**.
+
+**Ligar:** Configuração Apuração → **Monitoramento de horistas**: marque "Monitorar horistas", tolerância **15** min
+(além das 4h), limite **4** ocorrências no mês e, se quiser, "Avisar também o gestor". Todo dia às 19h o programa conta
+os dias do mês de cada horista:
+
+- Ao chegar a 4 (e a 8, 12…), abre a inconsistência **Horista além de 4 h sem intervalo** (Alta: impede fechar o mês)
+  e manda o WhatsApp ao horista (e ao gestor), uma vez por limite. O **Alerta Horista** do mês mostra os dias.
+- Dia acima de 4h15 não conta aqui (é jornada estendida): fica só a inconsistência de intervalo do dia.
+
+**Regularizar (com termo):**
+1. No alerta ou no painel do dia: **Imprimir o termo de ajuste** (já vem com os dias). O colaborador preenche os
+   horários da pausa e assina com o gestor.
+2. No **cartão ponto**, no dia: **Incluir o intervalo do termo assinado** → digite início e fim nas colunas livres.
+3. **Salvar…** → motivo **"Intervalo não registrado — termo assinado"** → anexe a foto ou PDF do termo (obrigatório).
+   O dia é recalculado: o intervalo suprimido zera e a indenização sai. Quando os dias não regularizados ficam abaixo
+   do limite, a inconsistência do mês se resolve sozinha.
+
+**Sem termo:** **Ciente: pagar a indenização** (no alerta ou no painel do dia) resolve a pendência até o próximo
+limite; o intervalo é pago normalmente na folha.
+
+**WhatsApp (Evolution API):** Configuração Apuração → **WhatsApp**: URL, chave (apikey) e instância; use **Enviar
+mensagem de teste** antes de ligar o **Envio de WhatsApp** (vem Desligado). Cada mensagem fica em **Notificacao
+WhatsApp** (prova do aviso); fora das 8h–20h espera a próxima hora. Celular ausente ou erro da API abre a pendência
+**WhatsApp não enviado**, com **Reenviar** (corrija o celular no cadastro antes).
+
 ## Opções da CCT por cargo
 
 Regra Sindical CCT → **Parâmetros por cargo**: piso (mensalista ou horista, com a carga de referência), adicional

@@ -124,6 +124,13 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	resultado.intrajornada_suprimida, avisos = intrajornada(
 		pares, regra, permite_estendido=entrada.jornada.permite_intervalo_estendido
 	)
+	if (
+		entrada.horista
+		and entrada.tolerancia_aviso_intervalo
+		and resultado.trabalhado <= regra.jornada_sem_intervalo_ate + entrada.tolerancia_aviso_intervalo
+	):
+		# poucos minutos além das 4h: quem acompanha é o monitoramento do mês (Alerta Horista), sem poluir o dia
+		avisos = [a for a in avisos if a.tipo != "intrajornada"]
 	resultado.inconsistencias += avisos
 
 	resultado.interjornada_suprimida = interjornada_suprimida(

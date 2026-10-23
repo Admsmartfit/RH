@@ -1,0 +1,138 @@
+{
+ "actions": [],
+ "creation": "2026-10-23 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "destinatario",
+  "numero",
+  "alerta",
+  "column_break_1",
+  "situacao",
+  "tentativas",
+  "enviada_em",
+  "texto_section",
+  "texto",
+  "resposta"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sobre o colaborador",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "default": "Colaborador",
+   "fieldname": "destinatario",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Para",
+   "options": "Colaborador\nGestor\nTeste",
+   "read_only": 1
+  },
+  {
+   "fieldname": "numero",
+   "fieldtype": "Data",
+   "label": "Número",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alerta",
+   "fieldtype": "Link",
+   "label": "Alerta Horista",
+   "options": "Alerta Horista",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Na fila",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Na fila\nEnviada\nErro\nNão enviada (desligado)\nSem telefone",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "tentativas",
+   "fieldtype": "Int",
+   "label": "Tentativas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enviada_em",
+   "fieldtype": "Datetime",
+   "label": "Enviada em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "texto_section",
+   "fieldtype": "Section Break",
+   "label": "Mensagem"
+  },
+  {
+   "fieldname": "texto",
+   "fieldtype": "Small Text",
+   "label": "Texto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resposta",
+   "fieldtype": "Small Text",
+   "label": "Resposta / erro",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Notificacao WhatsApp",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "WPP-.#####",
+ "description": "Mensagem de WhatsApp enviada pelo programa (Evolution API): fica como registro do aviso.",
+ "in_create": 1,
+ "title_field": "employee_name",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ]
+}

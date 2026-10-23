@@ -138,11 +138,13 @@ class TratamentodePonto(Document):
 			frappe.throw(_("Já existe o tratamento {0} igual a este.").format(existente))
 
 	def _reapurar(self):
+		from hrms_secullum_brasil.apuracao.monitoramento_horistas import recontar
 		from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 
 		if frappe.flags.get("cartao_ponto_lote"):  # o salvar do cartão reapura cada dia uma vez só
 			return
 		reapurar_dia(self.employee, self.data)
+		recontar(self.employee, self.data)  # monitoramento de horistas: o alerta do mês acompanha a correção
 		if self.tipo == COMPENSACAO and self.data_folga:
 			reapurar_dia(self.employee, self.data_folga)
 

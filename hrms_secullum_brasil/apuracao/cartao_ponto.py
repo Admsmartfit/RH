@@ -142,7 +142,7 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 	for i in frappe.get_list(
 		INCONSISTENCIA,
 		filters={"employee": employee, "data": ["between", [inicio, fim]], "status": "Aberta"},
-		fields=["name", "data", "tipo", "severidade", "descricao"],
+		fields=["name", "data", "tipo", "severidade", "descricao", "referencia_doctype", "referencia_name"],
 		order_by="severidade asc",
 		limit_page_length=0,
 	):
@@ -278,6 +278,7 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 			if regra
 			else {}
 		),
+		horista=bool(ctx and ctx.entrada and ctx.entrada.horista),
 	)
 	return {
 		"data": str(data),
@@ -300,6 +301,8 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 			{
 				"name": i.name,
 				"tipo": i.tipo,
+				"referencia_doctype": i.referencia_doctype,
+				"referencia_name": i.referencia_name,
 				"severidade": i.severidade,
 				"descricao": i.descricao,
 				**_orientacao(i.tipo, contexto),
@@ -415,6 +418,8 @@ def modo_envio() -> str:
 	return modo()
 
 
+MOTIVO_TERMO = "Intervalo não registrado — termo assinado"  # MH-06: exige o termo anexado
+
 # DC-3: motivos prontos por tipo de correção (texto livre continua possível)
 MOTIVOS = {
 	"batida": [
@@ -423,6 +428,7 @@ MOTIVOS = {
 		"Batida em duplicidade",
 		"Serviço externo",
 		"Erro de registro",
+		MOTIVO_TERMO,
 	],
 	"abono": [
 		"Atestado médico",
@@ -468,11 +474,12 @@ def _aplicar(
 	enviar: bool = False,
 	justificativa: str | None = None,
 	espelhos: dict | None = None,
+	anexo: str | None = None,
 ) -> list[str]:
 	criados = []
 	espelhos = espelhos or {}
 	base = datetime.combine(data, datetime.min.time())
-	extra = {"enviar_secullum": int(enviar)}
+	extra = {"enviar_secullum": int(enviar), "anexo": anexo}
 	for acao in edicao.acoes:
 		if acao.tipo == ce.INCLUIR:
 			criados.append(
@@ -499,7 +506,14 @@ def _aplicar(
 
 
 def salvar(
-	employee: str, alteracoes: list, motivo: str, simular: bool, inicio: date, fim: date, enviar=None
+	employee: str,
+	alteracoes: list,
+	motivo: str,
+	simular: bool,
+	inicio: date,
+	fim: date,
+	enviar=None,
+	anexo: str | None = None,
 ) -> dict:
 	"""Aplica as alterações da grade: [{data, horarios: ["08:00", ...] | None, abonar: bool | None,
 	justificativa: Justificativa Secullum | None}]. `enviar`: a caixa "Enviar também ao Secullum" (CP-10)."""
@@ -511,6 +525,9 @@ def salvar(
 		frappe.throw(_("Sem permissão para corrigir o ponto."), frappe.PermissionError)
 	if not simular and not (motivo or "").strip():
 		frappe.throw(_("Informe o motivo."))
+	if not simular and (motivo or "").strip() == MOTIVO_TERMO and not anexo:
+		# docs/PRD-monitoramento-horistas.md, DH-8: o intervalo esquecido só entra com o termo assinado
+		frappe.throw(_("Anexe o termo de ajuste assinado pelo colaborador."))
 	datas = sorted({getdate(a["data"]) for a in alteracoes})
 	if not datas:
 		return {"resumo": ce.resumo({}), "dias": {}, "cartao": cartao(employee, inicio, fim)}
@@ -573,6 +590,7 @@ def salvar(
 				enviar,
 				alteracao.get("justificativa"),
 				{b["referencia"]: b["espelho"] for b in grade["batidas"] if b.get("espelho")},
+				anexo,
 			)
 			reapurar_dia(employee, data)
 			if enviar and aprova:  # o do gestor sai quando o RH aprovar (Tratamento de Ponto.on_submit)
@@ -584,6 +602,11 @@ def salvar(
 			resultado[chave].pop("tratamentos", None)
 		finally:
 			frappe.flags[LOTE] = False
+	if not simular:
+		from hrms_secullum_brasil.apuracao.monitoramento_horistas import recontar
+
+		for mes in {(d.year, d.month) for d in datas}:  # o alerta do horista acompanha a correção (DH-3)
+			recontar(employee, date(*mes, 1))
 	return {
 		"resumo": ce.resumo({k: e for k, e in edicoes.items() if not resultado[k]["erros"]}),
 		"enviar_secullum": enviar,

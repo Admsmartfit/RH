@@ -1234,3 +1234,29 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - **Corrigido:** trocar o tipo (no cargo ou em "Tipo de remuneração por cargo") não reapurava os dias já apurados;
   agora vão para a fila (`cargo_padrao.reapurar_colaborador`). Instrutores: 1.310 dias reapurados em 24 s; atrasos
   259 → 0 e HE acima do limite 48 → 22 (regras de horista).
+
+## Monitoramento de horistas (docs/PRD-monitoramento-horistas.md, 23/10/2026)
+
+- Origem: `docs/prd_monitoramento_de_horistas.md` (proposta do RH), adaptada à estrutura; decisões DH-1 a DH-10
+  confirmadas. Ajustes à proposta: aviso uma vez por limite (a regra "% N == 0" repetiria todo dia), Evolution v2
+  (`number`/`text`; o servidor do Ricardo é 2.3.7), job às 19h, resolução sozinha abaixo do limite ou "Ciente".
+- Feito: `engine/monitoramento_horista.py` (pytest 100%); Configuração Apuração (parâmetros e WhatsApp, botão de
+  teste); DocTypes Alerta Horista (+ dias), Notificacao WhatsApp; tipos `excesso_jornada_horista` e
+  `whatsapp_nao_enviado` (Select, sugestões, frontend); job `monitoramento_horistas.verificar` (cron 19h) e
+  `whatsapp.enviar_pendentes` (de hora em hora, 8h-20h); `recontar` no Salvar do cartão e no Tratamento de Ponto;
+  cliente `integrations/evolution/client.py` com mock; formato de impressão "Termo de Ajuste de Intervalo"; no cartão,
+  sugestão "Incluir o intervalo do termo assinado", motivo pronto e anexo obrigatório (upload privado); card no Cockpit.
+- Testes: 13 Frappe novos (`apuracao/test_monitoramento_horistas.py`) e regressão do cartão, envio, painel, fechamento,
+  horista com escala e cargo; 862+ pytest; 8 do cliente Evolution; 50 testes de navegador; ruff e lint limpos.
+- Aceite (banco real, só leitura): outubro teria 22 dos 26 INSTRUTORES no limite (186 ocorrências); ginástica, música
+  e educação física: nenhuma. 10 horistas sem celular válido no cadastro.
+- No site de operação o monitoramento ficou **desligado** (campos novos em branco no single): nada acontece até o RH
+  ligar na Configuração Apuração. WhatsApp desligado.
+- Pendências: o RH ligar o monitoramento e decidir o que fazer com os 22 instrutores de outubro (termos ou "Ciente");
+  primeiro envio real do WhatsApp com a URL/chave/instância da Evolution; corrigir os celulares ausentes no Secullum.
+- **Ajuste (23/10/2026, pedido do Ricardo):** com o monitoramento ligado, o dia de horista até 4h + tolerância sem
+  pausa não gera mais a inconsistência diária `intrajornada` (o intervalo continua indenizado e o dia conta no alerta
+  do mês); acima da tolerância (ex.: 5h10) continua aparecendo. `EntradaDia.tolerancia_aviso_intervalo`, preenchida
+  pelo adaptador só com o monitoramento ligado. Site de operação: monitoramento **ligado** (15 min, limite 4, WhatsApp
+  desligado); outubro dos horistas reapurado (791 dias): intrajornada diárias 220 → 34; 22 alertas no limite viraram
+  22 inconsistências Altas (`excesso_jornada_horista`); 22 mensagens registradas como "não enviada (desligado)".

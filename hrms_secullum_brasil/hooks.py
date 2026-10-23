@@ -152,6 +152,9 @@ scheduler_events = {
 		"*/5 * * * *": ["hrms_secullum_brasil.ingestion.coleta_batidas.tick"],
 		# processa a fila Reapuracao Pendente (marcada pela coleta, por tratamentos e pelo job diário)
 		"*/10 * * * *": ["hrms_secullum_brasil.apuracao.servico.tick_reapuracao"],
+		# docs/PRD-monitoramento-horistas.md: contagem do mês às 19h e WhatsApp que ficou na fila (8h-20h)
+		"0 19 * * *": ["hrms_secullum_brasil.apuracao.monitoramento_horistas.verificar"],
+		"0 * * * *": ["hrms_secullum_brasil.apuracao.whatsapp.enviar_pendentes"],
 		# AJ-11: feriados do ano seguinte, todo 1º de dezembro
 		"0 6 1 12 *": ["hrms_secullum_brasil.apuracao.feriados.gerar_ano_seguinte"],
 		# AJ-08: contribuições da CCT da folha anterior, todo dia 1º

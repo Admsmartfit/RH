@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "creation": "2026-10-23 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "designation",
+  "competencia",
+  "column_break_1",
+  "situacao",
+  "ocorrencias",
+  "ultimo_limite_avisado",
+  "inconsistencia",
+  "atualizado_em",
+  "ciente_section",
+  "ciente_limite",
+  "ciente_por",
+  "ciente_em",
+  "dias_section",
+  "dias"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.designation",
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Cargo",
+   "options": "Designation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "competencia",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Competência (AAAA-MM)",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Abaixo do limite",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Abaixo do limite\nNo limite\nCiente",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "ocorrencias",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Ocorrências não regularizadas",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "ultimo_limite_avisado",
+   "fieldtype": "Int",
+   "label": "Último limite avisado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inconsistencia",
+   "fieldtype": "Link",
+   "label": "Inconsistência",
+   "options": "Inconsistencia de Ponto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "atualizado_em",
+   "fieldtype": "Datetime",
+   "label": "Atualizado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ciente_section",
+   "fieldtype": "Section Break",
+   "label": "Ciente (pagar a indenização)",
+   "collapsible": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "ciente_limite",
+   "fieldtype": "Int",
+   "label": "Ciente até o limite",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ciente_por",
+   "fieldtype": "Link",
+   "label": "Ciente por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ciente_em",
+   "fieldtype": "Datetime",
+   "label": "Ciente em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "Dias além de 4h sem intervalo registrado"
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Table",
+   "label": "Dias",
+   "options": "Alerta Horista Dia",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Alerta Horista",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "format:ALH-{employee}-{competencia}",
+ "description": "Monitoramento de horistas (docs/PRD-monitoramento-horistas.md): dias do mês além de 4h sem intervalo registrado.",
+ "in_create": 1,
+ "title_field": "employee_name",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ]
+}

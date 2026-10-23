@@ -80,6 +80,9 @@ class EntradaDia:
 	repouso: bool | None = None  # AJ-02: True = repouso semanal; False = folga compensada/trabalho
 	setimo_dia: bool = False  # AJ-10: 7º dia seguido de trabalho (OJ 410: pago em dobro)
 	horista_escalado: bool = False  # AJ-14: horista com escala do mês ou semana padrão no perfil
+	# docs/PRD-monitoramento-horistas.md: horista até 4h + esta tolerância sem pausa não gera a inconsistência do dia
+	# (o intervalo continua indenizado e o dia conta no alerta do mês); 0 = sempre gera
+	tolerancia_aviso_intervalo: int = 0
 	estagio: bool = False  # EST-04: estagiário — sem HE, banco, DSR nem adicional pago
 	limite_diario_estagio: int = 0  # EST-04: carga diária do TCE (minutos)
 

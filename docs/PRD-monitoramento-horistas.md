@@ -45,7 +45,7 @@ Essas três regras respondem às perguntas da conversa de 23/10/2026 (hora extra
 
 ## 4. Decisões
 
-**Propostas — confirmar antes da etapa 1** (regra do `AGENTS.md`: ambíguo → perguntar).
+**Confirmadas em 23/10/2026** (DH-1 a DH-10, como propostas).
 
 | # | Pergunta | Proposta | Afeta |
 |---|---|---|---|
@@ -130,13 +130,13 @@ os testes Frappe da etapa e, se mexeu no `frontend/`, `yarn lint`, `yarn build` 
 
 | Etapa | O que faz | Requisitos | Situação |
 |---|---|---|---|
-| 1 | Engine: ocorrências, limite e aviso (DH-1, DH-2), telefone, texto da mensagem (pytest) | MH-02 | A fazer |
-| 2 | Configuração Apuração (parâmetros e WhatsApp), DocType Alerta Horista, tipo de inconsistência novo | MH-01, MH-03 | A fazer |
-| 3 | Job diário: alertas, inconsistência Alta, resolução sozinha e "Ciente" | MH-02, MH-03 | A fazer |
-| 4 | Cliente Evolution (v2) com mock, Notificacao WhatsApp, trava, horário, gestor, Reenviar, mensagem de teste | MH-04 | A fazer |
-| 5 | Termo de ajuste para imprimir | MH-05 | A fazer |
-| 6 | Cartão ponto: sugestão "Incluir o intervalo do termo", motivo pronto e anexo obrigatório no Salvar | MH-06 | A fazer |
-| 7 | Cockpit, manuais (RH, gestor, teste), AGENTS.md, aceite com o banco real (só leitura) e primeiro envio real com o RH | MH-07 | A fazer |
+| 1 | Engine: ocorrências, limite e aviso (DH-1, DH-2), telefone, texto da mensagem (pytest) | MH-02 | Feita |
+| 2 | Configuração Apuração (parâmetros e WhatsApp), DocType Alerta Horista, tipo de inconsistência novo | MH-01, MH-03 | Feita |
+| 3 | Job diário: alertas, inconsistência Alta, resolução sozinha e "Ciente" | MH-02, MH-03 | Feita |
+| 4 | Cliente Evolution (v2) com mock, Notificacao WhatsApp, trava, horário, gestor, Reenviar, mensagem de teste | MH-04 | Feita |
+| 5 | Termo de ajuste para imprimir | MH-05 | Feita |
+| 6 | Cartão ponto: sugestão "Incluir o intervalo do termo", motivo pronto e anexo obrigatório no Salvar | MH-06 | Feita |
+| 7 | Cockpit, manuais (RH, gestor, teste), AGENTS.md, aceite com o banco real (só leitura) e primeiro envio real com o RH | MH-07 | Feita (falta o primeiro envio real com o RH) |
 
 ### Texto para colar em cada etapa
 "Leia AGENTS.md, docs/PROGRESS.md e docs/PRD-monitoramento-horistas.md e faça a Etapa N."

@@ -95,3 +95,12 @@ def test_intrajornada_mostra_o_intervalo():
 
 def test_intervalo_longo_oferece_a_jornada_fragmentada():
 	assert acoes(orientar("intervalo_superior_2h"))[0] == JORNADA_FRAGMENTADA
+
+
+def test_horista_sem_intervalo_sugere_o_termo():
+	from hrms_secullum_brasil.engine.sugestoes import INCLUIR_INTERVALO
+
+	o = orientar("intrajornada", ContextoDia(batidas("08:00", "12:12"), horista=True))
+	assert o.sugestoes[0].acao == INCLUIR_INTERVALO
+	assert o.explicacao == "Passou do limite da jornada sem registrar intervalo."
+	assert INCLUIR_INTERVALO not in acoes(orientar("intrajornada", ContextoDia(batidas("08:00", "12:12"))))

@@ -31,6 +31,7 @@ from hrms_secullum_brasil.engine.models import (
 	JornadaPrevista,
 	RegraApuracao,
 )
+from hrms_secullum_brasil.engine.monitoramento_horista import TOLERANCIA_PADRAO
 from hrms_secullum_brasil.engine.professor import Aula, EntradaProfessor
 from hrms_secullum_brasil.estagio.tce import get_tce_vigente
 
@@ -512,10 +513,21 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		marcacoes_dia_anterior=tuple(anteriores),
 		horista=perfil.tipo in HORISTAS,
 		horista_escalado=perfil.tipo in HORISTAS and horista_escalado(employee, data, perfil),
+		tolerancia_aviso_intervalo=_tolerancia_aviso_intervalo() if perfil.tipo in HORISTAS else 0,
 		estagio=estagio,
 		limite_diario_estagio=limite_estagio,
 	)
 	return ctx
+
+
+def _tolerancia_aviso_intervalo() -> int:
+	"""Com o monitoramento de horistas ligado, a tolerância dele (minutos além das 4h); desligado, 0."""
+	if not cint(valor_single("Configuracao Apuracao", "monitorar_horistas")):
+		return 0
+	return (
+		cint(valor_single("Configuracao Apuracao", "horista_tolerancia_intrajornada_min"))
+		or TOLERANCIA_PADRAO
+	)
 
 
 def cartao_do_dia(employee: str, data: date):

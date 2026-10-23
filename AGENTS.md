@@ -114,6 +114,17 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - Comparar antes e depois explicitamente: `has_value_changed` num documento carregado com `get_doc` devolve sempre
   "mudou" antes do save.
 
+## Monitoramento de horistas — docs/PRD-monitoramento-horistas.md
+
+- Regra pura em `engine/monitoramento_horista.py` (ocorrência, limite, aviso uma vez por limite, telefone, mensagem);
+  job em `apuracao/monitoramento_horistas.py` (Alerta Horista por competência, inconsistência Alta
+  `excesso_jornada_horista`, "Ciente"); correção no ponto chama `recontar` (cartão e Tratamento de Ponto).
+- O programa **nunca** inclui o intervalo sozinho e não muda os limites legais (240 min, 8h/44h): o intervalo entra
+  pelo cartão com o motivo `cartao_ponto.MOTIVO_TERMO`, que exige o anexo do termo.
+- WhatsApp só por `apuracao/whatsapp.py` (Notificacao WhatsApp, trava `whatsapp_envio`, horário 8h-20h, pendência
+  `whatsapp_nao_enviado`); cliente puro em `integrations/evolution/client.py` (Evolution v2: `number`/`text`).
+  Testes usam `frappe.flags.whatsapp_mock`.
+
 ## Convenções de código
 
 - **Traduções:** o HRMS v16 não traz pt-BR e o ERPNext traz pouco; texto em inglês visível nas cinco áreas é traduzido em `translations/pt-BR.csv` (origem, tradução, contexto), preservando os marcadores `{0}`; `engine/tests/test_traducoes.py` valida o arquivo.

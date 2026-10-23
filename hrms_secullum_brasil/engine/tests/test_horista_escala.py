@@ -100,3 +100,35 @@ def test_aceite_dsr_mensal_de_setembro():
 
 def test_dsr_mensal_sem_dias_uteis():
 	assert "DSR_HOR" not in valores(MinutosPeriodo(dsr_horista_mensal=True, dsr_horista_base=600))
+
+
+# ------------------------------------------------------------------ docs/PRD-monitoramento-horistas.md
+
+
+def _dia_minutos(entrada, saida, **kw):
+	marcas = (datetime(2026, 10, 8, *entrada), datetime(2026, 10, 8, *saida))
+	return apurar_dia(
+		EntradaDia(
+			date(2026, 10, 8),
+			marcas,
+			JornadaPrevista((Periodo(420, 660),)),
+			horista=True,
+			horista_escalado=True,
+			**kw,
+		)
+	)
+
+
+def test_poucos_minutos_alem_de_4h_nao_poluem_o_dia():
+	r = _dia_minutos((14, 56), (19, 3), tolerancia_aviso_intervalo=15)  # 4h07 sem pausa
+	assert r.intrajornada_suprimida == 15  # a indenização continua
+	assert "intrajornada" not in r.tipos_inconsistencia()
+
+
+def test_alem_da_tolerancia_gera_a_inconsistencia_do_dia():
+	r = _dia_minutos((13, 50), (19, 0), tolerancia_aviso_intervalo=15)  # 5h10 sem pausa
+	assert "intrajornada" in r.tipos_inconsistencia()
+
+
+def test_sem_monitoramento_sempre_gera():
+	assert "intrajornada" in _dia_minutos((14, 56), (19, 3)).tipos_inconsistencia()

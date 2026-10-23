@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "creation": "2026-10-23 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "data",
+  "trabalhado"
+ ],
+ "fields": [
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trabalhado",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Trabalhado (min)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Alerta Horista Dia",
+ "owner": "Administrator",
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 0,
+ "permissions": []
+}
