@@ -1,0 +1,38 @@
+[
+ {
+  "Id": 2,
+  "Descricao": "DISPENSA POR JUSTA CAUSA"
+ },
+ {
+  "Id": 1,
+  "Descricao": "DISPENSA SEM JUSTA CAUSA"
+ },
+ {
+  "Id": 9,
+  "Descricao": "MUDANÇA DE FUNÇÃO/CARGO CONFIANÇA"
+ },
+ {
+  "Id": 8,
+  "Descricao": "MUDANÇA DE FUNÇÃO-CARGO CONFIANÇA"
+ },
+ {
+  "Id": 5,
+  "Descricao": "PEDIDO DE DEMISSÃO"
+ },
+ {
+  "Id": 4,
+  "Descricao": "RESCISÃO DE CONTRATO POR MOTIVO DE ACORDO"
+ },
+ {
+  "Id": 3,
+  "Descricao": "TERMINO DE CONTRATO"
+ },
+ {
+  "Id": 7,
+  "Descricao": "TRANFERENCIA"
+ },
+ {
+  "Id": 6,
+  "Descricao": "TRANSFERÊNCIA"
+ }
+]

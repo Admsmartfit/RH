@@ -68,3 +68,16 @@ def test_mock_devolve_totais_configurados():
 		"Colunas": ["Normais"],
 		"Totais": ["08:00"],
 	}
+
+
+def test_colunas_do_banco_real():
+	resposta = {
+		"Colunas": ["Data", "Normais", "Faltas", "Atras.", "Adian.", "Horas Ad.", "Carga"],
+		"Totais": ["", "04:00", "00:00", "00:10", "00:05", "00:11", "04:00"],
+	}
+	assert totais_por_categoria(resposta) == {"normais": 240, "falta": 0, "atraso": 15, "hora_extra": 11}
+
+
+def test_horas_abonadas_contam_como_normais():
+	resposta = {"Colunas": ["Normais", "Ajuste", "Abono2"], "Totais": ["04:00", "04:00", "01:00"]}
+	assert totais_por_categoria(resposta) == {"normais": 540}

@@ -1,0 +1,44 @@
+[
+ {
+  "Id": 8,
+  "Descricao": "FUNCIONAL DA PRAIA",
+  "Nfolha": null,
+  "Desativado": false
+ },
+ {
+  "Id": 6,
+  "Descricao": "LIVE VV",
+  "Nfolha": null,
+  "Desativado": false
+ },
+ {
+  "Id": 5,
+  "Descricao": "MAPLE BEAR",
+  "Nfolha": null,
+  "Desativado": false
+ },
+ {
+  "Id": 7,
+  "Descricao": "PRAIA FITNESS",
+  "Nfolha": null,
+  "Desativado": false
+ },
+ {
+  "Id": 1,
+  "Descricao": "SMART FIT MATRIZ",
+  "Nfolha": "",
+  "Desativado": false
+ },
+ {
+  "Id": 3,
+  "Descricao": "SMART FIT SERRA",
+  "Nfolha": "",
+  "Desativado": false
+ },
+ {
+  "Id": 4,
+  "Descricao": "SMART FIT VILA VELHA",
+  "Nfolha": "",
+  "Desativado": false
+ }
+]

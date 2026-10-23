@@ -24,7 +24,7 @@ def test_carrega_fixtures():
 		"Banco Mock - Escolas PR",
 		"Banco Mock - Academias ES",
 	]
-	assert mock.listar_bancos()[0]["identificador"] == "6f9619ff8b86d011b42d00c04fc964ff"
+	assert mock.listar_bancos()[0]["id_banco"] == "1001"
 
 
 def test_inclusao_e_alteracao_pelo_cpf():

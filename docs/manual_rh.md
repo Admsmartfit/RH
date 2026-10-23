@@ -14,6 +14,94 @@ espaço de trabalho **Ponto**, no menu lateral.
 5. No fim do mês, o **Fechamento de Ponto** transforma os minutos em valores e envia para a folha (Additional
    Salary). O período fica **travado**.
 
+## Painel de ponto (/ponto)
+
+Tela única para o trabalho do dia a dia: abra **http://<servidor>/ponto** ou o atalho **Painel de ponto** no espaço
+Ponto do Desk. Cadastros e regras (CCT, perfis, escalas, fechamento) continuam no Desk; o painel tem links para o
+documento certo. No topo ficam os filtros (competência, empresa, filial, departamento e status), guardados no
+endereço da página: copie o link para mostrar a mesma visão a outra pessoa.
+
+### Cockpit
+
+Os números do mês, calculados no servidor: conformidade (dias Ok ou Tratados sobre os dias apurados, com os não
+apurados à parte), horas extras de 50% e 100% (e quanto foi ao banco), faltas e atrasos, banco de horas a vencer
+em 30 dias, alertas do INSS pendentes (só colaborador e data do 16º dia; nunca o CID), inconsistências abertas por
+severidade, integração Secullum, fila de reapuração e até quando o ponto está fechado. Cada card abre a lista
+filtrada (as inconsistências abrem a central do painel; os demais, a lista do Desk).
+
+### Inconsistências (central)
+
+À esquerda, a lista agrupada por severidade (Alta, Média, Baixa) e tipo; à direita, o dia escolhido: a **linha do
+tempo** (previsto ao fundo, tolerância nas pontas, trabalhado, hora extra, atraso, falta, intervalo e noturno),
+os tratamentos e as inconsistências do dia. Clique numa marcação para abrir a **auditoria** (origem, equipamento,
+data de inclusão no Secullum, substituição, tratamento, PIS).
+
+Ações (as mesmas do Desk, sempre com motivo): **Abonar**, **Lançar atestado**, **Incluir marcação** (já vem com o
+horário previsto mais próximo; confira antes de confirmar), **Desconsiderar marcação** e **Atribuir ao gestor**.
+Marque várias linhas para abonar, lançar atestado ou atribuir em lote (um abono por colaborador e dia). Quando a
+reapuração resolve a inconsistência, a linha some da lista.
+
+**Atalhos de teclado** (fora dos campos de texto):
+
+| Tecla | Faz |
+|---|---|
+| `J` / `K` | Próxima / anterior (mostra o dia) |
+| `X` | Marca ou desmarca a linha para ação em lote |
+| `Enter` | Leva o foco ao dia |
+| `A` | Abonar (as marcadas, se houver; senão a selecionada) |
+| `I` | Incluir marcação |
+| `D` | Desconsiderar marcação |
+| `Esc` | Fecha o diálogo ou a gaveta; desmarca as linhas |
+
+Exemplo: `J`, `A`, digite o motivo, `Enter` — o dia está abonado.
+
+**Aba "Aguardando aprovação"** (só RH Ponto): os tratamentos que os gestores criaram. **Aprovar** envia o
+tratamento (o dia é reapurado); **Recusar** exclui o rascunho, depois de confirmar.
+
+### Colaborador (espelho do mês)
+
+Escolha o colaborador: os totais do mês no topo (normais, horas extras pagas e no banco, noturno, faltas, atrasos,
+DSR perdido e banco) e uma linha do tempo compacta por dia, com o status e os totais. Clique no dia para ver o dia
+inteiro. Mês aberto: aviso de que os números ainda podem mudar. Mês fechado: botão para o **PDF do Espelho de
+Ponto** gerado no fechamento (o documento oficial continua sendo esse PDF e o espelho do Secullum).
+
+### Cartão ponto (corrigir o mês numa tela só)
+
+Como o cartão ponto do Secullum: **Cartão ponto** no menu do painel (ou **Abrir no cartão ponto** na central, a
+tecla `C`, o botão **Abrir cartão ponto** na Inconsistência, na Apuração Diária e no Colaborador do Desk). Uma linha
+por dia com o previsto, as batidas (Entrada 1 … Saída 3, mais colunas quando precisar), o abono, os totais e a
+situação. As setas **◀ Anterior / Próximo ▶** (ou `[` e `]`) trocam de colaborador sem sair da tela.
+
+- **Corrigir uma batida:** clique na célula e digite o horário (`1705` vira `17:05`). Apagar a célula tira a batida;
+  mudar o horário = a original fica **riscada** (desconsiderada) e a nova entra. `Enter`/`↓` desce, `↑` sobe, `Esc`
+  desfaz a célula. A batida original nunca é apagada (Portaria 671).
+- **Abonar:** "abonar" na coluna Abono (escolha a justificativa do Secullum, se for enviar). Vários dias: marque as
+  caixas (Shift + clique pega um intervalo) e **Abonar os dias**.
+- **O que está errado:** clique no `!` do dia: o painel ao lado explica o problema e traz sugestões em um clique
+  (incluir o horário previsto, desconsiderar a repetida, abonar, permitir jornada fragmentada, reenviar ao
+  Secullum). A sugestão só preenche a grade; nada é gravado sem o Salvar.
+- **Salvar:** as alterações ficam marcadas ("Alterado") até você clicar em **Salvar…**. O resumo mostra o que vai
+  ser feito ("2 inclusões, 1 abono em 2 dias") e os avisos por dia; escolha o motivo (os mais comuns são botões; o
+  último fica lembrado) e confirme. Cada alteração vira um Tratamento de Ponto aprovado, o dia é recalculado na hora
+  e a grade volta com os totais novos. Um dia com erro (ex.: período fechado, horário inválido) não impede os outros.
+- **Histórico:** "Alterações do período", no fim da tela: quem corrigiu, quando, o motivo e se foi ao Secullum.
+
+### Enviar as correções ao Secullum
+
+**Configuração Secullum → Envio de correções de ponto ao Secullum** (a trava, que vem **Bloqueado**):
+
+| Opção | O que acontece |
+|---|---|
+| Bloqueado | Nada é enviado: a correção vale só no programa |
+| Perguntar ao salvar | O Salvar do cartão traz a caixa **Enviar também ao Secullum** (vem marcada) |
+| Sempre enviar | Toda correção aprovada vai para o cartão do Secullum |
+
+O envio sai numa fila (o Salvar não espera o Secullum). Correção de gestor só vai depois que o RH aprovar. A batida
+incluída volta na coleta seguinte e conta uma vez só. O abono vai como justificativa do Secullum (escolha uma ao
+abonar; sem ela, o abono fica só no programa). Se o Secullum recusar, a correção continua valendo no programa e abre
+a inconsistência **Correção não enviada ao Secullum**: use **Reenviar ao Secullum** (no painel do dia ou no
+documento **Envio Cartao Secullum**). Antes de ligar, faça um teste com um colaborador de teste.
+
 ## Rotina diária
 
 ### Inconsistências
@@ -110,6 +198,11 @@ o **RH Saúde** (dado de saúde, LGPD). O RH Ponto vê só as datas.
    - colaborador sem estrutura salarial (Salary Structure Assignment).
 3. **Divergência com o Secullum** (recomendado): compara os totais do app com os do Secullum por colaborador.
    Veja o resultado em "Divergência Totais Secullum".
+   Use **O que impede fechar**: a lista por colaborador, cada um com **Abrir no cartão** já no primeiro dia com
+   problema.
+   **Lançamentos manuais** (opcional): ajuste que não vem do ponto, por exemplo uma diferença do mês anterior —
+   colaborador, rubrica, minutos (valorados pelo valor-hora: HE50 x1,5; HE100 x2) **ou** valor, e o motivo. Entram na
+   prévia somados à rubrica, viram Additional Salary com os demais e saem ao reabrir.
 4. **Enviar** (Submit): grava os lançamentos na folha (um Additional Salary por colaborador e rubrica), trava o
    período e gera os **Espelhos de Ponto**. Depois disso, o processamento da folha segue normalmente no HRMS
    (Payroll Entry).
@@ -128,8 +221,13 @@ oficial é o do Secullum.
 
 ## Escala do mês e trocas de escala
 
-**Escala Mensal** (uma por colaborador e mês): cada dia é **Trabalho** (com horário), **Repouso semanal** ou
-**Folga compensada**.
+**Escala Mensal** (uma por colaborador e mês): cada dia é **Trabalho** (com horário), **Repouso semanal**,
+**Folga compensada** ou **Neutro**.
+
+**Dia neutro (rodízio, como no Secullum):** no Perfil de Jornada, marque **Neutro** no dia (ex.: sábado do
+rodízio). Quem não vem não tem falta; quem trabalha faz horas normais até 8h no dia. O que passar de 44h na
+semana vira hora extra (faixa de dia útil). O horário do dia neutro fica só de referência e não entra na carga
+semanal. Os horários importados do Secullum já vêm com o neutro marcado.
 
 1. Crie a escala (Escala Mensal → Novo: colaborador, ano e mês) e clique em **Preencher pelo perfil**. Ajuste os
    dias.
@@ -164,10 +262,33 @@ horário. Exemplo: João folga no domingo 18 (linha "Folga compensada"), Maria t
   folga". Nos dois últimos, lance um Tratamento de Ponto **Compensação de feriado** (dia de trabalho = feriado;
   data da folga dentro do prazo): as horas do feriado viram normais e a folga não gera falta.
 
+## Cargo: tudo do cargo numa tela
+
+**Pessoas → Cargos → (o cargo)** — por exemplo http://localhost:8000/desk/designation/INSTRUTOR. Na seção **Ponto e
+folha do cargo**:
+
+- **Tipo de remuneração** (ex.: Horista): ao salvar, **todos os colaboradores ativos do cargo** passam para esse tipo.
+- **Valor do cargo** (horista: valor da hora; mensalista: salário) e **Valor vale a partir de**: ao salvar, cada
+  colaborador ativo ganha a atribuição de salário com esse valor a partir da data (quem já tem o mesmo valor fica
+  como está). Para um reajuste, troque o valor e a data: os meses anteriores continuam com o valor antigo.
+- **Adicional noturno, Banco de horas por padrão, Jornada fragmentada** e o **Piso da CCT**: ao salvar, vão para a
+  linha do cargo em todas as CCTs vigentes (e nas CCTs criadas depois).
+- No fim da tela, **Colaboradores e CCTs do cargo**: quem está no cargo, com o tipo e o salário de hoje (em amarelo
+  quem está diferente do cargo), e as CCTs vigentes. **Aplicar de novo a todos** corrige quem ficou diferente.
+- Quem é admitido no cargo, ou muda para ele, recebe o tipo e o valor do cargo automaticamente.
+
+Para editar o cargo é preciso o papel **HR User** ou **HR Manager** (além do RH Ponto).
+
 ## Opções da CCT por cargo
 
 Regra Sindical CCT → **Parâmetros por cargo**: piso (mensalista ou horista, com a carga de referência), adicional
-noturno do cargo (nunca menos que 20% nem que o da CCT) e banco de horas padrão.
+noturno do cargo (nunca menos que 20% nem que o da CCT), banco de horas padrão e **jornada fragmentada**.
+
+- **Jornada fragmentada (intervalo maior que 2h):** para quem trabalha em dois turnos no dia (ex.: instrutor de
+  ginástica de manhã e à noite). Ligada, o intervalo longo não vira inconsistência para todos do cargo. Só ligue se a
+  CCT ou acordo escrito permitir (CLT, art. 71). A importação do Secullum já liga para os cargos dos horistas (com
+  aviso na revisão); na central ou no cartão, a inconsistência "Intervalo maior que 2 h" tem **Permitir para este
+  cargo**, que liga e recalcula os dias abertos.
 
 - Salário abaixo do piso proporcional: aviso na estrutura salarial, no Fechamento de Ponto e no cadastro.
 - Admissão ou troca de cargo: o colaborador recebe o banco padrão do cargo. Mudar a opção no meio do mês vale a
@@ -242,6 +363,42 @@ maior); falta desconta 1/30 por dia; entra na base da hora extra. Laudo vencido:
 5. **Relatório de Estagio** a cada 6 meses (aviso no 5º mês). Alertas: TCE vencendo (30/15/5 dias), TCE vencido
    com batida, seguro vencido.
 6. Folha: só **BOLSA_DESC** (falta = bolsa/30; atraso por minuto). Use a Salary Structure "Estágio".
+
+## Importação do Secullum
+
+O Secullum é a **origem dos cadastros**: nome, CPF, PIS, datas, empresa, cargo, departamento e horário vêm de lá
+e ficam somente leitura no colaborador ("altere no Secullum e importe de novo"). O resto (chefe, CCT, tipo de
+remuneração, banco de horas, salário, VT, EPI...) é do programa.
+
+**Ponto → Importação Secullum** tem cinco passos:
+
+1. **Conectar:** usuário, senha e número do banco do Secullum.
+2. **Conferir:** mostra, sem gravar nada, quantos cadastros entram e os problemas, com o que fazer em cada um.
+3. **Importar:** cadastros e batidas desde a data escolhida, em segundo plano. Acompanhe na própria tela; **Ver o
+   log** mostra cada registro (Criado, Atualizado, Sem mudança, Ignorado, Aviso, Erro).
+4. **Revisar:** a tabela por cargo e as pendências. Use:
+   - **Tipo de remuneração por cargo:** marca todos os ativos do cargo como Horista (ou outro tipo) de uma vez; o
+     horista passa a usar a cópia horista do horário (divisor 1: o salário informado é o valor da hora).
+   - **Banco de horas por cargo:** liga ou desliga para todos os ativos do cargo; as próximas admissões do cargo
+     já entram com essa opção.
+5. **Salários:** **Baixar modelo da planilha** (os ativos sem salário) → preencha **Salário** (horista: valor da
+   hora) e **Início** → **Importar planilha de salários** (deixe "Só conferir" marcado na primeira vez).
+
+**Sincronização diária** (botão no assistente): todo dia o programa repete a importação dos cadastros.
+- Demissão no Secullum: o colaborador fica Desligado e os dias depois da demissão saem da apuração.
+- Troca de horário no Secullum: o horário novo vale **a partir do dia da sincronização** (o Secullum não informa
+  a data). Se a troca foi antes, abra o colaborador → aba Ponto → **Histórico de horário** e acerte a data: os
+  dias são reapurados.
+- Afastamento novo, alterado ou apagado no Secullum: os dias são reapurados (menos em período fechado, que vira a
+  inconsistência "Alteração do Secullum em período fechado").
+- Colaborador que sumiu do Secullum sem demissão: inconsistência Alta "Colaborador não encontrado no Secullum".
+
+**Justificativas do Secullum** (Ponto → Justificativa Secullum): cada uma tem o **Efeito no ponto** (Abona o dia,
+Falta, Férias, Atestado, Afastamento INSS), sugerido pela importação. Confira: mudar o efeito reapura os dias dos
+afastamentos com essa justificativa. O motivo em texto livre do afastamento não é importado (LGPD).
+
+**Dia neutro (rodízio):** os horários do Secullum com sábado ou domingo "neutro" entram com o dia marcado como
+Neutro no Perfil de Jornada (ver "Escala do mês e trocas de escala").
 
 ## Cadastros e regras (RH Ponto)
 

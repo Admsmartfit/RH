@@ -12,7 +12,7 @@ from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
 from hrms_secullum_brasil.integrations.secullum.erros import SecullumIndisponivelError
 
 EMPRESA = "_Test Company"
-BANCO = "6f9619ff8b86d011b42d00c04fc964ff"
+BANCO = "1002"
 RAW = "Secullum Checkin Raw"
 
 

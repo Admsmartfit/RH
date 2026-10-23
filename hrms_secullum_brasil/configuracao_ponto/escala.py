@@ -14,6 +14,7 @@ from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.escala import (
 	DIAS_SEMANA,
 	FOLGA_COMPENSADA,
+	NEUTRO,
 	REPOUSO,
 	TRABALHO,
 	DiaEscala,
@@ -49,19 +50,20 @@ def linha_do_perfil(perfil, data: date):
 
 def jornada_do_perfil(perfil, data: date) -> JornadaPrevista:
 	linha = linha_do_perfil(perfil, data)
-	return JornadaPrevista(
-		periodos_da_linha(linha) if linha else (), bool(cint(perfil.permite_intervalo_estendido))
-	)
+	estendido = bool(cint(perfil.permite_intervalo_estendido))
+	if linha and cint(linha.get("neutro")):
+		return JornadaPrevista((), estendido, neutro=True)
+	return JornadaPrevista(periodos_da_linha(linha) if linha else (), estendido)
 
 
-def repouso_do_perfil(perfil, data: date) -> bool:
-	"""Sem escala: a folga é o repouso se for o repouso padrão da semana (domingo ou primeira folga)."""
+def repouso_do_perfil(perfil, data: date, neutros: bool = False) -> bool:
+	"""Sem escala: a folga é o repouso se for o repouso padrão da semana (domingo ou primeira folga).
+	`neutros`: sem nenhuma folga na semana, o repouso sai dos dias neutros (só para gerar a Escala do Mês)."""
 	segunda = segunda_da_semana(data)
-	folgas = [
-		segunda + timedelta(days=i)
-		for i in range(7)
-		if jornada_do_perfil(perfil, segunda + timedelta(days=i)).folga
-	]
+	semana = [jornada_do_perfil(perfil, segunda + timedelta(days=i)) for i in range(7)]
+	folgas = [segunda + timedelta(days=i) for i, j in enumerate(semana) if j.folga]
+	if not folgas and neutros:
+		folgas = [segunda + timedelta(days=i) for i, j in enumerate(semana) if j.neutro]
 	return repouso_padrao(folgas, perfil.get("repouso_semanal_padrao") or d.REPOUSO_PADRAO) == data
 
 
@@ -78,7 +80,9 @@ def dia_da_escala(employee: str, data: date, perfil) -> tuple[JornadaPrevista, b
 	estendido = bool(cint(perfil.permite_intervalo_estendido))
 	if linha:
 		periodos = periodos_da_linha(linha) if linha.situacao == TRABALHO else ()
-		return JornadaPrevista(periodos, estendido), linha.situacao == REPOUSO
+		return JornadaPrevista(
+			periodos, estendido, neutro=linha.situacao == NEUTRO
+		), linha.situacao == REPOUSO
 	jornada = jornada_do_perfil(perfil, data)
 	return jornada, (jornada.folga and repouso_do_perfil(perfil, data))
 
@@ -92,6 +96,8 @@ def horista_escalado(employee: str, data: date, perfil) -> bool:
 
 def dia_para_conferencia(employee: str, data: date, perfil) -> DiaEscala:
 	jornada, repouso = dia_da_escala(employee, data, perfil)
+	if jornada.neutro:
+		return DiaEscala(data, NEUTRO)
 	if jornada.folga:
 		return DiaEscala(data, REPOUSO if repouso else FOLGA_COMPENSADA)
 	return DiaEscala(data, TRABALHO, jornada.periodos)
@@ -107,6 +113,8 @@ def horarios_do_dia(employee: str, data: date) -> dict | None:
 		perfil = get_perfil_vigente(employee, data)
 		linha = linha_do_perfil(perfil, data) if perfil else None
 	elif linha.situacao != TRABALHO:
+		return None
+	if linha.get("neutro"):
 		return None
 	if not linha or not periodos_da_linha(linha):
 		return None
@@ -129,11 +137,13 @@ def linhas_do_perfil(employee: str, ano: int, mes: int) -> list[dict]:
 		linha = {"data": dia, "dia_semana": DIAS_SEMANA[dia.weekday()], "situacao": FOLGA_COMPENSADA}
 		if perfil:
 			jornada = jornada_do_perfil(perfil, dia)
-			if not jornada.folga:
+			if repouso_do_perfil(perfil, dia, neutros=True):
+				linha["situacao"] = REPOUSO
+			elif jornada.neutro:
+				linha["situacao"] = NEUTRO
+			elif not jornada.folga:
 				origem = linha_do_perfil(perfil, dia)
 				linha.update({"situacao": TRABALHO, **{c: origem.get(c) for c in CAMPOS_HORARIO}})
-			elif repouso_do_perfil(perfil, dia):
-				linha["situacao"] = REPOUSO
 		linhas.append(linha)
 		dia += timedelta(days=1)
 	return linhas

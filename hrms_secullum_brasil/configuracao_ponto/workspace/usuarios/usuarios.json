@@ -1,0 +1,138 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"Usuarios_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Usuários</b></span>\", \"col\": 12}}, {\"id\": \"Usuarios_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Usuários\", \"col\": 3}}, {\"id\": \"Usuarios_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Perfis de papéis\", \"col\": 3}}, {\"id\": \"Usuarios_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Permissões de usuário\", \"col\": 3}}, {\"id\": \"Usuarios_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e consultas</b></span>\", \"col\": 12}}, {\"id\": \"Usuarios_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Acesso\", \"col\": 4}}]",
+ "creation": "2026-10-20 16:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "lock",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Usuarios",
+ "links": [
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Acesso",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Usuário",
+   "link_count": 0,
+   "link_to": "User",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Papel",
+   "link_count": 0,
+   "link_to": "Role",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Perfil de papéis",
+   "link_count": 0,
+   "link_to": "Role Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Perfil de módulos",
+   "link_count": 0,
+   "link_to": "Module Profile",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Permissão de usuário",
+   "link_count": 0,
+   "link_to": "User Permission",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Gerenciar permissões",
+   "link_count": 0,
+   "link_to": "permission-manager",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-20 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Usuarios",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "RH Ponto"
+  }
+ ],
+ "sequence_id": 34.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "label": "Usuários",
+   "type": "DocType",
+   "link_to": "User",
+   "format": "{} ativos",
+   "stats_filter": "{\"enabled\": 1, \"user_type\": \"System User\"}"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Perfis de papéis",
+   "type": "DocType",
+   "link_to": "Role Profile"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Permissões de usuário",
+   "type": "DocType",
+   "link_to": "User Permission"
+  }
+ ],
+ "title": "Usuários"
+}

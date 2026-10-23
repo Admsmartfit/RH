@@ -39,7 +39,16 @@ _RUBRICAS_FOLHA = [
 ]
 
 # Códigos das rubricas na folha (Prosoft), preenchidos só quando vazios (AJ-13)
-after_migrate = ["hrms_secullum_brasil.payroll_handoff.rubricas.preencher_codigos_folha"]
+# site novo: as fixtures entram depois dos valores padrão dos singles; links para elas são preenchidos aqui
+after_install = "hrms_secullum_brasil.install.after_install"
+
+after_migrate = [
+	"hrms_secullum_brasil.payroll_handoff.rubricas.preencher_codigos_folha",
+	# o migrate ressincroniza os espaços padrão: reaplica o menu enxuto, se ligado (utils/localizacao.py)
+	"hrms_secullum_brasil.utils.localizacao.reaplicar_apos_migrate",
+	# docs/PRD-cargo.md: o cargo herda os parâmetros que já estão nas CCTs (não sobrescreve)
+	"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.copiar_das_ccts",
+]
 
 fixtures = [
 	{
@@ -53,6 +62,11 @@ fixtures = [
 		"filters": [["name", "in", ["FER-CARNAVAL-SEG", "FER-CARNAVAL-TER", "FER-CORPUS-CHRISTI"]]],
 	},
 	{"dt": "Salary Component", "filters": [["salary_component_abbr", "in", _RUBRICAS_FOLHA]]},
+	# AM-01 (docs/PRD-areas-modernas.md): campos sem uso no Brasil escondidos nos formulários do HRMS
+	{
+		"dt": "Property Setter",
+		"filters": [["module", "=", "Configuracao Ponto"], ["property", "=", "hidden"]],
+	},
 	{
 		"dt": "Custom Field",
 		"filters": [
@@ -65,21 +79,55 @@ fixtures = [
 	},
 ]
 
-doctype_js = {"Employee": "public/js/employee.js"}
+# v16: ícone do app na tela inicial (/desk), à frente do ERPNext e do Frappe HR; abre o espaço Ponto
+add_to_apps_screen = [
+	{
+		"name": "hrms_secullum_brasil",
+		"logo": "/assets/hrms_secullum_brasil/images/ponto-logo.svg",
+		"title": "Ponto e RH",
+		"route": "/desk/ponto",
+		"has_permission": "hrms_secullum_brasil.utils.localizacao.pode_ver_app",
+		"sequence_id": 1,
+	}
+]
+
+# AM-02 (docs/PRD-areas-modernas.md): o tema do Desk (public/css/tema_desk.css) está desligado desde 20/10/2026:
+# o visual do Desk passou a ser o do app swift_theme (v16). Para voltar ao tema próprio, descomente:
+# app_include_css = ["/assets/hrms_secullum_brasil/css/tema_desk.css"]
+
+doctype_js = {"Employee": "public/js/employee.js", "Designation": "public/js/designation.js"}
+
+# Painel de Ponto (docs/PRD-frontend.md): app Vue em /ponto, como o /hrms do HRMS
+website_route_rules = [{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"}]
 
 doc_events = {
 	"Employee": {
+		"onload": "hrms_secullum_brasil.configuracao_ponto.employee.onload",
 		"validate": [
 			"hrms_secullum_brasil.configuracao_ponto.employee.validate",
+			# docs/PRD-cargo.md: quem entra no cargo recebe o tipo de remuneração dele
+			"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.validate_employee",
 			# EST-03: perfil do estagiário dentro da carga do TCE
 			"hrms_secullum_brasil.estagio.tce.validar_perfil_do_estagiario",
 		],
 		# on_update também roda na inclusão; só enfileira se o payload do Secullum mudou.
 		"on_update": [
 			"hrms_secullum_brasil.ingestion.sync_colaboradores.on_update_employee",
+			# IS-08: histórico de horário alterado → reapura os dias
+			"hrms_secullum_brasil.configuracao_ponto.employee.reapurar_troca_de_horario",
 			# desligamento com saldo positivo no banco de horas: avisa o RH
 			"hrms_secullum_brasil.apuracao.banco_horas.on_update_employee",
+			# docs/PRD-cargo.md: e o valor do cargo (atribuição de salário)
+			"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.on_update_employee",
 		],
+	},
+	# docs/PRD-cargo.md: tela única do cargo (aplica tipo, valor e parâmetros da CCT a todos do cargo)
+	"Designation": {
+		"validate": "hrms_secullum_brasil.configuracao_ponto.cargo_padrao.validate_designation",
+		"on_update": "hrms_secullum_brasil.configuracao_ponto.cargo_padrao.on_update_designation",
+	},
+	"Regra Sindical CCT": {
+		"before_insert": "hrms_secullum_brasil.configuracao_ponto.cargo_padrao.preencher_cct_nova",
 	},
 	# AJ-11: feriado incluído/removido à mão (trava de período fechado, registro de remoção, reapuração)
 	"Holiday List": {
@@ -111,6 +159,8 @@ scheduler_events = {
 	},
 	"daily": [
 		"hrms_secullum_brasil.ingestion.sync_colaboradores.reconciliar_cadastros",
+		# IS-08: origem Secullum — repete a importação dos cadastros (se ligada na Configuracao Secullum)
+		"hrms_secullum_brasil.ingestion.importacao_secullum.sincronizar",
 		"hrms_secullum_brasil.apuracao.servico.marcar_dia_anterior",
 		"hrms_secullum_brasil.apuracao.banco_horas.alertar_saldos_a_vencer",
 		"hrms_secullum_brasil.apuracao.instrutores.verificar_cref",
@@ -168,7 +218,7 @@ has_permission = {
 }
 
 # Log Settings: apaga linhas do Secullum Sync Log com mais de 90 dias.
-default_log_clearing_doctypes = {"Secullum Sync Log": 90}
+default_log_clearing_doctypes = {"Secullum Sync Log": 90, "Log de Importacao Secullum": 180}
 
 # bench run-tests só executa o before_tests do app testado; reaproveita o do HRMS, que conclui o
 # assistente de configuração (_Test Company) exigido pelos registros de teste do ERPNext/HRMS.

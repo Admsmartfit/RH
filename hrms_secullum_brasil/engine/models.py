@@ -27,6 +27,9 @@ class Inconsistencia:
 class JornadaPrevista:
 	periodos: tuple[Periodo, ...] = ()
 	permite_intervalo_estendido: bool = False
+	# dia neutro (rodízio, como no Secullum): sem horário previsto e sem falta; quem trabalha faz horas normais
+	# até 8h no dia (acima de 44h na semana é HE: DSR Semanal). Não é folga.
+	neutro: bool = False
 
 	@property
 	def minutos(self) -> int:
@@ -34,7 +37,7 @@ class JornadaPrevista:
 
 	@property
 	def folga(self) -> bool:
-		return not self.periodos
+		return not self.periodos and not self.neutro
 
 
 @dataclass(frozen=True)

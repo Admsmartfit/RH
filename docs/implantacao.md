@@ -7,7 +7,7 @@ cadastros e a virada. O ambiente de desenvolvimento (Docker) está em `docker/RE
 
 | Item | Versão / valor |
 |---|---|
-| Frappe / ERPNext / HRMS | **v15** (`version-15`) |
+| Frappe / ERPNext / HRMS | **v16** (`version-16`), Python 3.14, Node 24 |
 | Python / Node | 3.10+ (testado em 3.12) / 20 |
 | MariaDB / Redis | 10.6+ / 6+ |
 | wkhtmltopdf | 0.12.6 com patch do Qt (para o PDF do espelho) |
@@ -21,9 +21,10 @@ A fila é dividida em jobs de 50 colaboradores. Com 2 a 4 workers `long`, um mê
 ## 2. Instalação
 
 ```bash
-bench init --frappe-branch version-15 frappe-bench && cd frappe-bench
-bench get-app --branch version-15 erpnext
-bench get-app --branch version-15 hrms
+bench init --frappe-branch version-16 frappe-bench && cd frappe-bench
+bench get-app --branch version-16 erpnext
+bench get-app --branch version-16 hrms
+bench get-app --branch version-16 https://github.com/its-alikhokher/swift_theme.git  # visual do Desk (opcional)
 bench get-app <url-do-repositorio> hrms_secullum_brasil
 bench new-site <site> --install-app erpnext --install-app hrms --install-app hrms_secullum_brasil
 bench --site <site> enable-scheduler
@@ -61,6 +62,13 @@ RECESSO_EST quando houver saldo de recesso remunerado.
 
 ## 3. Configuração inicial (nesta ordem)
 
+> **Implantação pelo Secullum (recomendada desde 20/10/2026):** com o site limpo (`t zerar`), use o assistente
+> **Ponto → Importação Secullum** (seção 3A). Ele cria empresas, cargos, departamentos, perfis de jornada, CCT
+> padrão, feriados nacionais, colaboradores, justificativas, afastamentos e relógios a partir do Secullum, e
+> carrega as batidas. Os itens abaixo continuam valendo para o que o Secullum não tem (idioma, CCT completa,
+> salários, benefícios).
+
+
 0. **Idioma e menu:** `bench --site <site> execute hrms_secullum_brasil.utils.localizacao.aplicar_brasil` (pt-BR,
    Brasil, BRL, America/Sao_Paulo, dd/mm/aaaa, 1.234,56; usuários em português com o espaço Ponto como página
    inicial) e `...localizacao.ocultar_recursos` (esconde do menu os espaços do ERPNext que o ponto não usa e cria o
@@ -80,7 +88,34 @@ RECESSO_EST quando houver saldo de recesso remunerado.
 6. **Perfis de Jornada** e **Grades de Aulas** (professores).
 7. **Regras de Benefício e de Prêmio**, se houver.
 
+## 3A. Importação do Secullum (assistente)
+
+1. `t zerar` (site de operação limpo) e `aplicar_brasil` / `ocultar_recursos` (item 0 acima).
+2. **Ponto → Importação Secullum → 1. Conectar:** usuário, senha e número do banco (ficam só na Configuração
+   Secullum, campo senha). O assistente lista os bancos da conta.
+3. **2. Conferir:** simulação (nada é gravado). Confira as contagens com o Secullum (empresas, horários,
+   funcionários ativos) e corrija no Secullum os problemas listados (CPF inválido, funcionário sem horário...).
+4. **3. Importar:** escolha a data inicial das batidas (padrão: 1º dia do mês anterior) e deixe marcado "Ligar a
+   coleta automática no fim". Roda em segundo plano; o progresso aparece na tela e cada cadastro fica no **Log de
+   Importacao Secullum**.
+5. **4. Revisar:** marque os cargos horistas (Tipo de remuneração por cargo), o banco de horas por cargo, complete
+   a CCT padrão de cada empresa (noturno, banco, DSR; para a ES Fitness, `utils/config_es_fitness.py` como
+   modelo), defina os chefes (campo "Reporta a"), cadastre os feriados municipais em Feriado Regional e clique
+   em **Gerar feriados**.
+6. **5. Salários:** baixe o modelo (ativos sem salário), preencha salário (horista: valor da hora) e início, e
+   importe (primeiro com "Só conferir").
+7. **Ligar sincronização diária:** todo dia a importação dos cadastros se repete (demissões, trocas de horário,
+   afastamentos, colaboradores sumidos do Secullum).
+
+Com a origem dos cadastros "Secullum", nome, documentos, datas, empresa, cargo, departamento e horário são
+alterados **no Secullum** (no programa ficam somente leitura) e chegam na próxima sincronização. O chefe, a CCT,
+o tipo de remuneração, o banco de horas e o histórico de horário continuam editáveis no programa.
+
 ## 4. Cadastros de colaboradores
+
+> Com a importação do Secullum (3A), os itens 1 e 2 abaixo são feitos pelo assistente; o 3 pela planilha de
+> salários e o 4 na revisão.
+
 
 1. Cada Employee precisa de **CPF válido** (chave da integração com o Secullum), empresa, cargo (designation),
    **Perfil de Jornada** e, de preferência, **CCT**. Quem participa do banco de horas: marcar a opção. Professor:
@@ -102,6 +137,11 @@ RECESSO_EST quando houver saldo de recesso remunerado.
 Para os usuários comuns, escolha o **Perfil de Módulos "Ponto (usuários)"** no cadastro do User (aba
 Configurações): ele bloqueia contabilidade, compras, vendas, estoque etc. Para tirar também um módulo do app de
 quem não usa (ex.: Estágio, Segurança do Trabalho), marque-o no perfil.
+
+**Analista de RH que também é colaborador:** ao ligar o usuário ao Employee, o HRMS cria uma User Permission que o
+restringe ao próprio cadastro em todo o sistema (ele deixaria de ver os outros colaboradores, no Desk e no painel
+`/ponto`). No Employee dele, desmarque **Create User Permission** antes de salvar o usuário, ou apague essa User
+Permission depois.
 
 Para restringir um analista a um departamento: User Permission em **Department**. A matriz completa está em
 `docs/permissoes.md`.

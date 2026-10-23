@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "creation": "2026-10-20 09:00:00.000000",
+ "description": "Assistente de importação do Secullum (docs/PRD-importacao-secullum.md, IS-11).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_conectar",
+  "conexao_html",
+  "section_conferir",
+  "conferencia_em",
+  "conferencia_html",
+  "conferencia",
+  "section_importar",
+  "batidas_desde",
+  "ativar_coleta",
+  "column_break_importar",
+  "importacao_em",
+  "importacao_execucao",
+  "section_carga",
+  "carga_status",
+  "carga_desde",
+  "carga_etapa",
+  "column_break_carga",
+  "carga_percentual",
+  "carga_atualizado_em",
+  "carga_resultado",
+  "section_revisar",
+  "revisao_html"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_conectar",
+   "fieldtype": "Section Break",
+   "label": "1. Conectar"
+  },
+  {
+   "fieldname": "conexao_html",
+   "fieldtype": "HTML",
+   "label": "Conexão"
+  },
+  {
+   "fieldname": "section_conferir",
+   "fieldtype": "Section Break",
+   "label": "2. Conferir"
+  },
+  {
+   "fieldname": "conferencia_em",
+   "fieldtype": "Datetime",
+   "label": "Conferido em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "conferencia_html",
+   "fieldtype": "HTML",
+   "label": "Conferência"
+  },
+  {
+   "fieldname": "conferencia",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Conferência (dados)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_importar",
+   "fieldtype": "Section Break",
+   "label": "3. Importar"
+  },
+  {
+   "description": "1º dia do mês anterior, por padrão: o mês anterior pode ser conferido com o Secullum antes de fechar.",
+   "fieldname": "batidas_desde",
+   "fieldtype": "Date",
+   "label": "Importar batidas desde"
+  },
+  {
+   "default": "1",
+   "description": "Liga a coleta automática das batidas quando a carga terminar.",
+   "fieldname": "ativar_coleta",
+   "fieldtype": "Check",
+   "label": "Ligar a coleta automática no fim"
+  },
+  {
+   "fieldname": "column_break_importar",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "importacao_em",
+   "fieldtype": "Datetime",
+   "label": "Última importação",
+   "read_only": 1
+  },
+  {
+   "fieldname": "importacao_execucao",
+   "fieldtype": "Data",
+   "label": "Execução (log)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_carga",
+   "fieldtype": "Section Break",
+   "label": "Progresso"
+  },
+  {
+   "fieldname": "carga_status",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "\nNa fila\nEm andamento\nConcluída\nConcluída com erros\nErro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_desde",
+   "fieldtype": "Date",
+   "label": "Batidas desde",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_etapa",
+   "fieldtype": "Data",
+   "label": "Etapa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_carga",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "carga_percentual",
+   "fieldtype": "Percent",
+   "label": "Progresso",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_atualizado_em",
+   "fieldtype": "Datetime",
+   "label": "Atualizado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_resultado",
+   "fieldtype": "Code",
+   "label": "Resultado",
+   "options": "JSON",
+   "collapsible": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_revisar",
+   "fieldtype": "Section Break",
+   "label": "4. Revisar"
+  },
+  {
+   "fieldname": "revisao_html",
+   "fieldtype": "HTML",
+   "label": "Revisão"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-20 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Importacao Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "hide_toolbar": 0
+}

@@ -18,7 +18,7 @@ from hrms_secullum_brasil.integrations.secullum.erros import (
 
 URL_AUTH = "https://autenticador.secullum.com.br"
 URL_API = "https://pontowebintegracaoexterna.secullum.com.br/IntegracaoExterna/"
-BANCO = "6f9619ff8b86d011b42d00c04fc964ff"
+BANCO = "1002"
 
 
 class Resp:
@@ -239,14 +239,14 @@ class TestOperacoes:
 		assert sessao.pedidos[1]["params"] == {"cpf": "52998224725"}
 		assert sessao.pedidos[1]["url"].endswith("/Funcionarios/Cpf")
 
-	def test_listar_bancos_filtra_ponto_web_e_normaliza_guid(self):
+	def test_listar_bancos_filtra_ponto_web_e_usa_o_id_numerico(self):
 		bancos = [
 			{"id": 1, "identificador": "6F9619FF-8B86-D011-B42D-00C04FC964FF", "clienteId": "3", "nome": "A"},
 			{"id": 2, "identificador": "x", "clienteId": "1", "nome": "B"},
 		]
 		c, sessao, _, _ = cliente(token("t"), Resp(200, bancos))
 		resultado = c.listar_bancos()
-		assert [b["identificador"] for b in resultado] == [BANCO]
+		assert [b["id_banco"] for b in resultado] == ["1"]
 		assert sessao.pedidos[1]["url"] == f"{URL_AUTH}/ContasSecullumExterno/ListarBancos/"
 		assert sessao.pedidos[1]["headers"]["Authorization"] == "Bearer t"
 		assert "secullumidbancoselecionado" not in sessao.pedidos[1]["headers"]

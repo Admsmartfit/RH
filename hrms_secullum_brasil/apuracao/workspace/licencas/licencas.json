@@ -1,0 +1,277 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"Licencas_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Licenças</b></span>\", \"col\": 12}}, {\"id\": \"Licencas_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Afastamentos (Secullum)\", \"col\": 3}}, {\"id\": \"Licencas_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Licenças em aberto\", \"col\": 3}}, {\"id\": \"Licencas_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Atestados médicos\", \"col\": 3}}, {\"id\": \"Licencas_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Alertas INSS pendentes\", \"col\": 3}}, {\"id\": \"Licencas_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Folgas do cartão (Secullum)\", \"col\": 3}}, {\"id\": \"Licencas_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e consultas</b></span>\", \"col\": 12}}, {\"id\": \"Licencas_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Ausências\", \"col\": 4}}, {\"id\": \"Licencas_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Configuração\", \"col\": 4}}, {\"id\": \"Licencas_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Feriados\", \"col\": 4}}, {\"id\": \"Licencas_c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Relatórios\", \"col\": 4}}]",
+ "creation": "2026-10-20 16:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "calendar-check",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Licencas",
+ "links": [
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ausências",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Afastamentos (Secullum)",
+   "link_count": 0,
+   "link_to": "Afastamento Secullum",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Folgas e justificativas do cartão",
+   "link_count": 0,
+   "link_to": "Cartao Secullum Dia",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Licenças",
+   "link_count": 0,
+   "link_to": "Leave Application",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Atestado médico",
+   "link_count": 0,
+   "link_to": "Atestado Medico",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alerta previdenciário",
+   "link_count": 0,
+   "link_to": "Alerta Previdenciario",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuração",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Justificativas (Secullum)",
+   "link_count": 0,
+   "link_to": "Justificativa Secullum",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipos de licença",
+   "link_count": 0,
+   "link_to": "Leave Type",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Saldos de licença",
+   "link_count": 0,
+   "link_to": "Leave Allocation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Política de licenças",
+   "link_count": 0,
+   "link_to": "Leave Policy",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Período de licenças",
+   "link_count": 0,
+   "link_to": "Leave Period",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Feriados",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lista de feriados",
+   "link_count": 0,
+   "link_to": "Holiday List",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Feriados regionais",
+   "link_count": 0,
+   "link_to": "Feriado Regional",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Relatórios",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Saldo de licenças",
+   "link_count": 0,
+   "link_to": "Employee Leave Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Resumo dos saldos",
+   "link_count": 0,
+   "link_to": "Employee Leave Balance Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-20 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Licencas",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "RH Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "RH Saúde"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Gestor Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 32.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "label": "Afastamentos (Secullum)",
+   "type": "DocType",
+   "link_to": "Afastamento Secullum",
+   "format": "{} vigentes",
+   "stats_filter": "{\"removido_no_secullum\": 0}"
+  },
+  {
+   "color": "Orange",
+   "doctype": "Workspace Shortcut",
+   "label": "Licenças em aberto",
+   "type": "DocType",
+   "link_to": "Leave Application",
+   "format": "{} em aberto",
+   "stats_filter": "{\"status\": \"Open\"}"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Atestados médicos",
+   "type": "DocType",
+   "link_to": "Atestado Medico"
+  },
+  {
+   "color": "Red",
+   "doctype": "Workspace Shortcut",
+   "label": "Alertas INSS pendentes",
+   "type": "DocType",
+   "link_to": "Alerta Previdenciario"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Folgas do cartão (Secullum)",
+   "type": "DocType",
+   "link_to": "Cartao Secullum Dia"
+  }
+ ],
+ "title": "Licenças"
+}

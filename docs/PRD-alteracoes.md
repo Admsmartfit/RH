@@ -69,7 +69,7 @@ Ordem de execução de **todos** os requisitos deste documento. Cada etapa pode 
 ### Regras para todas as etapas
 - Ler `AGENTS.md`, `docs/PROGRESS.md` e a etapa inteira antes de começar. `AGENTS.md` manda: nada no core do Frappe/HRMS; regra de cálculo em `engine/` (Python puro, sem import frappe); Custom Fields, Roles e Salary Components como fixtures; tempos em minutos inteiros; dinheiro em Decimal com ROUND_HALF_UP no final; tabs; ruff com linha de 110.
 - Usar os testes de **Aceite** de cada requisito citado como casos de teste (pytest no engine; `FrappeTestCase` na pasta do DocType).
-- Ao terminar: `ruff check .`, `ruff format --check .`, `pytest --cov` (engine ≥ 90%) e os testes Frappe da etapa (`bench --site ponto.localhost run-tests --app hrms_secullum_brasil --module <módulo>`). Não seguir para a próxima etapa com teste vermelho.
+- Ao terminar: `ruff check .`, `ruff format --check .`, `pytest --cov` (engine ≥ 90%) e os testes Frappe da etapa (`bench --site testes.localhost run-tests --app hrms_secullum_brasil --module <módulo>`). Não seguir para a próxima etapa com teste vermelho.
 - Atualizar `docs/PROGRESS.md` e a coluna "Situação" da seção 2 deste documento.
 - Regra do PRD ambígua: parar e perguntar, não inventar.
 

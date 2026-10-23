@@ -65,6 +65,7 @@ def reapurar_dia(employee: str, data) -> str | None:
 		return None
 	ctx = montar_entrada(employee, data)
 	if ctx is None:
+		_descartar_fora_do_contrato(employee, data)
 		return None
 	if ctx.entrada_professor:
 		resultado = apurar_dia_professor(ctx.entrada_professor)
@@ -76,6 +77,28 @@ def reapurar_dia(employee: str, data) -> str | None:
 		conferir_domingos(employee, inicio_da_semana(getdate(data)))
 		conferir_semana_estagio(employee, inicio_da_semana(getdate(data)))
 	return nome
+
+
+def _descartar_fora_do_contrato(employee: str, data) -> None:
+	"""Dia fora do contrato (ex.: demissão informada depois, IS-08) deixa de ter apuração: apaga a Apuracao Diaria e
+	os lançamentos do banco do dia (se não liquidados) e resolve as inconsistências ligadas a ela."""
+	nome = frappe.db.get_value(APURACAO, {"employee": employee, "data": data}, "name")
+	if not nome:
+		return
+	atualizar_dia(employee, data, None, nome)
+	for inconsistencia in frappe.get_all("Inconsistencia de Ponto", filters={"apuracao": nome}, pluck="name"):
+		frappe.db.set_value(
+			"Inconsistencia de Ponto",
+			inconsistencia,
+			{"status": "Resolvida", "apuracao": None},
+			update_modified=False,
+		)
+	frappe.db.set_value(
+		"Banco de Horas Movimento", {"apuracao": nome}, "apuracao", None, update_modified=False
+	)
+	frappe.delete_doc(APURACAO, nome, ignore_permissions=True, force=True)
+	if not adiar_semana(employee, data):
+		atualizar_semana(employee, data)
 
 
 def _status(ctx: Contexto, resultado: ResultadoDia | None, inconsistencias: list[Inconsistencia]) -> str:

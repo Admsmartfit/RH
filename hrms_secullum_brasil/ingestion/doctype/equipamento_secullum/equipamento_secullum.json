@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "creation": "2026-10-20 08:00:00.000000",
+ "description": "Relógios do Secullum (3.9): o nome aparece na auditoria da marcação no lugar do número.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "id_secullum",
+  "descricao",
+  "endereco_ip"
+ ],
+ "fields": [
+  {
+   "fieldname": "id_secullum",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Id no Secullum",
+   "reqd": 1,
+   "unique": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Descrição",
+   "read_only": 1
+  },
+  {
+   "fieldname": "endereco_ip",
+   "fieldtype": "Data",
+   "label": "Endereço IP",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-20 08:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Equipamento Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:id_secullum",
+ "title_field": "descricao",
+ "in_create": 1
+}

@@ -1,4 +1,4 @@
-// Escala do Mês (AJ-09): R = repouso semanal, FC = folga compensada, F = feriado.
+// Escala do Mês (AJ-09): R = repouso semanal, FC = folga compensada, N = neutro (rodízio), F = feriado.
 frappe.query_reports["Escala do Mes"] = {
 	filters: [
 		{ fieldname: "company", label: __("Empresa"), fieldtype: "Link", options: "Company", reqd: 1, default: frappe.defaults.get_user_default("Company") },

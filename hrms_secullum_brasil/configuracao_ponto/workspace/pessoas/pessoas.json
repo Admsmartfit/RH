@@ -1,0 +1,311 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"Pessoas_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pessoas</b></span>\", \"col\": 12}}, {\"id\": \"Pessoas_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Colaboradores ativos\", \"col\": 3}}, {\"id\": \"Pessoas_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Departamentos\", \"col\": 3}}, {\"id\": \"Pessoas_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Cargos\", \"col\": 3}}, {\"id\": \"Pessoas_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"ASO\", \"col\": 3}}, {\"id\": \"Pessoas_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Entregas de EPI\", \"col\": 3}}, {\"id\": \"Pessoas_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Termos de estágio\", \"col\": 3}}, {\"id\": \"Pessoas_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e consultas</b></span>\", \"col\": 12}}, {\"id\": \"Pessoas_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Colaboradores\", \"col\": 4}}, {\"id\": \"Pessoas_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Segurança do trabalho\", \"col\": 4}}, {\"id\": \"Pessoas_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Estágio\", \"col\": 4}}, {\"id\": \"Pessoas_c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Relatórios\", \"col\": 4}}]",
+ "creation": "2026-10-20 16:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "users",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Pessoas",
+ "links": [
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Colaboradores",
+   "link_count": 5,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Colaborador",
+   "link_count": 0,
+   "link_to": "Employee",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Empresa",
+   "link_count": 0,
+   "link_to": "Company",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Departamento",
+   "link_count": 0,
+   "link_to": "Department",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cargo",
+   "link_count": 0,
+   "link_to": "Designation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Filial",
+   "link_count": 0,
+   "link_to": "Branch",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Segurança do trabalho",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Itens de segurança (EPI)",
+   "link_count": 0,
+   "link_to": "Item de Seguranca",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Entrada de EPI",
+   "link_count": 0,
+   "link_to": "Entrada de EPI",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Entrega de EPI",
+   "link_count": 0,
+   "link_to": "Entrega de EPI",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "ASO",
+   "link_count": 0,
+   "link_to": "ASO",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tipos de treinamento",
+   "link_count": 0,
+   "link_to": "Tipo de Treinamento",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Treinamentos realizados",
+   "link_count": 0,
+   "link_to": "Treinamento Realizado",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Estágio",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Termo de compromisso",
+   "link_count": 0,
+   "link_to": "Termo de Compromisso de Estagio",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Instituição de ensino",
+   "link_count": 0,
+   "link_to": "Instituicao de Ensino",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Agente de integração",
+   "link_count": 0,
+   "link_to": "Agente de Integracao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Relatório de estágio",
+   "link_count": 0,
+   "link_to": "Relatorio de Estagio",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Relatórios",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Informações dos colaboradores",
+   "link_count": 0,
+   "link_to": "Employee Information",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Aniversariantes",
+   "link_count": 0,
+   "link_to": "Employee Birthday",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-20 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Pessoas",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "RH Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Gestor Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 31.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "label": "Colaboradores ativos",
+   "type": "DocType",
+   "link_to": "Employee",
+   "format": "{} ativos",
+   "stats_filter": "{\"status\": \"Active\"}"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Departamentos",
+   "type": "DocType",
+   "link_to": "Department"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Cargos",
+   "type": "DocType",
+   "link_to": "Designation"
+  },
+  {
+   "color": "Orange",
+   "doctype": "Workspace Shortcut",
+   "label": "ASO",
+   "type": "DocType",
+   "link_to": "ASO"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Entregas de EPI",
+   "type": "DocType",
+   "link_to": "Entrega de EPI"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Termos de estágio",
+   "type": "DocType",
+   "link_to": "Termo de Compromisso de Estagio"
+  }
+ ],
+ "title": "Pessoas"
+}

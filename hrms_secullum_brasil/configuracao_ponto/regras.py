@@ -151,15 +151,37 @@ def regra_vigente_para(emp, data) -> Document | None:
 	return documento("Regra Sindical CCT", vigentes[0].nome)
 
 
+def perfil_na_data(employee: str, padrao: str | None, data) -> str | None:
+	"""Perfil do colaborador na data pelo histórico de horário (troca de horário, IS-08); sem histórico, o Perfil de
+	Jornada do cadastro. Antes da primeira linha vale a primeira."""
+	historico = memo(
+		("historico_perfil", employee),
+		lambda: frappe.get_all(
+			"Historico Perfil Jornada",
+			filters={"parent": employee, "parenttype": "Employee", "parentfield": "historico_perfil_jornada"},
+			fields=["desde", "perfil_jornada"],
+			order_by="desde asc",
+		),
+	)
+	if not historico:
+		return padrao
+	escolhido = historico[0].perfil_jornada
+	for linha in historico:
+		if getdate(linha.desde) <= getdate(data):
+			escolhido = linha.perfil_jornada
+	return escolhido
+
+
 def get_perfil_vigente(employee: str, data) -> Document | None:
 	"""Versão do Perfil de Jornada do colaborador (mesmo código) vigente na data, ou None."""
 	data = getdate(data)
 	emp = _dados_colaborador(employee)
-	if not emp.perfil_jornada:
+	perfil = perfil_na_data(employee, emp.perfil_jornada, data)
+	if not perfil:
 		return None
 	codigo = memo(
-		("perfil_codigo", emp.perfil_jornada),
-		lambda: frappe.db.get_value("Perfil de Jornada", emp.perfil_jornada, "codigo"),
+		("perfil_codigo", perfil),
+		lambda: frappe.db.get_value("Perfil de Jornada", perfil, "codigo"),
 	)
 	candidatos = memo(("perfis", codigo), lambda: carregar_perfis({"codigo": codigo}))
 	vigentes = selecionar_vigentes(candidatos, data)

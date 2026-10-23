@@ -5,6 +5,9 @@
  "engine": "InnoDB",
  "field_order": [
   "ativo",
+  "origem_cadastros",
+  "sincronizar_cadastros",
+  "envio_correcoes",
   "modo_mock",
   "conexao_section",
   "url_auth",
@@ -36,6 +39,30 @@
    "fieldname": "ativo",
    "fieldtype": "Check",
    "label": "Integração ativa"
+  },
+  {
+   "default": "Secullum",
+   "fieldname": "origem_cadastros",
+   "fieldtype": "Select",
+   "label": "Origem dos cadastros",
+   "options": "Secullum\nPrograma",
+   "description": "Secullum: empresas, cargos, horários e colaboradores vêm do Secullum (importação) e nada é enviado para lá; os campos que vêm de lá ficam somente leitura. Programa: o cadastro é feito aqui e enviado ao Secullum (modo antigo)."
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.origem_cadastros != 'Programa'",
+   "description": "Todo dia, repete a importação dos cadastros do Secullum (funcionários, horários, afastamentos…).",
+   "fieldname": "sincronizar_cadastros",
+   "fieldtype": "Check",
+   "label": "Sincronizar cadastros todo dia"
+  },
+  {
+   "default": "Bloqueado",
+   "fieldname": "envio_correcoes",
+   "fieldtype": "Select",
+   "label": "Envio de correções de ponto ao Secullum",
+   "options": "Bloqueado\nPerguntar ao salvar\nSempre enviar",
+   "description": "Trava das correções feitas no cartão ponto do programa. Bloqueado: nada é enviado ao Secullum. Perguntar ao salvar: o Salvar do cartão pergunta se envia. Sempre enviar: toda correção aprovada vai para o cartão do Secullum. A batida original nunca é apagada (fica desconsiderada)."
   },
   {
    "default": "0",
@@ -82,10 +109,10 @@
    "label": "Senha"
   },
   {
-   "description": "GUID do banco do Ponto Secullum Web (enviado no header secullumidbancoselecionado).",
+   "description": "Número (id) do banco do Ponto Secullum Web, mostrado no Testar conexão. É o valor do header secullumidbancoselecionado.",
    "fieldname": "id_banco",
    "fieldtype": "Data",
-   "label": "Identificador do banco"
+   "label": "Número do banco"
   },
   {
    "fieldname": "coleta_section",
@@ -176,7 +203,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-16 18:00:00.000000",
+ "modified": "2026-10-22 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Ingestion",
  "name": "Configuracao Secullum",

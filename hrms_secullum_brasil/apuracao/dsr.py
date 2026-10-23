@@ -98,6 +98,14 @@ def _horista_semana(emp, segunda, apuracoes, normais: int) -> tuple[int, int]:
 	return he_semanal, complemento
 
 
+def _he_semanal_neutro(emp, segunda, normais: int) -> int:
+	"""Dia neutro (rodízio do Secullum): as horas dele são normais, mas o que passar de 44h na semana é HE."""
+	perfil = get_perfil_vigente(emp.name, segunda)
+	if not perfil or not any(cint(linha.get("neutro")) for linha in perfil.dias):
+		return 0
+	return max(0, normais - d.CARGA_SEMANAL_MAXIMA_MIN)
+
+
 def atualizar_semana(employee: str, data) -> str | None:
 	segunda = inicio_da_semana(getdate(data))
 	if documento("Employee", employee).get("tipo_remuneracao") == "Estagiario":
@@ -142,6 +150,8 @@ def atualizar_semana(employee: str, data) -> str | None:
 		"dsr_horista_minutos": 0,
 		"atualizado_em": now_datetime(),
 	}
+	if tipo not in HORISTAS:
+		valores["he_semanal_minutos"] = _he_semanal_neutro(emp, segunda, normais)
 	if tipo == "Mensalista" and perde_por_falta:
 		valores["dsr_perdido_minutos"] = dsr_perdido_mensalista(
 			faltas=faltas,

@@ -18,6 +18,7 @@ from typing import Any, Protocol
 
 import requests
 
+from hrms_secullum_brasil.integrations.secullum.edicao_cartao import ROTAS as ROTAS_CARTAO
 from hrms_secullum_brasil.integrations.secullum.erros import (
 	SecullumAuthError,
 	SecullumHttpError,
@@ -106,17 +107,57 @@ class SecullumClient(ABC):
 	def listar_fonte_dados(self, data_inicio: date, data_fim: date) -> list[dict]:
 		"""Marcações originais (FonteDados) com Data entre data_inicio e data_fim, inclusive."""
 
+	# ------------------------------------------------------------------ leitura dos cadastros (importação)
+	# docs/PRD-importacao-secullum.md, IS-04; formato real em docs/secullum_api.md
+
+	@abstractmethod
+	def listar_empresas(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_funcoes(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_departamentos(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_horarios(self) -> list[dict]:
+		"""Horários completos: Dias (7), Opcoes, Extras, Descanso, FaixasExtras, ToleranciaEspecifica."""
+
+	@abstractmethod
+	def listar_estruturas(self) -> list[dict]:
+		"""Estruturas com os responsáveis e os funcionários vinculados; sem estrutura cadastrada, lista vazia."""
+
+	@abstractmethod
+	def listar_justificativas(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_motivos_demissao(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_equipamentos(self) -> list[dict]: ...
+
+	@abstractmethod
+	def listar_afastamentos(self, data_inicio: date, data_fim: date) -> list[dict]:
+		"""Afastamentos que tocam o período [data_inicio, data_fim]."""
+
+	def listar_cartao(self, data_inicio: date, data_fim: date, cpf: str | None = None) -> list[dict]:
+		"""Cartão ponto (GET Batidas) no período (de um funcionário, com `cpf`): folga, neutro e colunas do dia."""
+		return []
+
+	def editar_cartao(self, metodo: str, rota: str, corpo: dict) -> None:
+		"""Uma operação de edição do cartão ponto (CartaoPonto/*; integrations/secullum/edicao_cartao.py)."""
+		raise NotImplementedError
+
 
 def _transitorio(status: int | None) -> bool:
 	return status is None or status == 429 or status >= 500
 
 
 def filtrar_bancos(bancos: list[dict], client_id: str) -> list[dict]:
-	"""Bancos do Ponto Web (clienteId = client_id) com o GUID sem hífens, como o header exige."""
+	"""Bancos do Ponto Web (clienteId = client_id) com o `id_banco`: o id numérico, que o header
+	secullumidbancoselecionado exige (o GUID "identificador" dá HTTP 401 no Secullum real)."""
 	return [
-		{**b, "identificador": str(b.get("identificador") or "").replace("-", "").lower()}
-		for b in bancos
-		if str(b.get("clienteId")) == str(client_id)
+		{**b, "id_banco": str(b.get("id") or "")} for b in bancos if str(b.get("clienteId")) == str(client_id)
 	]
 
 
@@ -290,6 +331,66 @@ class HttpSecullumClient(SecullumClient):
 	def listar_fonte_dados(self, data_inicio: date, data_fim: date) -> list[dict]:
 		params = {"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()}
 		return self._api("GET", "FonteDados", params=params) or []
+
+	def _listar(self, rota: str, params: dict | None = None) -> list[dict]:
+		corpo = self._api("GET", rota, params=params)
+		if isinstance(corpo, dict):  # rota que devolve um objeto só
+			return [corpo]
+		return corpo or []
+
+	def listar_empresas(self) -> list[dict]:
+		return self._listar("Empresas")
+
+	def listar_funcoes(self) -> list[dict]:
+		return self._listar("Funcoes")
+
+	def listar_departamentos(self) -> list[dict]:
+		return self._listar("Departamentos")
+
+	def listar_horarios(self) -> list[dict]:
+		return self._listar("Horarios")
+
+	def listar_estruturas(self) -> list[dict]:
+		try:
+			estruturas = self._listar("Estruturas")
+		except SecullumValidacaoError as exc:
+			if "nenhuma estrutura" in str(exc).lower():  # banco sem estrutura responde HTTP 400
+				return []
+			raise
+		saida = []
+		for item in estruturas:
+			estrutura = dict(item) if isinstance(item, dict) else {"Descricao": str(item)}
+			descricao = estrutura.get("Descricao")
+			estrutura["Responsaveis"] = self._listar("Estruturas/Responsaveis", {"descricao": descricao})
+			estrutura["FuncionariosVinculados"] = self._listar(
+				"Estruturas/Funcionarios", {"descricaoEstrutura": descricao}
+			)
+			saida.append(estrutura)
+		return saida
+
+	def listar_justificativas(self) -> list[dict]:
+		return self._listar("Justificativas")
+
+	def listar_motivos_demissao(self) -> list[dict]:
+		return self._listar("MotivosDemissao")
+
+	def listar_equipamentos(self) -> list[dict]:
+		return self._listar("Equipamentos")
+
+	def listar_afastamentos(self, data_inicio: date, data_fim: date) -> list[dict]:
+		params = {"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()}
+		return self._listar("FuncionariosAfastamentos", params)
+
+	def listar_cartao(self, data_inicio: date, data_fim: date, cpf: str | None = None) -> list[dict]:
+		params = {"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()}
+		if cpf:
+			params["funcionarioCpf"] = cpf
+		return self._listar("Batidas", params)
+
+	def editar_cartao(self, metodo: str, rota: str, corpo: dict) -> None:
+		if rota not in ROTAS_CARTAO:
+			raise ValueError(f"Rota de edição do cartão desconhecida: {rota}")
+		self._api(metodo, rota, json_body=corpo)
 
 	def calcular_totais(self, cpf: str, data_inicio: date, data_fim: date) -> dict:
 		corpo = {

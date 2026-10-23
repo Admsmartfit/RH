@@ -14,6 +14,26 @@ e justificar**.
 | Criar tratamentos (inclusão de marcação, desconsideração, abono) | Ver atestados, CID ou alertas do INSS |
 | Ver os espelhos de ponto da equipe | Alterar regras, CCTs ou perfis de jornada |
 
+## Painel de ponto (/ponto)
+
+Abra **/ponto** (ou o atalho **Painel de ponto** no espaço Ponto). Você vê só a sua equipe.
+
+- **Cockpit:** os números da equipe no mês (conformidade, horas extras, faltas e atrasos, banco a vencer,
+  inconsistências por severidade). Clique num card para ver a lista.
+- **Inconsistências:** a lista da equipe agrupada por severidade e, ao lado, a **linha do tempo** do dia (previsto,
+  trabalhado, extra, atraso, falta, intervalo) com as marcações. Clique numa marcação para ver de onde ela veio
+  (relógio, aplicativo, incluída à mão) e se foi substituída; o PIS aparece mascarado.
+- **Ações:** abonar, incluir marcação (com o horário previsto sugerido), desconsiderar marcação e atribuir — sempre
+  com motivo. O que você cria fica **aguardando aprovação do RH**; a inconsistência só sai da lista depois que o RH
+  aprovar.
+- **Atalhos:** `J`/`K` próxima/anterior, `X` marcar para lote, `Enter` abrir o dia, `A` abonar, `I` incluir
+  marcação, `D` desconsiderar, `Esc` fechar. Não funcionam enquanto você digita num campo.
+- **Colaborador:** o espelho do mês de cada pessoa da equipe, com uma linha do tempo por dia.
+- **Cartão ponto:** o mês inteiro do colaborador numa grade, como no Secullum. Digite o horário que faltou na
+  célula, apague a batida errada ou clique em "abonar"; o `!` do dia explica o problema e sugere a correção. Clique
+  em **Salvar…**, escolha o motivo e confirme: tudo vai **para o RH aprovar** de uma vez (aparece "aguardando RH" no
+  dia). Na central, **Abrir no cartão ponto** (ou a tecla `C`) já abre no dia da inconsistência.
+
 ## Rotina sugerida (5 minutos por dia)
 
 1. Abra o espaço **Ponto** e clique em **Inconsistências abertas**. A lista já vem filtrada pela sua equipe.

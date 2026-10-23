@@ -18,6 +18,7 @@ from hrms_secullum_brasil.payroll_handoff.fechamento import (
 	hash_do_periodo,
 	pendencias,
 	salary_slips_submetidos,
+	validar_ajustes_manuais,
 )
 from hrms_secullum_brasil.reports.espelho import gerar_espelhos, marcar_espelhos_substituidos
 
@@ -54,6 +55,7 @@ class FechamentodePonto(Document):
 		)
 		if sobreposto:
 			frappe.throw(_("O período se sobrepõe ao fechamento {0}.").format(sobreposto))
+		validar_ajustes_manuais(self)  # CP-11
 
 	@frappe.whitelist()
 	def calcular_previa(self):

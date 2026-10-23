@@ -24,6 +24,8 @@
   "avisos",
   "colaboradores_section",
   "colaboradores",
+  "ajustes_manuais_section",
+  "ajustes_manuais",
   "lancamentos_section",
   "lancamentos",
   "amended_from"
@@ -153,6 +155,19 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
+   "fieldname": "ajustes_manuais_section",
+   "fieldtype": "Section Break",
+   "label": "Lançamentos manuais",
+   "description": "Ajustes que não vêm do ponto (ex.: diferença de um mês anterior). Entram na prévia e viram Additional Salary junto com os outros; ao reabrir, saem com os demais."
+  },
+  {
+   "fieldname": "ajustes_manuais",
+   "fieldtype": "Table",
+   "label": "Lançamentos manuais",
+   "options": "Fechamento Ponto Ajuste Manual"
+  },
+  {
    "fieldname": "lancamentos_section",
    "fieldtype": "Section Break",
    "label": "Lançamentos na folha"
@@ -176,7 +191,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-15 12:00:00.000000",
+ "modified": "2026-10-22 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Payroll Handoff",
  "name": "Fechamento de Ponto",

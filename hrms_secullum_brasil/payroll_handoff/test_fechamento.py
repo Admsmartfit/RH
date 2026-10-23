@@ -21,6 +21,7 @@ from hrms_secullum_brasil.apuracao.test_apuracao import DIAS_UTEIS, criar_raw, h
 from hrms_secullum_brasil.ingestion.divergencia_totais import comparar_totais
 from hrms_secullum_brasil.ingestion.secullum import get_client, resetar_mocks
 from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
+from hrms_secullum_brasil.payroll_handoff.planilha_salarios import _garantir_conta_da_folha
 
 EMPRESA = "_Test Company"
 INICIO, FIM = date(2026, 9, 1), date(2026, 9, 30)
@@ -140,6 +141,65 @@ class TestFechamentoDePonto(FrappeTestCase):
 		self.assertEqual((flt(colab.salario), colab.divisor, flt(colab.valor_hora)), (2200.0, 220, 10.0))
 		self.assertFalse(doc.pendencias)
 
+	def test_cp11_lancamento_manual_entra_na_previa_e_na_folha(self):
+		self.montar_periodo()
+		doc = self.fechamento(
+			ajustes_manuais=[
+				{
+					"employee": self.employee,
+					"salary_component": "Horas Extras 50%",
+					"minutos": 60,
+					"motivo": "Diferença de agosto",
+				},
+				{
+					"employee": self.employee,
+					"salary_component": "Horas Extras 100%",
+					"valor": 50,
+					"motivo": "Feriado de agosto não lançado",
+				},
+			]
+		).calcular_previa()
+		lanc = self.lancamentos(doc)
+		self.assertEqual(
+			(flt(lanc["HE50"].valor), lanc["HE50"].minutos_base), (45.0, 180)
+		)  # 30 do ponto + 15
+		self.assertIn("Lançamento manual", lanc["HE50"].descricao)
+		self.assertEqual(flt(lanc["HE100"].valor), 50.0)
+
+		doc.insert()
+		doc.submit()
+		he100 = frappe.db.get_value(
+			"Additional Salary",
+			{
+				"ref_docname": doc.name,
+				"employee": self.employee,
+				"salary_component": "Horas Extras 100%",
+				"docstatus": 1,
+			},
+			"amount",
+		)
+		self.assertEqual(flt(he100), 50.0)
+		doc.cancel()  # reabrir: os manuais saem com os demais
+		self.assertEqual(frappe.db.count("Additional Salary", {"ref_docname": doc.name, "docstatus": 1}), 0)
+
+	def test_cp11_lancamento_manual_valida_colaborador_e_valor(self):
+		self.montar_periodo()
+		with patch.object(frappe, "enqueue"):
+			de_fora = make_employee(
+				f"fp-fora-{hash_curto()}@example.com", company="_Test Company 1", cpf=gerar_cpf()
+			)
+		for linha in (
+			{"employee": self.employee, "salary_component": "Horas Extras 50%", "motivo": "sem valor"},
+			{
+				"employee": de_fora,
+				"salary_component": "Horas Extras 50%",
+				"minutos": 10,
+				"motivo": "outra empresa",
+			},
+		):
+			with self.assertRaises(frappe.ValidationError):
+				self.fechamento(ajustes_manuais=[linha]).insert()
+
 	# ------------------------------------------------------------------ fechamento
 
 	def test_fechar_gera_additional_salary_trava_o_periodo_e_gera_espelho(self):
@@ -249,6 +309,21 @@ class TestFechamentoDePonto(FrappeTestCase):
 			doc.submit()
 		self.assertIn("marcacao_impar", str(erro.exception))
 
+	def test_cp08_pendencias_guiadas_por_colaborador(self):
+		from hrms_secullum_brasil.payroll_handoff.fechamento import pendencias_guiadas
+
+		self.montar_periodo()
+		for dia in (4, 8):
+			batidas(self.employee, date(2026, 9, dia), "08:00", "12:00", "13:00")
+			reapurar_dia(self.employee, date(2026, 9, dia))
+		r = pendencias_guiadas(EMPRESA, INICIO, FIM)
+		[item] = [c for c in r["colaboradores"] if c["employee"] == self.employee]
+		self.assertEqual(
+			(item["primeiro_dia"], item["dias"], item["tipos"].get("marcacao_impar")), ("2026-09-04", 2, 2)
+		)
+		self.assertEqual(r["competencia"], "2026-09")
+		self.assertEqual(r["prontos"] + r["pendentes"], r["total"])
+
 	def test_alerta_previdenciario_pendente_bloqueia(self):
 		self.montar_periodo()
 		frappe.db.set_single_value("Configuracao Apuracao", "criar_leave_application", 0)
@@ -339,6 +414,8 @@ class TestFechamentoDePonto(FrappeTestCase):
 		self.montar_periodo()
 		self.fechamento().insert().submit()
 
+		# v16: a conta da folha precisa ser do tipo Payable (a mesma preparação da planilha de salários)
+		_garantir_conta_da_folha(EMPRESA)
 		entrada = frappe.new_doc("Payroll Entry")
 		entrada.update(
 			{

@@ -17,7 +17,7 @@ from hrms_secullum_brasil.ingestion.sync_colaboradores import (
 from hrms_secullum_brasil.integrations.secullum.erros import SecullumIndisponivelError, SecullumValidacaoError
 
 EMPRESA = "_Test Company"
-BANCO = "6f9619ff8b86d011b42d00c04fc964ff"
+BANCO = "1002"
 CARGO = "Professor Sync Teste"
 
 
@@ -60,7 +60,7 @@ class TestSyncColaboradores(FrappeTestCase):
 		if not frappe.db.exists("Designation", CARGO):
 			frappe.get_doc({"doctype": "Designation", "designation_name": CARGO}).insert()
 		cfg = frappe.get_single("Configuracao Secullum")
-		cfg.update({"ativo": 1, "modo_mock": 1, "id_banco": BANCO})
+		cfg.update({"ativo": 1, "modo_mock": 1, "id_banco": BANCO, "origem_cadastros": "Programa"})
 		cfg.save()
 		cls.perfil = frappe.get_doc(
 			{
@@ -239,4 +239,4 @@ class TestSyncColaboradores(FrappeTestCase):
 
 	def test_testar_conexao_lista_bancos(self):
 		bancos = testar_conexao()
-		self.assertIn(BANCO, [b["identificador"] for b in bancos])
+		self.assertIn(BANCO, [b["id_banco"] for b in bancos])

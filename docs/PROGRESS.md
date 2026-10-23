@@ -761,3 +761,476 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Observação do teste: intervalo de almoço de 58–59 min ou jornada de 4h02 sem pausa já geram inconsistência e indenização (não há tolerância no intervalo). Confirmar com o jurídico se a empresa quer tolerância.
 - Português e menu enxuto: o site tinha sido criado com o padrão da Índia (inglês, INR, Asia/Kolkata, número indiano). `utils/localizacao.py`: `aplicar_brasil` (pt-BR, Brasil, BRL, America/Sao_Paulo, dd/mm/aaaa, 1.234,56; usuários em pt-BR com o espaço Ponto inicial), `ocultar_recursos` (esconde 26 espaços do ERPNext/HRMS e cria o Perfil de Módulos "Ponto (usuários)") e `mostrar_tudo`. `translations/pt-BR.csv`: 190 traduções (rótulos que faltavam ou estavam errados no ERPNext/HRMS, como "Leaves" = "Sai", e os nomes acentuados das telas do app). Atalhos `t brasil`, `t enxugar`, `t mostrar`.
 - Testes depois da troca de idioma/fuso: 235 testes Frappe verdes; ruff limpo.
+
+## PRD do painel de ponto (docs/PRD-frontend.md)
+
+### Etapa 1 — Regras puras do painel (19/10/2026)
+- `engine/painel.py`: `taxa_conformidade` (D-2: Ok + Tratado ÷ apurados, "Não Apurado" à parte), `somar_he_por_faixa` (50% = abaixo de 100%, como as rubricas; minutos, colaboradores e quanto foi ao banco), `segmentos_do_dia` (previsto, tolerância, trabalhado, extra, atraso, falta, intervalo e noturno, em minutos a partir da virada; jornada que atravessa a meia-noite fica contínua), `sugerir_horario` (D-4) e `mascarar_documento` (D-5: CPF `***.***.*89-01`, PIS `***.****5.67-8`).
+- Extra e atraso só aparecem na linha do tempo quando o desvio passa da tolerância por marcação; marcações ímpares não formam pares (só previsto e tolerância).
+- `engine/tests/test_painel.py`: 26 testes com os aceites da etapa. Engine: 733 pytest, cobertura 99%.
+
+### Etapa 2 — API: resumo do mês e lista de inconsistências (19/10/2026)
+- `apuracao/painel.py`: `resumo(competencia, company, branch, department)` e `inconsistencias(filtros, inicio, quantidade)`. Acesso só para RH Ponto, Gestor Ponto e System Manager (D-3); toda leitura por `frappe.get_list` mais o filtro de `employees_visiveis`. Filtro de empresa/filial/departamento em DocType sem o campo (ex.: filial no Banco de Horas) passa pelos colaboradores.
+- Blocos que o usuário não pode ler (alertas do INSS, log do Secullum e fila de reapuração para o Gestor Ponto) vêm como `null`. Alertas só com contagem, colaborador e data do 16º dia.
+- A lista pagina na ordem Alta → Média → Baixa (depois tipo, data e nome), 50 por página (máx. 200), com `tipo_dia` e `status_apuracao` da apuração.
+- Cenário de agosto (ES Fitness): 24 abertas, 5 Altas, conformidade 92,7% (229 de 247; 1 não apurado).
+- `apuracao/test_painel.py`: 9 testes (gestor só a equipe, colaborador recusado, sem CID, paginação, filial em DocType sem filial).
+- Achado: analista de RH com Employee vinculado fica restrito ao próprio cadastro pela User Permission que o HRMS cria; orientação em `docs/implantacao.md` (desmarcar "Create User Permission").
+
+### Etapa 3 — API: dia e mês do colaborador (19/10/2026)
+- `apuracao/painel.py`: `dia(employee, data)` com jornada prevista (`dia_da_escala`), tolerâncias da CCT vigente, marcações consideradas e ignoradas (as mesmas funções da apuração: `adaptador.marcacoes` e `remover_duplicadas`), segmentos da linha do tempo, sugestão D-4, totais da Apuração Diária (com as faixas de HE), marcações originais com a auditoria (origem, equipamento, inclusão no Secullum, substituta, tratamento que desconsiderou), tratamentos (aprovados e aguardando), inconsistências do dia e se o período está fechado.
+- `mes(employee, competencia)`: um item por dia (sem a auditoria da raw), totais do mês nas mesmas fontes do Espelho de Ponto (DSR pela semana que termina no mês, créditos/débitos do banco), competência fechada e o Espelho de Ponto vigente. Usa `modo_lote` para ler as batidas do mês de uma vez.
+- PIS e CPF completos para RH Ponto/System Manager; mascarados (D-5) para o Gestor Ponto.
+- `apuracao/test_painel.py`: 15 testes (6 novos: dia completo, sugestão na marcação ímpar, substituída com a substituta, PIS por papel, gestor fora da equipe, mês com um item por dia).
+
+### Etapa 4 — Esqueleto do app /ponto (19/10/2026)
+- `frontend/` no formato do app `roster` do HRMS v15: Vue 3.5, Vite 5, frappe-ui 0.1.105 (a mesma do HRMS `version-15`), Tailwind 3, `lucide-vue-next`, ESLint (`yarn lint`, zero aviso). `package.json` na raiz do app com `build`/`postinstall`/`lint`: o `bench build --app hrms_secullum_brasil` gera `public/frontend/` e `www/ponto.html` (ambos no `.gitignore`).
+- `www/ponto.py`: sem login → `/login?redirect-to=/ponto`; sem RH Ponto, Gestor Ponto ou System Manager → `/app`. `hooks.py`: `website_route_rules` para `/ponto/<path>`. `painel.sessao()`: nome, papéis e se é RH.
+- Página inicial com o título "Painel de ponto" e o nome do usuário. `docker/README.md`: build, lint e `yarn dev` (porta 8080 acrescentada ao compose).
+- Conferido no ambiente docker: `/ponto` sem login → login; com login → página (inclusive sub-rotas). `apuracao/test_painel_rota.py`: 5 testes (sem login, sem papel, colaborador, RH e gestor, sessão).
+
+### Etapa 5 — Design system e CI (19/10/2026)
+- `frontend/src/styles/tokens.css`: `--background`, `--surface`, `--primary`, `--status-compliant`, `--status-warning`, `--status-danger` (e neutro), cada um com o tom de texto (`-text`, ≥ 4,5:1 sobre o fundo) e o fundo suave; modo escuro por `prefers-color-scheme`; cores da linha do tempo (`--tl-*`). No Tailwind: `primario`, `conforme`, `alerta`, `perigo`, `neutro`, `superficie`, `borda`, `texto`.
+- Suposição registrada: o PDF do design system não está no repositório; além dos valores citados no PRD (#0284C7/#0369A1, #059669/#047857), os tons de alerta, perigo e do modo escuro foram escolhidos para passar no contraste AA (a conferir com o PDF).
+- Fontes servidas pelo próprio app (empacotadas pelo Vite em `public/frontend`): Inter (do frappe-ui) e JetBrains Mono (`@fontsource/jetbrains-mono`). Foco visível em tudo (`:focus-visible`).
+- Componentes: `BadgeStatus` (status da apuração, severidade, situação da inconsistência e do tratamento; sempre ícone + texto), `Minutos` (HH:MM em fonte mono, lido por extenso pelo leitor de tela), `SkeletonCockpit` (animação só com `motion-safe`). Vitrine temporária na página inicial.
+- CI: job `frontend` (Node 18, `yarn install --frozen-lockfile`, `yarn lint`, `yarn build`), simulado no container com Node 18.
+
+### Etapa 6 — Estrutura da tela e filtros (19/10/2026)
+- `Layout.vue`: cabeçalho fixo com o menu (Cockpit, Inconsistências, Colaborador, "Abrir no Desk"), nome do usuário, link "Pular para o conteúdo" e `FiltrosPeriodo` (competência, empresa, filial, departamento, status). Os filtros ficam na URL (`useFiltros`): trocar um filtro faz `router.replace` e as telas recarregam só os blocos; filial e departamento dependem da empresa.
+- `Bloco.vue`: cada bloco carrega e falha sozinho (esqueleto próprio, mensagem do servidor e "Tentar de novo").
+- `painel.opcoes_filtros()`: empresas, filiais e departamentos dos colaboradores visíveis; status, severidades e tipos de inconsistência.
+- Testes de navegador (Playwright no container, com o Chromium do Debian; `yarn test:e2e`): URL muda com a competência, recarga mantém os filtros, só os blocos recarregam, erro simulado num bloco não derruba o outro, menu mantém os filtros. Usuários de teste `rh.teste@esfitness.local` e `gestor.teste@esfitness.local` (senha `Ponto@teste1`) criados por `demo.usuarios_de_teste` (o gestor chefia Renata, Bruno e Marcos; a Elisa fica abaixo da Renata).
+- Achado no cenário de teste: `reports_to` gravado com `set_value` não atualiza a árvore do Employee (lft/rgt) e o gestor deixava de ver a estagiária; `demo.py` agora salva pelo documento e reconstrói a árvore.
+
+### Etapa 7 — Cockpit (19/10/2026)
+- `pages/Cockpit.vue` com `CardNumero`: Conformidade (e não apurados), Horas extras 50%/100% (minutos, colaboradores, banco), Faltas e atrasos, Banco a vencer em 30 dias, Alertas INSS (sem CID), Inconsistências abertas por severidade, Integração Secullum, Fila de reapuração e Período fechado até. Cards que o papel não lê não aparecem. Mais o bloco "Inconsistências de severidade Alta" (5 primeiras).
+- Cada card leva à lista filtrada: Inconsistências → central do painel (com a severidade); os demais → lista do Desk com os mesmos filtros (`utils/desk.js`).
+- Testes de navegador (`cockpit.spec.js`): agosto da ES Fitness com 24 abertas (5 Altas, 15 Médias, 4 Baixas), conformidade 92,7%, 1 não apurado, 8 dias com falta; os filtros dos links do Desk contados no servidor dão os mesmos números; o gestor de teste vê 11 (3 Altas) e não vê alertas, Secullum nem fila.
+
+### Etapa 8 — Linha do tempo do dia (19/10/2026)
+- `components/TimelineDay.vue`: faixa de 24 h a partir da virada (SVG que só desenha os segmentos do servidor): previsto ao fundo, tolerância nas pontas, trabalhado, extra, atraso, falta (hachurada), intervalo e faixa do noturno. Marcações são botões sobre a faixa (teclado e leitor de tela), com formatos diferentes para original, incluída por tratamento, desconsiderada, substituída e ignorada. Texto alternativo com o previsto, as marcações e os totais; legenda só com o que aparece no dia; modo compacto para o mês.
+- API: cada marcação (consideradas, ignoradas, originais e inclusões dos tratamentos) traz a `posicao` na faixa (`engine/painel.py:posicao_na_linha`) e se foi incluída por tratamento; `painel.colaboradores()` lista os colaboradores visíveis.
+- Tela Colaborador (provisória até a Etapa 13): escolher colaborador e dia (`/ponto/colaborador/<employee>?data=AAAA-MM-DD`).
+- `demo.cenarios_setembro` (`t setembro`): os 14 cenários do manual. Testes: os 14 dias desenham exatamente os segmentos de `painel.dia` (Playwright), jornada 22:00–06:00 com virada às 12h contínua (Playwright com resposta simulada e Frappe com perfil noturno real: segmento (600, 1080)).
+
+### Etapa 9 — Gaveta de auditoria da marcação (19/10/2026)
+- `components/AuditoriaMarcacao.vue`: gaveta lateral (diálogo modal, foco preso dentro) ao clicar ou dar Enter numa marcação: data e hora, origem (nomes em português), tipo no Secullum, equipamento, inclusão no Secullum, importação, situação (substituída riscada, com a substituta, o motivo e o link), tratamento que desconsiderou ou incluiu (com situação, motivo, quem pediu e quem aprovou), PIS conforme D-5 e link para a marcação original no Desk. Sem NSR e sem localização (aviso na gaveta). `Esc` fecha e devolve o foco à marcação.
+- `TimelineDay`: marcações a menos de 25 min uma da outra ficam em alturas diferentes (o teste mostrou que 08:00 e 08:05 se sobrepunham e uma não era clicável).
+- Cenário: `demo.cenarios_setembro` cria o 21/09 da Renata com a batida das 08:00 substituída pela das 08:05 e o PIS 120.12345.67-8. Testes (Playwright): substituída riscada e substituta na gaveta; gestor vê `***.****5.67-8`; Esc devolve o foco.
+
+### Etapa 10 — Central de inconsistências: lista e ações (19/10/2026)
+- `pages/Inconsistencias.vue`: lista agrupada por severidade (Alta, Média, Baixa) e tipo (`utils/inconsistencias.js` com os nomes em português), filtros de severidade e tipo além do cabeçalho, "Carregar mais" de 50 em 50; ao lado, o dia selecionado (linha do tempo, gaveta de auditoria, tratamentos e inconsistências do dia, aviso de período fechado, link para o Desk).
+- As cinco ações chamam `apuracao/acoes.py` sem mudar nada nele (`DialogoAcao.vue`): abonar, lançar atestado, incluir marcação (com o horário sugerido de D-4 pré-preenchido), desconsiderar marcação (lista do `marcacoes_do_dia`) e atribuir ao gestor. Motivo sempre obrigatório; erro do servidor aparece no diálogo.
+- Testes (Playwright, desfazendo o que criam): lista agrupada; RH abona a falta de 17/09 → tratamento aprovado e a linha some; gestor abona → tratamento em rascunho e a linha continua; período fechado → mensagem do servidor no diálogo e a tela continua; sugestão 17:48 na marcação ímpar de 19/08; a lista do Desk continua abrindo.
+
+### Etapa 11 — Central: teclado, lote e avisos (19/10/2026)
+- `composables/useAtalhos.js`: `J`/`K` próxima/anterior (seleciona, mostra o dia e põe o foco na linha), `X` marca para lote, `Enter` leva o foco ao dia, `A` abonar, `I` incluir marcação, `D` desconsiderar, `Esc` desmarca (diálogos e gaveta fecham no próprio Esc). Desligados com foco em campo de texto/seleção, com diálogo aberto ou com Ctrl/Alt/Cmd.
+- Lote: caixas de marcação nas linhas e barra "Ações em lote" (abonar, lançar atestado, atribuir ao gestor); o servidor cria um abono por colaborador e dia. Incluir/desconsiderar continuam de um em um.
+- Resultado de cada ação em `role="status"` `aria-live="polite"`; quando a reapuração fecha a inconsistência, a linha some e a seleção passa para a seguinte. A central não seleciona nada ao abrir (J escolhe a primeira).
+- Testes (Playwright): abonar só pelo teclado; três marcadas com X → três abonos aprovados (um por colaborador e dia); "jjj" no motivo não mexe na seleção; Enter leva ao dia e K volta.
+
+### Etapa 12 — Aprovação de tratamentos no painel (19/10/2026)
+- Aba "Aguardando aprovação" na central (só RH Ponto; `role="tablist"`, setas trocam de aba, `?aba=aprovacao` na URL): `painel.tratamentos_pendentes(filtros)` lista os Tratamentos de Ponto em rascunho (gestor recebe erro de permissão). Aprovar = `frappe.client.submit` (permissão de submit que já existe; o submit reapura o dia); recusar = `frappe.client.delete` do rascunho, com confirmação. Os atalhos da central só valem na aba da lista.
+- Testes: Frappe (pendentes só para RH) e Playwright (tratamento do gestor aparece e aprovar fecha a marcação ímpar de 19/08; recusar exclui o rascunho; gestor não vê a aba).
+
+### Etapa 13 — Espelho do mês na tela (19/10/2026)
+- `pages/Colaborador.vue`: escolher colaborador (só os visíveis) e competência; totais do mês no topo (normais, HE 50% paga e no banco, HE 100%, noturno real e ficto, faltas, atrasos, DSR perdido, créditos, débitos e saldo do banco); tabela com um dia por linha (linha do tempo compacta, status, normais, extra, falta e atraso); o link do dia abre o detalhe (linha do tempo completa e gaveta) em `?data=`. Competência fechada: botão para o PDF do Espelho de Ponto (Print Format atual); aberta: aviso de que os números podem mudar.
+- Na linha do tempo compacta as marcações são só desenho (o texto alternativo lista os horários): evita centenas de botões repetidos para o teclado e o leitor de tela.
+- Conferido no cenário real: agosto tratado como no manual e fechado → proventos R$ 4.303,57 e descontos R$ 436,00 (iguais aos registrados) e os totais da tela iguais aos do Espelho de Ponto dos 8 colaboradores (zero diferença); o cenário foi restaurado depois. Teste Frappe permanente `apuracao/test_painel_espelho.py` (fecha fevereiro/2027 e compara totais e dias) e testes Playwright (31 linhas, totais da API, aviso de aberta, botão do PDF, detalhe do dia).
+
+### Etapa 14 — Acessibilidade e desempenho (19/10/2026)
+- Auditoria axe (WCAG 2.1 A/AA, `tests/e2e/acessibilidade.spec.js`) em Cockpit, Inconsistências (dia aberto, linha marcada e diálogo), Aguardando aprovação e Colaborador (mês, dia e gaveta), nos modos claro e escuro: zero violação séria ou crítica. Corrigido o que apareceu: texto secundário do modo escuro (#a5b4c8 → #b6c2d3) e botão principal com par próprio de cores (`--primary-strong`/`--on-primary-strong`).
+- Teclado (`foco.spec.js`): Tab começa em "Pular para o conteúdo", segue menu, filtros e conteúdo, sempre com contorno de foco de 2 px (regra fora das camadas do Tailwind, inclusive `:focus-within` dos campos de mês, cujo foco fica num subcampo do navegador); o link de pular leva o foco ao conteúdo.
+- Desempenho com `utils/carga.py` (500 × 31 = 15.500 dias, empresa ES Fitness, no ambiente docker): `resumo` 0,97 s na primeira chamada (0,27 s nas seguintes) e `inconsistencias` (50 itens) 0,016 s; apuração em 248 s. `carga.medir_painel` entra no resultado (`painel_meta`). Corrigido no `carga.py`: o perfil de jornada da carga é criado na empresa da carga (antes caía na empresa padrão e a carga falhava em outra empresa).
+- Suíte de navegador: 42 testes Playwright verdes.
+
+### Etapa 15 — Atalho, manuais e regras (19/10/2026)
+- Atalho "Painel de ponto" (URL `/ponto`) no Workspace "Ponto" (`apuracao/workspace/ponto/ponto.json`), logo abaixo do título; teste Playwright abre o espaço no Desk e segue o atalho.
+- `docs/manual_rh.md`: seção "Painel de ponto" (cockpit, central com linha do tempo, auditoria, ações, lote, tabela de atalhos de teclado, aba "Aguardando aprovação", espelho do mês). `docs/manual_gestor.md`: o painel do ponto de vista do gestor (só a equipe, PIS mascarado, tratamentos aguardando o RH, atalhos). `docs/manual_teste_windows.md` 7.11: como testar o painel com os usuários de teste; `t painel` (gera a tela) e `t testes-tela` (testes de navegador) no `docker/teste.ps1`.
+- `AGENTS.md`: `frontend/` na tabela de estrutura e as regras da seção 4 do PRD (painel só leitura, endpoints em `apuracao/painel.py` com `employees_visiveis` e sem permlevel 1, cadastros no Desk, novo tipo/status também no `BadgeStatus` e na central, `yarn lint`/`yarn build`/`yarn test:e2e`).
+- Achado: o `migrate` ressincroniza os espaços padrão do ERPNext/HRMS e desfazia o menu enxuto (`t enxugar`). Agora a escolha fica gravada no site (`ponto_menu_enxuto`) e o `after_migrate` a reaplica (`utils/localizacao.py:reaplicar_apos_migrate`, com teste).
+
+### Situação do PRD do painel
+- As 15 etapas e os requisitos FE-01 a FE-08 estão atendidos. Testes: engine (pytest) 831 com cobertura 99%; 262 testes Frappe verdes (260 da suíte + 2 do menu enxuto); Frappe do painel em `apuracao/test_painel.py`, `test_painel_rota.py`, `test_painel_espelho.py` e `utils/test_localizacao.py`; 43 testes de navegador (Playwright + axe) em `frontend/tests/e2e`.
+- Pendências: conferir os tons de alerta, perigo e do modo escuro com o PDF do design system (não está no repositório); os testes de navegador rodam no ambiente `docker/` (precisam do bench e do cenário de teste), não no CI do GitHub, que roda lint e build do frontend.
+
+## PRD de importação do Secullum (docs/PRD-importacao-secullum.md)
+
+### Planejamento (19/10/2026)
+- PRD escrito a partir do Swagger oficial (`/swagger/v1/swagger.json`, 80 rotas) e do manual `Integracao_Externa_Ponto_Web.pdf` (80 páginas): o Secullum passa a ser a origem dos cadastros (empresas, funções, departamentos, horários → perfis, funcionários, estruturas → hierarquia, justificativas, afastamentos, equipamentos e batidas); o que a API não tem (CCT, salário, banco de horas, feriados, VR/VT, EPI, ASO, estágio) é completado na revisão.
+- Decisões: recriar o site do zero (DI-1); origem Secullum com campos somente leitura (DI-2); batidas desde o 1º dia do mês anterior (DI-3); 3 primeiros períodos de horários com 4–5 e aviso (DI-4); CCT padrão por empresa com as sugestões do horário (DI-5); sem nascimento → 01/01/1900 e inconsistência (DI-6, novo tipo de inconsistência a criar); demitidos dos últimos 12 meses (DI-7); usuários de gestores com e-mail (DI-8); pendências depois (DI-9).
+- Risco principal: o Swagger não descreve as respostas dos GETs; a Etapa 2 grava amostras reais anonimizadas antes do mapeamento (precisa das credenciais do Secullum do cliente).
+
+### Etapa 1 — Base limpa e site de testes separado (19/10/2026)
+- `testes.localhost` (`docker/site_testes.sh`, `t site-testes`): site só para testes, com a preparação do ERPNext/HRMS (`before_tests`), os registros de teste do ERPNext e a `_Test Company` como empresa padrão (os testes criam perfis e CCTs sem empresa), e o cenário ES Fitness (agosto e setembro) dos testes de navegador. `t testes`, `t testes-tela` e os comandos do cenário (`preparar`, `bater`, `agosto`...) agem nele; o Playwright usa `http://testes.localhost:8000`.
+- `ponto.localhost` recriado do zero (`docker/zerar.sh`, `t zerar` com confirmação "APAGAR"; cópia do site antigo em `archived/sites`): só Administrator, nenhuma empresa, colaborador, CCT, perfil ou cargo de exemplo, em português, menu enxuto, assistente do ERPNext concluído sem empresa (`utils/localizacao.py:concluir_instalacao`).
+- `docker/multisite.sh`: o `bench start` serve os dois sites pelo nome (linha `web` do Procfile sem site fixo) e `http://localhost:8000` continua abrindo a operação (apelido `sites/localhost`). `docker/setup.sh` já faz isso numa instalação nova.
+- Defeitos de instalação achados ao criar sites novos (o site antigo tinha sido montado aos poucos e não os mostrava): o padrão "Atestado Médico" da Configuração Apuração apontava para uma fixture que ainda não existe na instalação e quebrava o `install-app`; os códigos das rubricas na folha (ex.: DSR_HE 9189) só eram preenchidos no `after_migrate`. Novo `install.py:after_install` importa as fixtures, liga o Leave Type e preenche os códigos.
+- Testes no site de testes: 262 Frappe (depois da correção dos códigos, o módulo que falhou passou) e 43 de navegador verdes.
+
+### Etapa 2 — Descoberta das respostas reais do Secullum (19/10/2026)
+- Conexão com o banco real "ES FITNESS LTDA". **Defeito corrigido:** o header `secullumidbancoselecionado` precisa
+  do **id numérico** do banco (73365), não do GUID. Com o GUID, toda rota dava HTTP 401. Corrigidos:
+  - `filtrar_bancos` (devolve `id_banco`);
+  - "Testar conexão" (mostra o número);
+  - validação e rótulo do campo ("Número do banco") e descrição do campo da empresa;
+  - testes que usavam um GUID de exemplo.
+- `ingestion/amostras_secullum.py`:
+  - `estrutura` lista só os nomes dos campos e os tipos de cada GET;
+  - `gravar` grava amostras anonimizadas em `integrations/secullum/fixtures/reais/`: as 7 empresas, 17 funções,
+    7 departamentos, 64 horários, 23 justificativas, 9 motivos e 8 equipamentos; 120 funcionários (todos os
+    ativos e 30 demitidos); 80 afastamentos e 32 batidas desses funcionários.
+- `integrations/secullum/anonimizar.py` (puro, testado):
+  - troca CPF, PIS e CNPJ por fictícios válidos e consistentes entre os arquivos;
+  - troca nomes, contatos, endereço, RG, CTPS, filiação e o texto livre do afastamento;
+  - nascimento vira 1990-01-01;
+  - se algum documento real sobrar, nada é gravado.
+- `test_amostras_reais.py` protege o repositório: CPFs e CNPJs só da faixa fictícia, e-mails só example.com, nomes
+  só fictícios, ligações entre os arquivos mantidas.
+- Formato real documentado em `docs/secullum_api.md`; achados registrados no PRD:
+  - objetos aninhados no funcionário;
+  - nenhuma estrutura (chefe definido no programa);
+  - horários semanais com até 2 períodos;
+  - `Compensado` não é folga;
+  - 90 ativos e 66 demitidos em 12 meses;
+  - 59 sem nascimento.
+
+### Etapa 3 — Cliente: leitura de todos os cadastros (19/10/2026)
+- `SecullumClient` (abstrato), `HttpSecullumClient` e `MockSecullumClient` ganham: `listar_empresas`, `listar_funcoes`, `listar_departamentos`, `listar_horarios`, `listar_estruturas` (com responsáveis e funcionários vinculados; banco sem estrutura → HTTP 400 "Nenhuma estrutura encontrada." vira lista vazia), `listar_justificativas`, `listar_motivos_demissao`, `listar_equipamentos` e `listar_afastamentos(inicio, fim)`.
+- O mock aceita `fixtures_dir=REAIS_DIR` (amostras reais anonimizadas, formato do GET); com a pasta padrão, os testes de envio continuam com o formato do POST e os cadastros vêm das amostras reais.
+- Achado: no formato real cada registro é um **vínculo** com `Id` próprio; a mesma pessoa (CPF) pode ter um vínculo demitido numa empresa e outro noutra (2 casos na amostra). A chave da importação passa a ser o `Id` do Secullum (`id_secullum`); o CPF liga os vínculos. PRD atualizado.
+- Testes: `integrations/secullum/tests/test_leitura_cadastros.py` (17: rotas e parâmetros, objeto único, estruturas vazias e com responsáveis, mock com as amostras, afastamentos por período, vínculos da mesma pessoa). Integração: 129 pytest verdes.
+
+### Etapa 4 — Mapeamento puro Secullum → programa (19/10/2026)
+- `integrations/secullum/importacao.py` (sem frappe): `empresa_do_secullum` + `sugerir_abbr`; `perfil_do_horario` (dias, até 3 períodos, folgas, carga, divisor 220/210/200/180/150, virada, tolerância, intervalo > 2h, faixas de HE); `sugestao_de_cct` (tolerância e faixas mais comuns, mínimo legal de 50%); `colaborador_do_secullum` (lê os objetos aninhados `Empresa`, `Horario`, `Departamento`, `Funcao`; sem nascimento → 01/01/1900 com aviso; demitido → Left); `selecionar_vinculos` (ativos + demitidos nos últimos 12 meses); `hierarquia_das_estruturas`; `efeito_da_justificativa` (Abona, Falta, Férias, Atestado, INSS); `afastamento_do_secullum` (sem o texto livre "Motivo", que pode ter dado de saúde). Cada resultado traz `problemas` (não importa) e `avisos` (importa e mostra na revisão).
+- Achados nas amostras reais: dias **neutros com horário** (ex.: sábado neutro) viram folga com aviso; horários com **todos os dias neutros** ("HORISTA GINASTICA", "HORISTA ESCOLA") viram perfil **Horista** sem semana padrão e divisor 1. Todos os 64 horários, 120 funcionários, 7 empresas, 23 justificativas e 80 afastamentos da amostra convertem sem problema; a CCT sugerida pelos horários reais é úteis 50%, sábado 50%, domingo 100%, feriado 100%, folga 100%, tolerância 5/10.
+- `test_importacao.py`: 30 testes (aceites do PRD + amostras reais); cobertura do módulo 99%.
+
+### Etapa 5 — Origem dos cadastros = Secullum (19/10/2026)
+- `Configuracao Secullum.origem_cadastros` ("Secullum" padrão; "Programa" = modo antigo). `ingestion/secullum.py`: `origem_secullum()` (vazio vale Secullum), `envio_ligado()` (ativa **e** origem Programa) e `CAMPOS_DO_SECULLUM`.
+- Com origem Secullum nada é enviado: `on_update_employee`, o job `sincronizar_colaborador`, `enfileirar_todos` (recusa com mensagem) e a reconciliação diária param. A coleta de batidas continua dependendo só de "Ativo".
+- `configuracao_ponto/employee.py`: colaborador importado (`id_secullum`) não muda aqui nome, CPF, PIS, sexo, nascimento, admissão, desligamento, situação, empresa, departamento, cargo, perfil, matrícula e Id (validação no servidor, mensagem "vêm do Secullum: altere no Secullum e importe de novo"); só a importação grava (flag `importacao_secullum`). O chefe e os demais campos continuam editáveis; colaborador criado no programa continua livre. `onload` + `public/js/employee.js`: os campos aparecem bloqueados com a explicação.
+- Testes: `ingestion/test_origem_secullum.py` (8); os testes do envio antigo passam a declarar a origem "Programa".
+- Suíte completa no site de testes: 270 testes Frappe verdes.
+
+### Etapa 6 — Importação de empresas, funções, departamentos e horários (19/10/2026)
+- `ingestion/importacao_secullum.py`: `ImportacaoSecullum(client, hoje, simular).executar(passos)` e o método `importar(passos, simular)` (RH Ponto/System Manager). Passos desta etapa: empresas (Company com CNPJ, UF, município, Id/inscrição/CEI/código na folha, endereço, BRL, plano de contas padrão; casa pelo CNPJ), funções (Designation), departamentos (um por empresa que tem funcionário nele, `<descrição> - <sigla>`, raiz "All Departments" criada se faltar) e horários (Perfil de Jornada `SEC-<número>`, ou `SEC-<número>-<sigla>` quando mais de uma empresa usa; vigência desde a menor admissão; horário alterado no Secullum fecha a versão vigente e abre outra a partir do dia). Upsert por chave do Secullum: repetir não duplica e só grava o que mudou; cada registro num savepoint (erro desfaz só ele) e numa linha do novo DocType **Log de Importacao Secullum** (limpeza automática em 180 dias). `simular` calcula tudo e não grava. Usados só os vínculos selecionados (ativos e demitidos em 12 meses): função, departamento ou horário sem funcionário importado é "Ignorado".
+- Campos novos: Company `id_secullum_empresa`, `inscricao_estadual`, `cei`, `codigo_folha_empresa`; Department `codigo_folha`. O mock usa as amostras reais quando a origem é Secullum.
+- Resultado com as amostras reais: 7 empresas, 15 funções novas (+2 já existentes), 6 departamentos, 61 perfis (horários compartilhados entre empresas viram um perfil por empresa), 22 horários sem uso ignorados, nenhum erro; ~33 s.
+- Achado: comparação dos horários gravados precisava converter `8:00:00`/timedelta em minutos (senão a segunda importação via "mudança"). Testes: `ingestion/test_importacao_secullum.py` (10).
+- **Dia neutro (DI-10, decisão de 19/10/2026: rodízio com horas normais).** 51 dos 90 ativos têm o sábado neutro com
+  horário (26 também o domingo). Novo campo `neutro` em Perfil Jornada Dia (o horário fica de referência, fora da
+  carga e dos minutos previstos) e situação "Neutro" na Escala Mensal Dia. Engine: `JornadaPrevista.neutro` (não é
+  folga); sem batida não há falta; trabalhado = normal até 8h, o resto é HE do tipo do dia (mesma regra do horista
+  com escala, AJ-14); feriado e 7º dia continuam como antes. DSR Semanal: `he_semanal_minutos` também para quem não é
+  horista quando o perfil tem dia neutro (acima de 44h na semana), pago no fechamento na faixa de dia útil.
+  Vale-transporte não conta o dia neutro; a Escala do Mês gerada marca "Neutro" e, sem folga na semana, escolhe o
+  repouso entre os dias neutros (domingo). Relatório Escala do Mês: "N". Testes: `engine/tests/test_dia_neutro.py`
+  (7), `apuracao/test_dia_neutro.py` (5). Suíte: 904 pytest (engine 99%) e 285 Frappe OK.
+
+### Etapa 7 — CCT padrão por empresa e feriados (19/10/2026)
+- Passos `cct` e `feriados` em `ingestion/importacao_secullum.py` (depois de `horarios`). Só para empresas com
+  funcionário importado (nas amostras: 6 das 7; a "Empresa Exemplo 05" não tem ninguém).
+- **CCT padrão (IS-07):** `Regra Sindical CCT` com sindicato "Importada do Secullum", vigente desde a menor admissão
+  dos vínculos importados da empresa (inclui demitidos em 12 meses, para nenhum dia ficar sem CCT), UF da empresa,
+  sem cargos (vale para todos), defaults legais + `sugestao_de_cct` dos horários fixos (tolerância por marcação e
+  diária; faixas de HE por tipo de dia; Folga compensada fica no padrão). Avisos da sugestão vão para o log.
+  Empresa que já tem CCT vigente cadastrada no programa (outro sindicato): não cria outra; `cct_por_documento`
+  guarda a CCT para ligar os funcionários na Etapa 8. Depois de criada, a CCT é do programa: a importação só
+  antecipa a vigência se aparecer admissão anterior (não sobrescreve ajustes do RH).
+- Resultado com as amostras: tolerância 5/10 min; HE Útil 50, Sábado 50, Domingo 100, Feriado 100, Folga 100,
+  Folga compensada 50 (padrão).
+- **Feriados (IS-10):** `apuracao/feriados.py:gerar_feriados` do ano corrente e do seguinte para cada empresa
+  (lista "Feriados - <empresa>", nacionais + Feriado Regional da UF/município). Sem feriado municipal cadastrado
+  para o município → linha "Aviso" pedindo para cadastrar (não inventamos feriados municipais). Divergência do
+  PRD: o nome da lista segue o padrão já existente (uma por empresa, todos os anos), não "Feriados <ano> - <cidade>".
+- Testes: `ingestion/test_importacao_secullum.py` agora com 14 (CCT por empresa com os valores do Secullum,
+  nenhum vínculo sem CCT vigente na admissão, CCT do programa respeitada, feriados 2026/2027 + aviso municipal).
+  904 pytest e 289 Frappe OK; ruff limpo.
+- Pendências: cadastrar os feriados municipais de Vitória, Vila Velha, Serra (ES) e São José dos Pinhais (PR) e
+  o estadual do PR (19/12) em Feriado Regional — dados que o Secullum não tem; confirmar com o RH as datas.
+
+### Etapa 8 — Funcionários, estruturas e usuários dos gestores (19/10/2026)
+- Passos `funcionarios` e `estruturas` em `ingestion/importacao_secullum.py` (depois de `feriados`).
+- **Funcionários (3.5):** upsert pelo `id_secullum` (cada vínculo é um colaborador; o mesmo CPF em duas empresas
+  gera dois). Grava nome, CPF, PIS, sexo, nascimento, admissão, demissão/status/motivo, empresa, departamento e
+  cargo (pelo nome gravado no programa: o banco ignora maiúsculas), matrícula, e-mail pessoal (se válido),
+  celular, endereço, RG, CTPS e código do holerite. Perfil de Jornada = versão vigente do código `SEC-<n>` (ou
+  `SEC-<n>-<sigla>`) da empresa. Só na criação: `regra_cct` = CCT da empresa (Etapa 7), `tipo_remuneracao`
+  Horista quando o perfil é Horista (senão Mensalista), `create_user_permission` 0 e `banco_horas_desde` =
+  admissão quando o cargo tem banco padrão. Na atualização, regra CCT, tipo e banco ficam com o RH; troca de
+  horário no Secullum troca o perfil (a data da troca é a Etapa 13).
+- **DI-6:** sem nascimento → 01/01/1900 e inconsistência Média `nascimento_ausente` (novo tipo no Select e no
+  `frontend/src/utils/inconsistencias.js`), resolvida quando o Secullum informar a data.
+- **Estruturas (3.6):** sem estruturas no Secullum, uma linha "Aviso" (chefes definidos no programa). Com
+  estruturas: `reports_to` pelo responsável (CPF → vínculo ativo), `rebuild_tree` no fim e **DI-8**
+  `garantir_usuario_gestor` (usuário com Gestor Ponto, sem e-mail de boas-vindas, ligado ao `user_id`; reusado
+  pela revisão da Etapa 11).
+- Campos novos no Employee: `codigo_holerite`, `invisivel_secullum` (somente leitura), `ctps` (permlevel 2).
+- Achados no site limpo (`t zerar`), testados com os dados reais numa transação desfeita: a raiz "All
+  Departments" exige empresa (criada com `ignore_mandatory`, como o ERPNext faz) e os registros de Gender só
+  existem com o assistente de configuração (`install.garantir_generos`, também no `after_install`). PIS
+  inválido (4 casos, 12 dígitos) entra sem PIS com aviso; celular gravado só com dígitos.
+- **Resultado com o banco real** (ponto.localhost, rollback no fim, 169 s): 7 empresas, 17 funções, 6
+  departamentos, 69 perfis, 6 CCTs, 6 listas de feriados, **156 colaboradores (90 ativos, 66 demitidos; 144
+  Mensalistas, 12 Horistas)**, todos com perfil, CCT, cargo e departamento; 108 sem nascimento no Secullum.
+- Testes: `ingestion/test_importacao_secullum.py` com 23 (campos de cada colaborador, demitido com motivo,
+  horista, CPF em duas empresas, nascimento ausente, troca de cargo no Secullum, CPF inválido vira erro e os
+  outros entram, sem estruturas = aviso, estrutura define o chefe e cria o usuário do gestor). 905 pytest e 298
+  Frappe OK; ruff limpo.
+- Pendências: 108 colaboradores sem data de nascimento e 4 com PIS inválido — corrigir no Secullum; definir os
+  chefes no programa (o Secullum não tem estruturas).
+
+### Etapa 9 — Justificativas, afastamentos e equipamentos (20/10/2026)
+- DocTypes novos no módulo Ingestion: **Justificativa Secullum** (catálogo somente leitura; só o "Efeito no ponto"
+  é editável: Abona o dia, Falta, Férias, Atestado, Afastamento INSS — sugerido por `efeito_da_justificativa` na
+  criação, depois é do RH), **Afastamento Secullum** (colaborador, justificativa, efeito, início, fim, Id,
+  chave, data de inclusão, "Removido no Secullum"; sem o motivo em texto livre) e **Equipamento Secullum** (nome
+  = Id do relógio).
+- Passos `justificativas` (depois de empresas), `afastamentos` e `equipamentos` (no fim). Afastamentos lidos do
+  1º dia do mês do ano passado até um ano à frente; vínculo = o do CPF empregado no período; afastamento que
+  sumiu do Secullum na janela vira "Removido no Secullum". Novo, alterado ou removido → reapura os dias **já
+  apurados** do intervalo (fora de período fechado; os fechados viram aviso). Mudar o efeito de uma
+  justificativa reapura os afastamentos dela.
+- Apuração (`apuracao/adaptador.py:abonos_do_dia`, inclusive no modo lote): afastamento não removido abona o dia,
+  menos quando a justificativa tem efeito "Falta". Não cria Leave Application nem Atestado Médico (a regra dos 15
+  dias do INSS continua só com o Atestado Médico).
+- Painel: a auditoria da marcação mostra o nome do relógio (`equipamento_nome`) no lugar do número.
+- Testes: `ingestion/test_importacao_secullum.py` com 29 (efeitos sugeridos, afastamento só de vínculo importado,
+  abona/falta, apagado no Secullum, alterado reapura, equipamentos). Frontend: `yarn lint` e `yarn build` OK.
+
+### Etapa 10 — Carga inicial das batidas e apuração (20/10/2026)
+- `ingestion/carga_batidas.py`: `iniciar(desde, ativar)` (assistente; enfileira na fila long) e `carregar(desde,
+  hoje, ativar)`. Lê dia a dia, de `desde` (padrão DI-3: 1º do mês anterior, `data_inicial_padrao`) até hoje, com a
+  coleta de sempre (`_Coleta` de `coleta_batidas.py`: idempotente, Raw imutável, período fechado bloqueado); commit
+  por dia. Depois marca **todos os dias de cada vínculo importado** de `desde` até ontem, dentro do contrato
+  (admissão a demissão) — inclusive os sem batida, que viram falta — e processa a fila `Reapuracao Pendente` em
+  lotes de 2000 até esvaziar (para se só sobrarem dias que falharam). `ativar=1` liga a coleta automática
+  (`Configuracao Secullum.ativo`) no fim. Uma linha "Batidas" no Log de Importacao Secullum com o resumo.
+- Progresso no novo single **Importacao Secullum** (`carga_status`, `carga_etapa`, `carga_percentual`,
+  `carga_resultado`…) e em `publish_realtime("importacao_secullum_carga")`: o cache do Frappe não serve, porque é
+  limpo quando a importação grava empresas e cargos.
+- Testes: `ingestion/test_carga_batidas.py` (5): batidas entram e os dias ficam apurados (8h trabalhadas no dia com
+  4 batidas), dias sem batida também são apurados, demitido só até a demissão, rodar de novo não duplica e liga a
+  coleta, data inicial padrão.
+
+### Etapa 11 — Assistente de importação (20/10/2026)
+- Single **Importacao Secullum** (espaço Ponto → "Importação Secullum"), com botões por passo:
+  1. **Conectar** (`conectar`): diálogo com usuário, senha e número do banco, gravados só na Configuracao Secullum
+     (Password); lista os bancos da conta e escolhe sozinho quando há um só.
+  2. **Conferir** (`conferir`): simulação completa (nada é gravado): contagens no Secullum (empresas, horários,
+     ativos), o que será importado (ativos, demitidos em 12 meses, sem nascimento), contagem por cadastro e os
+     problemas com "o que fazer" (ex.: "Corrija o CPF no Secullum").
+  3. **Importar** (`importar` → job `executar_importacao`): cadastros e a carga das batidas desde a data escolhida
+     (padrão DI-3), com progresso na tela (realtime) e opção de ligar a coleta no fim; **Repetir só os cadastros**;
+     **Ver o log**.
+- Na simulação, afastamento de quem ainda vai ser importado conta como "Criado".
+- Testes: `ingestion/doctype/importacao_secullum/test_importacao_secullum.py` (3).
+
+### Etapa 12 — Revisão pós-importação (20/10/2026)
+- `ingestion/revisao_importacao.py`, no passo 4 do assistente: tabela por cargo (ativos, tipos de remuneração, no
+  banco) e pendências (sem nascimento, sem chefe, sem salário; horários com intervalo > 2h; avisos de horários com
+  mais de 3 períodos, da CCT padrão e dos feriados municipais).
+- **Tipo de remuneração por cargo** (`aplicar_tipo_por_cargo`): todos os ativos do cargo; Horista/Intermitente
+  passam para a cópia Horista do perfil (`<código>-H`, mesmos dias, divisor 1) e a volta religa o original. A
+  importação trata `-H` como o mesmo horário (não desfaz o ajuste do RH). Limitação: se o horário mudar no
+  Secullum, a cópia `-H` não acompanha (refaça o lote).
+- **Banco de horas por cargo** (`aplicar_banco_por_cargo`): liga/desliga nos ativos do cargo e grava o padrão do
+  cargo nos Parâmetros por cargo da CCT importada da empresa (as próximas admissões herdam).
+- Testes no mesmo arquivo do assistente.
+
+### Etapa 13 — Sincronização diária e mudanças (20/10/2026)
+- Job diário `importacao_secullum.sincronizar` (hooks `daily`): repete os passos dos cadastros (menos feriados)
+  quando a origem é Secullum e **Configuracao Secullum → Sincronizar cadastros todo dia** está ligada (botão no
+  assistente). Nunca levanta exceção (erro → Error Log).
+- **Troca de horário**: novo child **Historico Perfil Jornada** no Employee (`historico_perfil_jornada`: desde,
+  perfil). A primeira troca grava o perfil antigo desde a admissão e o novo desde o dia da sincronização (aviso no
+  log para o RH acertar a data). `get_perfil_vigente` usa o perfil da data (`perfil_na_data`, memoizado no modo
+  lote). O Employee ordena o histórico, recusa datas repetidas e mantém o Perfil de Jornada = última linha;
+  mudança no histórico reapura os dias já apurados desde a primeira data alterada.
+- **Demissão**: status Left e `relieving_date`; os dias depois dela já apurados são reapurados e
+  `reapurar_dia` passa a descartar a apuração fora do contrato (apaga a Apuracao Diaria e os lançamentos não
+  liquidados do banco, resolve as inconsistências ligadas).
+- **Sumido do Secullum** sem demissão: inconsistência Alta `colaborador_nao_encontrado_secullum` (não apaga, não
+  demite), resolvida quando volta. **Afastamento em período fechado**: nada muda e abre
+  `alteracao_periodo_fechado`. Os dois tipos novos estão no Select e no `frontend/src/utils/inconsistencias.js`.
+- Testes: `ingestion/test_sincronizacao_secullum.py` (6).
+
+### Etapa 14 — Planilha de salários (20/10/2026)
+- Puro: `engine/planilha_salarios.py` (`ler_planilha`: colunas flexíveis CPF/Salário ou Valor hora/Início/CNPJ,
+  valor brasileiro "R$ 1.234,56" em Decimal ROUND_HALF_UP, datas dd/mm/aaaa, CPF sem o zero à esquerda do Excel,
+  erros por linha). pytest: `engine/tests/test_planilha_salarios.py` (19).
+- Frappe: `payroll_handoff/planilha_salarios.py`: CSV (; , ou tab, UTF-8 ou Windows-1252) ou Excel → Salary
+  Structure Assignment na Salary Structure **"Padrão Ponto - <sigla>"** (componente "Salário Base", fórmula
+  `base`; criada e submetida na primeira vez; conta Payroll Payable da empresa ligada se faltar). Vínculo pelo
+  CPF ativo (com dois, a coluna CNPJ decide); início antes da admissão vira a admissão, com aviso; mesma linha de
+  novo = sem mudança; mesmo início com outro valor cancela a atribuição anterior e cria outra; `simular`.
+  `modelo()` gera o CSV dos ativos sem salário. Botões no assistente (5. Salários).
+- Testes: `payroll_handoff/test_planilha_salarios.py` (6).
+
+### Etapa 15 — Aceite com o banco real; manuais e implantação (20/10/2026)
+- **Importação real no site de operação** (ponto.localhost), pelo mesmo job do assistente
+  (`executar_importacao(desde=01/09/2026, ativar=1)`): conferência = 7 empresas, 64 horários, 90 ativos, nenhum
+  problema; importados 7 empresas, 23 justificativas, 17 funções, 6 departamentos, 69 perfis, 6 CCTs, 6 listas de
+  feriados, **156 colaboradores (90 ativos, 66 demitidos)**, 318 afastamentos, 8 relógios; **8.324 batidas** de
+  01/09 a 20/10 e **4.294 dias apurados**, fila vazia, coleta automática ligada (Configuracao Secullum → Ativo).
+- **Achados e correções durante o aceite:**
+  - `FonteDados.Origem = 16` (fora do manual) recusava a batida e derrubava a carga → código desconhecido vira
+    "Desconhecido"; um dia com erro na carga não para mais os outros (fica no resumo e no Error Log).
+  - **Cartão do Secullum** (rota GET Batidas): folgas do rodízio e justificativas lançadas pelo RH no Secullum não
+    chegavam ao programa (o dobro das faltas). Novo DocType **Cartao Secullum Dia** (`ingestion/cartao_secullum.py`,
+    lido na carga inicial e na coleta) e `engine/cartao.py` aplicado em `adaptador.montar_entrada` (folga lançada =
+    folga compensada; neutro; justificativa no dia inteiro = abonado; em parte = períodos fora da jornada; efeito
+    "Falta" não abona). No banco real: 1.524 dias, 28 folgas, 387 com justificativa. Testes:
+    `engine/tests/test_cartao.py` (6), `integrations/secullum/tests/test_cartao.py` (4),
+    `ingestion/test_cartao_secullum.py` (6).
+  - Conferência de totais (`divergencia_totais`) não lia as colunas reais `Horas Ad.`, `Atras.`, `Adian.`,
+    `Ajuste/Abono2..4` → incluídas no mapeamento padrão.
+- **Conferência com o Secullum (Calcular/SomenteTotais), setembro, 2 empresas, 14 colaboradores:** hora extra
+  80h41 (programa) × 79h13 (Secullum); noturno 33h09 × 32h06. Diferenças explicadas:
+  - **faltas** 78h20 × 45h40: o Secullum tem o feriado municipal de 08/09 (Vitória) e o programa ainda não (feriados
+    municipais a cadastrar em Feriado Regional);
+  - **normais**: nos dias de férias/licença o programa conta o dia abonado como horas normais e o Secullum não conta
+    hora nenhuma (3 colaboradores afastados; sem eles a diferença é de ~4h);
+  - **atrasos** 26h05 × 48h55: a CCT padrão usa a tolerância do art. 58 (5 min por marcação, 10 no dia) e
+    "Compensar atraso com HE"; o RH confere na CCT se quer a regra do Secullum.
+- Documentação: `docs/implantacao.md` (3A — implantação pelo Secullum), `docs/manual_rh.md` (Importação do
+  Secullum), `docs/manual_teste_windows.md` (Parte 9 — roteiro de aceite), `docs/secullum_api.md` (uso na importação
+  e achados do banco real), `AGENTS.md` (regras da importação), PRD (3.8A, IS-08).
+- **Etapa 16 (Pendências do Secullum)** adiada (DI-9): a sincronização diária completa é rápida o bastante.
+- **Pendências para o RH no site de operação:** cadastrar os feriados municipais (Vitória, Vila Velha, Serra, São
+  José dos Pinhais) e o estadual do PR e gerar os feriados; marcar os cargos horistas e o banco por cargo; completar a
+  CCT padrão (noturno, banco, DSR, tolerâncias); definir os chefes; importar a planilha de salários; corrigir no
+  Secullum 110 nascimentos ausentes e 4 PIS inválidos; ligar a sincronização diária; tratar as inconsistências de
+  setembro/outubro (intervalo, atraso, faltas, marcações ímpares).
+- Testes ao fim do PRD de importação: 958 pytest (engine 99%), 330 Frappe OK; ruff limpo; frontend lint/build OK.
+
+## Migração para Frappe/ERPNext/HRMS v16 (decisão de 20/10/2026)
+
+- **Por que v15 até agora:** o PRD (Seção 3.1) dizia "v15 (ou v16, se já estável no ambiente)"; na Etapa 0 ficou o
+  v15 por ser o alvo principal. Não havia motivo técnico. Hoje o v16 é estável (Frappe 16.52, ERPNext 16.51, HRMS
+  16.51) e o Ricardo pediu a atualização ("se não tiver motivo, atualize para a versão 16"), também para usar o
+  swift_theme, que só roda no v16.
+- **Requisitos do v16:** Python 3.14, Node 24 (a imagem `frappe/bench` já traz os dois); MariaDB 10.6 continua servindo.
+- **Como:** bench novo em `/workspace/frappe-bench-16` (o v15 fica em `/workspace/frappe-bench` como volta de
+  segurança até a validação); o site de operação vai por backup do v15 → restore no v16 → `bench migrate` (caminho
+  oficial de atualização, preserva a importação do Secullum e as credenciais); o site de testes é recriado.
+- **Suspenso:** a implementação do `docs/PRD-areas-modernas.md` parou na etapa 4 (tema do Desk), a pedido, para
+  instalar o swift_theme depois da migração.
+- **Feito (20/10/2026):** bench v16 montado (`docker/setup.sh` com `VERSAO=version-16`, Python 3.14, Node 24): Frappe
+  16.52.0, ERPNext 16.51.1, HRMS 16.51.0. Site de operação restaurado do backup do v15 (com a `encryption_key` do
+  v15, para a senha do Secullum abrir) e migrado: 156 colaboradores, 4.294 apurações, 8.324 batidas, 1.524 dias de
+  cartão, conexão com o Secullum funcionando. Site de testes recriado (`docker/site_testes.sh`).
+- **Ajustes do v16 no código:** agregados do painel (`apuracao/painel.py`) e da conferência de totais
+  (`ingestion/divergencia_totais.py`) no formato de dicionário (`TOTAL`, `_distintos`); conta "Payroll Payable" com
+  tipo "Payable" (`planilha_salarios._garantir_conta_da_folha`, também usado no teste do Payroll Entry); códigos da
+  folha preenchidos de novo ao concluir a instalação (`concluir_instalacao` e `site_testes.sh`), porque no v16 as
+  fixtures entram depois do `after_install`. Scripts: `utils/site_testes.py` (preparação do HRMS com
+  `frappe.in_test`, pelo console), política de senha desligada só no site de testes, app `payments` só no site de
+  testes. CI em Python 3.14 (e 3.12 para o engine) e Node 24.
+- **swift_theme 3.0.0** (version-16, commit 29673e2, revisado: endpoints só gravam preferências do próprio usuário,
+  sem chamadas externas além de três fontes opcionais do Google Fonts) instalado no site de operação; o tema próprio
+  do Desk foi desligado.
+- **Testes no v16:** 333 Frappe OK (1 pulado), 958 pytest (engine 99%), ruff limpo, `yarn lint` e `yarn build` (Node 24) OK.
+- **Pendências:** apagar o bench v15 (`/workspace/frappe-bench`) quando o Ricardo validar o v16; decidir as fontes do
+  Google no swift_theme; retomar o PRD das áreas na etapa 6.
+- **Depois da migração (20/10/2026):** a restauração deixa o agendador do site desligado — a coleta automática não
+  rodava; religado com `bench --site ponto.localhost enable-scheduler` (registrado no manual de teste). Tema padrão do
+  swift_theme (preset "Iron Man", rosa) trocado por cores próprias iguais às do painel (`localizacao.aplicar_tema`,
+  comando `t tema`, chamado no `concluir_instalacao`; o `t zerar` instala o swift_theme), com a fonte do sistema (sem
+  Google Fonts). Ícone **Ponto e RH** na tela inicial do v16 (`add_to_apps_screen`, `localizacao.pode_ver_app`,
+  `public/images/ponto-logo.svg`). Manual de teste atualizado para o v16.
+
+## Traduções pt-BR (20/10/2026)
+
+- **Causa do inglês na tela:** no v16 as traduções pt-BR dos apps de base estão incompletas — HRMS 100% sem tradução
+  (2.172 textos), ERPNext 74% sem tradução, Frappe 14%. Por isso Colaborador, Licença, Holerite, Estrutura salarial,
+  Empresa etc. apareciam em inglês mesmo com o sistema em português.
+- **Correção:** o CSV do app (`translations/pt-BR.csv`, carregado depois dos outros apps e com prioridade) passou de
+  190 para 1.543 traduções: todo o HRMS usado nas cinco áreas (licenças, folha, colaborador, aprovações, relatórios,
+  avisos), as telas de pessoas/empresa do ERPNext, a interface do Frappe que faltava, os nomes acentuados dos
+  DocTypes do app e os textos do swift_theme. Termos: Leave Application = Licença, Leave Allocation = Concessão de
+  licença, Salary Slip = Holerite, Earnings/Deductions = Proventos/Descontos, Additional Salary = Lançamento
+  adicional, Salary Structure Assignment = Atribuição de salário, Payroll Entry = Processamento da folha.
+- Ficaram de fora, de propósito: módulos escondidos do HRMS (recrutamento, avaliação de desempenho, despesas,
+  viagens, turnos, empréstimos, imposto de renda indiano) e códigos (A+, IBAN, séries HR-EMP-).
+- Auditoria dos campos das telas das cinco áreas: de 428 rótulos em inglês para 62, todos já em português (nomes do
+  app), códigos ou campos do imposto indiano (escondidos).
+- Teste novo `engine/tests/test_traducoes.py` (linhas válidas, sem repetição, marcadores `{0}` preservados — pegou
+  um deslocamento de linhas na revisão — e termos principais). 961 pytest OK.
+
+## PRD do cartão ponto (docs/PRD-cartao-ponto.md, 22/10/2026)
+
+- **Decisões:** DC-1 confirmada com o envio ao Secullum (trava na Configuração Secullum, pergunta no Salvar); DC-2 a
+  DC-7 confirmadas como propostas no "implementar".
+- **Etapa 1 — Jornada fragmentada por cargo (CP-06):** campo `jornada_fragmentada` em Regra CCT Parametro Cargo;
+  `cargo.jornada_fragmentada`; o adaptador liga `permite_intervalo_estendido` quando perfil OU cargo permitem; a
+  importação cria a linha do cargo dos horistas na CCT importada (sem mexer na linha que o RH já tem; aviso no log e na
+  revisão); `cargo.permitir_jornada_fragmentada` (RH) liga nas CCTs vigentes do cargo e reapura os dias com
+  `intervalo_superior_2h` aberto; botões na central, no cartão e na revisão da importação. Banco real: 9 abertas
+  (PROFESSOR REGENTE 5, PROFESSOR(A) DE MÚSICA 2 — horista —, INSTRUTOR 1, PROFESSOR(A) ASSISTENTE 1); não alterei
+  nada lá: a próxima sincronização liga só o cargo horista; os de horário fixo são decisão do RH ("Permitir para este
+  cargo").
+- **Etapa 2 — Engine:** `engine/cartao_edicao.py` (grade editada → incluir / desconsiderar / desfazer inclusão /
+  abonar / tirar abono; resumo do Salvar) e `engine/sugestoes.py` (explicação e sugestões para todos os tipos do
+  Select; teste de cobertura). 100% e 99% de cobertura.
+- **Etapas 3 e 4 — API:** `apuracao/cartao_ponto.py` com `painel.cartao` (mês numa chamada, modo lote; 0,05 s com
+  dados reais) e `acoes.salvar_cartao` (simular=1 para o resumo; um savepoint por dia; flag `cartao_ponto_lote` faz o
+  Tratamento não reapurar sozinho; reapura cada dia uma vez). Gestor cria pendentes; período fechado e horário
+  inválido viram erro só do dia.
+- **Etapa 5 — Envio ao Secullum (CP-10):** contrato das rotas `CartaoPonto/*` conferido no Swagger e no manual
+  (págs. 45-52) e registrado em `docs/secullum_api.md`. Trava `envio_correcoes` (Bloqueado / Perguntar ao salvar /
+  Sempre enviar; padrão Bloqueado). DocType `Envio Cartao Secullum` (um por dia, fila `short`, situação, operações,
+  resposta, tentativas); `integrations/secullum/edicao_cartao.py` calcula as operações por coluna para o Secullum
+  ficar igual ao programa (reenviar é seguro); `SecullumClient.editar_cartao` e `listar_cartao(cpf=)`; mock aplica as
+  operações e devolve a batida manual na FonteDados (Origem 8). Tratamento ganha `justificativa`, `enviar_secullum`
+  e `envio_secullum`; o do gestor só sai no submit. Erro → inconsistência `envio_cartao_secullum` com Reenviar. A
+  batida que volta no mesmo minuto da inclusão conta uma vez (`adaptador.marcacoes` e a grade).
+- **Etapas 6 a 8 — Tela:** `/ponto/cartao/<colaborador>` (`CartaoPonto.vue`, `DialogoSalvarCartao.vue`,
+  `PainelDoDia.vue`, `utils/cartao.js`): grade editável, colunas dinâmicas, teclado, alterações marcadas até o Salvar,
+  resumo do servidor, motivos prontos (o último lembrado), caixa do envio conforme a trava, painel "o que está
+  errado" com sugestões; "Abrir no cartão ponto" (e tecla C) na central; botão "Abrir cartão ponto" no Desk
+  (Inconsistência, Apuração Diária, Colaborador); link no Colaborador.
+- **Etapas 9 e 10:** seleção de dias com Shift e "Abonar os dias"; "Alterações do período" (quem, quando, motivo,
+  aprovação, envio).
+- **Etapa 11:** `fechamento.pendencias_guiadas` + botão "O que impede fechar" com "Abrir no cartão" por colaborador.
+- **Etapa 12:** tabela "Lançamentos manuais" no Fechamento de Ponto (`Fechamento Ponto Ajuste Manual`), valor por
+  `engine/valoracao.valor_manual`, somado à rubrica do ponto (o HRMS não aceita dois Additional Salary da mesma
+  rubrica na mesma data), validação de colaborador e valor.
+- **Etapas 13 e 14:** e2e `frontend/tests/e2e/cartao.spec.js` (leitura, central → cartão, sugestão, editar e salvar,
+  horário inválido, axe nos dois modos); manuais do RH, do gestor e de teste (7.11 e 7.11A); regras no AGENTS.md.
+  O Chromium do container tinha sumido na recriação do v16: reinstalado e agora no `docker/setup.sh`. O Playwright
+  1.47 travava no Node 24 (nem o `--list` respondia: os testes de navegador estavam parados desde a migração):
+  atualizado para 1.56.1 (`frontend/package.json`, só desenvolvimento). Teste de foco ajustado ao item novo do menu.
+  Suíte de navegador: 50 testes verdes (7 do cartão).
+- **Testes ao fim do PRD:** 357 Frappe OK (1 pulado, 24 min), 1.007 pytest (engine 99%), ruff limpo, `yarn lint`,
+  `yarn build` e 50 testes de navegador OK.
+- **Fora / pendente:** "Folga" e "Observação" no menu do dia não existem como tratamento (só abono); "Abonar
+  período" (horas parciais) idem — ficam para uma decisão do RH. Primeiro envio real ao Secullum com o RH num
+  colaborador de teste (confirmar se o abono deve ir em todos os grupos ou só no 1º).
+
+## Tela única do cargo (docs/PRD-cargo.md, 22/10/2026)
+
+- Pedido: configurar num lugar só "instrutor, recebe por hora, valor de X, todos os parâmetros do cargo". Decisões:
+  um valor para todos do cargo; mudar o tipo no cargo muda todos os ativos.
+- Campos novos no Cargo (Designation, fixtures): tipo de remuneração, valor e data, adicional noturno, banco padrão,
+  jornada fragmentada, piso (tipo, valor, carga) e o resumo "Colaboradores e CCTs do cargo". Ao salvar
+  (`cargo_padrao.on_update_designation`): tipo → todos os ativos (cópia horista do horário); valor → Atribuição de
+  salário de cada ativo com salário diferente na data (reaproveita `planilha_salarios._gravar`); parâmetros → linha
+  do cargo nas CCTs vigentes (CCT usada em período fechado não muda e vira aviso). CCT nova nasce com as linhas
+  (`preencher_cct_nova`). Admissão ou troca de cargo recebe tipo e valor. `copiar_das_ccts` (after_migrate) faz o
+  cargo herdar o que já estava nas CCTs (ex.: jornada fragmentada dos horistas), sem sobrescrever.
+- Corrigido junto: "Tipo de remuneração por cargo" da revisão contava (e salvava) todos os colaboradores, mesmo sem
+  mudança (`has_value_changed` sem documento anterior devolve verdadeiro).
+- Testes: `configuracao_ponto/test_cargo_padrao.py` (7) e regressão de parâmetros por cargo, CCT, importação,
+  revisão, planilha de salários e origem Secullum: OK.
+- Pendência: o papel RH Ponto não edita o Designation (o ERPNext dá a escrita só a HR User/HR Manager). Para o RH
+  editar, dar a ele também o papel HR User (não mudei permissões padrão).
+- **Preenchimento no site de operação (22/10/2026):** tipo de remuneração dos 11 cargos com ativos (o do horário do
+  Secullum, igual em cada cargo) e jornada fragmentada nos 3 cargos horistas (INSTRUTOR DE GINASTICA, PROFESSOR(A) DE
+  MÚSICA, PROFESSOR DE EDUCAÇÃO FISICA; 16 dias reapurados). A pedido, **INSTRUTOR passou a Horista** (26 ativos, cópia
+  horista do horário). Valor, piso, noturno e banco ficam para o Ricardo informar (nenhum salário lançado ainda).
+- **Corrigido:** trocar o tipo (no cargo ou em "Tipo de remuneração por cargo") não reapurava os dias já apurados;
+  agora vão para a fila (`cargo_padrao.reapurar_colaborador`). Instrutores: 1.310 dias reapurados em 24 s; atrasos
+  259 → 0 e HE acima do limite 48 → 22 (regras de horista).

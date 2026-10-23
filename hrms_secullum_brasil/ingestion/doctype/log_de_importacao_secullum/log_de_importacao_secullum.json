@@ -1,0 +1,112 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-19 20:00:00.000000",
+ "description": "Uma linha por registro de cada importação do Secullum (docs/PRD-importacao-secullum.md, IS-06).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "execucao",
+  "passo",
+  "resultado",
+  "chave",
+  "column_break_1",
+  "referencia_doctype",
+  "referencia_name",
+  "section_break_1",
+  "mensagem"
+ ],
+ "fields": [
+  {
+   "fieldname": "execucao",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Execução",
+   "read_only": 1
+  },
+  {
+   "fieldname": "passo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Passo",
+   "options": "Empresas\nMotivos de demissão\nJustificativas\nFunções\nDepartamentos\nHorários\nCCT padrão\nFeriados\nFuncionários\nEstruturas\nAfastamentos\nEquipamentos\nBatidas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Resultado",
+   "options": "Criado\nAtualizado\nSem mudança\nIgnorado\nAviso\nErro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "chave",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Chave no Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "referencia_doctype",
+   "fieldtype": "Link",
+   "label": "Tipo de documento",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "referencia_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Documento",
+   "options": "referencia_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "mensagem",
+   "fieldtype": "Small Text",
+   "label": "Mensagem",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-10-19 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Log de Importacao Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "chave"
+}

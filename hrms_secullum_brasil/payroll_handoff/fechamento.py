@@ -26,7 +26,13 @@ from hrms_secullum_brasil.configuracao_ponto.regras import (
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.dsr import contar_dias
 from hrms_secullum_brasil.engine.feriados import fim_do_prazo_da_folga
-from hrms_secullum_brasil.engine.valoracao import BaseValoracao, LancamentoValorado, MinutosPeriodo, valorar
+from hrms_secullum_brasil.engine.valoracao import (
+	BaseValoracao,
+	LancamentoValorado,
+	MinutosPeriodo,
+	valor_manual,
+	valorar,
+)
 from hrms_secullum_brasil.estagio.tce import get_tce_vigente
 from hrms_secullum_brasil.payroll_handoff.vale_transporte import percentual_desconto, vt_do_mes
 
@@ -127,6 +133,49 @@ def pendencias(company: str, inicio, fim) -> list[str]:
 	if sem_salario:
 		mensagens.append(_("Sem Salary Structure Assignment vigente: {0}").format(", ".join(sem_salario)))
 	return mensagens
+
+
+@frappe.whitelist()
+def pendencias_guiadas(company: str, periodo_inicio, periodo_fim) -> dict:
+	"""Fechamento guiado (docs/PRD-cartao-ponto.md, CP-08): inconsistências altas abertas agrupadas por colaborador,
+	com o primeiro dia de cada um para abrir o cartão ponto já no problema."""
+	frappe.has_permission("Fechamento de Ponto", "read", throw=True)
+	inicio, fim = getdate(periodo_inicio), getdate(periodo_fim)
+	colaboradores = colaboradores_do_periodo(company, inicio, fim)
+	por_colaborador: dict[str, dict] = {}
+	for i in frappe.get_all(
+		"Inconsistencia de Ponto",
+		filters={"company": company, "status": "Aberta", "severidade": "Alta"},
+		or_filters=[["data", "between", [inicio, fim]], ["data", "is", "not set"]],
+		fields=["name", "employee", "employee_name", "tipo", "data"],
+		order_by="employee_name asc, data asc",
+	):
+		item = por_colaborador.setdefault(
+			i.employee, {"employee": i.employee, "employee_name": i.employee_name, "dias": [], "tipos": {}}
+		)
+		if i.data:
+			item["dias"].append(str(i.data))
+		item["tipos"][i.tipo] = item["tipos"].get(i.tipo, 0) + 1
+	itens = []
+	for item in por_colaborador.values():
+		dias = sorted(set(item["dias"]))
+		itens.append(
+			{
+				"employee": item["employee"],
+				"employee_name": item["employee_name"],
+				"problemas": sum(item["tipos"].values()),
+				"tipos": item["tipos"],
+				"primeiro_dia": dias[0] if dias else None,
+				"dias": len(dias),
+			}
+		)
+	return {
+		"total": len(colaboradores),
+		"pendentes": len(itens),
+		"prontos": len([e for e in colaboradores if e not in por_colaborador]),
+		"competencia": f"{inicio.year}-{inicio.month:02d}",
+		"colaboradores": itens,
+	}
 
 
 def feriados_aguardando_folga(colaboradores: list[str], inicio, fim) -> list[str]:
@@ -270,7 +319,7 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 
 	horista = tipo in HORISTAS
 	horas_normais = sum(cint(a.normais) for a in docs) if horista else 0
-	he_semanal = sum(cint(s.he_semanal_minutos) for s in dsr) if horista else 0
+	he_semanal = sum(cint(s.he_semanal_minutos) for s in dsr)
 	complemento = 0
 	dsr_mensal = horista and cct and cct.get("dsr_horista_modo") == d.DSR_HORISTA_MENSAL
 	if horista:
@@ -279,6 +328,9 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		if he_semanal:
 			he_pagas[_percentual_he_util(cct)] += he_semanal
 		complemento = _complemento_minimo(emp, docs, dsr, horas_normais)
+	elif he_semanal:
+		# dia neutro (rodízio): acima de 44h na semana é HE da faixa de dia útil
+		he_pagas[_percentual_he_util(cct)] += he_semanal
 	descanso_dsr = descanso
 	if dsr_mensal and cint(cct.get("falta_horista_desconta_dsr")):
 		descanso_dsr -= sum(cint(s.dias_descanso) for s in dsr if cint(s.faltas_injustificadas))
@@ -378,6 +430,64 @@ def componente(codigo: str) -> str:
 	return nome
 
 
+def ajustes_manuais(doc, employee: str, base: BaseValoracao) -> list[LancamentoValorado]:
+	"""CP-11 (docs/PRD-cartao-ponto.md): lançamentos manuais do fechamento, valorados pelo engine."""
+	saida = []
+	for ajuste in doc.get("ajustes_manuais") or []:
+		if ajuste.employee != employee:
+			continue
+		codigo = frappe.get_cached_value("Salary Component", ajuste.salary_component, "salary_component_abbr")
+		lanc = valor_manual(
+			base, codigo, cint(ajuste.minutos), Decimal(str(flt(ajuste.valor))) if flt(ajuste.valor) else None
+		)
+		saida.append(
+			LancamentoValorado(
+				codigo,
+				lanc.minutos_base,
+				lanc.valor,
+				f"Lançamento manual ({lanc.descricao}): {ajuste.motivo}",
+			)
+		)
+	return saida
+
+
+def somar_por_rubrica(lancamentos: list[LancamentoValorado]) -> list[LancamentoValorado]:
+	"""Uma linha por rubrica: o HRMS não aceita dois Additional Salary da mesma rubrica na mesma data (o manual soma
+	no que o ponto já gerou)."""
+	por_codigo: dict[str, LancamentoValorado] = {}
+	for lanc in lancamentos:
+		atual = por_codigo.get(lanc.codigo)
+		por_codigo[lanc.codigo] = (
+			LancamentoValorado(
+				lanc.codigo,
+				atual.minutos_base + lanc.minutos_base,
+				atual.valor + lanc.valor,
+				f"{atual.descricao}; {lanc.descricao}",
+			)
+			if atual
+			else lanc
+		)
+	return list(por_codigo.values())
+
+
+def validar_ajustes_manuais(doc) -> None:
+	colaboradores = set(colaboradores_do_periodo(doc.company, doc.periodo_inicio, doc.periodo_fim))
+	erros = []
+	for ajuste in doc.get("ajustes_manuais") or []:
+		if not cint(ajuste.minutos) and not flt(ajuste.valor):
+			erros.append(
+				_("Linha {0} dos lançamentos manuais: informe os minutos ou o valor.").format(ajuste.idx)
+			)
+		if ajuste.employee not in colaboradores:
+			erros.append(
+				_(
+					"Linha {0} dos lançamentos manuais: {1} não está no fechamento desta empresa e período."
+				).format(ajuste.idx, ajuste.employee_name or ajuste.employee)
+			)
+	if erros:
+		frappe.throw(erros, title=_("Lançamentos manuais"), as_list=True)
+
+
 def calcular(doc) -> None:
 	"""Preenche colaboradores e lançamentos do Fechamento de Ponto (sem gravar nada fora dele)."""
 	inicio, fim = getdate(doc.periodo_inicio), getdate(doc.periodo_fim)
@@ -406,6 +516,7 @@ def calcular(doc) -> None:
 		lancamentos: list[LancamentoValorado] = valorar(
 			base, minutos, premios=premios, coparticipacao=coparticipacao
 		)
+		lancamentos = somar_por_rubrica(lancamentos + ajustes_manuais(doc, employee, base))  # CP-11
 		proventos = descontos = Decimal("0")
 		for lanc in lancamentos:
 			nome_componente = componente(lanc.codigo)

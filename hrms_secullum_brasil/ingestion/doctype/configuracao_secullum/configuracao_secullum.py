@@ -14,9 +14,12 @@ CAMPOS_OBRIGATORIOS_ATIVO = {
 }
 
 
-def normalizar_id_banco(valor: str | None) -> str:
-	"""GUID do banco no formato aceito pelo header secullumidbancoselecionado: 32 hex, sem hífens."""
-	return re.sub(r"[\s{}-]", "", valor or "").lower()
+def normalizar_id_banco(valor) -> str:
+	"""Id numérico do banco (campo "id" do ListarBancos), o valor que o header secullumidbancoselecionado aceita.
+
+	Conferido com o Secullum real em 19/10/2026: o GUID ("identificador"), com ou sem hífens, dá HTTP 401.
+	"""
+	return re.sub(r"\s", "", str(valor or ""))
 
 
 class ConfiguracaoSecullum(Document):
@@ -24,8 +27,8 @@ class ConfiguracaoSecullum(Document):
 		self.id_banco = normalizar_id_banco(self.id_banco)
 		erros = []
 
-		if self.id_banco and not re.fullmatch(r"[0-9a-f]{32}", self.id_banco):
-			erros.append(_("Identificador do banco deve ser um GUID (32 caracteres hexadecimais)."))
+		if self.id_banco and not self.id_banco.isdigit():
+			erros.append(_('Informe o número do banco (o "id" mostrado no Testar conexão), não o GUID.'))
 		for campo in ("url_auth", "url_api"):
 			if self.get(campo) and not self.get(campo).startswith("https://"):
 				erros.append(
@@ -67,4 +70,4 @@ def testar_conexao() -> list[dict]:
 		bancos = get_client().listar_bancos()
 	except SecullumError as exc:
 		frappe.throw(_("Falha na conexão com o Secullum: {0}").format(exc), title=_("Secullum"))
-	return [{"nome": b.get("nome"), "identificador": b.get("identificador")} for b in bancos]
+	return [{"nome": b.get("nome"), "id_banco": b.get("id_banco")} for b in bancos]

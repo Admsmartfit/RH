@@ -14,6 +14,7 @@ from frappe.utils import cint, getdate, now_datetime, today
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
 from hrms_secullum_brasil.configuracao_ponto.regras import get_perfil_vigente
 from hrms_secullum_brasil.ingestion.secullum import (
+	envio_ligado,
 	get_client,
 	id_banco_da_empresa,
 	integracao_ativa,
@@ -65,7 +66,7 @@ def payload_do_colaborador(emp) -> dict:
 def on_update_employee(doc, method=None):
 	if frappe.flags.in_install or frappe.flags.in_migrate or frappe.flags.in_patch:
 		return
-	if not integracao_ativa():
+	if not envio_ligado():  # origem Secullum: nada é enviado (IS-02)
 		return
 	if hash_payload(payload_do_colaborador(doc)) == doc.get("secullum_hash"):
 		return
@@ -128,6 +129,8 @@ def _garantir_auxiliar(client, id_banco: str, tipo: str, descricao: str) -> None
 
 def sincronizar_colaborador(employee: str) -> bool:
 	"""Envia o colaborador ao Secullum. Erros viram Inconsistencia de Ponto; nunca levanta exceção."""
+	if not envio_ligado():  # job enfileirado antes de a origem mudar para Secullum
+		return False
 	emp = frappe.get_doc("Employee", employee)
 	payload = payload_do_colaborador(emp)
 
@@ -194,6 +197,8 @@ def enfileirar_todos() -> int:
 	frappe.only_for(("System Manager", "RH Ponto"))
 	if not integracao_ativa():
 		frappe.throw(_("Ative a integração na Configuracao Secullum antes de enviar os colaboradores."))
+	if not envio_ligado():
+		frappe.throw(_("A origem dos cadastros é o Secullum: os colaboradores vêm de lá e não são enviados."))
 	nomes = frappe.get_all("Employee", filters={"status": "Active", "cpf": ["is", "set"]}, pluck="name")
 	for nome in nomes:
 		enfileirar(nome)
@@ -207,9 +212,9 @@ def reconciliar_cadastros() -> int:
 	"""Job diário: compara Secullum x Frappe por banco e grava o retrato em Divergencia Cadastro Secullum.
 
 	Não altera nada no Secullum nem no Frappe (PRD, 6.2). Cada execução substitui as divergências
-	anteriores do mesmo banco.
+	anteriores do mesmo banco. Com origem Secullum não roda: a importação diária mantém o programa igual a ele.
 	"""
-	if not integracao_ativa():
+	if not envio_ligado():
 		return 0
 
 	execucao = now_datetime()

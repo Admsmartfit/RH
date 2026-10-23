@@ -84,7 +84,7 @@ def comparar_totais(company: str, periodo_inicio, periodo_fim) -> int:
 		somas = frappe.db.get_value(
 			"Apuracao Diaria",
 			{"employee": employee, "data": ["between", [inicio, fim]]},
-			[f"sum({campo})" for campo in CAMPO_APURACAO.values()],
+			[{"SUM": campo, "as": campo} for campo in CAMPO_APURACAO.values()],
 		)
 		frappe_minutos = dict(zip(CAMPO_APURACAO, (cint(v) for v in somas), strict=True))
 		for categoria in CATEGORIAS:

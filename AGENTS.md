@@ -14,8 +14,18 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 
 ## Versão alvo
 
-- **Frappe Framework v15 + ERPNext v15 + HRMS v15** (branch `version-15`), Python ≥ 3.10 (CI usa 3.11).
-- Fixada em `pyproject.toml` (`[tool.bench.frappe-dependencies]`). Mudar para v16 exige decisão registrada em `docs/PROGRESS.md`.
+- **Frappe Framework v16 + ERPNext v16 + HRMS v16** (branch `version-16`) desde 20/10/2026, Python 3.14 e Node 24
+  (CI: Python 3.14 e 3.12 para o engine puro; Node 24 para o frontend). Decisão e motivo em `docs/PROGRESS.md`.
+- Fixada em `pyproject.toml` (`[tool.bench.frappe-dependencies]`). Mudar de versão exige decisão registrada em
+  `docs/PROGRESS.md`.
+- Bench de desenvolvimento em `/workspace/frappe-bench-16` (o v15 antigo, em `/workspace/frappe-bench`, só como volta
+  de segurança). O app **payments** fica instalado **só no site de testes** (o ERPNext v16 depende dele para montar os
+  registros de teste). O visual do Desk é o app **swift_theme** (só no site de operação).
+- **Diferenças do v16 que já pegaram o projeto:** funções SQL em `fields` de `get_all`/`get_list`/`get_value` só no
+  formato de dicionário (`{"COUNT": "*", "as": "total"}`, `{"SUM": "campo", "as": "campo"}`; não há COUNT DISTINCT:
+  busque os distintos com `distinct=True` e conte); a conta "Payroll Payable" precisa do tipo "Payable"; o aviso de
+  teste é `frappe.in_test` (não só `frappe.flags.in_test`), e o `bench execute` não deixa ligá-lo — preparações de
+  teste do HRMS rodam pelo `bench console` (`utils/site_testes.py`); a política de senha vem ligada.
 
 ## Estrutura (PRD, Seção 3.2)
 
@@ -28,6 +38,7 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 | 5 | `hrms_secullum_brasil/payroll_handoff/` | Módulo Frappe `Payroll Handoff` |
 | 6 | `hrms_secullum_brasil/reports/` | Módulo Frappe `Reports` |
 | — | `hrms_secullum_brasil/configuracao_ponto/` | Módulo Frappe `Configuracao Ponto`: regras com vigência (CCT, Perfil de Jornada) e hooks de Employee |
+| — | `frontend/` | App Vue 3 + frappe-ui do painel `/ponto` (só tela; build em `public/frontend` e `www/ponto.html`) |
 
 - `integrations` **não** é módulo Frappe: o nome de Module Def `Integrations` já existe no core do Frappe. DocTypes da integração (`Configuracao Secullum`, `Secullum Sync Log`) ficam no módulo `Ingestion`; o código do cliente fica em `integrations/secullum/`.
 - Novos módulos Frappe: adicionar em `modules.txt` e criar a pasta com o nome "scrubbed" (minúsculas, `_`).
@@ -44,8 +55,8 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Marcação original (`Secullum Checkin Raw`) é imutável:** nunca use `doc.save()`/`delete_doc` nela. Só `ingestion/coleta_batidas.py` muda os campos de controle (status, substituição, espelho) via `frappe.db.set_value`. Correções do RH vão para Tratamento de Ponto (Etapa 5).
 - **Período fechado:** consulte `apuracao/periodos.py` (`periodo_fechado`, `fechado_ate`) antes de alterar qualquer dado de ponto de um dia.
 - **Mudou o dado de um dia → `apuracao/reapuracao.py:marcar_para_reapuracao`.**
-- **Campos `Time`:** o Frappe v15 grava a hora atual em todo campo Time vazio de documento novo criado no servidor (inclusive sobre o `default`). Todo DocType com campo Time deve chamar `configuracao_ponto/horarios.py:descartar_hora_automatica` no `before_validate`.
-- **Testes Frappe:** rode no ambiente `docker/` (`bench --site ponto.localhost run-tests --app hrms_secullum_brasil`). Em testes que fazem `patch` de `frappe.enqueue`, filtre as chamadas pelo método do app (o Frappe também enfileira).
+- **Campos `Time`:** o Frappe (v15 e v16) grava a hora atual em todo campo Time vazio de documento novo criado no servidor (inclusive sobre o `default`). Todo DocType com campo Time deve chamar `configuracao_ponto/horarios.py:descartar_hora_automatica` no `before_validate`.
+- **Testes Frappe:** rode no ambiente `docker/` (`cd /workspace/frappe-bench-16 && bench --site testes.localhost run-tests --app hrms_secullum_brasil`). Em testes que fazem `patch` de `frappe.enqueue`, filtre as chamadas pelo método do app (o Frappe também enfileira).
 - **Motor de apuração:** entrada única `engine.models.EntradaDia` → `engine.apuracao_dia.apurar_dia` → `ResultadoDia`. Regras da CCT chegam em `RegraApuracao`; nunca leia DocType dentro do engine. Todo tipo de inconsistência emitido pelo engine deve existir no Select de Inconsistencia de Ponto (há teste).
 - **Apuração no Frappe:** sempre via `apuracao/servico.py:reapurar_dia` (ou a fila `Reapuracao Pendente`); nunca grave `Apuracao Diaria` direto. Novas fontes de dados entram em `apuracao/adaptador.py:montar_entrada`.
 - **Visibilidade:** DocTypes com campo `employee` usados por gestores/colaboradores devem entrar em `permission_query_conditions` e `has_permission` (`apuracao/permissoes.py`).
@@ -58,8 +69,54 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Jornada do dia:** sempre por `configuracao_ponto/escala.py:dia_da_escala` (Escala Mensal com as trocas, senão o perfil). Troca de Escala nunca é lida na apuração: ao ser aprovada, ela grava na Escala Mensal.
 - **Erros operacionais** (sync, coleta) viram `Inconsistencia de Ponto` via `apuracao/inconsistencias.py`; jobs não devem levantar exceção por erro de negócio.
 
+## Importação do Secullum — docs/PRD-importacao-secullum.md
+
+- **Origem dos cadastros = Secullum** (`Configuracao Secullum.origem_cadastros`, vazio vale Secullum): nada é enviado ao Secullum (`ingestion/secullum.py:envio_ligado`) e os campos de `CAMPOS_DO_SECULLUM` ficam somente leitura no Employee; só a importação (`frappe.flags.importacao_secullum`) os grava.
+- **Mapeamento puro** (Secullum → valores do programa) fica em `integrations/secullum/importacao.py` (pytest, sem frappe); a gravação em `ingestion/importacao_secullum.py` (`ImportacaoSecullum`, um método `_passo_<nome>` por passo de `PASSOS`).
+- **Toda importação é idempotente e tem log:** upsert pela chave do Secullum (Id do vínculo, CNPJ, número do horário...), só grava o que mudou, um savepoint por registro (erro desfaz só ele) e uma linha no `Log de Importacao Secullum` por registro; `simular=True` não grava nada.
+- O que o RH ajusta depois de importado (efeito da justificativa, tipo de remuneração, CCT, banco, chefe, cópia `-H` do perfil, histórico de horário) **não é sobrescrito** pela importação seguinte.
+- **Perfil na data:** a troca de horário vai para o Histórico de horário do colaborador (`historico_perfil_jornada`); a apuração usa `regras.perfil_na_data` (via `get_perfil_vigente`), nunca só o `perfil_jornada` do cadastro.
+- **Mudança que afeta dias já apurados** (afastamento, demissão, histórico) → `importacao_secullum.reapurar_dias_apurados` (respeita período fechado; o fechado vira inconsistência). Dia fora do contrato perde a apuração em `servico.reapurar_dia`.
+- **Cartão do Secullum** (`Cartao Secullum Dia`, rota GET Batidas): folga, neutro e justificativas lançadas no Secullum valem na apuração via `engine/cartao.py` em `adaptador.montar_entrada`; é lido junto com as batidas (carga e coleta).
+- Nada de dados reais de pessoas no repositório: amostras só anonimizadas (`integrations/secullum/anonimizar.py`, `fixtures/reais/`); credenciais só no campo Password da Configuracao Secullum.
+
+## Painel de ponto (/ponto) — docs/PRD-frontend.md
+
+- O painel `/ponto` (`frontend/`, Vue 3 + frappe-ui) é só leitura e atalho para ações que já existem (`apuracao/acoes.py`, submit/delete padrão do Frappe). Regra de negócio nunca fica no `frontend/`; números, segmentos da linha do tempo e posições vêm do servidor (`engine/painel.py`).
+- Endpoints do painel ficam em `apuracao/painel.py`, sempre via `frappe.get_list` e filtrados por `employees_visiveis`, sem campos de `permlevel` 1 (nunca CID); PIS/CPF mascarados para quem não é RH Ponto (D-5).
+- Cadastros e regras continuam no Desk; não criar formulário de cadastro no `frontend/`.
+- Novo tipo de inconsistência ou status de apuração entra também no `BadgeStatus` (`frontend/src/components/BadgeStatus.vue`) e nos nomes/grupos da central (`frontend/src/utils/inconsistencias.js`).
+- Antes de concluir mudança no `frontend/`: `yarn lint` e `yarn build` (e, no ambiente `docker/` com o `bench start` ligado, `yarn test:e2e`), além do que este arquivo já pede.
+
+## Cartão ponto editável — docs/PRD-cartao-ponto.md
+
+- **Correção de ponto é sempre Tratamento de Ponto com motivo**; a tela nunca grava Apuracao Diaria nem altera a
+  batida. "O que mudou no cartão → quais tratamentos" fica em `engine/cartao_edicao.py` e a explicação/sugestão por
+  tipo de inconsistência em `engine/sugestoes.py` (todo tipo novo do Select precisa de entrada lá; há teste).
+- O cartão lê por `apuracao/painel.py:cartao` e grava por `apuracao/acoes.py:salvar_cartao` (lógica em
+  `apuracao/cartao_ponto.py`): um savepoint por dia, `frappe.flags.cartao_ponto_lote` para os tratamentos não
+  reapurarem sozinhos e uma reapuração por dia no fim.
+- **Envio ao Secullum** só pela fila de `ingestion/envio_cartao.py` (`Envio Cartao Secullum`) e só com a trava
+  `Configuracao Secullum.envio_correcoes` permitindo; nunca chame `CartaoPonto/*` fora dela. O mapeamento
+  (colunas Entrada1..Saida5) é puro, em `integrations/secullum/edicao_cartao.py`. Falha no envio nunca desfaz a
+  correção do programa (vira a inconsistência `envio_cartao_secullum`). Tratamento do gestor só é enviado no submit.
+- A inclusão do programa e a batida que volta do Secullum no mesmo minuto contam uma vez (`adaptador.marcacoes`).
+- **Jornada fragmentada** (intervalo > 2h permitido) é parâmetro do cargo na CCT (`cargo.jornada_fragmentada`); o
+  adaptador combina perfil OU cargo. Lançamento manual da folha só na tabela do Fechamento de Ponto
+  (`fechamento.ajustes_manuais`, valor por `engine/valoracao.valor_manual`, somado à rubrica do ponto).
+
+## Tela única do cargo — docs/PRD-cargo.md
+
+- O que vale para todos do cargo (tipo de remuneração, valor, piso, noturno, banco padrão, jornada fragmentada) é
+  editado no **Designation** (`configuracao_ponto/cargo_padrao.py`): o tipo vai para todos os ativos, o valor vira
+  Atribuição de salário de cada um e os parâmetros vão para a linha do cargo nas CCTs vigentes. A apuração e a folha
+  continuam lendo a CCT (`cargo.parametro_do_cargo`) e o salário (`fechamento.salario_vigente`).
+- Comparar antes e depois explicitamente: `has_value_changed` num documento carregado com `get_doc` devolve sempre
+  "mudou" antes do save.
+
 ## Convenções de código
 
+- **Traduções:** o HRMS v16 não traz pt-BR e o ERPNext traz pouco; texto em inglês visível nas cinco áreas é traduzido em `translations/pt-BR.csv` (origem, tradução, contexto), preservando os marcadores `{0}`; `engine/tests/test_traducoes.py` valida o arquivo.
 - **Idioma:** interface em pt-BR. Nomes de domínio em português sem acento, como no PRD (`apuracao_dia.py`, `Regra Sindical CCT`, `minutos_atraso`); termos técnicos genéricos em inglês (`client`, `sync`, `retry`, `hash`).
 - **Formatação:** ruff (lint + format), indentação com **tabs** (convenção Frappe), linha de 110.
 - **Testes:**

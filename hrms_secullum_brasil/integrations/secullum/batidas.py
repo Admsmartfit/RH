@@ -83,10 +83,14 @@ def _data_hora_opcional(valor) -> datetime | None:
 
 
 def _rotulo(mapa: dict[int, str], valor) -> str:
+	"""Rótulo do código; código fora do manual (o banco real tem Origem 16, não documentada) vira o primeiro
+	rótulo ("Desconhecido"/"Original"), para não recusar a batida."""
+	if valor in mapa.values():
+		return valor
 	try:
-		return mapa[int(valor)]
-	except (TypeError, ValueError, KeyError):
-		return str(valor) if valor not in (None, "") else mapa[0]
+		return mapa.get(int(valor), mapa[0])
+	except (TypeError, ValueError):
+		return mapa[0]
 
 
 def _texto(valor) -> str | None:

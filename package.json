@@ -1,0 +1,12 @@
+{
+	"private": true,
+	"name": "hrms_secullum_brasil",
+	"description": "Ponto brasileiro (Secullum) para Frappe HRMS: painel /ponto",
+	"license": "MIT",
+	"scripts": {
+		"postinstall": "cd frontend && yarn install --check-files",
+		"dev": "cd frontend && yarn dev",
+		"build": "cd frontend && yarn build",
+		"lint": "cd frontend && yarn lint"
+	}
+}

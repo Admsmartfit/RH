@@ -9,13 +9,21 @@ CATEGORIAS = ("normais", "hora_extra", "falta", "atraso", "noturno_real")
 
 MAPEAMENTO_PADRAO = {
 	"Normais": "normais",
+	# horas abonadas por justificativa: no programa, o dia abonado conta as horas previstas como normais
+	"Ajuste": "normais",
+	"Abono2": "normais",
+	"Abono3": "normais",
+	"Abono4": "normais",
 	"Extras": "hora_extra",
 	"Ex50%": "hora_extra",
 	"Ex70%": "hora_extra",
 	"Ex100%": "hora_extra",
+	"Horas Ad.": "hora_extra",  # banco real (20/10/2026): horários sem faixa lançam as extras aqui
 	"Faltas": "falta",
 	"Atrasos": "atraso",
 	"Atraso": "atraso",
+	"Atras.": "atraso",  # nomes abreviados do banco real; o atraso do programa inclui a saída antecipada
+	"Adian.": "atraso",
 	"Noturno": "noturno_real",
 	"Not.": "noturno_real",
 }

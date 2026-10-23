@@ -1,7 +1,7 @@
 """Escala do Mês (AJ-09): calendário por colaborador para o gerente planejar trocas e ver os domingos de folga.
 
-Cada célula: horário de trabalho (ex.: 08:00-17:48), R (repouso semanal), FC (folga compensada) ou F
-(feriado). Vem da Escala do Mês do colaborador (com as trocas aprovadas) ou, sem ela, do Perfil de Jornada.
+Cada célula: horário de trabalho (ex.: 08:00-17:48), R (repouso semanal), FC (folga compensada), N (neutro:
+rodízio) ou F (feriado). Vem da Escala do Mês do colaborador (com as trocas aprovadas) ou, sem ela, do Perfil de Jornada.
 """
 
 import calendar
@@ -31,6 +31,8 @@ def celula(employee: str, emp, dia: date) -> str:
 	if eh_feriado(lista_de_feriados(emp), dia):
 		return "F"
 	jornada, repouso = dia_da_escala(employee, dia, perfil)
+	if jornada.neutro:
+		return "N"
 	if jornada.folga:
 		return "R" if repouso else "FC"
 	return f"{_hora(jornada.periodos[0].inicio)}-{_hora(jornada.periodos[-1].fim)}"

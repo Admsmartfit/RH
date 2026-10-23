@@ -4,13 +4,14 @@ Marcações = Secullum Checkin Raw ativas (exceto as desconsideradas no Secullum
 Ponto aprovado) + inclusões aprovadas. Tratamentos nunca alteram a raw: só mudam o que entra no cálculo.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 
 import frappe
 from frappe.utils import cint, flt, getdate
 
 from hrms_secullum_brasil.apuracao.lote import ativo, consultar, documento, janela, memo, valor_single
+from hrms_secullum_brasil.configuracao_ponto.cargo import jornada_fragmentada
 from hrms_secullum_brasil.configuracao_ponto.escala import dia_da_escala, horista_escalado, jornada_do_perfil
 from hrms_secullum_brasil.configuracao_ponto.regras import (
 	RegraAmbiguaError,
@@ -18,6 +19,7 @@ from hrms_secullum_brasil.configuracao_ponto.regras import (
 	get_regra_vigente,
 )
 from hrms_secullum_brasil.engine import defaults_legais as d
+from hrms_secullum_brasil.engine.cartao import jornada_com_cartao
 from hrms_secullum_brasil.engine.defaults_legais import FaixaHE
 from hrms_secullum_brasil.engine.descanso_semanal import setimo_dia_seguido
 from hrms_secullum_brasil.engine.estagio import periodos_dia_de_prova
@@ -34,6 +36,9 @@ from hrms_secullum_brasil.estagio.tce import get_tce_vigente
 
 RAW = "Secullum Checkin Raw"
 TRATAMENTO = "Tratamento de Ponto"
+AFASTAMENTO = "Afastamento Secullum"
+CARTAO = "Cartao Secullum Dia"
+EFEITO_FALTA = "Falta"
 INCLUSAO = "Inclusao de marcacao"
 DESCONSIDERAR = "Desconsiderar marcacao"
 ABONO = "Abono do dia"
@@ -228,10 +233,16 @@ def marcacoes(employees: list[str], data: date, hora_virada: int) -> tuple[list[
 			fields=["name", "data_hora"],
 		)
 	removidas = {t.marcacao for t in desconsiderar}
-	resultado = [
-		r.data_hora for r in raws if r.tipo_fonte != "Desconsiderado" and r.name not in removidas
-	] + [frappe.utils.get_datetime(t.data_hora) for t in inclusoes]
-	return sorted(resultado), [t.name for t in desconsiderar] + [t.name for t in inclusoes]
+	originais = [r.data_hora for r in raws if r.tipo_fonte != "Desconsiderado" and r.name not in removidas]
+	# CP-10: a inclusão enviada ao Secullum volta na coleta como batida (Origem IntegracaoExterna) no mesmo minuto;
+	# conta uma vez só
+	minutos = {frappe.utils.get_datetime(m).replace(second=0, microsecond=0) for m in originais}
+	incluidas = [
+		frappe.utils.get_datetime(t.data_hora)
+		for t in inclusoes
+		if frappe.utils.get_datetime(t.data_hora).replace(second=0, microsecond=0) not in minutos
+	]
+	return sorted(originais + incluidas), [t.name for t in desconsiderar] + [t.name for t in inclusoes]
 
 
 def _carregar_abonos(employee: str, periodo) -> dict:
@@ -262,6 +273,16 @@ def _carregar_abonos(employee: str, periodo) -> dict:
 				"to_date": [">=", inicio],
 			},
 			fields=["name", "from_date", "to_date"],
+		),
+		"afastamentos": frappe.get_all(
+			AFASTAMENTO,
+			filters={
+				"employee": employee,
+				"removido_no_secullum": 0,
+				"inicio": ["<=", fim],
+				"fim": [">=", inicio],
+			},
+			fields=["name", "inicio", "fim", "justificativa"],
 		),
 		"compensacoes": frappe.get_all(
 			TRATAMENTO,
@@ -307,6 +328,11 @@ def abonos_do_dia(employee: str, data: date) -> list[str]:
 				for lic in dados["licencas"]
 				if getdate(lic.from_date) <= data <= getdate(lic.to_date)
 			]
+			+ [
+				af.name
+				for af in dados["afastamentos"]
+				if getdate(af.inicio) <= data <= getdate(af.fim) and _afastamento_abona(af.justificativa)
+			]
 		)
 	return [
 		*frappe.get_all(
@@ -335,7 +361,32 @@ def abonos_do_dia(employee: str, data: date) -> list[str]:
 			},
 			pluck="name",
 		),
+		*[
+			af.name
+			for af in frappe.get_all(
+				AFASTAMENTO,
+				filters={
+					"employee": employee,
+					"removido_no_secullum": 0,
+					"inicio": ["<=", data],
+					"fim": [">=", data],
+				},
+				fields=["name", "justificativa"],
+			)
+			if _afastamento_abona(af.justificativa)
+		],
 	]
+
+
+def _afastamento_abona(justificativa: str | None) -> bool:
+	"""Afastamento do Secullum abona o dia, salvo se a justificativa tem o efeito "Falta" (3.8)."""
+	if not justificativa:
+		return True
+	efeito = memo(
+		("efeito_justificativa", justificativa),
+		lambda: frappe.db.get_value("Justificativa Secullum", justificativa, "efeito"),
+	)
+	return efeito != EFEITO_FALTA
 
 
 def vinculos_na_empresa(emp) -> list[str]:
@@ -395,6 +446,7 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		return ctx
 	ctx.perfil = perfil.name
 	jornada, repouso = dia_da_escala(employee, data, perfil)  # AJ-02/AJ-09: escala do mês ou perfil
+	jornada, repouso, abono_cartao = _aplicar_cartao(employee, data, jornada, repouso)
 	if perfil.tipo == "Intermitente" and not cint(
 		valor_single("Configuracao Apuracao", "habilitar_intermitente")
 	):
@@ -415,6 +467,8 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	if cct:
 		ctx.regra_cct = cct.name
 		regra = memo(("regra_apuracao", cct.name), lambda: regra_de_cct(cct))
+		if not jornada.permite_intervalo_estendido and jornada_fragmentada(cct, emp.designation):
+			jornada = replace(jornada, permite_intervalo_estendido=True)  # CP-06: perfil OU cargo
 	else:
 		regra = RegraApuracao()
 		ctx.avisos.append(
@@ -426,7 +480,7 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	hora_virada = cint(perfil.hora_virada_dia)
 	do_dia, tratamentos = marcacoes([employee], data, hora_virada)
 	anteriores, _ = marcacoes(vinculos_na_empresa(emp), data - timedelta(days=1), hora_virada)
-	abonos = abonos_do_dia(employee, data) + folgas_compensatorias(employee, data)
+	abonos = abonos_do_dia(employee, data) + folgas_compensatorias(employee, data) + abono_cartao
 	compensado = compensacoes_do_feriado(employee, data)
 	ctx.tratamentos = tratamentos + abonos + compensado
 	if perfil.tipo == PROFESSOR:
@@ -462,6 +516,58 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		limite_diario_estagio=limite_estagio,
 	)
 	return ctx
+
+
+def cartao_do_dia(employee: str, data: date):
+	"""Cartao Secullum Dia do colaborador no dia (folga/neutro/justificativas lançadas no Secullum) ou None."""
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		dados = memo(
+			("cartao", employee),
+			lambda: {
+				getdate(c.data): c
+				for c in frappe.get_all(
+					CARTAO,
+					filters={"employee": employee, "data": ["between", list(periodo)]},
+					fields=["name", "data", "folga", "neutro", "justificativas"],
+				)
+			},
+		)
+		return dados.get(data)
+	linhas = frappe.get_all(
+		CARTAO,
+		filters={"employee": employee, "data": data},
+		fields=["name", "data", "folga", "neutro", "justificativas"],
+		limit=1,
+	)
+	return linhas[0] if linhas else None
+
+
+def _aplicar_cartao(employee: str, data: date, jornada: JornadaPrevista, repouso):
+	"""O que o RH lançou no cartão do Secullum vale no dia (engine/cartao.py). Devolve (jornada, repouso, abonos)."""
+	cartao = cartao_do_dia(employee, data)
+	if not cartao:
+		return jornada, repouso, []
+	grupos = set()
+	for item in (cartao.justificativas or "").split(","):
+		grupo, _, nome = item.partition(":")
+		if grupo.isdigit() and _justificativa_abona(nome):
+			grupos.add(int(grupo))
+	nova, abonado = jornada_com_cartao(
+		jornada, folga=bool(cint(cartao.folga)), neutro=bool(cint(cartao.neutro)), grupos_abonados=grupos
+	)
+	if cint(cartao.folga) and not jornada.folga:
+		repouso = False  # folga do rodízio lançada no Secullum: folga compensada, não o repouso semanal
+	return nova, repouso, [cartao.name] if abonado else []
+
+
+def _justificativa_abona(nome_abreviado: str) -> bool:
+	"""Justificativa do cartão abona salvo efeito "Falta" (desconhecida no catálogo: abona, como no Secullum)."""
+	efeito = memo(
+		("efeito_por_nome", nome_abreviado),
+		lambda: frappe.db.get_value("Justificativa Secullum", {"nome_abreviado": nome_abreviado}, "efeito"),
+	)
+	return efeito != EFEITO_FALTA
 
 
 def _dia_do_estagiario(employee: str, data: date, jornada: JornadaPrevista):

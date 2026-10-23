@@ -68,7 +68,7 @@
    "label": "Gerar Leave Application ao submeter o atestado"
   },
   {
-   "default": "Atestado Médico",
+   "description": "Na instalação: Atestado Médico (criado pelas fixtures do app).",
    "fieldname": "leave_type_atestado",
    "fieldtype": "Link",
    "label": "Leave Type do atestado",

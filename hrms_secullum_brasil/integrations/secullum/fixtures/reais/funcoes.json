@@ -1,0 +1,87 @@
+[
+ {
+  "Id": 9,
+  "Descricao": "ASSISTENTE COMERCIAL",
+  "Desativado": false
+ },
+ {
+  "Id": 17,
+  "Descricao": "ASSISTENTE COORDENAÇÃO",
+  "Desativado": false
+ },
+ {
+  "Id": 16,
+  "Descricao": "ATENDENTE DE SALA DE AULA",
+  "Desativado": false
+ },
+ {
+  "Id": 8,
+  "Descricao": "AUXILIAR ADMINISTRATIVO",
+  "Desativado": false
+ },
+ {
+  "Id": 1,
+  "Descricao": "AUXILIAR DE SERVIÇOS GERAIS",
+  "Desativado": false
+ },
+ {
+  "Id": 15,
+  "Descricao": "ENCARREGADO DE SECRETARIA",
+  "Desativado": false
+ },
+ {
+  "Id": 2,
+  "Descricao": "INSTRUTOR",
+  "Desativado": false
+ },
+ {
+  "Id": 3,
+  "Descricao": "INSTRUTOR DE GINASTICA",
+  "Desativado": false
+ },
+ {
+  "Id": 12,
+  "Descricao": "PROFESSOR DE EDUCAÇÃO FISICA",
+  "Desativado": false
+ },
+ {
+  "Id": 10,
+  "Descricao": "PROFESSOR REGENTE",
+  "Desativado": false
+ },
+ {
+  "Id": 11,
+  "Descricao": "PROFESSOR(A) ASSISTENTE",
+  "Desativado": false
+ },
+ {
+  "Id": 13,
+  "Descricao": "PROFESSOR(A) DE MÚSICA",
+  "Desativado": false
+ },
+ {
+  "Id": 4,
+  "Descricao": "RECEPCIONISTA",
+  "Desativado": false
+ },
+ {
+  "Id": 14,
+  "Descricao": "RECREADORA",
+  "Desativado": false
+ },
+ {
+  "Id": 5,
+  "Descricao": "VENDEDOR ABERTURA",
+  "Desativado": false
+ },
+ {
+  "Id": 7,
+  "Descricao": "VENDEDOR FECHAMENTO",
+  "Desativado": false
+ },
+ {
+  "Id": 6,
+  "Descricao": "VENDEDOR INTERMEDIARIO",
+  "Desativado": false
+ }
+]

@@ -178,3 +178,18 @@ def test_est09_auxilio_transporte_com_desconto_zero():
 		salario=Decimal("0"), divisor=1, estagio=True, bolsa=Decimal("1200.00"), vt_percentual=0
 	)
 	assert valores(MinutosPeriodo(vale_transporte=Decimal("150.00")), base) == {"VT": Decimal("150.00")}
+
+
+# ------------------------------------------------------------------ CP-11 (PRD do cartão ponto): lançamento manual
+
+
+def test_lancamento_manual_por_minutos_e_por_valor():
+	from hrms_secullum_brasil.engine.valoracao import valor_manual
+
+	base = BaseValoracao(salario=Decimal("2200"), divisor=220)  # R$ 10,00 a hora
+	assert valor_manual(base, "HE50", 60).valor == Decimal("15.00")
+	assert valor_manual(base, "HE100", 30).valor == Decimal("10.00")
+	assert valor_manual(base, "ADN", 60).valor == Decimal("2.00")
+	assert valor_manual(base, "FALTA", 90).valor == Decimal("15.00")
+	informado = valor_manual(base, "HE50", 0, Decimal("123.455"))
+	assert (informado.valor, informado.descricao) == (Decimal("123.46"), "Valor informado")

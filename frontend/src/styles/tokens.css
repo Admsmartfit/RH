@@ -1,0 +1,91 @@
+/*
+ * Tokens do Painel de Ponto (docs/PRD-frontend.md, FE-02 e item 1.2.4).
+ * Cores "de marca" (#0284C7, #059669...) só em fundos, bordas e ícones; em texto, os tons -text, que passam de
+ * 4,5:1 sobre branco (WCAG AA). Modo escuro pelo sistema operacional (prefers-color-scheme).
+ */
+:root {
+	--background: #f8fafc;
+	--surface: #ffffff;
+	--surface-muted: #f1f5f9;
+	--border: #e2e8f0;
+	--text: #0f172a; /* 17,9:1 */
+	--text-muted: #475569; /* 7,6:1 */
+
+	--primary: #0284c7;
+	--primary-text: #0369a1; /* 5,9:1 */
+	--primary-soft: #e0f2fe;
+	--primary-strong: #0369a1; /* botão principal: texto branco 5,9:1 */
+	--on-primary-strong: #ffffff;
+
+	--status-compliant: #059669;
+	--status-compliant-text: #047857; /* 5,5:1 */
+	--status-compliant-soft: #ecfdf5;
+
+	--status-warning: #d97706;
+	--status-warning-text: #b45309; /* 5,0:1 */
+	--status-warning-soft: #fffbeb;
+
+	--status-danger: #dc2626;
+	--status-danger-text: #b91c1c; /* 6,5:1 */
+	--status-danger-soft: #fef2f2;
+
+	--status-neutral: #64748b;
+	--status-neutral-text: #475569;
+	--status-neutral-soft: #f1f5f9;
+
+	--focus: #0369a1;
+
+	/* linha do tempo */
+	--tl-previsto: #e2e8f0;
+	--tl-tolerancia: #bae6fd;
+	--tl-trabalhado: #059669;
+	--tl-extra: #0284c7;
+	--tl-atraso: #d97706;
+	--tl-falta: #dc2626;
+	--tl-intervalo: #cbd5e1;
+	--tl-noturno: #4338ca;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0f172a;
+		--surface: #1e293b;
+		--surface-muted: #273449;
+		--border: #334155;
+		--text: #f1f5f9;
+		--text-muted: #b6c2d3;
+
+		--primary: #38bdf8;
+		--primary-text: #7dd3fc;
+		--primary-soft: #0c4a6e;
+		--primary-strong: #7dd3fc;
+		--on-primary-strong: #0f172a;
+
+		--status-compliant: #34d399;
+		--status-compliant-text: #6ee7b7;
+		--status-compliant-soft: #064e3b;
+
+		--status-warning: #fbbf24;
+		--status-warning-text: #fcd34d;
+		--status-warning-soft: #78350f;
+
+		--status-danger: #f87171;
+		--status-danger-text: #fca5a5;
+		--status-danger-soft: #7f1d1d;
+
+		--status-neutral: #94a3b8;
+		--status-neutral-text: #cbd5e1;
+		--status-neutral-soft: #334155;
+
+		--focus: #7dd3fc;
+
+		--tl-previsto: #334155;
+		--tl-tolerancia: #0c4a6e;
+		--tl-trabalhado: #34d399;
+		--tl-extra: #38bdf8;
+		--tl-atraso: #fbbf24;
+		--tl-falta: #f87171;
+		--tl-intervalo: #475569;
+		--tl-noturno: #a5b4fc;
+	}
+}

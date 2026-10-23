@@ -1,0 +1,260 @@
+/*
+ * Tema moderno do Desk (docs/PRD-areas-modernas.md, AM-02).
+ *
+ * Os mesmos tokens do painel /rh (frontend/src/styles/tokens.css): superfícies, primária e status com os tons de texto
+ * que passam de 4,5:1 (WCAG AA), Inter (já servida pelo Frappe) e JetBrains Mono (servida pelo app). Só variáveis CSS
+ * e seletores estáveis do Desk v15; nenhum JS mexe no layout. Modo escuro pelo tema do próprio Desk (data-theme).
+ * Para voltar ao Desk padrão, basta tirar este arquivo de app_include_css no hooks.py.
+ */
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url("/assets/hrms_secullum_brasil/fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url("/assets/hrms_secullum_brasil/fonts/jetbrains-mono-latin-600-normal.woff2") format("woff2");
+}
+
+/* ------------------------------------------------------------------ tokens (claro) */
+
+:root,
+[data-theme="light"] {
+	--ponto-background: #f8fafc;
+	--ponto-surface: #ffffff;
+	--ponto-surface-muted: #f1f5f9;
+	--ponto-border: #e2e8f0;
+	--ponto-border-strong: #cbd5e1;
+	--ponto-text: #0f172a;
+	--ponto-text-muted: #475569;
+	--ponto-primary: #0284c7;
+	--ponto-primary-text: #0369a1;
+	--ponto-primary-soft: #e0f2fe;
+	--ponto-primary-strong: #0369a1;
+	--ponto-on-primary-strong: #ffffff;
+	--ponto-compliant-text: #047857;
+	--ponto-compliant-soft: #ecfdf5;
+	--ponto-warning-text: #b45309;
+	--ponto-warning-soft: #fffbeb;
+	--ponto-danger-text: #b91c1c;
+	--ponto-danger-soft: #fef2f2;
+	--ponto-neutral-text: #475569;
+	--ponto-neutral-soft: #f1f5f9;
+	--ponto-focus: #0369a1;
+	--ponto-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08);
+	--ponto-radius: 10px;
+	--ponto-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ------------------------------------------------------------------ tokens (escuro) */
+
+[data-theme="dark"] {
+	--ponto-background: #0f172a;
+	--ponto-surface: #1e293b;
+	--ponto-surface-muted: #273449;
+	--ponto-border: #334155;
+	--ponto-border-strong: #475569;
+	--ponto-text: #f1f5f9;
+	--ponto-text-muted: #b6c2d3;
+	--ponto-primary: #38bdf8;
+	--ponto-primary-text: #7dd3fc;
+	--ponto-primary-soft: #0c4a6e;
+	--ponto-primary-strong: #7dd3fc;
+	--ponto-on-primary-strong: #0f172a;
+	--ponto-compliant-text: #6ee7b7;
+	--ponto-compliant-soft: #064e3b;
+	--ponto-warning-text: #fcd34d;
+	--ponto-warning-soft: #78350f;
+	--ponto-danger-text: #fca5a5;
+	--ponto-danger-soft: #7f1d1d;
+	--ponto-neutral-text: #cbd5e1;
+	--ponto-neutral-soft: #334155;
+	--ponto-focus: #7dd3fc;
+	--ponto-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ------------------------------------------------------------------ variáveis do Desk v15 */
+
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+	--bg-color: var(--ponto-background);
+	--fg-color: var(--ponto-surface);
+	--card-bg: var(--ponto-surface);
+	--navbar-bg: var(--ponto-surface);
+	--modal-bg: var(--ponto-surface);
+	--popover-bg: var(--ponto-surface);
+	--subtle-accent: var(--ponto-surface-muted);
+	--subtle-fg: var(--ponto-surface-muted);
+	--fg-hover-color: var(--ponto-surface-muted);
+	--control-bg: var(--ponto-surface-muted);
+	--sidebar-select-color: var(--ponto-primary-soft);
+	--highlight-color: var(--ponto-surface-muted);
+
+	--text-color: var(--ponto-text);
+	--heading-color: var(--ponto-text);
+	--text-muted: var(--ponto-text-muted);
+	--text-light: var(--ponto-text-muted);
+
+	--border-color: var(--ponto-border);
+	--table-border-color: var(--ponto-border);
+	--dark-border-color: var(--ponto-border-strong);
+
+	--primary: var(--ponto-primary);
+	--primary-color: var(--ponto-primary-strong);
+	--btn-primary: var(--ponto-primary-strong);
+	--border-primary: var(--ponto-primary-strong);
+
+	--alert-text-danger: var(--ponto-danger-text);
+	--alert-text-warning: var(--ponto-warning-text);
+	--alert-text-info: var(--ponto-primary-text);
+	--alert-text-success: var(--ponto-compliant-text);
+	--alert-bg-danger: var(--ponto-danger-soft);
+	--alert-bg-warning: var(--ponto-warning-soft);
+	--alert-bg-info: var(--ponto-primary-soft);
+	--alert-bg-success: var(--ponto-compliant-soft);
+
+	--font-stack: "Inter", "InterVariable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ------------------------------------------------------------------ peças comuns */
+
+body {
+	background-color: var(--bg-color);
+}
+
+:focus-visible {
+	outline: 2px solid var(--ponto-focus);
+	outline-offset: 2px;
+}
+
+.btn-primary,
+.btn-primary:focus {
+	background-color: var(--ponto-primary-strong);
+	border-color: var(--ponto-primary-strong);
+	color: var(--ponto-on-primary-strong);
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+	filter: brightness(0.92);
+	background-color: var(--ponto-primary-strong);
+	color: var(--ponto-on-primary-strong);
+}
+
+/* barra lateral e espaços */
+.standard-sidebar-item.selected,
+.sidebar-item-container.selected > .standard-sidebar-item {
+	background-color: var(--ponto-primary-soft);
+	color: var(--ponto-primary-text);
+	font-weight: 600;
+}
+
+.widget.shortcut-widget-box,
+.widget.links-widget-box,
+.widget.quick-list-widget-box,
+.widget.number-widget-box {
+	border: 1px solid var(--ponto-border);
+	border-radius: var(--ponto-radius);
+	box-shadow: var(--ponto-shadow);
+	background-color: var(--ponto-surface);
+}
+
+.widget.shortcut-widget-box:hover {
+	border-color: var(--ponto-primary);
+}
+
+/* formulários: cada seção como cartão */
+.form-layout .form-page .form-section.card-section,
+.form-layout .form-tabs-list,
+.frappe-card {
+	border-radius: var(--ponto-radius);
+}
+
+.form-layout .form-page {
+	background-color: var(--ponto-surface);
+	border: 1px solid var(--ponto-border);
+	border-radius: var(--ponto-radius);
+	box-shadow: var(--ponto-shadow);
+}
+
+.form-section .section-head {
+	color: var(--ponto-text);
+	font-weight: 600;
+}
+
+.control-label,
+.form-section .help-box,
+.frappe-control .help-box {
+	color: var(--ponto-text-muted);
+}
+
+/* listas e relatórios */
+.layout-main-section.frappe-card,
+.frappe-list,
+.report-wrapper {
+	border-radius: var(--ponto-radius);
+}
+
+.list-row-container:hover,
+.list-row:hover {
+	background-color: var(--ponto-surface-muted);
+}
+
+/* indicadores de status com texto AA (nunca só cor) */
+.indicator-pill.green,
+.indicator.green {
+	background-color: var(--ponto-compliant-soft);
+	color: var(--ponto-compliant-text);
+}
+
+.indicator-pill.red,
+.indicator.red {
+	background-color: var(--ponto-danger-soft);
+	color: var(--ponto-danger-text);
+}
+
+.indicator-pill.orange,
+.indicator-pill.yellow,
+.indicator.orange,
+.indicator.yellow {
+	background-color: var(--ponto-warning-soft);
+	color: var(--ponto-warning-text);
+}
+
+.indicator-pill.blue,
+.indicator.blue {
+	background-color: var(--ponto-primary-soft);
+	color: var(--ponto-primary-text);
+}
+
+.indicator-pill.gray,
+.indicator-pill.grey,
+.indicator.gray,
+.indicator.grey {
+	background-color: var(--ponto-neutral-soft);
+	color: var(--ponto-neutral-text);
+}
+
+/* horários e números do ponto em fonte mono */
+.frappe-control[data-fieldtype="Time"] input,
+.frappe-control[data-fieldtype="Time"] .control-value,
+.frappe-control[data-fieldtype="Duration"] .control-value,
+[data-fieldtype="Time"] .static-area,
+.ponto-mono {
+	font-family: var(--ponto-mono);
+	font-variant-numeric: tabular-nums;
+}
+
+/* diálogos */
+.modal-content {
+	border-radius: var(--ponto-radius);
+	border: 1px solid var(--ponto-border);
+}

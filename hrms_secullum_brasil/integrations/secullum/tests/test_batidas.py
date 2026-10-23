@@ -62,6 +62,12 @@ class TestParse:
 	def test_rotulo_do_tipo(self, valor, esperado):
 		assert parse_fonte_dados(registro(tipo=valor)).tipo == esperado
 
+	@pytest.mark.parametrize(
+		("valor", "esperado"), [(1, "RelogioPonto"), (16, "Desconhecido"), ("xyz", "Desconhecido")]
+	)
+	def test_origem_fora_do_manual_vira_desconhecido(self, valor, esperado):
+		assert parse_fonte_dados(registro(Origem=valor)).origem == esperado
+
 	def test_campos_opcionais_vazios(self):
 		b = parse_fonte_dados(
 			registro(FuncionarioCpf=None, EquipamentoId="", DataInclusao="lixo", Origem=None)

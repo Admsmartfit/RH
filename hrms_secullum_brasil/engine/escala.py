@@ -1,6 +1,7 @@
 """Escala do mês, repouso semanal e conferências de descanso (AJ-02 e AJ-09 do docs/PRD-alteracoes.md).
 
-- Cada dia da escala é Trabalho, Repouso semanal ou Folga compensada. Semana = segunda a domingo.
+- Cada dia da escala é Trabalho, Repouso semanal, Folga compensada ou Neutro (rodízio: sem falta, horas
+  normais se trabalhar). Semana = segunda a domingo.
 - Toda semana inteira precisa de exatamente um repouso (AJ-02). Sem escala, o repouso padrão é o domingo, se
   for folga; senão a primeira folga da semana (ou o dia da semana configurado no perfil).
 - Avisos (não impedem): interjornada menor que o mínimo, jornada longa sem intervalo, 7 dias seguidos de
@@ -19,7 +20,8 @@ from hrms_secullum_brasil.engine.models import MEDIA, Inconsistencia
 TRABALHO = "Trabalho"
 REPOUSO = "Repouso semanal"
 FOLGA_COMPENSADA = "Folga compensada"
-SITUACOES = (TRABALHO, REPOUSO, FOLGA_COMPENSADA)
+NEUTRO = "Neutro"
+SITUACOES = (TRABALHO, REPOUSO, FOLGA_COMPENSADA, NEUTRO)
 DIAS_SEMANA = (
 	"Segunda-feira",
 	"Terça-feira",

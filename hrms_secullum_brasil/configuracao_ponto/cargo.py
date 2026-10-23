@@ -40,6 +40,12 @@ def percentual_noturno(cct, designation: str | None) -> float:
 	return flt(cct.percentual_adicional_noturno)
 
 
+def jornada_fragmentada(cct, designation: str | None) -> bool:
+	"""CP-06: cargo de dois turnos no dia (ex.: instrutor de ginástica): intervalo maior que 2h permitido."""
+	linha = parametro_do_cargo(cct, designation)
+	return bool(linha and cint(linha.get("jornada_fragmentada")))
+
+
 def _piso(employee: str, data):
 	"""(linha de parâmetro do cargo, carga semanal do perfil em minutos) ou (None, None)."""
 	designation = frappe.db.get_value("Employee", employee, "designation")
@@ -137,3 +143,51 @@ def _cct_do_cadastro(doc, data):
 		return regra_vigente_para(dados, data)
 	except RegraAmbiguaError:
 		return None
+
+
+# ------------------------------------------------------------------ jornada fragmentada (CP-06)
+
+PAPEIS_RH = ("System Manager", "RH Ponto")
+CCT = "Regra Sindical CCT"
+INTERVALO_LONGO = "intervalo_superior_2h"
+
+
+@frappe.whitelist()
+def permitir_jornada_fragmentada(designation: str, company: str | None = None) -> dict:
+	"""Liga "Jornada fragmentada" do cargo nas CCTs vigentes dos colaboradores ativos dele e reapura os dias com
+	intervalo maior que 2h em aberto (período fechado não muda). Devolve {ccts, alteradas, dias}."""
+	frappe.only_for(PAPEIS_RH)
+	if not designation:
+		frappe.throw(_("O colaborador não tem cargo no cadastro."))
+	hoje = getdate(today())
+	filtros = {"designation": designation, "status": "Active", **({"company": company} if company else {})}
+	employees = frappe.get_all("Employee", filters=filtros, pluck="name")
+	ccts = sorted({cct.name for cct in (_cct(e, hoje) for e in employees) if cct})
+	alteradas = 0
+	for nome in ccts:
+		doc = frappe.get_doc(CCT, nome)
+		linha = parametro_do_cargo(doc, designation) or doc.append(
+			"parametros_cargo", {"designation": designation}
+		)
+		if not cint(linha.jornada_fragmentada):
+			linha.jornada_fragmentada = 1
+			doc.save(ignore_permissions=True)
+			alteradas += 1
+	return {"ccts": len(ccts), "alteradas": alteradas, "dias": reapurar_intervalo_longo(employees)}
+
+
+def reapurar_intervalo_longo(employees: list[str]) -> int:
+	"""Reapura os dias com "intervalo maior que 2h" em aberto destes colaboradores. Devolve quantos dias."""
+	from hrms_secullum_brasil.apuracao.servico import reapurar_dia
+
+	if not employees:
+		return 0
+	dias = frappe.get_all(
+		"Inconsistencia de Ponto",
+		filters={"employee": ["in", employees], "tipo": INTERVALO_LONGO, "status": "Aberta"},
+		fields=["employee", "data"],
+		distinct=True,
+	)
+	for dia in dias:
+		reapurar_dia(dia.employee, dia.data)
+	return len(dias)

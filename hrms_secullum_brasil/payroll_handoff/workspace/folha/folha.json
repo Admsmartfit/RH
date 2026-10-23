@@ -1,0 +1,318 @@
+{
+ "charts": [],
+ "content": "[{\"id\": \"Folha_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Folha de Pagamento</b></span>\", \"col\": 12}}, {\"id\": \"Folha_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fechamentos de ponto\", \"col\": 3}}, {\"id\": \"Folha_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lançamentos adicionais\", \"col\": 3}}, {\"id\": \"Folha_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Processamento da folha\", \"col\": 3}}, {\"id\": \"Folha_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Holerites\", \"col\": 3}}, {\"id\": \"Folha_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Atribuição de salário\", \"col\": 3}}, {\"id\": \"Folha_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Carga de VT\", \"col\": 3}}, {\"id\": \"Folha_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e consultas</b></span>\", \"col\": 12}}, {\"id\": \"Folha_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Fechamento\", \"col\": 4}}, {\"id\": \"Folha_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Salários\", \"col\": 4}}, {\"id\": \"Folha_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Benefícios\", \"col\": 4}}, {\"id\": \"Folha_c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Configuração\", \"col\": 4}}, {\"id\": \"Folha_c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Relatórios\", \"col\": 4}}]",
+ "creation": "2026-10-20 16:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "money-coins-1",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Folha",
+ "links": [
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fechamento",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Fechamento de ponto",
+   "link_count": 0,
+   "link_to": "Fechamento de Ponto",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Lançamento adicional",
+   "link_count": 0,
+   "link_to": "Additional Salary",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Processamento da folha",
+   "link_count": 0,
+   "link_to": "Payroll Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Holerite",
+   "link_count": 0,
+   "link_to": "Salary Slip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Salários",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Estrutura salarial",
+   "link_count": 0,
+   "link_to": "Salary Structure",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Atribuição de salário",
+   "link_count": 0,
+   "link_to": "Salary Structure Assignment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Componente salarial",
+   "link_count": 0,
+   "link_to": "Salary Component",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Benefícios",
+   "link_count": 6,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras de benefício",
+   "link_count": 0,
+   "link_to": "Regra de Beneficio",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras de prêmio",
+   "link_count": 0,
+   "link_to": "Regra de Premiacao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Avaliação mensal",
+   "link_count": 0,
+   "link_to": "Avaliacao Mensal",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Carga de VT",
+   "link_count": 0,
+   "link_to": "Carga de VT",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tarifas de VT",
+   "link_count": 0,
+   "link_to": "Tarifa VT",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Log da carga de VT",
+   "link_count": 0,
+   "link_to": "Log Carga VT",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configuração",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configurações da folha",
+   "link_count": 0,
+   "link_to": "Payroll Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Período da folha",
+   "link_count": 0,
+   "link_to": "Payroll Period",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Relatórios",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Registro de salários",
+   "link_count": 0,
+   "link_to": "Salary Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Contribuições da CCT",
+   "link_count": 0,
+   "link_to": "Contribuicoes da CCT",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-20 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Payroll Handoff",
+ "name": "Folha",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "role": "RH Ponto"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Gestor DP"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 33.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doctype": "Workspace Shortcut",
+   "label": "Fechamentos de ponto",
+   "type": "DocType",
+   "link_to": "Fechamento de Ponto"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Lançamentos adicionais",
+   "type": "DocType",
+   "link_to": "Additional Salary"
+  },
+  {
+   "color": "Green",
+   "doctype": "Workspace Shortcut",
+   "label": "Processamento da folha",
+   "type": "DocType",
+   "link_to": "Payroll Entry"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Holerites",
+   "type": "DocType",
+   "link_to": "Salary Slip"
+  },
+  {
+   "color": "Grey",
+   "doctype": "Workspace Shortcut",
+   "label": "Atribuição de salário",
+   "type": "DocType",
+   "link_to": "Salary Structure Assignment"
+  },
+  {
+   "color": "Orange",
+   "doctype": "Workspace Shortcut",
+   "label": "Carga de VT",
+   "type": "DocType",
+   "link_to": "Carga de VT"
+  }
+ ],
+ "title": "Folha de Pagamento"
+}

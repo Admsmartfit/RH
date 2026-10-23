@@ -16,7 +16,7 @@ from hrms_secullum_brasil.integrations.secullum.client import (
 	SecullumClient,
 )
 from hrms_secullum_brasil.integrations.secullum.mapeamento import resumir_payload
-from hrms_secullum_brasil.integrations.secullum.mock import MockSecullumClient
+from hrms_secullum_brasil.integrations.secullum.mock import FIXTURES_DIR, REAIS_DIR, MockSecullumClient
 
 SYNC_LOG = "Secullum Sync Log"
 
@@ -26,6 +26,42 @@ _MOCKS: dict[str, MockSecullumClient] = {}
 
 def integracao_ativa() -> bool:
 	return bool(cint(frappe.db.get_single_value("Configuracao Secullum", "ativo")))
+
+
+ORIGEM_SECULLUM = "Secullum"
+ORIGEM_PROGRAMA = "Programa"
+# campos do Employee que vêm do Secullum (docs/PRD-importacao-secullum.md, IS-02): somente leitura com origem Secullum.
+# O chefe (reports_to) fica editável: o banco não tem estruturas (Etapa 2).
+CAMPOS_DO_SECULLUM = (
+	"first_name",
+	"middle_name",
+	"last_name",
+	"cpf",
+	"pis",
+	"gender",
+	"date_of_birth",
+	"date_of_joining",
+	"relieving_date",
+	"status",
+	"company",
+	"department",
+	"designation",
+	"perfil_jornada",
+	"matricula_secullum",
+	"id_secullum",
+)
+
+
+def origem_secullum() -> bool:
+	"""Secullum é a origem dos cadastros (padrão, DI-2): nada é enviado para lá. Campo vazio vale como Secullum."""
+	return (frappe.db.get_single_value("Configuracao Secullum", "origem_cadastros") or ORIGEM_SECULLUM) == (
+		ORIGEM_SECULLUM
+	)
+
+
+def envio_ligado() -> bool:
+	"""O programa só envia colaboradores ao Secullum com a integração ativa e a origem "Programa"."""
+	return integracao_ativa() and not origem_secullum()
 
 
 def id_banco_da_empresa(company: str | None) -> str:
@@ -39,7 +75,9 @@ def get_client(id_banco: str | None = None) -> SecullumClient:
 	id_banco = normalizar_id_banco(id_banco or cfg.id_banco)
 	if cfg.modo_mock:
 		if id_banco not in _MOCKS:
-			_MOCKS[id_banco] = MockSecullumClient(registrar=lambda c: registrar_chamada(c, id_banco))
+			# origem Secullum (importação): o mock responde com as amostras reais anonimizadas (formato do GET)
+			pasta = REAIS_DIR if origem_secullum() else FIXTURES_DIR
+			_MOCKS[id_banco] = MockSecullumClient(pasta, registrar=lambda c: registrar_chamada(c, id_banco))
 		return _MOCKS[id_banco]
 	return HttpSecullumClient(
 		ConfigSecullum(

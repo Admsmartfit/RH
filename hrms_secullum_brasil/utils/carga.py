@@ -1,7 +1,7 @@
 """Teste de carga da apuração (PRD Seção 10: 500 colaboradores x 31 dias em menos de 5 minutos).
 
 Uso (no bench):
-    bench --site ponto.localhost execute hrms_secullum_brasil.utils.carga.executar \\
+    bench --site testes.localhost execute hrms_secullum_brasil.utils.carga.executar \\
         --kwargs "{'colaboradores': 500, 'dias': 31}"
 
 Cria colaboradores, perfil, CCT e batidas (inserção em lote, fora da medição), mede a apuração de todos os
@@ -40,6 +40,7 @@ def preparar(colaboradores: int, dias: int, company: str, inicio: date) -> list[
 		{
 			"doctype": "Perfil de Jornada",
 			"codigo": f"CARGA-{etiqueta}",
+			"company": company,
 			"tipo": "Fixa",
 			"vigencia_inicio": inicio - timedelta(days=1),
 			"dias": [
@@ -170,8 +171,35 @@ def preparar(colaboradores: int, dias: int, company: str, inicio: date) -> list[
 	return nomes
 
 
+def medir_painel(company: str, competencia: str = "2026-08", repeticoes: int = 3) -> dict:
+	"""Tempo do painel /ponto (FE-08): resumo < 2 s e inconsistencias (50 itens) < 1 s. Primeira chamada e a
+	melhor de `repeticoes`."""
+	from hrms_secullum_brasil.apuracao import painel
+
+	def medir(funcao):
+		tempos = []
+		for _ in range(repeticoes):
+			inicio = time.perf_counter()
+			funcao()
+			tempos.append(time.perf_counter() - inicio)
+		return round(tempos[0], 3), round(min(tempos), 3)
+
+	frappe.clear_cache()
+	resumo = medir(lambda: painel.resumo(competencia, company=company))
+	lista = medir(lambda: painel.inconsistencias({"competencia": competencia, "company": company}, 0, 50))
+	return {
+		"painel_resumo_s": resumo,
+		"painel_inconsistencias_s": lista,
+		"painel_meta": resumo[0] < 2 and lista[0] < 1,
+	}
+
+
 def executar(
-	colaboradores: int = 500, dias: int = 31, company: str | None = None, manter: bool = False
+	colaboradores: int = 500,
+	dias: int = 31,
+	company: str | None = None,
+	manter: bool = False,
+	painel: bool = True,
 ) -> dict:
 	from hrms_secullum_brasil.apuracao.servico import processar_reapuracoes_pendentes
 
@@ -195,6 +223,8 @@ def executar(
 		resultado["dias_apurados"] = processados
 		resultado["dias_por_segundo"] = round(processados / max(resultado["apuracao_s"], 0.1), 1)
 		resultado["meta_5_min"] = resultado["apuracao_s"] < 300
+		if painel:
+			resultado.update(medir_painel(company))
 		if manter:
 			frappe.db.commit()
 	finally:

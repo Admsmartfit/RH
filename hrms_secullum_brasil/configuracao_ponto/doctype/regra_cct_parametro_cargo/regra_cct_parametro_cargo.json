@@ -10,7 +10,8 @@
   "valor_piso",
   "carga_referencia_horas",
   "percentual_noturno",
-  "banco_padrao"
+  "banco_padrao",
+  "jornada_fragmentada"
  ],
  "fields": [
   {
@@ -60,11 +61,19 @@
    "in_list_view": 1,
    "label": "Banco de horas por padrão",
    "description": "Ao admitir ou trocar para este cargo, o colaborador recebe esta opção (pode ser mudada no cadastro dele)."
+  },
+  {
+   "default": "0",
+   "fieldname": "jornada_fragmentada",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Jornada fragmentada (intervalo maior que 2h)",
+   "description": "Para quem trabalha em dois turnos no dia (ex.: instrutor de ginástica de manhã e à noite): o intervalo maior que 2h não vira inconsistência. Só ligue se a CCT ou acordo escrito permitir (CLT, art. 71)."
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-15 12:00:00.000000",
+ "modified": "2026-10-22 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra CCT Parametro Cargo",

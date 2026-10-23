@@ -1,6 +1,6 @@
 # Ambiente de desenvolvimento (Docker)
 
-Frappe + ERPNext + HRMS **v15** rodando em containers, com este app ligado à pasta do repositório:
+Frappe + ERPNext + HRMS **v16** rodando em containers (bench em `/workspace/frappe-bench-16`), com este app ligado à pasta do repositório:
 o que você edita no Windows aparece na hora dentro do bench.
 
 > Só para desenvolvimento e testes. As senhas são fixas: banco `123`, usuário `Administrator` / `admin`.
@@ -26,12 +26,30 @@ docker exec hrms-secullum-dev-frappe-1 bash /workspace/setup.sh
 
 Termina com `PRONTO`. Se cair no meio (internet, por exemplo), rode o último comando de novo: ele continua de onde parou.
 
+## Dois sites: operação e testes
+
+| Site | Para quê | Endereço |
+|---|---|---|
+| `ponto.localhost` | **Operação**: dados reais, importados do Secullum. Nunca recebe dados de teste | http://localhost:8000 (ou http://ponto.localhost:8000) |
+| `testes.localhost` | **Testes**: testes automáticos do Frappe, testes de navegador e o cenário ES Fitness | http://testes.localhost:8000 |
+
+```powershell
+# criar o site de testes (uma vez, uns 15 min) ou refazer o cenário ES Fitness nele
+docker exec hrms-secullum-dev-frappe-1 bash /workspace/src/hrms_secullum_brasil/docker/site_testes.sh
+
+# APAGAR o site de operação e criar um novo, limpo (pede para digitar APAGAR)
+powershell -ExecutionPolicy Bypass -File docker	este.ps1 zerar
+```
+
+O `bench start` serve os dois sites pelo nome (`docker/multisite.sh` troca a linha `web` do Procfile e cria o
+apelido `sites/localhost` → `ponto.localhost`). Depois do `zerar`, reinicie o `bench start`.
+
 ## Uso diário
 
 | O que | Comando |
 |---|---|
 | Ligar os containers | `docker compose -f docker\docker-compose.yml up -d` |
-| Subir o sistema (deixe a janela aberta) | `docker exec -it hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench && bench start"` |
+| Subir o sistema (deixe a janela aberta) | `docker exec -it hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && bench start"` |
 | Abrir no navegador | http://localhost:8000 (usuário `Administrator`, senha `admin`) |
 | Parar o sistema | `Ctrl+C` na janela do `bench start` |
 | Desligar os containers (os dados ficam guardados) | `docker compose -f docker\docker-compose.yml stop` |
@@ -40,17 +58,46 @@ Termina com `PRONTO`. Se cair no meio (internet, por exemplo), rode o último co
 
 ```powershell
 # Aplicar DocTypes, fixtures e patches depois de mudar o app
-docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench && bench --site ponto.localhost migrate"
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && bench --site ponto.localhost migrate && bench --site testes.localhost migrate"
 
 # Todos os testes Frappe do app
-docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench && bench --site ponto.localhost run-tests --app hrms_secullum_brasil"
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && bench --site testes.localhost run-tests --app hrms_secullum_brasil"
 
 # Um módulo de teste
-docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench && bench --site ponto.localhost run-tests --module hrms_secullum_brasil.ingestion.test_coleta_batidas"
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && bench --site testes.localhost run-tests --module hrms_secullum_brasil.ingestion.test_coleta_batidas"
 
 # Terminal dentro do bench (para comandos avulsos)
-docker exec -it hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench && exec bash"
+docker exec -it hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && exec bash"
 ```
+
+## Painel de ponto (/ponto)
+
+O painel é um app Vue em `frontend/` (Vue 3 + frappe-ui + Tailwind, como o `/hrms` do HRMS). O `bench build`
+gera `hrms_secullum_brasil/public/frontend/` e `hrms_secullum_brasil/www/ponto.html`.
+
+```powershell
+# Primeira vez (ou depois de mudar frontend/package.json): instala as dependências (uns 5 min)
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd /workspace/src/hrms_secullum_brasil/frontend && yarn install"
+
+# Gerar o painel (depois de mudar qualquer arquivo de frontend/)
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd frappe-bench-16 && bench build --app hrms_secullum_brasil"
+
+# Conferir o código antes de concluir
+docker exec hrms-secullum-dev-frappe-1 bash -lc "cd /workspace/src/hrms_secullum_brasil/frontend && yarn lint && yarn build"
+```
+
+Abra **http://localhost:8000/ponto** (precisa do papel RH Ponto ou Gestor Ponto).
+
+**Desenvolvimento com recarga automática (`yarn dev`):** com o `bench start` rodando, numa segunda janela:
+
+```powershell
+docker exec -it hrms-secullum-dev-frappe-1 bash -lc "cd /workspace/src/hrms_secullum_brasil/frontend && yarn dev"
+```
+
+e abra **http://ponto.localhost:8080/ponto** (o Vite repassa `/api`, `/app` e `/login` ao bench na porta 8000; faça
+login primeiro em http://ponto.localhost:8000). A porta 8080 vem do `docker-compose.yml`: se o container foi
+criado antes dela, rode `docker compose -f docker\docker-compose.yml up -d` uma vez para recriá-lo (o bench e
+o banco ficam nos volumes; nada se perde).
 
 ## Começar do zero
 

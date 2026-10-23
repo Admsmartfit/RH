@@ -110,3 +110,38 @@ def atribuir_ao_gestor(inconsistencias) -> int:
 			inc.save()
 			atribuidas += 1
 	return atribuidas
+
+
+@frappe.whitelist()
+def permitir_jornada_fragmentada(inconsistencia: str) -> dict:
+	"""CP-06: da inconsistência "intervalo maior que 2h", libera o cargo do colaborador (RH Ponto)."""
+	from hrms_secullum_brasil.configuracao_ponto.cargo import permitir_jornada_fragmentada as permitir
+
+	inc = _inconsistencia(inconsistencia)
+	designation, company = frappe.db.get_value("Employee", inc.employee, ["designation", "company"])
+	return {"cargo": designation, **permitir(designation, company)}
+
+
+@frappe.whitelist()
+def salvar_cartao(
+	employee: str,
+	alteracoes,
+	motivo: str = "",
+	competencia=None,
+	inicio=None,
+	fim=None,
+	simular=0,
+	enviar_secullum=None,
+) -> dict:
+	"""CP-02: grava as correções do cartão ponto num pedido só (cada dia num savepoint e reapurado uma vez).
+	`simular=1` só devolve o resumo do que seria feito (o texto do Salvar)."""
+	from hrms_secullum_brasil.apuracao import cartao_ponto
+
+	return cartao_ponto.salvar(
+		employee,
+		_lista(alteracoes),
+		motivo,
+		bool(int(simular or 0)),
+		*cartao_ponto.periodo(inicio, fim, competencia),
+		enviar=enviar_secullum,
+	)

@@ -1,9 +1,9 @@
 """Cenário de TESTE da ES Fitness (um colaborador por cargo) e batidas simuladas, para o manual
 docs/manual_teste_windows.md. Só para o site de testes/desenvolvimento — não use em produção.
 
-    bench --site ponto.localhost execute hrms_secullum_brasil.utils.demo.preparar_teste
-    bench --site ponto.localhost execute hrms_secullum_brasil.utils.demo.bater --kwargs "{'cargo': 'recepcao', 'data': '2026-10-05', 'horarios': '08:00 12:00 13:00 17:48'}"
-    bench --site ponto.localhost execute hrms_secullum_brasil.utils.demo.semana --kwargs "{'cargo': 'recepcao', 'segunda': '2026-10-05'}"
+    bench --site testes.localhost execute hrms_secullum_brasil.utils.demo.preparar_teste
+    bench --site testes.localhost execute hrms_secullum_brasil.utils.demo.bater --kwargs "{'cargo': 'recepcao', 'data': '2026-10-05', 'horarios': '08:00 12:00 13:00 17:48'}"
+    bench --site testes.localhost execute hrms_secullum_brasil.utils.demo.semana --kwargs "{'cargo': 'recepcao', 'segunda': '2026-10-05'}"
 
 Os valores (piso, tarifas, bolsa, laudo) são fictícios.
 """
@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta
 
 import frappe
 from frappe.utils import getdate
+from frappe.utils.nestedset import rebuild_tree
 
 from hrms_secullum_brasil.utils.config_es_fitness import EMPRESA, SINDICATO, aplicar
 from hrms_secullum_brasil.utils.seeds import _colaborador, _get_or_insert, _perfil
@@ -168,7 +169,7 @@ def preparar_teste() -> dict:
 		{"minimo_horas": 80, "minimo_periodo": "Mês", "divisor_horas": 1},
 	)
 	frappe.db.set_value("Employee", pessoas["instrutor2"], "divisor_horas", 1)
-	frappe.db.set_value("Employee", pessoas["estagiario"], "reports_to", pessoas["recepcao"])
+	_definir_chefe(pessoas["estagiario"], pessoas["recepcao"])
 	_estrutura_salarial(pessoas)
 
 	# salário mínimo, insalubridade do ASG, EPI, tarifa de VT
@@ -256,10 +257,76 @@ def preparar_teste() -> dict:
 		)
 		tce.insert(ignore_permissions=True)
 		tce.submit()
+	usuarios_de_teste(pessoas)
 	frappe.db.commit()
 	resumo = {chave: pessoas[chave] for chave in pessoas}
 	print("Cenário de teste pronto:", resumo)
 	return resumo
+
+
+SENHA_TESTE = "Ponto@teste1"
+USUARIO_RH = "rh.teste@esfitness.local"
+USUARIO_GESTOR = "gestor.teste@esfitness.local"
+
+
+def _usuario(email: str, nome: str, papeis: tuple[str, ...]) -> str:
+	if not frappe.db.exists("User", email):
+		frappe.get_doc(
+			{
+				"doctype": "User",
+				"email": email,
+				"first_name": nome,
+				"send_welcome_email": 0,
+				"language": "pt-BR",
+				"new_password": SENHA_TESTE,
+			}
+		).insert(ignore_permissions=True)
+	frappe.get_doc("User", email).add_roles(*papeis)
+	return email
+
+
+def _definir_chefe(employee: str, chefe: str) -> None:
+	"""reports_to pelo documento (não por set_value), para a árvore lft/rgt acompanhar."""
+	if frappe.db.get_value("Employee", employee, "reports_to") == chefe:
+		return
+	doc = frappe.get_doc("Employee", employee)
+	doc.reports_to = chefe
+	doc.flags.ignore_permissions = True
+	doc.flags.ignore_mandatory = True
+	doc.save()
+
+
+def usuarios_de_teste(pessoas: dict | None = None) -> dict:
+	"""Usuários para testar o painel /ponto (senha Ponto@teste1):
+	- rh.teste@esfitness.local: RH Ponto (vê todos);
+	- gestor.teste@esfitness.local: Gestor Ponto, chefe das recepcionistas (Renata, Bruno, Marcos e, abaixo da
+	  Renata, a estagiária Elisa). O colaborador do gestor é criado sem a User Permission do HRMS, que o
+	  restringiria ao próprio cadastro (docs/implantacao.md)."""
+	pessoas = pessoas or {chave: colaborador(chave) for chave in NOMES}
+	_usuario(USUARIO_RH, "Rita Teste RH", ("RH Ponto",))
+	_usuario(USUARIO_GESTOR, "Gustavo Teste Gestor", ("Gestor Ponto",))
+	gestor = frappe.db.get_value("Employee", {"user_id": USUARIO_GESTOR}, "name")
+	if not gestor:
+		cct = frappe.get_doc("Regra Sindical CCT", {"company": EMPRESA, "sindicato": SINDICATO})
+		perfil = frappe.get_doc("Perfil de Jornada", {"codigo": "TESTE-RECEPCAO-5X2"})
+		gestor = _colaborador(
+			EMPRESA,
+			"Gustavo Teste Gestor",
+			"300000009",
+			CARGOS["recepcao"],
+			perfil,
+			cct,
+			date_of_joining="2026-05-01",
+			gender="Male",
+			create_user_permission=0,
+			user_id=USUARIO_GESTOR,
+		)
+	for chave in ("recepcao", "recepcao2", "recepcao_noite"):
+		_definir_chefe(pessoas[chave], gestor)
+	rebuild_tree("Employee")  # a visibilidade do gestor usa a árvore (lft/rgt) do Employee
+	frappe.db.commit()
+	print(f"Usuários de teste: {USUARIO_RH} e {USUARIO_GESTOR} (senha {SENHA_TESTE}).")
+	return {"rh": USUARIO_RH, "gestor": USUARIO_GESTOR, "gestor_employee": gestor}
 
 
 def _estrutura_salarial(pessoas: dict) -> None:
@@ -447,6 +514,73 @@ def gerar_agosto() -> None:
 			reapurar_dia(employee, dia)
 		frappe.db.commit()
 		print(f"{chave}: agosto gerado e apurado.")
+
+
+# Os 14 cenários de batida de setembro/2026 do docs/manual_teste_windows.md (Parte 4); None = dia sem batida
+CENARIOS_SETEMBRO = (
+	("recepcao", "2026-09-14", "08:00 12:00 13:00 17:48"),
+	("recepcao", "2026-09-15", "08:04 12:00 13:00 17:48"),
+	("recepcao", "2026-09-16", "08:20 12:00 13:00 17:48"),
+	("recepcao", "2026-09-17", None),
+	("recepcao", "2026-09-18", "08:00 12:00 13:00"),
+	("recepcao", "2026-09-07", None),
+	("asg", "2026-09-07", "08:00 12:00 13:00 17:48"),
+	("asg", "2026-09-14", "08:00 12:00 13:00 19:00"),
+	("asg", "2026-09-15", "08:00 12:00 12:30 17:18"),
+	("asg", "2026-09-16", "13:00 17:00 18:00 23:00"),
+	("asg", "2026-09-17", "08:00 12:00 13:00 17:48"),
+	("estagiario", "2026-09-14", "08:00 15:00"),
+	("instrutor", "2026-09-14", "06:00 10:00"),
+	("instrutor", "2026-09-19", "06:00 12:00"),
+)
+
+
+def cenarios_setembro() -> list[dict]:
+	"""Cria (sem duplicar) os 14 cenários de setembro do manual e apura cada dia."""
+	saida = []
+	for cargo, data, horarios in CENARIOS_SETEMBRO:
+		employee = colaborador(cargo)
+		ja_tem = frappe.db.exists("Secullum Checkin Raw", {"employee": employee, "data": data})
+		nome = bater(cargo, data, horarios) if horarios and not ja_tem else apurar(cargo, data)
+		saida.append({"cargo": cargo, "employee": employee, "data": data, "apuracao": nome})
+	_marcacao_substituida()
+	return saida
+
+
+def _marcacao_substituida() -> None:
+	"""21/09 da Renata: a batida das 08:00 foi substituída no Secullum pela das 08:05 (gaveta de auditoria).
+	Só para o cenário de teste: na operação, quem marca a substituição é a coleta (ingestion/coleta_batidas.py)."""
+	from hrms_secullum_brasil.apuracao.servico import reapurar_dia
+
+	employee, dia = colaborador("recepcao"), date(2026, 9, 21)
+	frappe.db.set_value("Employee", employee, "pis", "12012345678")
+	if frappe.db.exists("Secullum Checkin Raw", {"employee": employee, "data": dia}):
+		return
+	_inserir_batidas(employee, dia, "08:05 12:00 13:00 17:48")
+	nova = frappe.db.get_value(
+		"Secullum Checkin Raw", {"employee": employee, "data_hora": datetime(2026, 9, 21, 8, 5)}, "name"
+	)
+	momento = datetime(2026, 9, 21, 8, 0)
+	frappe.get_doc(
+		{
+			"doctype": "Secullum Checkin Raw",
+			"employee": employee,
+			"data": dia,
+			"data_hora": momento,
+			"status": "Substituida",
+			"tipo_fonte": "Original",
+			"tipo_origem": "RelogioPonto",
+			"equipamento": "REP-RECEPCAO-01",
+			"origem_id": f"TESTE-{frappe.generate_hash(length=8)}",
+			"hash": frappe.generate_hash(length=16),
+			"chave_unica": f"{employee}|{momento.isoformat()}|substituida",
+			"substituida_por": nova,
+			"substituida_em": datetime(2026, 9, 21, 9, 30),
+			"motivo_substituicao": "Horário ajustado no Secullum",
+		}
+	).insert(ignore_permissions=True)
+	reapurar_dia(employee, dia)
+	frappe.db.commit()
 
 
 POR_COLABORADOR = (

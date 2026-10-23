@@ -74,9 +74,10 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	pares = [(minutos_relativos(e, entrada.data), minutos_relativos(s, entrada.data)) for e, s in pares_dt]
 	resultado.trabalhado = sum(s - e for e, s in pares)
 
-	if entrada.horista and entrada.horista_escalado and not setimo_dia:
+	if ((entrada.horista and entrada.horista_escalado) or entrada.jornada.neutro) and not setimo_dia:
 		# AJ-14: horista por escala não ganha HE por trabalhar em folga ou fim de semana; só acima de 8h no dia
 		# (44h na semana: DSR Semanal) ou em feriado sem folga compensatória. Sem tolerância: paga o trabalhado.
+		# O dia neutro do Secullum (rodízio) segue a mesma regra.
 		feriado_pago = entrada.feriado and not entrada.feriado_compensado
 		resultado.tipo_dia = tipo_do_dia(entrada.data, feriado=feriado_pago, folga=False, repouso=False)
 		normais = 0 if feriado_pago else min(resultado.trabalhado, d.JORNADA_DIARIA_MAXIMA_MIN)

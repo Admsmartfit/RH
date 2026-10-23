@@ -278,3 +278,27 @@ def _valorar_estagio(base: BaseValoracao, m: MinutosPeriodo) -> list[LancamentoV
 				LancamentoValorado("VT_DESC", 0, vt_desc, f"Desconto do VT: {base.vt_percentual:g}%")
 			)
 	return resultado
+
+
+# ------------------------------------------------------------------ lançamento manual (docs/PRD-cartao-ponto.md, CP-11)
+
+FATOR_MANUAL = {"HE50": Decimal("1.5"), "HE100": Decimal("2")}
+
+
+def valor_manual(
+	base: BaseValoracao, codigo: str, minutos: int = 0, valor: Decimal | None = None
+) -> LancamentoValorado:
+	"""Lançamento manual do Fechamento de Ponto (ex.: diferença de um mês anterior). Valor informado vale como veio;
+	senão minutos x valor-hora x fator da rubrica (HE50 1,5; HE100 2; ADN só o percentual noturno; demais 1)."""
+	if valor:
+		return LancamentoValorado(codigo, int(minutos or 0), _reais(Decimal(str(valor))), "Valor informado")
+	horas = Decimal(int(minutos or 0)) / SESSENTA * base.valor_hora
+	if codigo == "ADN":
+		return LancamentoValorado(
+			codigo,
+			int(minutos),
+			_reais(horas * _pct(base.percentual_noturno)),
+			f"{minutos} min a {base.percentual_noturno:g}%",
+		)
+	fator = FATOR_MANUAL.get(codigo, Decimal("1"))
+	return LancamentoValorado(codigo, int(minutos), _reais(horas * fator), f"{minutos} min x {fator:g}")

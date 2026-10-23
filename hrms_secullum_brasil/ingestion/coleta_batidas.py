@@ -23,6 +23,7 @@ from hrms_secullum_brasil.ingestion.secullum import (
 	get_client,
 	id_banco_da_empresa,
 	integracao_ativa,
+	origem_secullum,
 	registrar_evento,
 )
 from hrms_secullum_brasil.integrations.secullum.batidas import (
@@ -107,6 +108,11 @@ def coletar_batidas(hoje=None) -> dict:
 	resumo = Resumo()
 	for banco in bancos_configurados():
 		_Coleta(banco, getdate(inicio), hoje, resumo).executar()
+		if origem_secullum():
+			# folgas e justificativas lançadas no cartão do Secullum (Cartao Secullum Dia)
+			from hrms_secullum_brasil.ingestion.cartao_secullum import sincronizar_cartao
+
+			resumo.erros += sincronizar_cartao(get_client(banco), getdate(inicio), hoje)["erros"]
 
 	status = "Erro" if resumo.erros else "Sucesso"
 	frappe.db.set_single_value(

@@ -8,7 +8,7 @@ frappe.ui.form.on("Configuracao Secullum", {
 			}).then((r) => {
 				const bancos = r.message || [];
 				const linhas = bancos
-					.map((b) => `<li>${frappe.utils.escape_html(b.nome || "")} <code>${b.identificador}</code></li>`)
+					.map((b) => `<li>${frappe.utils.escape_html(b.nome || "")} <code>${b.id_banco}</code></li>`)
 					.join("");
 				frappe.msgprint({
 					title: __("Conexão OK"),

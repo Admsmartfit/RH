@@ -1,0 +1,42 @@
+[
+ {
+  "Id": 2,
+  "Descricao": "Checkin",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 1,
+  "Descricao": "SMART FIT MATRIZ ",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 3,
+  "Descricao": "SMART FIT SERRA",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 4,
+  "Descricao": "SMART FIT VILA VELHA",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 8,
+  "Descricao": "Tablet Maple",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 9,
+  "Descricao": "Tablet Reta da penha",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 7,
+  "Descricao": "Tablet Serra",
+  "EnderecoIP": null
+ },
+ {
+  "Id": 10,
+  "Descricao": "Tablet Vila Velha",
+  "EnderecoIP": null
+ }
+]

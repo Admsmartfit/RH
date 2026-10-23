@@ -189,7 +189,7 @@
   {
    "fieldname": "he_semanal_minutos",
    "fieldtype": "Int",
-   "label": "HE acima de 44h na semana (horista)",
+   "label": "HE acima de 44h na semana (horista ou dia neutro)",
    "read_only": 1
   },
   {

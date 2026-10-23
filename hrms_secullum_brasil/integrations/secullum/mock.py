@@ -15,10 +15,39 @@ from hrms_secullum_brasil.integrations.secullum.erros import SecullumValidacaoEr
 from hrms_secullum_brasil.integrations.secullum.mapeamento import CAMPOS_OBRIGATORIOS
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+# respostas reais anonimizadas (ingestion/amostras_secullum.py): cadastros no formato que o GET devolve
+REAIS_DIR = FIXTURES_DIR / "reais"
+CADASTROS = (
+	"empresas",
+	"funcoes",
+	"departamentos",
+	"horarios",
+	"justificativas",
+	"motivos_demissao",
+	"equipamentos",
+	"afastamentos",
+)
 
 
 def _carregar(pasta: Path, nome: str):
-	return json.loads((pasta / f"{nome}.json").read_text(encoding="utf-8"))
+	arquivo = pasta / f"{nome}.json"
+	if not arquivo.exists():  # o que a pasta não tem vem da pasta padrão (ex.: bancos.json)
+		arquivo = FIXTURES_DIR / f"{nome}.json"
+	return json.loads(arquivo.read_text(encoding="utf-8"))
+
+
+def _chave_funcionario(f: dict) -> str:
+	"""No formato real (GET) cada vínculo é um registro com Id próprio: a mesma pessoa (CPF) pode ter um vínculo
+	demitido numa empresa e outro ativo noutra. No formato do POST (envio), a chave é o CPF."""
+	if "EmpresaId" in f or not f.get("Cpf"):
+		return f"id:{f.get('Id')}"
+	return somente_digitos(f["Cpf"])
+
+
+def _no_periodo(item: dict, inicio: date, fim: date) -> bool:
+	de = date.fromisoformat(str(item.get("Inicio"))[:10])
+	ate = date.fromisoformat(str(item.get("Fim") or item.get("Inicio"))[:10])
+	return de <= fim and ate >= inicio
 
 
 def _fonte_dados_relativa(registros: list[dict], hoje: date) -> list[dict]:
@@ -36,6 +65,8 @@ class MockSecullumClient(SecullumClient):
 	"""Simula o Secullum: POST de funcionário faz upsert pelo CPF e valida os campos obrigatórios.
 
 	`falhas` é uma fila de exceções: cada chamada consome a primeira e a levanta (para testes).
+	Com `fixtures_dir=REAIS_DIR`, funcionários e cadastros vêm no formato real do GET (importação); os cadastros
+	sempre vêm das amostras reais quando a pasta não os tem. `estruturas` começa vazia, como no banco real.
 	"""
 
 	def __init__(
@@ -43,8 +74,12 @@ class MockSecullumClient(SecullumClient):
 	):
 		self.bancos: list[dict] = _carregar(fixtures_dir, "bancos")
 		self.funcionarios: dict[str, dict] = {
-			somente_digitos(f["Cpf"]): f for f in _carregar(fixtures_dir, "funcionarios")
+			_chave_funcionario(f): f for f in _carregar(fixtures_dir, "funcionarios")
 		}
+		pasta_cadastros = fixtures_dir if (fixtures_dir / "horarios.json").exists() else REAIS_DIR
+		self.cadastros: dict[str, list[dict]] = {nome: _carregar(pasta_cadastros, nome) for nome in CADASTROS}
+		self.estruturas: list[dict] = []
+		self.cartao: list[dict] = []  # registros do GET Batidas (cartão do dia); vazio = nada lançado
 		self.departamentos: set[str] = set()
 		self.funcoes: set[str] = set()
 		self.fonte_dados: list[dict] = _fonte_dados_relativa(
@@ -54,7 +89,7 @@ class MockSecullumClient(SecullumClient):
 		self.chamadas: list[tuple[str, object]] = []
 		self.falhas: list[Exception] = []
 		self._registrar = registrar or (lambda chamada: None)
-		self._proximo_id = max((int(f.get("Id", 0)) for f in self.funcionarios.values()), default=0) + 1
+		self._proximo_id = max((int(f.get("Id") or 0) for f in self.funcionarios.values()), default=0) + 1
 
 	def _chamada(self, metodo: str, rota: str, argumento=None):
 		self.chamadas.append((rota, argumento))
@@ -85,6 +120,14 @@ class MockSecullumClient(SecullumClient):
 	def buscar_funcionario_por_cpf(self, cpf: str) -> dict | None:
 		self._chamada("GET", "Funcionarios/Cpf", cpf)
 		encontrado = self.funcionarios.get(somente_digitos(cpf))
+		if not encontrado:  # formato real: o vínculo ativo, senão o mais recente
+			vinculos = [
+				f
+				for f in self.funcionarios.values()
+				if somente_digitos(f.get("Cpf") or "") == somente_digitos(cpf)
+			]
+			vinculos.sort(key=lambda f: (not f.get("Demissao"), str(f.get("Admissao") or "")))
+			encontrado = vinculos[-1] if vinculos else None
 		return dict(encontrado) if encontrado else None
 
 	def salvar_funcionario(self, dados: dict) -> None:
@@ -125,3 +168,97 @@ class MockSecullumClient(SecullumClient):
 		self._chamada("POST", "Calcular/SomenteTotais", {"FuncionarioCpf": cpf})
 		totais = self.totais.get(somente_digitos(cpf), {})
 		return {"Colunas": list(totais), "Totais": list(totais.values())}
+
+	# ------------------------------------------------------------------ leitura dos cadastros (importação)
+
+	def _lista(self, rota: str, nome: str) -> list[dict]:
+		self._chamada("GET", rota)
+		return [dict(item) for item in self.cadastros[nome]]
+
+	def listar_empresas(self) -> list[dict]:
+		return self._lista("Empresas", "empresas")
+
+	def listar_funcoes(self) -> list[dict]:
+		return self._lista("Funcoes", "funcoes")
+
+	def listar_departamentos(self) -> list[dict]:
+		return self._lista("Departamentos", "departamentos")
+
+	def listar_horarios(self) -> list[dict]:
+		return self._lista("Horarios", "horarios")
+
+	def listar_estruturas(self) -> list[dict]:
+		self._chamada("GET", "Estruturas")
+		return [dict(e) for e in self.estruturas]
+
+	def listar_justificativas(self) -> list[dict]:
+		return self._lista("Justificativas", "justificativas")
+
+	def listar_motivos_demissao(self) -> list[dict]:
+		return self._lista("MotivosDemissao", "motivos_demissao")
+
+	def listar_equipamentos(self) -> list[dict]:
+		return self._lista("Equipamentos", "equipamentos")
+
+	def listar_cartao(self, data_inicio: date, data_fim: date, cpf: str | None = None) -> list[dict]:
+		self._chamada(
+			"GET", "Batidas", {"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()}
+		)
+		return [
+			dict(r)
+			for r in self.cartao
+			if data_inicio.isoformat() <= str(r.get("Data") or "")[:10] <= data_fim.isoformat()
+			and (not cpf or somente_digitos(r.get("FuncionarioCpf") or "") == somente_digitos(cpf))
+		]
+
+	def editar_cartao(self, metodo: str, rota: str, corpo: dict) -> None:
+		"""Aplica a operação no cartão em memória; a batida manual também entra na FonteDados (Origem 8,
+		IntegracaoExterna), como a coleta seguinte a traria do Secullum."""
+		self._chamada(metodo, rota, corpo)
+		cpf, dia = somente_digitos(corpo.get("Cpf") or ""), str(corpo["Data"])[:10]
+		registro = next(
+			(
+				r
+				for r in self.cartao
+				if somente_digitos(r.get("FuncionarioCpf") or "") == cpf and str(r.get("Data"))[:10] == dia
+			),
+			None,
+		)
+		if registro is None:
+			registro = {"FuncionarioCpf": cpf, "FuncionarioId": cpf, "Data": f"{dia}T00:00:00"}
+			self.cartao.append(registro)
+		if rota == "CartaoPonto/Manual":
+			registro[corpo["Coluna"]] = corpo["Hora"]
+			self.fonte_dados.append(
+				{
+					"Id": 900000 + len(self.fonte_dados),
+					"FuncionarioId": cpf,
+					"FuncionarioCpf": cpf,
+					"EquipamentoId": None,
+					"Data": f"{dia}T00:00:00",
+					"DataInclusao": None,
+					"Hora": corpo["Hora"],
+					"Tipo": 1,
+					"Origem": 8,
+				}
+			)
+		elif rota == "CartaoPonto/Justificativa":
+			grupo = int(corpo["Grupo"])
+			registro[f"Entrada{grupo}"] = registro[f"Saida{grupo}"] = corpo["Justificativa"]
+		else:
+			coluna = corpo["Coluna"]
+			valor = str(registro.get(coluna) or "")
+			if valor and ":" not in valor:  # justificativa: apaga o grupo
+				grupo = coluna[-1]
+				registro.pop(f"Entrada{grupo}", None)
+				registro.pop(f"Saida{grupo}", None)
+			else:
+				registro.pop(coluna, None)
+
+	def listar_afastamentos(self, data_inicio: date, data_fim: date) -> list[dict]:
+		self._chamada(
+			"GET",
+			"FuncionariosAfastamentos",
+			{"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()},
+		)
+		return [dict(a) for a in self.cadastros["afastamentos"] if _no_periodo(a, data_inicio, data_fim)]

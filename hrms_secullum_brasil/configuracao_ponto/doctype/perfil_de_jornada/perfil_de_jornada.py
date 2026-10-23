@@ -69,7 +69,7 @@ class PerfildeJornada(Document):
 			periodos, erros_dia = montar_periodos(pares)
 			erros += [f"{linha.dia_semana}: {e}" for e in erros_dia]
 			self._maior_intervalo = max([self._maior_intervalo, *intervalos(periodos)])
-			linha.minutos_previstos = minutos_previstos(periodos)
+			linha.minutos_previstos = 0 if cint(linha.neutro) else minutos_previstos(periodos)
 			total += linha.minutos_previstos
 		self.minutos_semana_previstos = total
 		return erros
@@ -97,7 +97,8 @@ class PerfildeJornada(Document):
 			frappe.msgprint(
 				_(
 					'O perfil tem intervalo de {0} min, acima de {1} min, sem "Permite intervalo superior a 2h". '
-					"Cada dia apurado gerará a inconsistência intervalo_superior_2h."
+					"Cada dia apurado gerará a inconsistência intervalo_superior_2h, salvo se o cargo tiver "
+					'"Jornada fragmentada" na CCT.'
 				).format(self._maior_intervalo, limite),
 				title=_("Atenção: risco jurídico"),
 				indicator="orange",

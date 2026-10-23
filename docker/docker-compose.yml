@@ -1,4 +1,4 @@
-# Ambiente de DESENVOLVIMENTO do hrms_secullum_brasil (Frappe/ERPNext/HRMS v15).
+# Ambiente de DESENVOLVIMENTO do hrms_secullum_brasil (Frappe/ERPNext/HRMS v16).
 # Uso: veja docker/README.md. Não use em produção (senhas fixas de desenvolvimento).
 name: hrms-secullum-dev
 
@@ -41,6 +41,10 @@ services:
     ports:
       - "8000:8000"
       - "9000:9000"
+      - "8080:8080" # yarn dev do painel /ponto (frontend/)
+    extra_hosts:
+      - "ponto.localhost:127.0.0.1"
+      - "testes.localhost:127.0.0.1" # site dos testes automáticos e de navegador
     depends_on:
       mariadb:
         condition: service_healthy

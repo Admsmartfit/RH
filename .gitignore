@@ -16,3 +16,11 @@ dist/
 hrms_secullum_brasil/public/dist/
 .vscode/
 .idea/
+# build do painel /ponto (gerado por `bench build` / `yarn build`)
+hrms_secullum_brasil/public/frontend/
+hrms_secullum_brasil/www/ponto.html
+
+# sessões salvas dos testes de navegador
+frontend/tests/e2e/.auth/
+frontend/test-results/
+frontend/playwright-report/

@@ -18,9 +18,19 @@ Fitness, com 8 colaboradores. As batidas são simuladas pelo próprio sistema, c
 
 As regras aplicadas a cada cargo estão em [regras_por_cargo.md](regras_por_cargo.md).
 
-> **Secullum:** a integração está **desligada** (Configuracao Secullum → "Ativo" desmarcado, sem usuário e
-> senha). Assim o sistema não busca batidas, não envia cadastros e não confere nada no Secullum. **Não marque
-> "Ativo"** durante o teste: os colaboradores de teste seriam enviados ao Secullum de verdade.
+> **Onde fica o teste:** desde 19/10/2026 o cenário ES Fitness fica no site **de testes**, em
+> **http://testes.localhost:8000** (mesmo usuário e senha). O endereço http://localhost:8000 é o site **de operação**,
+> limpo, que recebe a importação do Secullum (`docs/PRD-importacao-secullum.md`). Os comandos `t preparar`,
+> `t bater`, `t agosto` etc. agem no site de testes; `t site-testes` refaz o cenário inteiro.
+
+> **Versão 16 (desde 20/10/2026):** o sistema roda no Frappe/ERPNext/HRMS **v16**. O visual do Desk vem do app
+> **swift_theme** (cores do painel: azul e verde, modo claro). A tela inicial depois do login mostra ícones de apps:
+> clique em **Ponto e RH**. O endereço do Desk agora é **/desk** (antes era /app; os links antigos continuam
+> funcionando).
+
+> **Secullum:** no site de testes a integração fica **desligada** (Configuracao Secullum → "Ativo" desmarcado,
+> sem usuário e senha). **Não marque "Ativo" no site de testes:** os colaboradores de teste seriam enviados ao
+> Secullum de verdade. A conexão real com o Secullum é só no site de operação.
 
 ---
 
@@ -61,26 +71,39 @@ comandos, abra **outra** janela do PowerShell e repita o passo 1.2 (o `cd` e a f
 
 ### 1.4 Entrar no sistema
 
-1. No navegador, abra **http://localhost:8000**.
+1. No navegador, abra **http://testes.localhost:8000** (site de testes) ou **http://localhost:8000** (site de
+   operação, com os dados reais do Secullum).
 2. Usuário **Administrator**, senha **admin**.
-3. Na barra lateral, clique no espaço **Ponto**.
+3. A tela inicial mostra os ícones **ERPNext**, **Frappe HR**, **Plataforma** e **Ponto e RH**. Clique em
+   **Ponto e RH**: abre o espaço **Ponto**, com o menu lateral das cinco áreas — **Ponto**, **Pessoas**,
+   **Licenças**, **Folha de Pagamento** e **Usuários**. (Os ícones ERPNext e Frappe HR são do sistema e levam aos
+   menus que o `t enxugar` esconde; não precisa usá-los.)
 
 > Se a página não abrir, espere 1 minuto (o `t iniciar` ainda está subindo) e atualize.
 
-### 1.5 Português e menu enxuto (já feito neste computador)
+### 1.5 Português, menu enxuto e cores (já feito neste computador)
 
 ```powershell
 t brasil     # idioma português, Brasil, R$, fuso de São Paulo, datas dd/mm/aaaa, números 1.234,56
-t enxugar    # esconde do menu o que o ponto não usa
+t enxugar    # deixa no menu só as cinco áreas: Ponto, Pessoas, Licenças, Folha de Pagamento e Usuários
+t tema       # cores do Desk iguais às do painel (azul e verde, modo claro, fonte do sistema)
 ```
 
 Depois de rodar, **saia e entre de novo** no sistema (ou aperte Ctrl+Shift+R) para a tela recarregar em português.
 
-**O que o `t enxugar` esconde do menu lateral (para todos):** Início, Contabilidade (e Contas a Pagar/Receber,
-Relatórios Financeiros), Compras, Vendas, Estoque, Ativos, Produção, Qualidade, Projetos, Suporte, CRM, Site,
-Ferramentas, Configurações do ERPNext, Integrações, Build, Recrutamento, Ciclo de Vida, Desempenho, Turnos e
-Frequência e Reembolso de Despesas. **Ficam:** Ponto, RH, Licenças, Folha de Pagamento e Usuários. Nada é
-apagado: `t mostrar` traz tudo de volta.
+**O que o `t enxugar` faz:** deixa no menu lateral **só os cinco espaços do sistema**, em português e com as telas
+que o RH usa — **Ponto** (apuração, inconsistências, banco de horas, fechamento, importação Secullum, regras),
+**Pessoas** (colaboradores, departamentos, cargos, EPI, ASO, treinamentos, estágio), **Licenças** (afastamentos e
+cartão do Secullum, licenças, atestados, alertas do INSS, feriados), **Folha de Pagamento** (fechamento, lançamentos,
+processamento da folha, holerites, salários, benefícios, VT) e **Usuários**. Todo o resto some do menu: Contabilidade,
+Compras, Vendas, Estoque, os espaços em inglês do HRMS (HR, Leaves, Payroll, Salary Payout, Tax & Benefits, Users) e
+qualquer espaço novo que uma atualização trouxer. Também ficam escondidos nos formulários os campos sem uso no
+Brasil (imposto indiano, passaporte, folha por timesheet...). Nada é apagado: `t mostrar` traz os espaços de volta.
+
+**Cores e tema:** cada usuário pode trocar o próprio tema no menu do usuário (canto superior direito) → **Trocar
+tema** (12 temas prontos ou cores próprias). O padrão do site (o que vale para quem não escolheu) fica em **Swift
+Theme Settings** (digite na busca). Se a tela ficar com outra cor (ex.: rosa), rode `t tema` e recarregue com
+**Ctrl+F5**.
 
 **Esconder ou mostrar um item por conta própria, na tela:**
 
@@ -408,13 +431,50 @@ setembro fechado.
 abonados (sem falta). Um segundo atestado com o mesmo grupo de CID que passe de 15 dias somados cria um **Alerta
 Previdenciário**, que bloqueia o fechamento até ser tratado.
 
-### 7.10 Testes automáticos
+### 7.11 Painel de ponto (/ponto)
+
+A tela nova de trabalho do ponto (cockpit, central de inconsistências com linha do tempo e espelho do mês).
+
+1. Depois de mudar o código do painel (ou na primeira vez), gere a tela: `t painel` (uns 2 minutos).
+2. Abra **http://testes.localhost:8000/ponto** (ou o atalho **Painel de ponto** no espaço Ponto do Desk).
+3. Usuários de teste (senha **Ponto@teste1**), para ver o painel como cada papel:
+   - **rh.teste@esfitness.local** — RH Ponto: vê todos, aprova tratamentos;
+   - **gestor.teste@esfitness.local** — Gestor Ponto: chefe de Renata, Bruno e Marcos (e da Elisa, abaixo da
+     Renata); vê só a equipe, o PIS mascarado e não tem a aba de aprovação.
+4. O que conferir (agosto, ES Fitness):
+   - **Cockpit:** 24 inconsistências abertas, 5 Altas; conformidade 92,7%; para o gestor, 11 abertas e 3 Altas.
+   - **Inconsistências:** tecle `J` para a primeira, `A` para abonar, digite o motivo e `Enter`. Marque linhas com
+     `X` e abone em lote. Clique numa marcação da linha do tempo para ver a auditoria.
+   - **Como gestor:** abone uma falta da equipe; entre como RH e aprove na aba **Aguardando aprovação**.
+   - **Colaborador:** escolha a Renata — o mês com uma linha do tempo por dia e os totais no topo.
+   - **Cartão ponto:** menu **Cartão ponto**, escolha a Renata (agosto). Na central, `J` e `C` abrem o cartão no dia
+     da inconsistência, com o painel "como resolver" ao lado. Digite um horário numa célula vazia (`1750`), veja a
+     linha "Alterado", clique em **Salvar…**, escolha um motivo e **Salvar e aprovar**: o dia é recalculado na hora.
+     Apague a célula e salve de novo para desfazer. Marque dois dias (Shift + clique) e **Abonar os dias**; desfaça
+     com **Desfazer tudo**.
+   - **Jornada fragmentada:** numa inconsistência "Intervalo maior que 2 h", **Permitir para este cargo** (RH).
+   - **Fechamento:** Fechamento de Ponto de agosto → **O que impede fechar** → **Abrir no cartão**.
+5. Testes automáticos da tela (com o `t iniciar` ligado): `t testes-tela` (uns 3 minutos; 50 testes, com o cartão ponto).
+
+### 7.11A Envio das correções ao Secullum (site de operação — com o RH)
+
+1. **Configuração Secullum → Envio de correções de ponto ao Secullum = Perguntar ao salvar.**
+2. Escolha **um colaborador de teste** no Secullum. No cartão do programa, inclua uma batida num dia aberto e salve
+   com **Enviar também ao Secullum** marcado.
+3. Em **Envio Cartao Secullum** veja a situação (**Enviado** ou **Erro**, com a resposta). Confira no cartão ponto
+   do Secullum que a batida apareceu na coluna certa. Na próxima coleta, o dia do programa continua com uma batida
+   só naquele horário.
+4. Teste também um abono com justificativa do Secullum e confira se o Secullum abonou o dia inteiro (se esperava a
+   justificativa só no primeiro par, avise: é a única regra a confirmar no envio).
+5. Se algo sair errado, volte a trava para **Bloqueado**: nada mais é enviado e as correções continuam no programa.
+
+### 7.12 Testes automáticos
 
 ```powershell
 t testes
 ```
 
-Roda todos os testes do sistema (uns 8 minutos). Deve terminar com **OK**.
+Roda todos os testes do sistema (uns 20 minutos; 333 testes). Deve terminar com **OK**.
 
 ---
 
@@ -438,3 +498,51 @@ Roda todos os testes do sistema (uns 8 minutos). Deve terminar com **OK**.
 | "não pode ser carregado porque a execução de scripts foi desabilitada" | Use sempre o `powershell -ExecutionPolicy Bypass -File ...` (ou a função `t` do passo 1.2) |
 | Mudei o código do sistema | Rode `t migrar` e reinicie o `t iniciar` (Ctrl+C e de novo) |
 | Quero apagar tudo e reinstalar do zero | Veja "Começar do zero" em [docker/README.md](../docker/README.md) (demora 20 a 40 min) |
+| A coleta não traz batidas novas ("Última coleta" vazia em Configuração Secullum) | O agendador do site está desligado (acontece depois de restaurar um backup): `docker exec hrms-secullum-dev-frappe-1 bash -lc "cd /workspace/frappe-bench-16 && bench --site ponto.localhost enable-scheduler"`, com o `t iniciar` ligado |
+| A tela ficou rosa (ou com outra cor) | É o tema do swift_theme: rode `t tema` e recarregue com Ctrl+F5. Para o seu usuário, use **Trocar tema** no menu do usuário |
+| Depois do login aparecem ícones (ERPNext, Frappe HR...) em vez do menu | É a tela inicial do v16: clique em **Ponto e RH** |
+| Vejo a Renata ou a ES Fitness em http://localhost:8000 | Confira o endereço: os dados de teste ficam só em http://testes.localhost:8000 |
+
+## Parte 9 — Importar do Secullum no site de operação (roteiro de aceite)
+
+Aqui o teste é com o **banco real** do Secullum, no site de operação (http://localhost:8000). Nada é enviado ao
+Secullum: o programa só lê.
+
+> **Situação neste computador (20/10/2026):** a importação já foi feita (7 empresas, 156 colaboradores, batidas
+> desde 01/09/2026) e o site foi levado para o v16 com todos os dados. A **coleta automática** está ligada: com o
+> `t iniciar` rodando, o programa busca as batidas novas no Secullum sozinho, a cada 60 minutos (e relê os últimos
+> dias para pegar correções). Acompanhe em **Configuração Secullum** (seção "Saúde da coleta": última coleta,
+> situação e resumo) e em **Secullum Sync Log**. Para buscar na hora: **Configuração Secullum → Coletar batidas
+> agora**. Se quiser repetir a importação dos cadastros: **Importação Secullum → 3. Importar → Repetir só os
+> cadastros**. Só use o `zerar` abaixo se quiser começar do zero de propósito: ele apaga o site de operação.
+
+1. No PowerShell, na pasta do sistema: `t zerar` e digite **APAGAR** quando pedir (recria o site de operação limpo,
+   em português, com o menu enxuto e as cores do painel). Os dados do site de testes não são tocados.
+2. Entre como Administrator → **Ponto e RH** → no espaço **Ponto**, **Importação Secullum → 1. Conectar**: usuário (e-mail do Secullum), senha e
+   o número do banco (ou deixe vazio: o assistente lista os bancos).
+3. **2. Conferir** (leva cerca de 1 minuto): as contagens "No Secullum" devem bater com o Secullum (empresas,
+   horários, funcionários ativos). Anote os problemas listados.
+4. **3. Importar:** confira a data "Importar batidas desde" (1º dia do mês anterior) e confirme. Acompanhe o
+   progresso na tela (cadastros, depois as batidas dia a dia, depois a apuração). Com ~150 colaboradores e dois
+   meses de batidas, leva alguns minutos.
+5. Confira no Desk:
+   - **Empresa:** CNPJ, UF e município de cada uma;
+   - **Perfil de Jornada:** um por horário (`SEC-<número>`), com os mesmos horários do Secullum (sábado/domingo
+     de rodízio marcados como Neutro);
+   - **Cargo** e **Departamento**;
+   - **Colaborador:** ativos com empresa, cargo, perfil e CCT; aba Ponto com Id e matrícula do Secullum;
+   - **Regra Sindical CCT:** "Importada do Secullum", uma por empresa;
+   - **Holiday List:** "Feriados - <empresa>", com os nacionais de 2026 e 2027.
+6. **4. Revisar:** marque os cargos horistas e o banco de horas por cargo; complete a CCT; defina os chefes;
+   cadastre os feriados municipais (Feriado Regional) e gere os feriados.
+7. Painel **/ponto**: o cockpit do mês com as batidas reais, as inconsistências do mês e a linha do tempo de um
+   colaborador — compare com o cartão ponto do mesmo colaborador no Secullum. Diferenças esperadas só onde a regra
+   da CCT do programa difere da do Secullum.
+8. **5. Salários:** baixe o modelo, preencha os salários e importe; a prévia do fechamento deixa de avisar "Sem
+   Salary Structure Assignment".
+9. Ligue a **sincronização diária** no assistente.
+10. Com o `t iniciar` ligado, a coleta automática traz as batidas novas a cada 60 minutos e a fila "Dias a
+    reapurar" apura os dias a cada 10 minutos. Folgas e justificativas lançadas no cartão do Secullum também
+    chegam (Licenças → **Folgas e justificativas do cartão**).
+
+Para repetir do zero: `t zerar` e recomece do passo 2.

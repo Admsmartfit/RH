@@ -87,7 +87,8 @@ def datas_de_trabalho(employee: str, ano: int, mes: int) -> list[date]:
 		perfil = get_perfil_vigente(employee, dia)
 		if perfil and ativo_na_data(emp, dia):
 			jornada, _repouso = dia_da_escala(employee, dia, perfil)
-			if not jornada.folga and not eh_feriado(lista, dia) and not abonos_do_dia(employee, dia):
+			# dia neutro (rodízio) não é dia previsto de trabalho
+			if jornada.periodos and not eh_feriado(lista, dia) and not abonos_do_dia(employee, dia):
 				datas.append(dia)
 		dia += timedelta(days=1)
 	return datas

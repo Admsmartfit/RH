@@ -1,7 +1,14 @@
 // Lista os outros vínculos (registros Employee) da mesma pessoa, identificada pelo CPF (PRD, 4.3).
 frappe.ui.form.on("Employee", {
 	refresh(frm) {
+		if (!frm.is_new()) {
+			// docs/PRD-cartao-ponto.md, CP-03: corrigir o ponto do mês na tela do cartão
+			frm.add_custom_button(__("Abrir cartão ponto"), () =>
+				window.open(`/ponto/cartao/${encodeURIComponent(frm.doc.name)}`, "_self")
+			);
+		}
 		mostrar_salario_e_piso(frm);
+		bloquear_campos_do_secullum(frm);
 		const campo = frm.fields_dict.pessoa_cpf_vinculos;
 		if (!campo) return;
 		const $wrapper = campo.$wrapper.empty();
@@ -51,4 +58,17 @@ function mostrar_salario_e_piso(frm) {
 			frm.dashboard.add_indicator(__("Piso do cargo: {0}", [moeda(r.piso)]), "blue");
 			if (r.aviso) frm.dashboard.set_headline_alert(frappe.utils.escape_html(r.aviso), "orange");
 		});
+}
+
+// Origem Secullum (docs/PRD-importacao-secullum.md, IS-02): o que vem do Secullum é somente leitura aqui.
+function bloquear_campos_do_secullum(frm) {
+	const campos = (frm.doc.__onload || {}).campos_do_secullum || [];
+	for (const campo of campos) {
+		if (!frm.fields_dict[campo]) continue;
+		frm.set_df_property(campo, "read_only", 1);
+		frm.set_df_property(campo, "description", __("Vem do Secullum: altere lá e importe de novo."));
+	}
+	if (campos.length) {
+		frm.dashboard.set_headline(__("Cadastro importado do Secullum: nome, documentos, datas, empresa, cargo, departamento e horário são alterados no Secullum."));
+	}
 }

@@ -1,0 +1,40 @@
+@import "frappe-ui/src/fonts/Inter/inter.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "./styles/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html,
+	body {
+		background: var(--background);
+		color: var(--text);
+		font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+	}
+}
+
+/* foco sempre visível no teclado (WCAG 2.4.7). Fora das camadas do Tailwind para valer sobre o estilo de
+   formulários do frappe-ui, que troca o contorno por sombra. Campos de data/mês focam um subcampo interno do
+   navegador: o campo de fora só casa com :focus-within. */
+:focus-visible,
+input:focus,
+input:focus-within,
+select:focus,
+textarea:focus {
+	outline: 2px solid var(--focus) !important;
+	outline-offset: 2px;
+}
+
+@layer utilities {
+	.sr-only-focusable:not(:focus) {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}

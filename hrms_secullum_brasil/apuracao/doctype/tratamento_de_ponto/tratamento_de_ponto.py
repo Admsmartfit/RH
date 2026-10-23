@@ -10,6 +10,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, date_diff, formatdate, get_datetime, getdate, now_datetime
 
 from hrms_secullum_brasil.apuracao.adaptador import (
+	ABONO,
 	COMPENSACAO,
 	DESCONSIDERAR,
 	INCLUSAO,
@@ -35,6 +36,8 @@ class TratamentodePonto(Document):
 		else:
 			self.data_hora = None
 			self.marcacao = None
+		if self.tipo != ABONO:
+			self.justificativa = None
 		if self.tipo != COMPENSACAO:
 			self.data_folga = None
 		self._validar_duplicidade()
@@ -45,9 +48,26 @@ class TratamentodePonto(Document):
 	def on_submit(self):
 		self.db_set({"aprovado_por": frappe.session.user, "aprovado_em": now_datetime()})
 		self._reapurar()
+		self._enviar_ao_secullum(justificativa=self._justificativa_secullum())
 
 	def on_cancel(self):
 		self._reapurar()
+		self._enviar_ao_secullum(justificativa_retirada=self._justificativa_secullum())
+
+	def _justificativa_secullum(self) -> str | None:
+		if self.tipo != ABONO or not self.justificativa:
+			return None
+		return frappe.db.get_value("Justificativa Secullum", self.justificativa, "nome_abreviado")
+
+	def _enviar_ao_secullum(self, **justificativas):
+		"""CP-10: correção marcada para enviar vai ao cartão do Secullum só depois de aprovada (fila, com a trava)."""
+		if not cint(self.enviar_secullum) or self.tipo == COMPENSACAO:
+			return
+		from hrms_secullum_brasil.ingestion.envio_cartao import agendar
+
+		envio = agendar(self.employee, self.data, motivo=self.motivo, **justificativas)
+		if envio:
+			self.db_set("envio_secullum", envio, update_modified=False)
 
 	# ------------------------------------------------------------------
 
@@ -120,6 +140,8 @@ class TratamentodePonto(Document):
 	def _reapurar(self):
 		from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 
+		if frappe.flags.get("cartao_ponto_lote"):  # o salvar do cartão reapura cada dia uma vez só
+			return
 		reapurar_dia(self.employee, self.data)
 		if self.tipo == COMPENSACAO and self.data_folga:
 			reapurar_dia(self.employee, self.data_folga)
