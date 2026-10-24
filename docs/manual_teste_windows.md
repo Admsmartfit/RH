@@ -454,6 +454,7 @@ A tela nova de trabalho do ponto (cockpit, central de inconsistências com linha
      com **Desfazer tudo**.
    - **Jornada fragmentada:** numa inconsistência "Intervalo maior que 2 h", **Permitir para este cargo** (RH).
    - **Fechamento:** Fechamento de Ponto de agosto → **O que impede fechar** → **Abrir no cartão**.
+   - **Um colaborador por cargo (outubro/2026):** `t cargos` — o roteiro de cada um está em `docs/guia_recursos.md`.
 5. Testes automáticos da tela (com o `t iniciar` ligado): `t testes-tela` (uns 3 minutos; 50 testes, com o cartão ponto).
 
 ### 7.11B Monitoramento de horistas

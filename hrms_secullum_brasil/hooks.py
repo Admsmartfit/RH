@@ -154,7 +154,10 @@ scheduler_events = {
 		"*/10 * * * *": ["hrms_secullum_brasil.apuracao.servico.tick_reapuracao"],
 		# docs/PRD-monitoramento-horistas.md: contagem do mês às 19h e WhatsApp que ficou na fila (8h-20h)
 		"0 19 * * *": ["hrms_secullum_brasil.apuracao.monitoramento_horistas.verificar"],
-		"0 * * * *": ["hrms_secullum_brasil.apuracao.whatsapp.enviar_pendentes"],
+		"0 * * * *": [
+			"hrms_secullum_brasil.apuracao.whatsapp.enviar_pendentes",
+			"hrms_secullum_brasil.apuracao.regras_whatsapp.enviar_ponto_do_dia",  # regras do ponto do dia
+		],
 		# AJ-11: feriados do ano seguinte, todo 1º de dezembro
 		"0 6 1 12 *": ["hrms_secullum_brasil.apuracao.feriados.gerar_ano_seguinte"],
 		# AJ-08: contribuições da CCT da folha anterior, todo dia 1º

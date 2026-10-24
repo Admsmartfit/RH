@@ -1260,3 +1260,39 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   pelo adaptador só com o monitoramento ligado. Site de operação: monitoramento **ligado** (15 min, limite 4, WhatsApp
   desligado); outubro dos horistas reapurado (791 dias): intrajornada diárias 220 → 34; 22 alertas no limite viraram
   22 inconsistências Altas (`excesso_jornada_horista`); 22 mensagens registradas como "não enviada (desligado)".
+
+## Cenário por cargo e guia dos recursos (23/10/2026)
+
+- Pedido: entender os recursos (Employee Grade, regra de premiação, regra de benefício...) com um exemplo real de cada
+  cargo. Decisão do Ricardo: no **site de testes** (não mistura com os dados reais).
+- `utils/cenario_cargos.py:montar` (`t cargos`, idempotente, um savepoint por recurso): 9 colaboradores novos na ES
+  Fitness, um por cargo da operação, com outubro/2026 simulado; tela do Cargo preenchida; Employee Grade (Operacional,
+  Docente, Administrativo); Regra de Benefício VA e Regra de Premiação (assiduidade); ASO, treinamento, uniforme;
+  Grade de Aulas; Escala do mês + Troca de escala; Holiday List Assignment; férias pelo HRMS; atestado; correções pelo
+  cartão; monitoramento de horistas; alertas diários; Fechamento de Ponto de outubro em rascunho com lançamento manual.
+  Conferido: cada pessoa mostra só as situações planejadas; 50 testes de navegador continuam verdes.
+- `docs/guia_recursos.md`: para que serve cada recurso, onde fica e o exemplo correspondente; onde configurar e testar o
+  WhatsApp. Espaço **Ponto** ganhou o cartão **Horistas e WhatsApp** (alertas, mensagens, configuração).
+- **Achado do HRMS v16:** férias e atestados exigem a **Holiday List Assignment** da empresa. `feriados.gerar_feriados`
+  agora cria (e liga `default_holiday_list`) via `garantir_lista_no_hrms`; aplicado no site de operação a 6 empresas
+  (`atribuir_listas_ao_hrms`). A "Live VV Ltda" não tem lista de feriados: gerar os feriados dela.
+- Observação do cenário: o "Banco de horas por padrão" do cargo vale para admissões; quem já está no cargo é ajustado no
+  cadastro (ou "Banco de horas por cargo" da revisão).
+
+## Configuração do site de operação e WhatsApp geral (24/10/2026)
+
+- Decisões CO-1 a CO-4 (`docs/configuracao_operacao.md`): SENALBA × SINDELIVRE para todas as empresas do ES;
+  ginástica por hora trabalhada; Employee Grade por área; WhatsApp começa pelo ponto do dia.
+- Feito no site de operação (backup antes): CCT nova em 6 empresas (as genéricas encerradas em 30/04/2026),
+  colaboradores ligados, 3.024 dias reapurados; Employee Grade por área (campo Grade visível de novo); regras de envio
+  criadas (envio geral desligado). Rotinas em `utils/config_operacao.py`.
+- WhatsApp como recurso geral: DocType **Regra Envio WhatsApp** (evento, colaborador/gestor, empresas e cargos, hora,
+  textos, Testar e Simular), `apuracao/regras_whatsapp.py` (cron de hora em hora do ponto do dia, sem repetir pela
+  chave), `engine/comunicacao.py`; o alerta de horista usa a regra quando existe. Testes: 3 pytest, 5 + 1 Frappe.
+- Traduções: 97 itens do menu do HRMS (licenças, turnos e frequência, desempenho, recrutamento, impostos, despesas) e
+  "Relatórios"; tipos de licença padrão renomeados para português (`localizacao.traduzir_tipos_de_licenca`, também no
+  `concluir_instalacao`).
+- Pendente: os valores da seção "A informar pelo RH" de `docs/configuracao_operacao.md`.
+- Textos das 3 regras de WhatsApp gravados no site de operação (batida esquecida, falta, horista — este com o texto
+  aprovado no `docs/prd_monitoramento_de_horistas.md`, 7.1); filtro do cargo INSTRUTOR na regra do horista. Nomes nas
+  mensagens no formato próprio ("Leandro da Silva"; o Secullum guarda em maiúsculas): `comunicacao.nome_proprio`.

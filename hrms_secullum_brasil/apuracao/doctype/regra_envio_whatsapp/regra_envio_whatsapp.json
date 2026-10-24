@@ -1,0 +1,149 @@
+{
+ "actions": [],
+ "autoname": "field:nome_regra",
+ "creation": "2026-10-24 10:00:00.000000",
+ "description": "Regras das mensagens de WhatsApp aos colaboradores e gestores (evento, destinatários, filtros e texto).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome_regra",
+  "ativa",
+  "evento",
+  "column_break_1",
+  "para_colaborador",
+  "para_gestor",
+  "hora_envio",
+  "filtros_section",
+  "empresas",
+  "column_break_2",
+  "cargos",
+  "mensagens_section",
+  "mensagem_colaborador",
+  "column_break_3",
+  "mensagem_gestor"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_regra",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome da regra",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "ativa",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Ativa"
+  },
+  {
+   "fieldname": "evento",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Quando enviar",
+   "options": "Ponto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "para_colaborador",
+   "fieldtype": "Check",
+   "label": "Enviar ao colaborador"
+  },
+  {
+   "default": "0",
+   "fieldname": "para_gestor",
+   "fieldtype": "Check",
+   "label": "Enviar ao gestor (Reporta a)"
+  },
+  {
+   "default": "9",
+   "depends_on": "eval:doc.evento && doc.evento.startsWith('Ponto do dia')",
+   "fieldname": "hora_envio",
+   "fieldtype": "Int",
+   "label": "Hora do envio (0 a 23)",
+   "non_negative": 1,
+   "description": "O aviso do ponto do dia sai nesta hora, sobre o dia anterior (o envio respeita a janela de 8h às 20h)."
+  },
+  {
+   "fieldname": "filtros_section",
+   "fieldtype": "Section Break",
+   "label": "Para quem (vazio = todos)"
+  },
+  {
+   "fieldname": "empresas",
+   "fieldtype": "Table MultiSelect",
+   "label": "Empresas",
+   "options": "Regra Envio WhatsApp Empresa"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cargos",
+   "fieldtype": "Table MultiSelect",
+   "label": "Cargos",
+   "options": "Regra Envio WhatsApp Cargo"
+  },
+  {
+   "fieldname": "mensagens_section",
+   "fieldtype": "Section Break",
+   "label": "Mensagens"
+  },
+  {
+   "fieldname": "mensagem_colaborador",
+   "fieldtype": "Small Text",
+   "label": "Mensagem ao colaborador",
+   "description": "Marcadores: {primeiro_nome}, {data}, {dia_semana}, {batidas}, {empresa}. No alerta de horista: {ocorrencias}, {limite}, {dias}. Em branco: texto padrão."
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mensagem_gestor",
+   "fieldtype": "Small Text",
+   "label": "Mensagem ao gestor",
+   "description": "Marcadores: {primeiro_nome} (do gestor), {colaborador}, {data}, {dia_semana}, {batidas}. No alerta de horista: {ocorrencias}, {dias}."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-24 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Regra Envio WhatsApp",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "nome_regra"
+}

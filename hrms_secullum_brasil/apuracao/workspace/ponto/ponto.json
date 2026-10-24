@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"Ponto_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Ponto</b></span>\", \"col\": 12}}, {\"id\": \"Ponto_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Painel de ponto\", \"col\": 3}}, {\"id\": \"Ponto_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Inconsistências abertas\", \"col\": 3}}, {\"id\": \"Ponto_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Alta severidade\", \"col\": 3}}, {\"id\": \"Ponto_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tratamentos pendentes\", \"col\": 3}}, {\"id\": \"Ponto_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dias a reapurar\", \"col\": 3}}, {\"id\": \"Ponto_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Apuração diária\", \"col\": 3}}, {\"id\": \"Ponto_s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Marcações originais\", \"col\": 3}}, {\"id\": \"Ponto_s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Importação Secullum\", \"col\": 3}}, {\"id\": \"Ponto_s8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fechamentos\", \"col\": 3}}, {\"id\": \"Ponto_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"Ponto_q0\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Inconsistências abertas\", \"col\": 6}}, {\"id\": \"Ponto_q1\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Tratamentos pendentes\", \"col\": 6}}, {\"id\": \"Ponto_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e regras</b></span>\", \"col\": 12}}, {\"id\": \"Ponto_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Apuração\", \"col\": 4}}, {\"id\": \"Ponto_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Escalas\", \"col\": 4}}, {\"id\": \"Ponto_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Banco de horas\", \"col\": 4}}, {\"id\": \"Ponto_c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Fechamento\", \"col\": 4}}, {\"id\": \"Ponto_c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Regras\", \"col\": 4}}, {\"id\": \"Ponto_c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Integração Secullum\", \"col\": 4}}]",
+ "content": "[{\"id\": \"Ponto_h0\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Ponto</b></span>\", \"col\": 12}}, {\"id\": \"Ponto_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Painel de ponto\", \"col\": 3}}, {\"id\": \"Ponto_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Inconsistências abertas\", \"col\": 3}}, {\"id\": \"Ponto_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Alta severidade\", \"col\": 3}}, {\"id\": \"Ponto_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tratamentos pendentes\", \"col\": 3}}, {\"id\": \"Ponto_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dias a reapurar\", \"col\": 3}}, {\"id\": \"Ponto_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Apuração diária\", \"col\": 3}}, {\"id\": \"Ponto_s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Marcações originais\", \"col\": 3}}, {\"id\": \"Ponto_s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Importação Secullum\", \"col\": 3}}, {\"id\": \"Ponto_s8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fechamentos\", \"col\": 3}}, {\"id\": \"Ponto_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"Ponto_q0\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Inconsistências abertas\", \"col\": 6}}, {\"id\": \"Ponto_q1\", \"type\": \"quick_list\", \"data\": {\"quick_list_name\": \"Tratamentos pendentes\", \"col\": 6}}, {\"id\": \"Ponto_h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Cadastros e regras</b></span>\", \"col\": 12}}, {\"id\": \"Ponto_c0\", \"type\": \"card\", \"data\": {\"card_name\": \"Apuração\", \"col\": 4}}, {\"id\": \"Ponto_c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Escalas\", \"col\": 4}}, {\"id\": \"Ponto_c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Banco de horas\", \"col\": 4}}, {\"id\": \"Ponto_c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Fechamento\", \"col\": 4}}, {\"id\": \"Ponto_horistas_whatsapp\", \"type\": \"card\", \"data\": {\"card_name\": \"Horistas e WhatsApp\", \"col\": 4}}, {\"id\": \"Ponto_c4\", \"type\": \"card\", \"data\": {\"card_name\": \"Regras\", \"col\": 4}}, {\"id\": \"Ponto_c5\", \"type\": \"card\", \"data\": {\"card_name\": \"Integração Secullum\", \"col\": 4}}]",
  "creation": "2026-10-20 16:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -196,6 +196,59 @@
    "doctype": "Workspace Link",
    "hidden": 0,
    "is_query_report": 0,
+   "label": "Horistas e WhatsApp",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alertas de horistas",
+   "link_count": 0,
+   "link_to": "Alerta Horista",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regras de envio do WhatsApp",
+   "link_count": 0,
+   "link_to": "Regra Envio WhatsApp",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mensagens de WhatsApp",
+   "link_count": 0,
+   "link_to": "Notificacao WhatsApp",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Configurar monitoramento e WhatsApp",
+   "link_count": 0,
+   "link_to": "Configuracao Apuracao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
    "label": "Regras",
    "link_count": 4,
    "onboard": 0,
@@ -343,7 +396,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-20 16:00:00.000000",
+ "modified": "2026-10-24 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Ponto",

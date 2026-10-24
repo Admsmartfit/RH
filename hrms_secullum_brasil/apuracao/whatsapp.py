@@ -42,7 +42,13 @@ def cliente():
 
 
 def criar(
-	employee: str | None, destinatario: str, numero: str | None, texto: str, alerta: str | None = None
+	employee: str | None,
+	destinatario: str,
+	numero: str | None,
+	texto: str,
+	alerta: str | None = None,
+	regra: str | None = None,
+	chave: str | None = None,
 ) -> str:
 	doc = frappe.get_doc(
 		{
@@ -52,6 +58,8 @@ def criar(
 			"numero": numero or "",
 			"texto": texto,
 			"alerta": alerta,
+			"regra": regra,
+			"chave": chave,
 		}
 	).insert(ignore_permissions=True)
 	return doc.name

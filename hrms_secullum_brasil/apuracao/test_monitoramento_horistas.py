@@ -271,3 +271,26 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		r = whatsapp.enviar_teste("28 99999-0001")
 		self.assertEqual(r["situacao"], "Enviada")
 		self.assertEqual(self.mock.enviadas[-1]["number"], "5528999990001")
+
+	def test_alerta_usa_a_regra_de_envio_quando_existe(self):
+		from hrms_secullum_brasil.engine import comunicacao as com
+
+		regra = frappe.get_doc(
+			{
+				"doctype": "Regra Envio WhatsApp",
+				"nome_regra": f"Horista {hash_curto()}",
+				"evento": com.HORISTA,
+				"para_colaborador": 1,
+				"mensagem_colaborador": "Oi {primeiro_nome}, {ocorrencias} dias: {dias}.",
+			}
+		).insert()
+		self.addCleanup(regra.db_set, "ativa", 0)
+		employee = self.horista()
+		mh.verificar(HOJE)
+		[n] = frappe.get_all(
+			"Notificacao WhatsApp", filters={"employee": employee}, fields=["regra", "texto"]
+		)
+		self.assertEqual(n.regra, regra.name)
+		self.assertIn("4 dias: 01/10, 02/10, 05/10, 06/10.", n.texto)
+		mh.verificar(HOJE)  # mesmo limite: não repete
+		self.assertEqual(frappe.db.count("Notificacao WhatsApp", {"employee": employee}), 1)

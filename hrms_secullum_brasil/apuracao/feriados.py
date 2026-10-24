@@ -123,8 +123,43 @@ def gerar_feriados(ano: int, company: str | None = None) -> dict:
 		lista.flags.ignore_permissions = True
 		lista.flags.importacao_de_feriados = True
 		lista.save()
+		garantir_lista_no_hrms(empresa, lista)
 		resumo[empresa] = len(novos)
 	return resumo
+
+
+def garantir_lista_no_hrms(company: str, lista) -> None:
+	"""HRMS v16: férias e atestados (Leave Application) só são aceitos com a lista de feriados atribuída à empresa
+	(Holiday List Assignment). A mesma lista do ponto passa a valer para o HRMS, se ele ainda não tiver uma."""
+	if not frappe.db.get_value("Company", company, "default_holiday_list"):
+		frappe.db.set_value("Company", company, "default_holiday_list", lista.name)
+	if not frappe.db.exists("DocType", "Holiday List Assignment") or frappe.db.exists(
+		"Holiday List Assignment", {"assigned_to": company, "docstatus": 1}
+	):
+		return
+	atribuicao = frappe.get_doc(
+		{
+			"doctype": "Holiday List Assignment",
+			"applicable_for": "Company",
+			"assigned_to": company,
+			"holiday_list": lista.name,
+			"from_date": lista.from_date,
+		}
+	)
+	atribuicao.insert(ignore_permissions=True)
+	atribuicao.submit()
+
+
+@frappe.whitelist()
+def atribuir_listas_ao_hrms() -> dict:
+	"""Uma vez, para as empresas que já têm a lista do ponto: registra a lista também para o HRMS."""
+	frappe.only_for(("System Manager", "RH Ponto"))
+	feitas = {}
+	for company, nome in frappe.get_all("Company", fields=["name", "holiday_list_ponto"], as_list=True):
+		if nome:
+			garantir_lista_no_hrms(company, frappe.get_doc("Holiday List", nome))
+			feitas[company] = nome
+	return feitas
 
 
 def gerar_ano_seguinte():

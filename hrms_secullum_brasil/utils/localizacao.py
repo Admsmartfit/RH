@@ -178,6 +178,7 @@ def concluir_instalacao() -> None:
 	from hrms_secullum_brasil.payroll_handoff.rubricas import preencher_codigos_folha
 
 	preencher_codigos_folha()  # v16: as fixtures entram depois do after_install e apagam os códigos da folha
+	traduzir_tipos_de_licenca()
 	aplicar_brasil()
 	ocultar_recursos()
 	aplicar_tema()
@@ -225,3 +226,28 @@ def pode_ver_app() -> bool:
 	if frappe.session.user == "Administrator":
 		return True
 	return bool(set(frappe.get_roles()) & set(PAPEIS_DO_APP))
+
+
+# Tipos de licença padrão do HRMS: a lista de seleção mostra o nome gravado, então o nome passa a ser em português
+TIPOS_DE_LICENCA = {
+	"Casual Leave": "Licença ocasional",
+	"Compensatory Off": "Folga compensatória",
+	"Sick Leave": "Licença médica",
+	"Privilege Leave": "Férias",
+	"Leave Without Pay": "Licença não remunerada",
+}
+
+
+def traduzir_tipos_de_licenca() -> dict:
+	"""Renomeia os tipos de licença padrão do HRMS para português (as referências são atualizadas; se o nome em
+	português já existir, os dois viram um só). Idempotente."""
+	feitos = {}
+	for antigo, novo in TIPOS_DE_LICENCA.items():
+		if not frappe.db.exists("Leave Type", antigo):
+			continue
+		existe = bool(frappe.db.exists("Leave Type", novo))
+		frappe.rename_doc("Leave Type", antigo, novo, merge=existe, force=True, show_alert=False)
+		frappe.db.set_value("Leave Type", novo, "leave_type_name", novo, update_modified=False)
+		feitos[antigo] = novo
+	frappe.db.commit()
+	return feitos

@@ -17,6 +17,7 @@ from frappe.utils import cint, getdate, now_datetime, today
 from hrms_secullum_brasil.apuracao import whatsapp
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
 from hrms_secullum_brasil.configuracao_ponto.regras import RegraAmbiguaError, get_regra_vigente
+from hrms_secullum_brasil.engine import comunicacao as com
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine import monitoramento_horista as mh
 
@@ -131,7 +132,39 @@ def _abrir_inconsistencia(alerta, datas: list[date], fim: date) -> str:
 
 
 def notificar(alerta, datas: list[date], cfg) -> list[str]:
-	"""WhatsApp ao horista (e ao gestor, se configurado). Com o envio desligado, fica registrado como não enviado."""
+	"""WhatsApp ao horista (e ao gestor, se configurado). Com uma Regra de Envio WhatsApp ativa para o evento, valem
+	os destinatários, filtros e textos dela; senão, os da Configuração Apuração. Com o envio desligado, fica
+	registrado como não enviado."""
+	from hrms_secullum_brasil.apuracao import regras_whatsapp
+
+	regras = regras_whatsapp.regras_ativas(com.HORISTA)
+	if regras:
+		emp = frappe.db.get_value(
+			"Employee",
+			alerta.employee,
+			["name", "first_name", "employee_name", "company", "designation", "cell_number", "reports_to"],
+			as_dict=True,
+		)
+		valores = {
+			"primeiro_nome": com.primeiro_nome(emp.first_name or emp.employee_name),
+			"colaborador": com.nome_proprio(emp.employee_name),
+			"ocorrencias": len(datas),
+			"limite": cfg.limite,
+			"dias": mh.dias_curtos(datas),
+			"empresa": emp.company,
+		}
+		marco = f"{alerta.competencia}-limite-{alerta.ultimo_limite_avisado}"  # um aviso por limite do mês
+		nomes = []
+		for regra in regras:
+			empresas, cargos = regras_whatsapp._filtros(regra)
+			if not com.alcanca(emp.company, emp.designation, empresas, cargos):
+				continue
+			if not regra.mensagem_colaborador:
+				regra.mensagem_colaborador = cfg.mensagem_horista
+			if not regra.mensagem_gestor:
+				regra.mensagem_gestor = cfg.mensagem_gestor
+			nomes += regras_whatsapp.avisar(regra, emp, marco, valores, alerta.name)
+		return nomes
 	emp = frappe.db.get_value(
 		"Employee",
 		alerta.employee,
@@ -141,7 +174,7 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 	nomes = []
 	texto = mh.montar_mensagem(
 		cfg.mensagem_horista,
-		primeiro_nome=emp.first_name or emp.employee_name,
+		primeiro_nome=com.primeiro_nome(emp.first_name or emp.employee_name),
 		ocorrencias=len(datas),
 		limite=cfg.limite,
 		dias=mh.dias_curtos(datas),
@@ -153,8 +186,8 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 		)
 		texto_gestor = mh.montar_mensagem(
 			cfg.mensagem_gestor,
-			primeiro_nome=gestor.first_name or gestor.employee_name,
-			colaborador=emp.employee_name,
+			primeiro_nome=com.primeiro_nome(gestor.first_name or gestor.employee_name),
+			colaborador=com.nome_proprio(emp.employee_name),
 			ocorrencias=len(datas),
 			dias=mh.dias_curtos(datas),
 		)

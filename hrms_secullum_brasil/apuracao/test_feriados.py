@@ -79,6 +79,8 @@ class TestFeriados(FrappeTestCase):
 		self.assertNotIn(date(2027, 2, 9), datas)  # Carnaval: ponto facultativo não adotado
 		self.assertNotIn(date(2027, 3, 28), datas)  # domingo de Páscoa
 		self.assertEqual(gerar_feriados(2027, EMPRESA), {EMPRESA: 0})
+		# HRMS v16: a lista passa a valer também para férias e atestados (Holiday List Assignment)
+		self.assertTrue(frappe.db.exists("Holiday List Assignment", {"assigned_to": EMPRESA, "docstatus": 1}))
 
 	def test_aj11_ponto_facultativo_adotado_entra(self):
 		empresa = frappe.get_doc("Company", EMPRESA)

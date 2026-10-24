@@ -29,6 +29,7 @@
 #   apurar      apura um dia sem batida (gera a falta):  apurar recepcao 2026-10-07
 #   agosto      gera o mês de agosto/2026 inteiro (batidas e apuração) dos 8 colaboradores de teste
 #   setembro    cria os 14 cenários de batida de setembro/2026 do manual
+#   cargos      cria um colaborador por cargo com outubro/2026 e todos os recursos (docs/guia_recursos.md)
 #   limpar      apaga batidas, apurações e fechamentos dos colaboradores de teste (recomeçar do zero)
 #   testes      roda todos os testes automáticos (uns 8 minutos)
 #   testes-tela roda os testes de navegador do painel (com o "iniciar" ligado)
@@ -95,6 +96,7 @@ switch ($acao) {
 	"apurar" { Bench $testes "execute hrms_secullum_brasil.utils.demo.apurar_env" }
 	"agosto" { Bench $testes "execute hrms_secullum_brasil.utils.demo.gerar_agosto" }
 	"setembro" { Bench $testes "execute hrms_secullum_brasil.utils.demo.cenarios_setembro" }
+	"cargos" { Bench $testes "execute hrms_secullum_brasil.utils.cenario_cargos.montar" }
 	"limpar" { Bench $testes "execute hrms_secullum_brasil.utils.demo.limpar_teste" }
 	"testes" { Bench $testes "run-tests --app hrms_secullum_brasil" }
 	"testes-tela" { docker exec $container bash -lc "cd /workspace/src/hrms_secullum_brasil/frontend && yarn test:e2e" }
