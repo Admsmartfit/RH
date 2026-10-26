@@ -7,10 +7,10 @@ Rotinas: `utils/config_operacao.py` (idempotentes).
 
 | # | Pergunta | Decisão |
 |---|---|---|
-| CO-1 | Convenção das empresas do ES | **SENALBA-ES × SINDELIVRE-ES 2026/2027** para todas (ES Fitness Matriz e Vila Velha, Funcional da Praia, Praia Fitness, Live VV, Trindade) |
-| CO-2 | Pagamento do instrutor de ginástica | **Por hora trabalhada** (horista); as aulas entram na Escala do mês |
-| CO-3 | Employee Grade | **Por área**: Operacional, Instrutores, Docentes, Administrativo |
-| CO-4 | Primeira comunicação por WhatsApp | **Ponto do dia** (batida esquecida), com regras de envio configuráveis |
+| CO-1 | Convenção das empresas do ES | **SENALBA-ES × SINDELIVRE-ES 2026/2027** para todas (ES Fitness Matriz e Vila Velha, Funcional da Praia, Praia Fitness, Live VV, Trindade) |-SIM
+| CO-2 | Pagamento do do instrutor e instrutor de ginástica | **Por hora trabalhada** (horista); as aulas entram na Escala do mês |-SIM
+| CO-3 | Employee Grade | **Por área**: Operacional, Instrutores, Docentes, Administrativo |-SIM
+| CO-4 | Primeira comunicação por WhatsApp | **Ponto do dia** (batida esquecida), com regras de envio configuráveis |-SIM
 
 ## Já configurado
 
@@ -35,10 +35,10 @@ Preencha e devolva; o que ficar em branco continua sem configurar.
 
 | Cargo | Valor (R$/mês ou R$/hora) | Igual para todos do cargo? | Piso da CCT 2026/2027 | Banco de horas por padrão | Mínimo de horas |
 |---|---|---|---|---|---|
-| Recepcionista | | | (PRD: R$ 1.650 para 44h — exemplo) | (PRD: sim) | — |
-| Auxiliar de serviços gerais | | | (PRD: sem conferência) | (PRD: sim) | — |
-| Instrutor de ginástica | (R$/hora) | | (PRD: R$ 15,20/h) | (PRD: não) | (h por mês ou semana) |
-
+| Recepcionista |R$/mês | sim | (PRD: R$ 1776,50  para 44h ) | (PRD: sim) | — |
+| Auxiliar de serviços gerais |R$/mês |sim  | PRD: R$ 1650,00  para 44h  | (PRD: sim) | — |
+| Instrutor de ginástica | (R$/hora) | sim | (PRD: R$ 40,15/h) | (PRD: não) | (h por mês ou semana) |
+| Instrutor | (R$/hora) |sim  | (PRD: R$ 16,50/h) | (PRD: não) | (h por mês ou semana) |
 ### ASG — insalubridade e segurança
 
 - Insalubridade: 20% (grau médio) sobre o **salário contratual** (como no PRD) ou sobre o **salário mínimo**? Número e
@@ -52,20 +52,23 @@ Preencha e devolva; o que ficar em branco continua sem configurar.
 ### Benefícios e prêmio
 
 - **VR:** valor por dia; quem recebe (todos? horistas também?); descontos (PRD: falta, atestado, férias, afastamento,
-  abono).
-- **VA:** existe? Valor e quem recebe.
+  abono). Recebe recepcionista e asg, 22,00 o dia trabalhado.  
+- **VA:** existe? Valor e quem recebe.Nao existe
 - **Prêmio de assiduidade:** existe? Valor, cargos e regras (ex.: 100% sem falta; 50% com 1 falta).
+recepcao- 250,00 sem falta , sem atestados. e 150 se tiver apenas uma falta ou atestado. assima de dois dias perde o 250.
+ASG - ainda nao tem assiduidade
+
 
 ### Vale-transporte (Serra, Vitória, Vila Velha)
 
-- Tarifas de 2026: **Transcol** (Grande Vitória) e **ônibus municipal de Vitória** (e outra, se houver).
-- Quem usa VT, quantas passagens por dia, número do CartãoGV e RG de cada um (pode ser uma planilha).
+- Tarifas de 2026: **Transcol** (Grande Vitória) e **ônibus municipal de Vitória** (e outra, se houver). r$5,10 por trajeto
+- Quem usa VT, quantas passagens por dia, número do CartãoGV e RG de cada um (pode ser uma planilha). Principalmente asg e recpcao, os instrutores nao recebem mas somente solicitando.
 
 ### Escalas
 
 - Recepção e ASG: o Secullum tem o fim de semana em rodízio (neutro). Gerar a **Escala do mês** de novembro a partir do
-  horário do Secullum, para o gestor marcar quem trabalha em cada sábado/domingo? Ou o gestor monta do zero?
-- Ginástica: os horários das aulas de cada instrutor (manhã/noite, sábados) para a Escala do mês, ou quem vai lançar.
+  horário do Secullum, para o gestor marcar quem trabalha em cada sábado/domingo? Ou o gestor monta do zero? pode criar a escala a partir horario secullum
+- Ginástica: os horários das aulas de cada instrutor (manhã/noite, sábados) para a Escala do mês, ou quem vai lançar.pode tirar do secummul tambem
 
 ### WhatsApp
 
