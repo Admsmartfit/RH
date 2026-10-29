@@ -93,7 +93,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Escalas",
-   "link_count": 3,
+   "link_count": 9,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -127,6 +127,73 @@
    "link_count": 0,
    "link_to": "Escala do Mes",
    "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Cockpit de escalas (painel)",
+   "link_count": 0,
+   "link_to": null,
+   "link_type": "URL",
+   "onboard": 0,
+   "type": "Link",
+   "url": "/ponto/escalas"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Turnos padrão",
+   "link_count": 0,
+   "link_to": "Turno Padrao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Indisponibilidades",
+   "link_count": 0,
+   "link_to": "Indisponibilidade",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Publicações de escala",
+   "link_count": 0,
+   "link_to": "Publicacao de Escala",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Quebras assumidas",
+   "link_count": 0,
+   "link_to": "Quebras Assumidas",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Alterações de horário (assinatura)",
+   "link_count": 0,
+   "link_to": "Alteracao de Jornada",
+   "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   },
@@ -197,7 +264,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Horistas e WhatsApp",
-   "link_count": 4,
+   "link_count": 7,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -242,6 +309,39 @@
    "link_count": 0,
    "link_to": "Configuracao Apuracao",
    "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Termos de ocorrências",
+   "link_count": 0,
+   "link_to": "Termo de Ocorrencias",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Conta de e-mail (Google)",
+   "link_count": 0,
+   "link_to": "Email Account",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Relatório de termos de ocorrências",
+   "link_count": 0,
+   "link_to": "Termos de Ocorrencias",
+   "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   },
@@ -396,7 +496,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-24 10:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Ponto",

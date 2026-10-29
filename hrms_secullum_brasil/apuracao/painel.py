@@ -93,7 +93,7 @@ def opcoes_filtros() -> dict:
 		"empresas": sorted({x.company for x in linhas if x.company}),
 		"filiais": sorted({(x.company, x.branch) for x in linhas if x.branch}),
 		"departamentos": sorted({(x.company, x.department) for x in linhas if x.department}),
-		"status_inconsistencia": ["Aberta", "Resolvida", "Todas"],
+		"status_inconsistencia": ["Aberta", "Aguardando termo", "Resolvida", "Mantida", "Todas"],
 		"severidades": list(SEVERIDADES),
 		"tipos_inconsistencia": [t for t in tipos if t],
 	}
@@ -226,6 +226,7 @@ def resumo(competencia: str, company=None, branch=None, department=None) -> dict
 		"banco_a_vencer": _banco_a_vencer(filtros),
 		"alertas_inss": _alertas_inss(filtros),
 		"horistas_no_limite": _horistas_no_limite(filtros, f"{inicio.year}-{inicio.month:02d}"),
+		"termos": _termos_aguardando(filtros),
 		"inconsistencias": _inconsistencias_por_severidade(filtros, inicio, fim),
 		"reapuracao": _fila_reapuracao(filtros, inicio, fim),
 		"secullum": _ultimo_sync(),
@@ -269,6 +270,27 @@ def _banco_a_vencer(filtros: dict) -> dict | None:
 		"minutos": cint(linha.minutos),
 		"colaboradores": cint(linha.colaboradores),
 		"primeiro_vencimento": str(linha.primeiro) if linha.primeiro else None,
+	}
+
+
+def _termos_aguardando(filtros: dict) -> dict | None:
+	"""docs/PRD-termo-ocorrencias.md (TO-11): termos aguardando assinatura e quantos passaram do prazo."""
+	doctype = "Termo de Ocorrencias"
+	if not _pode_ler(doctype):
+		return None
+	condicoes = _filtros(doctype, **filtros)
+	if condicoes is None:
+		return {"aguardando": 0, "atrasados": 0}
+	itens = frappe.get_list(
+		doctype,
+		filters={**condicoes, "status": "Aguardando assinatura"},
+		fields=["prazo"],
+		limit_page_length=0,
+	)
+	hoje = getdate(today())
+	return {
+		"aguardando": len(itens),
+		"atrasados": sum(1 for i in itens if i.prazo and getdate(i.prazo) < hoje),
 	}
 
 

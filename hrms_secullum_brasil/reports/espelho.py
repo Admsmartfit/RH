@@ -34,7 +34,9 @@ def _ocorrencias(employee: str, inicio, fim) -> dict:
 		fields=["data", "tipo", "status"],
 		order_by="tipo asc",
 	):
-		por_dia[getdate(inc.data)].append(inc.tipo + (" (tratada)" if inc.status == "Resolvida" else ""))
+		por_dia[getdate(inc.data)].append(
+			inc.tipo + (" (tratada)" if inc.status in ("Resolvida", "Mantida") else "")
+		)
 	return por_dia
 
 

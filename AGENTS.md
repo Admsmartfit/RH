@@ -134,3 +134,42 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   - Engine: `pytest` puro, em `hrms_secullum_brasil/engine/tests/`, roda sem bench. Cobertura do engine ≥ 90%.
   - Integração Frappe: `FrappeTestCase` dentro da pasta de cada DocType, rodados com `bench run-tests`.
 - Antes de concluir qualquer mudança: `ruff check .`, `ruff format --check .` e `pytest --cov`.
+
+## Cockpit de escalas e tratamento de inconsistências — docs/PRD-cockpit-escalas.md e docs/PRD-tratamento-inconsistencias.md
+
+- **Validação da escala** só no engine: `engine/escala_validacao.py` (quebras, soluções A/B, `ajustar_repouso`),
+  `engine/escala_custo.py` (custo previsto; nunca gera verba — DE-3), `engine/escala_equidade.py`,
+  `engine/turno_padrao.py`. O Frappe fica em `apuracao/cockpit_escala.py` (mês, validar, rascunho, publicar).
+- **Rascunho → Publicar:** o cockpit grava `Rascunho de Escala`; só `cockpit_escala.publicar` (ou a mudança urgente
+  < 48h) escreve na Escala Mensal, registra a `Publicacao de Escala` e chama `whatsapp_escala.avisar_publicacao`.
+  A apuração nunca lê rascunho. Turno no dia de repouso move o repouso (`ajustar_repouso`).
+- **"Manter" nunca cria verba** (DT-2): no cartão vira o status `Mantida` da Inconsistencia de Ponto
+  (`inconsistencias.manter`; a reapuração não reabre; dia "Ressalva"); na escala, a justificativa e o custo previsto
+  ficam no dia. O pagamento é sempre o da apuração do ponto real.
+- **Regras de WhatsApp têm homologação** (CE-09): regra em teste deixa a mensagem "Aguardando envio manual";
+  `whatsapp.enviar_manual` (RH) envia. Retorno de entregue/lida só pelo `whatsapp.webhook_evolution` (token secreto;
+  parser puro em `integrations/evolution/webhook.py`), ligado pelo `id_mensagem`.
+- **Balão compartilhado:** `Balao.vue` / `PopoverInconsistencia.vue` / `DialogoTexto.vue` servem ao cartão e ao
+  cockpit; ações e textos vêm do servidor (`engine/sugestoes.py`, `cockpit_escala.validar`).
+- **Horário fixo com assinatura (CE-16):** classificação só em `engine/alteracao_jornada.py`; fluxo em
+  `apuracao/jornada_assinatura.py` (o horário só entra no `historico_perfil_jornada` quando todos assinaram e o
+  perfil SEC-n igual existe; envio ao Secullum só pela trava `Configuracao Secullum.envio_horarios`, na data de
+  início, mandando o cadastro lido com só o `HorarioNumero` trocado). Páginas sem login (`www/disponibilidade`,
+  `www/assinar`) abrem só com token HMAC e mostram só os dados do próprio colaborador.
+
+## Termo de ocorrências — docs/PRD-termo-ocorrencias.md
+
+- Regra pura em `engine/termo_ocorrencias.py` (o que entra no termo, a regularização proposta de cada dia — a mesma
+  sugestão do cartão —, resumo, prazos em dias úteis e reincidência); Frappe em `apuracao/termo_ocorrencias.py`
+  (emissão, PDF, e-mail, página `/ponto/termo`, cobrança diária e lote). Tipo novo que caiba num termo entra em
+  `termo_ocorrencias.NOMES` (há teste).
+- O gestor é o **Reporta a** do colaborador (celular e e-mail do cadastro dele); o e-mail sai pela conta padrão do
+  Email Account (Google: serviço GMail e senha de app). Sem gestor ou sem conta: pendência, nunca erro.
+- Inconsistência no termo fica **Aguardando termo** (a reapuração não reabre; se o problema some, resolve). Um termo
+  em aberto por colaborador.
+- A confirmação (link do e-mail/QR do gestor ou assinatura pelo celular) **aplica direto** pelo
+  `cartao_ponto.salvar` (motivo "Termo de ocorrências X assinado"; o intervalo do termo com `MOTIVO_TERMO` e o PDF como
+  anexo); "Ciente" vira Mantida; "não reconhece" e recusa (2 testemunhas) devolvem ao RH. Um GET nunca confirma.
+- Toda confirmação gera o **comprovante** (PDF do termo + página do registro: quem, quando, IP, aparelho, respostas),
+  que é o anexo dos tratamentos; mudança de status grava `Version` (`_versao`). O lote roda em fila
+  (`emitir_lote` → `progresso_lote`); o relatório "Termos de Ocorrencias" usa `engine.termo_ocorrencias.estatisticas`.

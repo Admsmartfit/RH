@@ -132,8 +132,13 @@ SEMANAS_MES_PROFESSOR = 4.5
 
 # Jornada contratual
 JORNADA_DIARIA_MAXIMA_MIN = 480  # Art. 58: acima disso, o horista/intermitente faz hora extra
+# Art. 59: 8h + 2h extras; acima disso a escala do cockpit bloqueia (DE-6)
+JORNADA_MAXIMA_COM_HE_MIN = JORNADA_DIARIA_MAXIMA_MIN + LIMITE_HE_DIARIA_MIN
 DIVISOR_PADRAO = 220
 CARGA_SEMANAL_MAXIMA_MIN = 2640  # 44h — Art. 7º, XIII CF
+
+# Cockpit de escalas (docs/PRD-cockpit-escalas.md, DE-7): mudança com menos antecedência pede justificativa
+ANTECEDENCIA_ESCALA_MIN = 48 * 60
 
 # Vale-transporte — Lei 7.418/1985, art. 4º, parágrafo único; Decreto 10.854/2021
 PERCENTUAL_DESCONTO_VT = 6  # do salário base, limitado ao valor do benefício

@@ -53,6 +53,8 @@ const menu = [
 	{ nome: "Cockpit", rotulo: "Cockpit", exato: true },
 	{ nome: "Inconsistencias", rotulo: "Inconsistências" },
 	{ nome: "Cartao", rotulo: "Cartão ponto" },
+	{ nome: "Escalas", rotulo: "Escalas" },
+	{ nome: "Termos", rotulo: "Termos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },
 ];
 

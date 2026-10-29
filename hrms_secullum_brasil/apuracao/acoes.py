@@ -9,7 +9,7 @@ import json
 import frappe
 from frappe import _
 
-from hrms_secullum_brasil.apuracao.adaptador import ABONO, DESCONSIDERAR, INCLUSAO, RAW
+from hrms_secullum_brasil.apuracao.adaptador import ABONO, ABONO_PARCIAL, DESCONSIDERAR, INCLUSAO, RAW
 
 INCONSISTENCIA = "Inconsistencia de Ponto"
 TRATAMENTO = "Tratamento de Ponto"
@@ -45,6 +45,32 @@ def _criar_tratamento(inc, tipo: str, motivo: str, anexo: str | None = None, **c
 	if frappe.has_permission(TRATAMENTO, "submit", doc):
 		doc.submit()
 	return {"name": doc.name, "aprovado": doc.docstatus == 1}
+
+
+@frappe.whitelist()
+def abono_parcial(inconsistencia: str, minutos: int, motivo: str, anexo: str | None = None) -> dict:
+	"""TI-06: abona só os minutos do atraso/saída antecipada (a batida não muda)."""
+	return _criar_tratamento(
+		_inconsistencia(inconsistencia), ABONO_PARCIAL, motivo, anexo, minutos_abonados=int(minutos)
+	)
+
+
+@frappe.whitelist()
+def manter(inconsistencias, motivo: str | None = None) -> int:
+	"""TI-03: mantém com ressalva (nada a corrigir no ponto; não cria verba)."""
+	from hrms_secullum_brasil.apuracao.inconsistencias import manter as manter_uma
+
+	nomes = _lista(inconsistencias)
+	for nome in nomes:
+		manter_uma(nome, motivo)
+	return len(nomes)
+
+
+@frappe.whitelist()
+def desfazer_manter(inconsistencia: str) -> str:
+	from hrms_secullum_brasil.apuracao.inconsistencias import desfazer_manter as desfazer
+
+	return desfazer(inconsistencia)
 
 
 def _por_dia(nomes) -> list:

@@ -35,7 +35,7 @@
 			Status
 			<select class="campo mt-1" :value="filtros.status" @change="(e) => definir({ status: e.target.value })">
 				<option v-for="s in opcoes.data?.status_inconsistencia || ['Aberta']" :key="s" :value="s">
-					{{ s === "Aberta" ? "Abertas" : s === "Resolvida" ? "Resolvidas" : "Todas" }}
+					{{ { Aberta: "Abertas", "Aguardando termo": "Aguardando termo", Resolvida: "Resolvidas", Mantida: "Mantidas (ressalva)" }[s] || "Todas" }}
 				</option>
 			</select>
 		</label>

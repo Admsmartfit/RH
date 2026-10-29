@@ -1,0 +1,152 @@
+{
+ "actions": [],
+ "autoname": "CONV-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "designation",
+  "data",
+  "periodos",
+  "horario",
+  "turno_padrao",
+  "column_break_situacao",
+  "situacao",
+  "escolhido",
+  "observacao",
+  "respostas_section",
+  "respostas"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cargo",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Dia",
+   "reqd": 1
+  },
+  {
+   "description": "JSON: [[\"08:00\", \"11:00\"], [\"11:15\", \"14:15\"]]",
+   "fieldname": "periodos",
+   "fieldtype": "Small Text",
+   "label": "Turno",
+   "reqd": 1
+  },
+  {
+   "fieldname": "horario",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Horário",
+   "read_only": 1
+  },
+  {
+   "fieldname": "turno_padrao",
+   "fieldtype": "Link",
+   "label": "Turno padrão",
+   "options": "Turno Padrao"
+  },
+  {
+   "fieldname": "column_break_situacao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Aberto",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Aberto\nPreenchido\nCancelado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escolhido",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Escalado",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  },
+  {
+   "fieldname": "respostas_section",
+   "fieldtype": "Section Break",
+   "label": "Convidados"
+  },
+  {
+   "fieldname": "respostas",
+   "fieldtype": "Table",
+   "label": "Convidados",
+   "options": "Convite de Turno Resposta"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Convite de Turno",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

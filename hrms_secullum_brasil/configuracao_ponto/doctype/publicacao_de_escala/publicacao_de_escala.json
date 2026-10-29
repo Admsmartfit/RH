@@ -1,0 +1,126 @@
+{
+ "actions": [],
+ "autoname": "PUB-ESC-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "publicado_por",
+  "publicado_em",
+  "column_break_periodo",
+  "inicio",
+  "fim",
+  "urgente",
+  "colaboradores",
+  "linhas_section",
+  "linhas"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "publicado_por",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Publicado por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "publicado_em",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Publicado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_periodo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "label": "Primeiro dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fim",
+   "fieldtype": "Date",
+   "label": "Último dia",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Mudança a menos de 48h do turno, publicada na hora (DE-7).",
+   "fieldname": "urgente",
+   "fieldtype": "Check",
+   "label": "Urgente",
+   "read_only": 1
+  },
+  {
+   "fieldname": "colaboradores",
+   "fieldtype": "Int",
+   "label": "Colaboradores",
+   "read_only": 1
+  },
+  {
+   "fieldname": "linhas_section",
+   "fieldtype": "Section Break",
+   "label": "Dias publicados"
+  },
+  {
+   "fieldname": "linhas",
+   "fieldtype": "Table",
+   "label": "Dias",
+   "options": "Publicacao de Escala Linha",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Publicacao de Escala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

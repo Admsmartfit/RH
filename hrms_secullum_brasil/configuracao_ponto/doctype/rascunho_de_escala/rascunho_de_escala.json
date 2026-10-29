@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "gestor",
+  "column_break_dia",
+  "data",
+  "situacao",
+  "periodos",
+  "turno_padrao",
+  "auditoria_section",
+  "quebras",
+  "justificativa",
+  "custo_estimado",
+  "alterado_por"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_dia",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Dia",
+   "reqd": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Situação",
+   "options": "Trabalho\nRepouso semanal\nFolga compensada\nNeutro",
+   "reqd": 1
+  },
+  {
+   "description": "JSON: [[\"08:00\", \"11:00\"], [\"11:15\", \"14:15\"]]",
+   "fieldname": "periodos",
+   "fieldtype": "Small Text",
+   "label": "Períodos"
+  },
+  {
+   "fieldname": "turno_padrao",
+   "fieldtype": "Link",
+   "label": "Turno padrão",
+   "options": "Turno Padrao"
+  },
+  {
+   "fieldname": "auditoria_section",
+   "fieldtype": "Section Break",
+   "label": "Quebras e justificativa"
+  },
+  {
+   "fieldname": "quebras",
+   "fieldtype": "Small Text",
+   "label": "Quebras",
+   "read_only": 1
+  },
+  {
+   "fieldname": "justificativa",
+   "fieldtype": "Small Text",
+   "label": "Justificativa"
+  },
+  {
+   "fieldname": "custo_estimado",
+   "fieldtype": "Currency",
+   "label": "Custo estimado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alterado_por",
+   "fieldtype": "Link",
+   "label": "Alterado por",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Rascunho de Escala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "employee_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

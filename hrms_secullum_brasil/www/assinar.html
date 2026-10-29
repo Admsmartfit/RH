@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Assinar documento de horário</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 40rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; }
+		#documento { background: #ffffff; color: #0f172a; border: 1px solid var(--borda); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; }
+		label { display: block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
+		input { width: 100%; min-height: 44px; padding: 0.5rem; border: 1px solid var(--borda); border-radius: 0.375rem; background: transparent; color: inherit; font: inherit; }
+		.botoes { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+		button { min-height: 44px; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.secundario { background: transparent; color: var(--primario); }
+		button.perigo { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+	</style>
+</head>
+<body>
+	<main>
+		<h1 id="titulo">Documento de horário</h1>
+		<section id="documento" aria-label="Documento" tabindex="0"><p>Carregando…</p></section>
+		<form id="form" hidden>
+			<p class="suave">Para assinar, confirme o seu CPF e o código que enviamos ao seu WhatsApp.</p>
+			<label for="cpf">CPF</label>
+			<input id="cpf" inputmode="numeric" autocomplete="off" required />
+			<div class="botoes"><button type="button" class="secundario" id="pedir">Receber o código no WhatsApp</button></div>
+			<label for="codigo">Código de 6 dígitos</label>
+			<input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required />
+			<div class="botoes">
+				<button type="submit">Li e assino</button>
+				<button type="button" class="perigo" id="recusar">Não concordo</button>
+			</div>
+		</form>
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.jornada_assinatura";
+		const token = new URLSearchParams(location.search).get("token") || "";
+		const $ = (id) => document.getElementById(id);
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto;
+		}
+		function erroDe(corpo) {
+			try {
+				return JSON.parse(JSON.parse(corpo._server_messages)[0]).message;
+			} catch (e) {
+				return "Não foi possível concluir.";
+			}
+		}
+
+		async function post(metodo, dados) {
+			const r = await fetch(`${API}.${metodo}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(Object.assign({ token }, dados)),
+			});
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) throw new Error(erroDe(corpo));
+			return corpo.message;
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.documento?token=${encodeURIComponent(token)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("documento").innerHTML = "";
+				status("Link inválido. Fale com o seu gestor.", "erro");
+				return;
+			}
+			const d = corpo.message;
+			$("titulo").textContent = d.titulo;
+			$("documento").innerHTML = d.html;
+			if (d.aberto) $("form").hidden = false;
+			else status(`Situação: ${d.situacao}.`, "suave");
+		}
+
+		$("pedir").addEventListener("click", async () => {
+			try {
+				const r = await post("pedir_codigo", {});
+				status(r.enviado ? `Código enviado para ${r.celular}. Vale por 15 minutos.` : "O código não saiu agora: tente de novo em instantes.", r.enviado ? "ok" : "erro");
+				$("codigo").focus();
+			} catch (e) {
+				status(e.message, "erro");
+			}
+		});
+		$("recusar").addEventListener("click", async () => {
+			if (!window.confirm("Recusar o novo horário? Nada muda e o seu gestor será avisado.")) return;
+			try {
+				await post("recusar", {});
+				$("form").hidden = true;
+				status("Recusado. O seu horário continua o mesmo.", "ok");
+			} catch (e) {
+				status(e.message, "erro");
+			}
+		});
+		$("form").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			try {
+				await post("assinar", { cpf: $("cpf").value, codigo: $("codigo").value });
+				$("form").hidden = true;
+				status("Assinado. Obrigado! Uma cópia fica no seu cadastro.", "ok");
+			} catch (erro) {
+				status(erro.message, "erro");
+			}
+		});
+		carregar();
+	</script>
+</body>
+</html>

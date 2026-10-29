@@ -219,6 +219,47 @@ Botão **Espelhos de ponto** no fechamento enviado. Cada espelho tem os dias, os
 espaço para assinatura e o código de verificação (hash) no rodapé. É um relatório **gerencial**: o espelho
 oficial é o do Secullum.
 
+## Cockpit de escalas e WhatsApp da escala
+
+- **Turnos padrão** (Ponto → Escalas → Turnos padrão): por empresa e, se quiser, por cargo; entrada, saída e pausa
+  (6h seguidas pedem 15 min: T1 08:00–14:15 e T2 14:00–20:15). Aparecem na paleta do cockpit.
+- **Indisponibilidades**: períodos (dia inteiro ou horário) em que a pessoa não pode; sem dado de saúde.
+- **Publicações de escala**: registro de cada publicação (quem, quando, antes e depois de cada dia e o WhatsApp).
+- **Quebras assumidas** (relatório): o que foi mantido com justificativa, o custo previsto e o realizado da apuração.
+  O custo é só previsão: a folha paga pelo ponto real.
+- **WhatsApp da escala**: crie a Regra de Envio do evento "Escala: turno incluído/alterado/removido" (marcadores
+  `{primeiro_nome}`, `{empresa}`, `{mudancas}`). Toda regra nasce **Em teste**: as mensagens ficam "Aguardando envio
+  manual" e o RH confere e clica em **Enviar agora** na Notificação. Depois de conferir, mude a regra para **Em
+  produção**. O mesmo vale para a "Cobrança de inconsistência" do cartão (`{data}`, `{dia_semana}`, `{descricao}`).
+- **Comprovante de leitura**: na Configuração Apuração, preencha o "Token do webhook da Evolution" e configure o webhook
+  da Evolution (evento MESSAGES_UPDATE) com a URL indicada no campo. Quem desliga a confirmação de leitura no WhatsApp
+  aparece só como "Entregue".
+
+## Alterar o horário fixo com assinatura
+
+1. Crie o novo horário como **Perfil de Jornada** (pode ser um modelo) e abra **Ponto → Escalas → Alterações de
+   horário (assinatura)**: empresa, data de início e, para cada pessoa, o perfil com o novo horário.
+2. Ao salvar, cada linha mostra o horário de hoje e o novo, a carga e o noturno, e a **classificação**: *Ciência*
+   (termo; ajuste no mesmo turno), *Concordância* (aditivo; muda carga, turno, dias, noturno ou tira HE habitual),
+   *Proibida* (quebra a lei ou reduz salário: não envia) ou *Dispensada* (só muda dia flexível: sem assinatura).
+   Dias flexíveis ficam no cadastro do colaborador ("Escala flexível" ou "Dias flexíveis").
+3. **Enviar para assinatura**: cada pessoa recebe pelo WhatsApp (regra "Jornada: documento para assinar") o link
+   pessoal; ela lê, confirma o CPF e o código de 6 dígitos e assina (ficam data/hora, IP, aparelho e o SHA-256 do PDF,
+   anexado ao cadastro). Sem WhatsApp: **Imprimir documento**, colher a assinatura, anexar em "Documento em papel" e
+   **Registrar assinatura em papel**.
+4. **Libera só com todos** e com o horário existente no Secullum (a API não cria horário: crie lá, importe, e o job
+   diário liga sozinho). Liberado, o horário entra no Histórico de horário a partir da data de início.
+5. Na data de início, o horário vai ao Secullum se **Configuração Secullum → Envio de horários** = "Sempre enviar"
+   (padrão: Bloqueado). Falha vira a pendência "Horário não enviado ao Secullum"; recusa ou prazo vencido vira
+   "Alteração de horário parada" — ajuste o cenário (tire a pessoa ou mude o horário).
+
+## Inconsistência mantida com ressalva
+
+"Manter" (no balão do cartão ou em Ações → "Manter com ressalva" na lista do Desk) tira a inconsistência da fila sem
+mexer no ponto e sem criar verba. A de severidade Alta exige motivo. A reapuração não reabre a mantida. Para voltar
+atrás, só o RH: "Desfazer manter" (`acoes.desfazer_manter`). **Abono parcial**: Tratamento "Abono parcial" com os
+minutos de atraso abonados (a batida não muda; não vai ao Secullum).
+
 ## Escala do mês e trocas de escala
 
 **Escala Mensal** (uma por colaborador e mês): cada dia é **Trabalho** (com horário), **Repouso semanal**,
@@ -442,6 +483,33 @@ Neutro no Perfil de Jornada (ver "Escala do mês e trocas de escala").
 Regras e perfis têm **vigência**. Para mudar uma regra, **encerre a vigência atual e crie uma nova**, sem
 editar a antiga: o histórico dos meses fechados continua igual. Não é possível encerrar uma vigência dentro de
 um período já fechado.
+
+## Termo de ocorrências
+
+Para quem acumula ocorrências (intervalo, batida faltando, atraso, falta…), o termo junta tudo do período com a
+**correção que o sistema sugere** em cada dia.
+
+- **Um colaborador:** no cartão ponto, botão **Termo de ocorrências** → confira os dias e o texto do WhatsApp → **Emitir
+  e enviar**.
+- **Vários com o mesmo problema:** painel → **Termos** (ou o cartão "Termos aguardando assinatura" do cockpit) →
+  escolha o problema e o período → marque as pessoas → **Emitir**. Um termo por pessoa.
+- As ocorrências ficam **Aguardando termo**. O gestor (campo **Reporta a** do colaborador) recebe o e-mail com o PDF e
+  registra a assinatura pelo link; conforme ou com alteração, a correção entra direto no cartão. "Não reconheço" e
+  recusa voltam para a sua fila.
+- **Prazos (dias úteis):** 3 para assinar; depois, WhatsApp diário ao gestor; no 10º, aviso ao celular/e-mail do RH e
+  a pendência Alta "Termo não assinado". Reenviar e cancelar: na tela Termos.
+- **Reincidência:** no 3º termo em 90 dias, o RH recebe um aviso para avaliar orientação formal (nada automático).
+- **Configurar uma vez:** Configuração Apuração → seção *Termo de ocorrências* (celular e e-mail do RH, prazos, lista
+  semanal) e **Conta de e-mail (Google)** no espaço Ponto: Email Account com o serviço **GMail**, o e-mail da conta, a
+  **senha de app** do Google (exige verificação em duas etapas) e "Enviar e-mails" + "Conta de saída padrão" marcados.
+  Preencha o **Reporta a** de cada colaborador (lista de Colaboradores → selecionar → Editar → Reporta a).
+- No diálogo dá para mudar o período (por padrão começa depois do último termo) e abrir **Ver PDF (prévia)** antes de
+  emitir. Na tela Termos, a **Sugestão da semana** leva quem tem ocorrências nas últimas 2 semanas para o lote; o lote
+  mostra uma barra de progresso.
+- Cada confirmação gera o **comprovante** (o PDF do termo com a página de quem registrou, quando, IP e respostas),
+  anexado ao termo e aos tratamentos. Relatório: espaço Ponto → **Relatório de termos de ocorrências** (por
+  colaborador: emitidos, assinados, recusados, tempo até assinar e taxa de recusa).
+- O texto do termo é de ciência e regularização, **não é advertência**. Peça a revisão do advogado antes do uso.
 
 ## Dúvidas frequentes
 

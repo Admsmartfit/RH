@@ -51,6 +51,7 @@ frappe.listview_settings["Inconsistencia de Ponto"] = {
 	add_fields: ["severidade", "status"],
 	get_indicator(doc) {
 		if (doc.status === "Resolvida") return [__("Resolvida"), "green", "status,=,Resolvida"];
+		if (doc.status === "Mantida") return [__("Mantida (ressalva)"), "blue", "status,=,Mantida"];
 		const cor = { Alta: "red", "Média": "orange", Baixa: "yellow" }[doc.severidade] || "gray";
 		return [__(doc.severidade || "Aberta"), cor, "severidade,=," + doc.severidade];
 	},
@@ -63,6 +64,31 @@ frappe.listview_settings["Inconsistencia de Ponto"] = {
 		listview.page.add_actions_menu_item(__("Lançar atestado"), () =>
 			dialogo_motivo(listview, __("Lançar atestado"), "lancar_atestado")
 		);
+
+		// docs/PRD-tratamento-inconsistencias.md (TI-03): nada a corrigir no ponto; não cria verba
+		listview.page.add_actions_menu_item(__("Manter com ressalva"), () => {
+			const nomes = exigir(listview);
+			if (!nomes) return;
+			frappe.prompt(
+				[
+					{
+						fieldname: "motivo",
+						fieldtype: "Small Text",
+						label: __("Motivo (obrigatório para severidade Alta)"),
+					},
+				],
+				(v) =>
+					frappe.call(`${ACOES}.manter`, { inconsistencias: nomes, motivo: v.motivo }).then((r) => {
+						frappe.show_alert({
+							message: __("{0} inconsistência(s) mantida(s) com ressalva.", [r.message]),
+							indicator: "blue",
+						});
+						listview.refresh();
+					}),
+				__("Manter com ressalva"),
+				__("Confirmar")
+			);
+		});
 
 		listview.page.add_actions_menu_item(__("Incluir marcação"), () => {
 			const nomes = exigir(listview, true);

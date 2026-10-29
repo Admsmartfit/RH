@@ -17,12 +17,17 @@
   "severidade",
   "status",
   "responsavel",
+  "termo",
   "detalhes_section",
   "descricao",
   "referencia_doctype",
   "referencia_name",
   "apuracao",
-  "resolvido_em"
+  "resolvido_em",
+  "ressalva_section",
+  "motivo_manter",
+  "mantida_por",
+  "mantida_em"
  ],
  "fields": [
   {
@@ -95,7 +100,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tipo",
-   "options": "marcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\naula_nao_registrada\ncref_vencido\nerro_sync_cadastro\nbatida_periodo_fechado\nconfiguracao_ausente\nbanco_horas_rescisao\nlimite_aulas_excedido\ndomingos_sem_folga\nsete_dias_seguidos\ndescanso_semanal\nepi_sem_entrega\nepi_troca_vencida\nepi_ca_vencido\nepi_devolucao_pendente\naso_vencido\ntreinamento_vencido\nexcesso_jornada_estagio\nexcesso_semanal_estagio\ntce_vencido\nrelatorio_estagio_pendente\nseguro_estagio_vencido\nnascimento_ausente\ncolaborador_nao_encontrado_secullum\nalteracao_periodo_fechado\nenvio_cartao_secullum\nexcesso_jornada_horista\nwhatsapp_nao_enviado",
+   "options": "marcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\naula_nao_registrada\ncref_vencido\nerro_sync_cadastro\nbatida_periodo_fechado\nconfiguracao_ausente\nbanco_horas_rescisao\nlimite_aulas_excedido\ndomingos_sem_folga\nsete_dias_seguidos\ndescanso_semanal\nepi_sem_entrega\nepi_troca_vencida\nepi_ca_vencido\nepi_devolucao_pendente\naso_vencido\ntreinamento_vencido\nexcesso_jornada_estagio\nexcesso_semanal_estagio\ntce_vencido\nrelatorio_estagio_pendente\nseguro_estagio_vencido\nnascimento_ausente\ncolaborador_nao_encontrado_secullum\nalteracao_periodo_fechado\nenvio_cartao_secullum\nexcesso_jornada_horista\nwhatsapp_nao_enviado\nescala_nao_publicada\nalteracao_jornada\nenvio_horario_secullum\ntermo_sem_gerente\ntermo_nao_assinado\nemail_termo_nao_enviado",
    "reqd": 1
   },
   {
@@ -114,13 +119,22 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Aberta\nResolvida"
+   "options": "Aberta\nResolvida\nMantida\nAguardando termo"
   },
   {
    "fieldname": "responsavel",
    "fieldtype": "Link",
    "label": "Responsável",
    "options": "User"
+  },
+  {
+   "depends_on": "eval:doc.termo",
+   "fieldname": "termo",
+   "fieldtype": "Link",
+   "label": "Termo de ocorrências",
+   "options": "Termo de Ocorrencias",
+   "read_only": 1,
+   "description": "Aguardando termo: o colaborador vai conferir e assinar a correção no termo (docs/PRD-termo-ocorrencias.md)."
   },
   {
    "fieldname": "detalhes_section",
@@ -156,10 +170,37 @@
    "fieldtype": "Datetime",
    "label": "Resolvida em",
    "read_only": 1
+  },
+  {
+   "collapsible": 0,
+   "depends_on": "eval:doc.status=='Mantida'",
+   "fieldname": "ressalva_section",
+   "fieldtype": "Section Break",
+   "label": "Mantida com ressalva"
+  },
+  {
+   "description": "Nada a corrigir no ponto: o que a apuração calcula (pagar ou descontar) fica valendo. Não cria verba.",
+   "fieldname": "motivo_manter",
+   "fieldtype": "Small Text",
+   "label": "Motivo para manter",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mantida_por",
+   "fieldtype": "Link",
+   "label": "Mantida por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mantida_em",
+   "fieldtype": "Datetime",
+   "label": "Mantida em",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-10-23 12:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Inconsistencia de Ponto",

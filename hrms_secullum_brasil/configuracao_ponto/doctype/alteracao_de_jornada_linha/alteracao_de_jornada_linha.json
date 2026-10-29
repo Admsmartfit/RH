@@ -1,0 +1,228 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "perfil_desejado",
+  "horario_novo",
+  "classificacao",
+  "assinatura",
+  "column_break_impacto",
+  "perfil_atual",
+  "resumo_antes",
+  "resumo_depois",
+  "carga_antes",
+  "carga_depois",
+  "noturno_depois",
+  "motivos",
+  "secullum_section",
+  "perfil_secullum",
+  "numero_secullum",
+  "envio_secullum",
+  "envio_resposta",
+  "assinatura_section",
+  "documento",
+  "hash_documento",
+  "assinado_em",
+  "assinatura_ip",
+  "assinatura_aparelho",
+  "documento_papel",
+  "codigo_hash",
+  "codigo_expira"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "description": "O novo horário semanal: escolha um Perfil de Jornada com os horários desejados (pode ser um modelo).",
+   "fieldname": "perfil_desejado",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Novo horário (perfil)",
+   "options": "Perfil de Jornada"
+  },
+  {
+   "fieldname": "horario_novo",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Novo horário (JSON)"
+  },
+  {
+   "fieldname": "classificacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Classificação",
+   "options": "\nCiência\nConcordância\nProibida\nDispensada",
+   "read_only": 1
+  },
+  {
+   "default": "Pendente",
+   "fieldname": "assinatura",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Assinatura",
+   "options": "Pendente\nEnviado\nAssinado\nAssinado em papel\nRecusado\nVencido",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_impacto",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "perfil_atual",
+   "fieldtype": "Link",
+   "label": "Perfil atual",
+   "options": "Perfil de Jornada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resumo_antes",
+   "fieldtype": "Data",
+   "label": "Horário de hoje",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resumo_depois",
+   "fieldtype": "Data",
+   "label": "Novo horário",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_antes",
+   "fieldtype": "Int",
+   "label": "Carga semanal antes (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "carga_depois",
+   "fieldtype": "Int",
+   "label": "Carga semanal depois (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "noturno_depois",
+   "fieldtype": "Int",
+   "label": "Noturno por semana depois (min)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivos",
+   "fieldtype": "Small Text",
+   "label": "Por quê",
+   "read_only": 1
+  },
+  {
+   "fieldname": "secullum_section",
+   "fieldtype": "Section Break",
+   "label": "Secullum"
+  },
+  {
+   "description": "Horário do Secullum igual ao novo (perfil SEC-n). Vazio: criar o horário no Secullum e importar.",
+   "fieldname": "perfil_secullum",
+   "fieldtype": "Link",
+   "label": "Perfil do Secullum",
+   "options": "Perfil de Jornada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "numero_secullum",
+   "fieldtype": "Int",
+   "label": "Número do horário no Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "envio_secullum",
+   "fieldtype": "Select",
+   "label": "Envio ao Secullum",
+   "options": "\nAguardando\nEnviado\nErro\nBloqueado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "envio_resposta",
+   "fieldtype": "Small Text",
+   "label": "Resposta do Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assinatura_section",
+   "fieldtype": "Section Break",
+   "label": "Assinatura"
+  },
+  {
+   "fieldname": "documento",
+   "fieldtype": "Attach",
+   "label": "Documento assinado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hash_documento",
+   "fieldtype": "Data",
+   "label": "SHA-256 do documento",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assinado_em",
+   "fieldtype": "Datetime",
+   "label": "Assinado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assinatura_ip",
+   "fieldtype": "Data",
+   "label": "IP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assinatura_aparelho",
+   "fieldtype": "Small Text",
+   "label": "Aparelho",
+   "read_only": 1
+  },
+  {
+   "description": "Sem WhatsApp: anexe o documento assinado em papel e use \"Registrar assinatura em papel\".",
+   "fieldname": "documento_papel",
+   "fieldtype": "Attach",
+   "label": "Documento em papel"
+  },
+  {
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Código (hash)"
+  },
+  {
+   "fieldname": "codigo_expira",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Código vale até"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Alteracao de Jornada Linha",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

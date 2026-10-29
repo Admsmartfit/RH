@@ -8,6 +8,7 @@
   "origem_cadastros",
   "sincronizar_cadastros",
   "envio_correcoes",
+  "envio_horarios",
   "modo_mock",
   "conexao_section",
   "url_auth",
@@ -199,11 +200,19 @@
    "fieldtype": "Table",
    "label": "Colunas do Secullum",
    "options": "Mapeamento Total Secullum"
+  },
+  {
+   "default": "Bloqueado",
+   "description": "CE-16: envio do novo horário (HorarioNumero) das alterações de jornada liberadas, na data de início. Bloqueado: nada é enviado (o horário vale só no programa).",
+   "fieldname": "envio_horarios",
+   "fieldtype": "Select",
+   "label": "Envio de horários ao Secullum",
+   "options": "Bloqueado\nSempre enviar"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-22 12:00:00.000000",
+ "modified": "2026-10-27 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Ingestion",
  "name": "Configuracao Secullum",

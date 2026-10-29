@@ -1,4 +1,4 @@
-# PRD — Cockpit de escalas flexíveis para horistas
+faca# PRD — Cockpit de escalas flexíveis para horistas
 
 Plano em etapas a partir de `docs/PRD V3.0 - Cockpit de Escalas Flexíveis para Horistas.md` (proposta do RH),
 adaptado ao que o programa já tem e às práticas dos sistemas de escala atuais (When I Work, 7shifts, Deputy,
@@ -9,6 +9,8 @@ lei antes de virar multa, custo da escala ligado à folha).
 - **Como executar:** seção 8, uma etapa por conversa. Requisitos `CE-01`… e decisões `DE-1`… nunca são renumerados.
 - **Escopo:** Fase 1 da proposta (cockpit, validação CLT, assistente de resolução, custo, WhatsApp com homologação).
   Fases 2 (turnos em aberto) e 3 (troca entre colegas) ficam preparadas, não implementadas.
+- **Feito junto com** `docs/PRD-tratamento-inconsistencias.md` (popover, "manter com ressalva" e WhatsApp editável no
+  cartão ponto, requisitos `TI-`): as etapas dos dois PRDs seguem o plano conjunto da seção 8.1.
 
 ## 1. O que o RH quer (resumo da proposta V3.0)
 
@@ -167,6 +169,9 @@ mudança só passa a valer depois que o colaborador assina.
 ### CE-05 — Assistente de resolução
 - Janela com as quebras em linguagem de RH e as soluções da matriz da V3.0 (A: ajuste de horário; B: substituir por
   colega sem conflito — lista calculada; C: manter com custo e justificativa obrigatória), aplicadas em um clique.
+- A "janela" é o mesmo balão do cartão ponto (`PopoverInconsistencia.vue`, TI-01) ancorado no card, e a
+  justificativa usa o modal de texto (TI-02). "Manter" segue a regra do TI-03/DT-2: registra a ressalva, **não**
+  cria verba (o pagamento continua pelo ponto real, DE-3).
 
 ### CE-06 — Custo em tempo real
 - Valor-hora do colaborador (salário vigente ÷ divisor) e percentuais da CCT pelo `engine/valoracao.py`: custo de
@@ -243,12 +248,15 @@ mudança só passa a valer depois que o colaborador assina.
 - A grade grava na `Escala Mensal` (mesma fonte da apuração); `Troca de Escala` continua para trocas formais.
 - A apuração continua sendo a fonte da folha; o cockpit só prevê e registra (DE-3).
 - As regras de WhatsApp do cockpit são as mesmas Regras de Envio (com CE-09).
+- Com o cartão ponto (`docs/PRD-tratamento-inconsistencias.md`, seção 5): mesmo balão, mesmo modal, mesma regra de
+  "manter" e o mesmo envio de WhatsApp. A homologação (CE-09) e o comprovante de entrega/leitura (CE-12) valem também
+  para a "Cobrança de inconsistência" (TI-08).
 
 ## 8. Plano de etapas
 
 | Etapa | O que faz | Requisitos | Situação |
 |---|---|---|---|
-| 1 | Engine de validação da escala (todas as quebras, com os dias escondidos e as batidas reais) e soluções A/B | CE-04, CE-05 | A fazer |
+| 1 | Engine de validação da escala (todas as quebras, com os dias escondidos e as batidas reais) e soluções A/B | CE-04, CE-05 | **Feita (26/10/2026)**: `engine/escala_validacao.py` |
 | 2 | Custo das quebras e do turno pelo `valoracao` | CE-06 | A fazer |
 | 3 | Turno Padrão, indisponibilidade e campos de auditoria no dia da escala | CE-02, CE-07, CE-10 | A fazer |
 | 4 | API do cockpit: ler o mês, validar movimento, gravar (com justificativa e custo), equidade | CE-01, CE-03, CE-07 | A fazer |
@@ -267,3 +275,28 @@ mudança só passa a valer depois que o colaborador assina.
 
 Ordem sugerida: a etapa 9 pode vir logo depois da 5 (o rascunho muda a gravação da etapa 4), e a etapa 13 junto da 5
 se o gestor for usar mais no celular.
+
+### 8.1 Plano conjunto com o tratamento de inconsistências
+
+As etapas `TI-E1`… são do `docs/PRD-tratamento-inconsistencias.md` (seção 7). Uma etapa por conversa, nesta ordem;
+os números das etapas de cada PRD não mudam.
+
+| Ordem | Etapa | O que faz | Por que aqui |
+|---|---|---|---|
+| 1 | CE 1 | Engine de validação da escala e soluções A/B | Base do cockpit — **feita** |
+| 2 | TI-E1 | Engine das ações do balão e pré-preenchimento | Base do cartão; independente da CE 1 — **feita** |
+| 3 | TI-E2 | Inconsistência "Mantida" (ressalva), sem reabrir | Define a regra de "manter" usada pelo CE-05 |
+| 4 | CE 2 | Custo das quebras e do turno | Texto de "manter" do cockpit mostra o custo |
+| 5 | TI-E3 | Abono parcial | Independente; libera o cartão completo |
+| 6 | CE 3 | Turno Padrão, indisponibilidade, auditoria no dia da escala | — |
+| 7 | TI-E4 | Componentes compartilhados: balão e modal de texto | Precisa existir antes das duas telas |
+| 8 | TI-E5 | Cartão ponto com o balão, um clique e badges | Primeira tela a usar o balão |
+| 9 | CE 4 | API do cockpit | — |
+| 10 | CE 5 | Tela da grade (com CE 13 junto, se o gestor usar mais no celular) | Reaproveita o balão (TI-E4) |
+| 11 | CE 9 | Rascunho → Publicar | Muda a gravação da CE 4 |
+| 12 | CE 6 | Assistente de resolução no balão | Reaproveita balão, modal e "manter" |
+| 13 | CE 7 | WhatsApp da escala e homologação das regras | Cria a homologação usada pela TI-E6 |
+| 14 | TI-E6 | Cobrar pelo WhatsApp no cartão | Usa homologação e registro da CE 7 |
+| 15 | CE 10 | Comprovante de ciência (entregue/lido) | Vale para escala e cobrança |
+| 16 | CE 8 e TI-E7 | Relatórios, manuais, AGENTS.md, e2e e acessibilidade dos dois | Fechamento conjunto |
+| 17+ | CE 11 a 16 | Copiar/modelos, indisponibilidade pelo colaborador, celular, horário fixo com assinatura | Sem dependência do cartão |

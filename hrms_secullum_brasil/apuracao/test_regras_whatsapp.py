@@ -66,6 +66,7 @@ class TestRegrasWhatsApp(FrappeTestCase):
 		self.regra = frappe.get_doc(
 			{
 				"doctype": "Regra Envio WhatsApp",
+				"situacao": "Em produção",  # CE-09: estes testes cobrem o envio automático
 				"nome_regra": f"Batida esquecida {hash_curto()}",
 				"evento": com.BATIDA_ESQUECIDA,
 				"para_colaborador": 1,
@@ -135,6 +136,7 @@ class TestRegrasWhatsApp(FrappeTestCase):
 			frappe.get_doc(
 				{
 					"doctype": "Regra Envio WhatsApp",
+					"situacao": "Em produção",  # CE-09: estes testes cobrem o envio automático
 					"nome_regra": f"X {hash_curto()}",
 					"evento": com.FALTA,
 					"para_colaborador": 0,

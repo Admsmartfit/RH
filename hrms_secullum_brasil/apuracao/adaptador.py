@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta
 
 import frappe
-from frappe.utils import cint, flt, getdate
+from frappe.utils import cint, flt, get_datetime, getdate
 
 from hrms_secullum_brasil.apuracao.lote import ativo, consultar, documento, janela, memo, valor_single
 from hrms_secullum_brasil.configuracao_ponto.cargo import jornada_fragmentada
@@ -43,6 +43,7 @@ EFEITO_FALTA = "Falta"
 INCLUSAO = "Inclusao de marcacao"
 DESCONSIDERAR = "Desconsiderar marcacao"
 ABONO = "Abono do dia"
+ABONO_PARCIAL = "Abono parcial"  # TI-06
 COMPENSACAO = "Compensação de feriado"  # AJ-03
 ESTAGIARIO = "Estagiario"  # EST-04
 MARGEM_DIAS = 9  # pré-carga das batidas além da janela do lote (semana do descanso semanal + virada)
@@ -316,6 +317,71 @@ def folgas_compensatorias(employee: str, data: date) -> list[str]:
 	return [c.name for c in _compensacoes(employee, data) if c.data_folga and getdate(c.data_folga) == data]
 
 
+def abonos_parciais(employee: str, data: date) -> tuple[int, list[str]]:
+	"""TI-06: soma dos minutos dos abonos parciais aprovados do dia e os tratamentos."""
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		todos = memo(
+			("abonos_parciais", employee),
+			lambda: frappe.get_all(
+				TRATAMENTO,
+				filters={
+					"docstatus": 1,
+					"tipo": ABONO_PARCIAL,
+					"employee": employee,
+					"data": ["between", list(periodo)],
+				},
+				fields=["name", "data", "minutos_abonados"],
+			),
+		)
+		do_dia = [t for t in todos if getdate(t.data) == data]
+	else:
+		do_dia = frappe.get_all(
+			TRATAMENTO,
+			filters={"docstatus": 1, "tipo": ABONO_PARCIAL, "employee": employee, "data": data},
+			fields=["name", "minutos_abonados"],
+		)
+	return sum(cint(t.minutos_abonados) for t in do_dia), [t.name for t in do_dia]
+
+
+def pausas_do_termo(employee: str, data: date) -> int:
+	"""Minutos das pausas incluídas pelo termo assinado (inclusões aprovadas com o motivo do termo, em pares): pausa
+	remunerada, paga como trabalhado (decisão do RH, 28/10/2026)."""
+	from hrms_secullum_brasil.apuracao.cartao_ponto import MOTIVO_TERMO
+
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		todas = memo(
+			("pausas_termo", employee),
+			lambda: frappe.get_all(
+				TRATAMENTO,
+				filters={
+					"docstatus": 1,
+					"tipo": INCLUSAO,
+					"employee": employee,
+					"motivo": MOTIVO_TERMO,
+					"data": ["between", list(periodo)],
+				},
+				fields=["data", "data_hora"],
+			),
+		)
+		horas = [t.data_hora for t in todas if getdate(t.data) == data]
+	else:
+		horas = frappe.get_all(
+			TRATAMENTO,
+			filters={
+				"docstatus": 1,
+				"tipo": INCLUSAO,
+				"employee": employee,
+				"motivo": MOTIVO_TERMO,
+				"data": data,
+			},
+			pluck="data_hora",
+		)
+	horas = sorted(get_datetime(h) for h in horas)
+	return sum(int((b - a).total_seconds() // 60) for a, b in zip(horas[::2], horas[1::2], strict=False))
+
+
 def abonos_do_dia(employee: str, data: date) -> list[str]:
 	"""Tratamentos de abono, atestados e licenças aprovadas (férias, afastamentos) que cobrem o dia."""
 	periodo = janela()
@@ -483,7 +549,9 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	anteriores, _ = marcacoes(vinculos_na_empresa(emp), data - timedelta(days=1), hora_virada)
 	abonos = abonos_do_dia(employee, data) + folgas_compensatorias(employee, data) + abono_cartao
 	compensado = compensacoes_do_feriado(employee, data)
-	ctx.tratamentos = tratamentos + abonos + compensado
+	minutos_abonados, parciais = abonos_parciais(employee, data)
+	pausa_termo = pausas_do_termo(employee, data)
+	ctx.tratamentos = tratamentos + abonos + compensado + parciais
 	if perfil.tipo == PROFESSOR:
 		aulas, recesso = grade
 		ctx.entrada_professor = EntradaProfessor(
@@ -507,6 +575,8 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		regra=regra,
 		feriado=eh_feriado(lista_de_feriados(emp), data),
 		abonado=bool(abonos),
+		minutos_abonados=minutos_abonados,
+		minutos_pausa_termo=pausa_termo,
 		feriado_compensado=bool(compensado),
 		repouso=repouso,
 		setimo_dia=bool(do_dia) and setimo_dia_seguido(data, dias_trabalhados(employee, data)),

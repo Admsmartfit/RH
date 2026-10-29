@@ -1296,3 +1296,339 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Textos das 3 regras de WhatsApp gravados no site de operação (batida esquecida, falta, horista — este com o texto
   aprovado no `docs/prd_monitoramento_de_horistas.md`, 7.1); filtro do cargo INSTRUTOR na regra do horista. Nomes nas
   mensagens no formato próprio ("Leandro da Silva"; o Secullum guarda em maiúsculas): `comunicacao.nome_proprio`.
+
+## Respostas do RH aplicadas no site de operação (26/10/2026)
+
+- `utils/config_operacao.py:aplicar_respostas_rh` (idempotente; backup antes): tela do Cargo de recepção (R$ 1.776,50),
+  ASG (R$ 1.650,00), ginástica (R$ 40,15/h) e musculação (R$ 16,50/h) com salário = piso desde 01/11/2026 (36
+  atribuições de salário); VR R$ 22/dia trabalhado (recepção e ASG) e prêmio assiduidade da recepção (250/150/0) em
+  cada empresa do ES desde 01/11/2026; tarifa VT R$ 5,10 e 2 trajetos/dia para 25 de recepção e ASG; 36 Escalas de
+  novembro pelo horário do Secullum. Detalhes e pendências em `docs/configuracao_operacao.md`.
+- Segunda rodada (`aplicar_respostas_rh_2`): banco ligado para os 28 atuais de recepção/ASG (desde 01/11/2026);
+  mínimo de 40 h semanais para os 34 instrutores horistas; insalubridade de 20% sobre o salário base do ASG em cada
+  empresa do ES (desde 01/11/2026); WhatsApp às 9h (já era o padrão).
+- Pendente: CartãoGV e RG de cada um e código GVBus; laudo LTCAT, EPI, uniforme, treinamentos e ASO do ASG;
+  credenciais da Evolution.
+
+## Atualização minor do v16 (26/10/2026)
+
+- Frappe 16.52.0 → **16.53.0**, ERPNext 16.51.1 → **16.52.1**, HRMS 16.51.0 → **16.52.0** (branch `version-16`, pedido
+  do Ricardo pelo aviso do Desk). Backup dos 3 sites antes; commits anteriores em `/workspace/antes_update_20261026.txt`
+  (frappe 4515014c, erpnext 5af6561f, hrms 2478afc7) para voltar atrás. Migração dos 3 sites sem erro; `bench build`.
+- Aviso "Novas atualizações estão disponíveis" desligado (System Settings → `disable_system_update_notification`) nos
+  3 sites. Próximas atualizações: mesmo roteiro (backup, pull, migrate, build, suíte no site de testes).
+- Suíte no site de testes: 383 testes, 2 falhas que não eram da atualização, corrigidas nos testes: `Employee.grade`
+  visível desde a CO-3 e cargo com/sem acento na importação (o banco compara sem acento e reaproveita o cargo já
+  cadastrado, ex.: "Educação Física" do cenário de exemplo).
+
+## Cockpit de escalas — etapa 1 do plano conjunto (CE 1, 26/10/2026)
+
+- `docs/PRD-tratamento-inconsistencias.md` criado (proposta do RH em PDF, decisões DT-1 a DT-11) e intercalado com o
+  cockpit no plano conjunto (`docs/PRD-cockpit-escalas.md`, 8.1).
+- `engine/escala_validacao.py` (puro, CE-04/CE-05): `quebras_da_escala`, `validar` (só as quebras novas e as do dia
+  alterado; batidas reais no lugar da escala nos dias passados; antecedência com `agora`), `solucoes_ajuste`
+  (solução A: pausa mantendo as horas, começar mais tarde, terminar mais cedo, intervalo de no máximo 2h — só entra
+  o ajuste que resolve sem criar outra quebra) e `substitutos` (solução B: colegas sem nenhuma quebra somando o turno
+  ao que já têm no dia, menor carga da semana primeiro). Quebras: interjornada, intervalo (15 min acima de 4h, 1h ou
+  o reduzido da CCT acima de 6h), intervalo acima de 2h sem jornada fragmentada, excesso acima de 10h e sobreposição
+  (bloqueiam), 7º dia, domingos pelo limite do gênero, feriado sem folga (modo e prazo da CCT), indisponibilidade
+  e antecedência de 48h. `minutos` de cada quebra é a base do custo (CE 2).
+- Defaults novos: `JORNADA_MAXIMA_COM_HE_MIN` (600) e `ANTECEDENCIA_ESCALA_MIN` (48h).
+- Testes: 27 pytest novos (cobertura do módulo 98%); engine 900 testes, cobertura 99%; ruff limpo.
+- Pendente para as próximas etapas: a leitura dos dados (escala, batidas, CCT, cargo, indisponibilidade) fica na API
+  do cockpit (CE 4); o custo das quebras é a etapa 4 do plano conjunto (CE 2). Próxima: TI-E1.
+
+## Tratamento de inconsistências — TI-E1 (etapa 2 do plano conjunto, 26/10/2026)
+
+- `engine/sugestoes.py`: ações novas `jornada_completa` (todas as batidas previstas, DT-9), `atestado` (DT-5),
+  `abono_parcial` (DT-6), `folga_compensatoria` (sete dias, domingos e descanso semanal, DT-8) e `cobrar_whatsapp`
+  (batida ímpar e falta, TI-08); `Sugestao.minutos` para pré-preencher vários horários; `intervalo_do_termo` (meio
+  do trecho contínuo mais longo com o intervalo exigido pela jornada: 07:00–17:00 → 12:00 às 13:00, DT-10);
+  "Manter" diz o efeito sem criar verba: falta pelo tipo de remuneração (mensalista perde o dia e o DSR; horista as
+  horas e, se a CCT mandar, o DSR proporcional), atraso e HE pelo destino (banco ou folha).
+- `cartao_ponto.dia_do_cartao`: contexto com o intervalo curto/limites da CCT e, só nos dias com inconsistência, banco
+  na data (`banco_horas.participa`, `debita_atrasos`) e `falta_horista_desconta_dsr`; as sugestões levam `horas`.
+- Frontend (mínimo, até a TI-E5): "Preencher a jornada prevista" e o intervalo do termo já calculado entram na grade
+  do cartão. As ações novas sem tela (atestado, abono parcial, folga, WhatsApp) ficam escondidas pelo `usavel` do
+  painel até as etapas delas; na TI-E5, tirar o "Ajustar a Escala do Mês" (Desk) duplicado pela folga compensatória.
+- Testes: pytest 907 (engine 99%); Frappe `test_cartao_ponto` (+1), `test_monitoramento_horistas`, `test_painel`
+  verdes; `yarn lint` e `yarn build` ok.
+
+## Tratamento de inconsistências — TI-E2 (etapa 3 do plano conjunto, 27/10/2026)
+
+- Inconsistencia de Ponto: status **Mantida** (`motivo_manter`, `mantida_por`, `mantida_em`; `resolvido_em` também
+  preenchido). `inconsistencias.manter` (gestor/RH com permissão de escrita; Alta exige motivo) e `desfazer_manter`
+  (só RH); `registrar_inconsistencia` não reabre a mantida (só atualiza descrição e severidade).
+- Apuracao Diaria: status **Ressalva** quando todas as inconsistências de severidade Média/Alta do dia estão mantidas
+  (`servico._status` + `inconsistencias.tipos_mantidos`); conta como conforme (`engine/painel.taxa_conformidade`).
+  Nada muda nos minutos: o intervalo suprimido continua pago pelo ponto real (DT-2).
+- Endpoints `acoes.manter` / `acoes.desfazer_manter`; ação "Manter com ressalva" na lista do Desk; filtro "Mantidas"
+  no painel; `BadgeStatus` "OK (ressalva)" e "Mantida (ressalva)"; espelho mostra "(tratada)".
+- Testes: `apuracao/test_inconsistencia_mantida.py` (5), `test_painel` do engine (+1); `test_apuracao`, `test_painel`,
+  `test_cartao_ponto` verdes.
+
+## Cockpit CE 2 e TI-E3 (etapas 4 e 5 do plano conjunto, 27/10/2026)
+
+- `engine/escala_custo.py` (CE-06): `custo_quebra` (interjornada como HE com o % da CCT; intervalo com o % da
+  indenização; 7º dia e feriado sem folga = horas do dia +100%; domingos, intervalo > 2h, indisponibilidade e
+  antecedência sem valor, com o risco escrito; excesso/sobreposição = None, bloqueiam), `custos`, `total` e
+  `custo_turno` (horas x valor-hora + noturno com hora ficta + dobro). Base = `valoracao.BaseValoracao`, com o
+  adicional de risco no valor-hora das extras (OJ 47). Só previsão: o pagamento continua pela apuração (DE-3).
+- Abono parcial (TI-06): Tratamento de Ponto tipo **"Abono parcial"** com `minutos_abonados` (obrigatório, > 0; não
+  vai ao Secullum); `adaptador.abonos_parciais` (memo no lote) → `EntradaDia.minutos_abonados` → `apurar_dia` reduz só
+  o atraso/saída antecipada (os minutos viram normais). Endpoint `acoes.abono_parcial`.
+- Testes: engine 914 (+6 custo, +1 abono); Frappe `test_inconsistencia_mantida` (6, com o abono parcial),
+  `test_apuracao` verdes.
+
+## Cockpit CE 3 (etapa 6 do plano conjunto, 27/10/2026)
+
+- DocType **Turno Padrao** (Configuracao Ponto): empresa, nome, cargo (vazio = todos), entrada, saída (menor = dia
+  seguinte), pausa em minutos (padrão 15) e início da pausa (vazio = meio do turno), cor, ativo; calcula os minutos
+  trabalhados e avisa (sem impedir) as quebras do turno isolado. Regra pura em `engine/turno_padrao.py`.
+- DocType **Indisponibilidade** (colaborador, período, dia inteiro ou faixa de horário, motivo sem dado de saúde,
+  situação Pendente/Aprovada/Recusada, origem Gestor/Colaborador); visibilidade em `permissoes` e `hooks`.
+- `configuracao_ponto/turnos.py`: `turnos_da_empresa` (com os períodos) e `indisponibilidades` (aprovadas →
+  `escala_validacao.Indisponibilidade`).
+- Escala Mensal Dia: `turno_padrao`, `quebras`, `justificativa`, `custo_estimado`, `alterado_por`, `alterado_em` (CE-10).
+- Testes: pytest do turno padrão (2, cobertura 100%); Frappe `configuracao_ponto/test_turnos.py` (4).
+
+## Tratamento de inconsistências — TI-E4 e TI-E5 (etapas 7 e 8 do plano conjunto, 27/10/2026)
+
+- Componentes: `Balao.vue` (ancorado no elemento clicado, abaixo ou acima conforme o espaço; folha inferior abaixo de
+  640 px; `role="dialog"`, foco preso, Esc devolve o foco, clique fora fecha), `PopoverInconsistencia.vue` (itens com
+  severidade, explicação, custo e ações vindas do servidor — reaproveitado pelo cockpit) e `DialogoTexto.vue` (modal
+  central com texto e, se preciso, minutos).
+- Cartão ponto: `PainelDoDia.vue` removido; o "! n" e a data abrem o balão do dia. Ações executáveis no balão:
+  "Manter" (motivo obrigatório na Alta → `acoes.manter`), "Abonar só os minutos do atraso" (`acoes.abono_parcial`,
+  minutos sugeridos = atraso do dia), "Lançar atestado" (`acoes.lancar_atestado`) e "Dar folga compensatória (Escala
+  do mês)" (abre a Escala Mensal do mês no Desk; substitui o antigo "Ajustar a Escala do Mês"). Badges: "Alterado"
+  (já existia) e "OK (ressalva)".
+- Testes: e2e `cartao.spec.js` 8/8 (balão no lugar do painel, axe nos modos claro e escuro, manter com ressalva e
+  desfazer); engine 924; `yarn lint`/`yarn build` ok.
+
+## Cockpit CE 4 (etapa 9 do plano conjunto, 27/10/2026)
+
+- `apuracao/cockpit_escala.py`: `mes` (grade colaboradores x dias com a escala vigente — dias passados pelas batidas
+  reais —, quebras do mês, travas de dia útil (DE-8), período fechado, indisponibilidade, auditoria, equidade e
+  paleta de turnos), `validar` (quebras novas com custo, solução A por dia, custo do turno, dias travados/fechados),
+  `substitutos` (solução B: mesma empresa e cargo, visíveis ao usuário) e `gravar` (bloqueio não grava; quebra ou dia
+  útil exige justificativa; grava na Escala Mensal com `turno_padrao`, `quebras`, `justificativa`, `custo_estimado`,
+  `alterado_por/em`). Leituras no `modo_lote`; parâmetros da CCT/cargo/perfil (intervalo reduzido, jornada
+  fragmentada, limite de HE, feriados e modo/prazo do feriado, domingos por gênero e empresa).
+- `engine/escala_equidade.py` (verde/laranja/vermelho com texto pela média da equipe; 3 meses pela apuração) e
+  `fechamento.base_para_custo` (mesmas fontes da folha).
+- Testes: Frappe `apuracao/test_cockpit_escala.py` (7); pytest da equidade (1).
+
+## Cockpit CE 5, CE 9 e CE 6 (etapas 10 a 12 do plano conjunto, 27/10/2026)
+
+- **Rascunho → Publicar (CE-11):** DocTypes `Rascunho de Escala` (um por colaborador e dia; a apuração não lê),
+  `Publicacao de Escala` + `Publicacao de Escala Linha` (antes/depois por dia). `cockpit_escala.salvar_rascunho`
+  (mudança a < 48h publica na hora, com justificativa), `descartar_rascunho`, `publicar` (Escala Mensal, registro e
+  resolução da `escala_nao_publicada`), job `avisar_rascunhos_esquecidos` (de hora em hora). Tipo novo de
+  inconsistência `escala_nao_publicada` (Select, `sugestoes`, `inconsistencias.js`).
+- **Repouso semanal:** `escala_validacao.ajustar_repouso` — turno no dia de repouso move o repouso para outro dia livre
+  da semana (domingo primeiro); a API devolve `ajustes` e grava junto (a Escala Mensal exige um repouso por semana).
+- **Tela `/ponto/escalas` (CE-01 a CE-03, CE-07):** grade colaboradores x dias, modo "Fim de semana e feriados" /
+  "Mês completo", filtro de cargo, paleta de turnos padrão (arrastar com clone, vue-draggable-plus 0.6.1), cartão
+  tracejado = rascunho, dias passados/fechados sem arraste, dia útil travado, indisponível listrado, equidade com
+  texto, botões Publicar (n) e Descartar. Teclado: setas, Enter/Espaço pega e solta, C copia, Delete remove, Esc
+  cancela, anúncios em `aria-live`. Lógica de montagem em `utils/escalas.js`.
+- **Assistente (CE-05/CE-06):** depois de cada movimento a tela chama `validar`; sem quebra grava o rascunho; com
+  quebra abre o balão com cada quebra, o custo de manter e as soluções A (ajuste), B (colegas sem conflito, menor carga
+  primeiro) e C (manter com justificativa; desabilitado quando bloqueia) e "Desfazer".
+- Testes: Frappe `test_cockpit_escala` 12; pytest `ajustar_repouso`; e2e `escalas.spec.js` 4/4 (teclado, rascunho,
+  descartar, assistente com a solução A, axe claro/escuro).
+
+## Cockpit CE 7 e TI-E6 (etapas 13 e 14 do plano conjunto, 27/10/2026)
+
+- Regra Envio WhatsApp: eventos **"Escala: turno incluído/alterado/removido"** e **"Cobrança de inconsistência"**;
+  homologação **Em teste / Em produção** (`situacao`, padrão Em teste; regra sem situação conta como em teste) e
+  contador `envios_teste`. Só RH Ponto/System Manager colocam em produção. Decisão: as regras que já existiam também
+  passam por teste (o envio geral do site de operação estava desligado; nada tinha saído).
+- `whatsapp.enviar`: regra em teste → "Aguardando envio manual"; `whatsapp.enviar_manual` (RH, sem esperar o horário,
+  conta o envio de teste; botão "Enviar agora" na Notificação). Notificacao WhatsApp ganhou `inconsistencia`,
+  `publicacao`, `id_mensagem` (key.id da Evolution), `entregue_em`, `lida_em` e as situações Entregue/Lida.
+- `apuracao/whatsapp_escala.py`: `avisar_publicacao` (uma mensagem por pessoa com `{mudancas}` — "• sáb 07/11:
+  08:00-11:00, 11:15-14:15 (antes: Neutro)" — e `{empresa}`, DE-4; sem regra que alcance, ninguém recebe) chamado ao
+  registrar cada publicação; `texto_cobranca` e `cobrar_inconsistencia` (TI-08, texto editável, nunca com CID).
+- Cartão: ação "Cobrar pelo WhatsApp" (modal com o texto pronto) e marca "✓ WhatsApp enviado/entregue/lido" sob a data.
+- Testes: Frappe `test_whatsapp_escala` (5); `test_regras_whatsapp` e `test_monitoramento_horistas` com as regras em
+  produção (cobrem o envio automático); `test_cockpit_escala`, `test_cartao_ponto` verdes.
+
+## Cockpit CE 10, CE 8 + TI-E7, CE 11, CE 12 e CE 13 (etapas 15 a 17 do plano conjunto, 27/10/2026)
+
+- **Comprovante de ciência (CE-12):** parser puro `integrations/evolution/webhook.py` (messages.update; status em texto
+  ou número do Baileys; só avança Enviada → Entregue → Lida) e `whatsapp.webhook_evolution` (allow_guest, POST, token
+  secreto em Configuração Apuração `evolution_webhook_token`, comparação em tempo constante). Cockpit mostra "✓ aviso
+  enviado / ✓✓ entregue / ✓✓ lido" e "Sem leitura e com turno em até 24h".
+- **Fechamento conjunto (CE 8 + TI-E7):** relatório **Quebras Assumidas** (previsto x realizado da apuração); espaço
+  Ponto com Cockpit de escalas, Turnos padrão, Indisponibilidades, Publicações e o relatório; manuais do gestor e do RH;
+  seção nova no AGENTS.md. Site de testes recriado (`docker/site_testes.sh`): a deriva de dados acabou e a suíte de
+  navegador ficou 57/57 (teste de foco estabilizado: espera a lista antes do Tab; ordem do menu com "Escalas").
+- **Copiar, modelo e distribuição justa (CE-13):** `engine/escala_sugestao.py` (origem da cópia por semana/mês, modelo
+  pelo turno mais frequente por dia da semana, distribuição gulosa sem quebra pela menor carga — a carga não conta os
+  turnos sendo redistribuídos). DocType `Modelo de Escala` (+ linha). Endpoints `copiar`, `salvar_modelo`,
+  `aplicar_modelo`, `distribuicao_justa`, `aplicar_distribuicao` (gravam em rascunho só os dias sem quebra/trava; os
+  outros voltam listados para o assistente). Barra "Ferramentas" na tela.
+- **Indisponibilidade pelo colaborador (CE-14):** `apuracao/disponibilidade.py` (token HMAC-SHA256 com a chave do site,
+  7 dias, só o mês pedido; `pedir` pelo evento "Escala: pedido de disponibilidade"; `dados`/`enviar` sem login;
+  `pendentes`/`decidir` no cockpit), prazo `Configuração Apuração.dia_limite_disponibilidade` (padrão dia 20 do mês
+  anterior), página `www/disponibilidade` em `/ponto/disponibilidade` (rota antes da regra geral do painel).
+- **Celular (CE-15):** abaixo de 640 px a grade vira agenda por dia (Cobrir este turno → colegas sem conflito, Remover,
+  Incluir turno; alvos de 44 px; sem rolagem horizontal).
+- Testes: pytest webhook (4) e sugestão (5); Frappe `test_cockpit_escala` 16, `test_disponibilidade` 4,
+  `test_whatsapp_escala` 6; e2e 59 (escalas 5, disponibilidade 1).
+
+## Cockpit CE 14 a 16 — horário fixo com assinatura (etapas finais do plano conjunto, 27/10/2026)
+
+- `engine/alteracao_jornada.py`: classificação Ciência / Concordância / Proibida (lei: excesso, intervalo,
+  interjornada, sobreposição, intervalo > 2h, 44h; redução de salário), noturno, turno (manhã/tarde/noite), resumo do
+  horário e comparação. Só dias flexíveis mudando = **Dispensada** (sem assinatura).
+- Cadastro: `Employee.escala_flexivel` e `dias_flexiveis` (fixtures); o cockpit não trava dia útil flexível.
+- DocTypes `Alteracao de Jornada` (+ linha: perfil desejado, impacto, classificação, perfil SEC igual e número,
+  assinatura, trilha, envio ao Secullum). `apuracao/jornada_assinatura.py`: `validar_cenario`, `enviar_para_assinatura`
+  (regra "Jornada: documento para assinar"), página `/ponto/assinar` (`documento`, `pedir_codigo` — 6 dígitos, 15 min,
+  pelo WhatsApp sem homologação —, `assinar` — CPF + código, PDF com a trilha, SHA-256, anexado ao Employee —,
+  `recusar`), `registrar_papel`, `imprimir`, `_tentar_liberar` (só com todos e com o perfil SEC: histórico desde a data
+  de início e reapuração), job diário `acompanhar` (vencidos, liga o horário criado no Secullum, envio) e
+  `enviar_ao_secullum` (trava `Configuracao Secullum.envio_horarios`, padrão Bloqueado). Tipos novos de inconsistência
+  `alteracao_jornada` e `envio_horario_secullum`.
+- Diferença do PRD: o cenário é montado no Desk (novo horário = um Perfil de Jornada escolhido), com o impacto
+  (carga, noturno, classificação) na própria linha, em vez da simulação na grade do cockpit.
+- Testes: pytest `test_alteracao_jornada` (5); Frappe `test_jornada_assinatura` (9); e2e da página de assinatura.
+
+## Plano conjunto concluído — sites de operação (27/10/2026)
+
+- `ponto.localhost` e `localhost` com backup e `migrate` (DocTypes e campos novos). `config_operacao.aplicar_cockpit`
+  no site de operação: turnos T1 08:00–14:15 e T2 14:00–20:15 (15 min de pausa, DE-1) nas 6 empresas do ES e as
+  regras de WhatsApp "Aviso de escala publicada", "Cobrança de inconsistência", "Pedido de disponibilidade" e
+  "Documento de horário para assinar", todas **Em teste** (envio geral continua como estava).
+- Conferência com os dados reais (novembro): `cockpit_escala.mes` de 0,7 s a 3,3 s por empresa (até 15 pessoas),
+  nenhuma quebra na escala gerada do horário do Secullum.
+- Pendências para ligar no site de operação: credenciais e webhook da Evolution (token em Configuração Apuração),
+  passar as regras para "Em produção" depois dos envios de teste, e decidir a trava `envio_horarios` do Secullum.
+- Verificação final: ruff limpo; pytest 1144 (engine 99%); **suíte Frappe completa 429 testes OK**; e2e 58/58.
+  Site de testes recém-recriado precisa de `throttle_user_limit` alto (a suíte cria centenas de usuários em minutos e o
+  Frappe recusa com "Throttled" acima de 60 por hora): `docker/site_testes.sh` já grava (`set-config -p`, número).
+
+## Cockpit: horário fora do padrão direto na grade (27/10/2026, pedido do RH)
+
+- Clique no dia (ou Enter pelo teclado; "Editar horário"/"Outro horário…" no celular) abre o editor do dia
+  (`DialogoTurno.vue`): Trabalho com 1 a 3 períodos de entrada/saída (a pausa é o espaço entre eles; total e virada do
+  dia mostrados), Folga (sem turno) ou Repouso semanal; mostra as quebras atuais do dia. Aplicar passa pela mesma
+  validação/assistente e vira rascunho. O clique que encerra um arraste não abre o editor.
+- e2e `escalas.spec.js` 6/6 (criar 09:00–13:00 + 14:00–16:00 e editar para folga).
+
+## Correção: limite de HE (art. 59) em feriado e folga (27/10/2026)
+
+- Erro: em feriado/folga/dia sem jornada todo o tempo é pago como extra (certo), mas o alerta `he_acima_limite`
+  comparava esse total com as 2h do art. 59 — um feriado de 8h15 (instrutor, 12/10) acusava 495 min de HE.
+- `engine/apuracao_dia.py`: nesses dias o limite vale só para o que passa de 8h no dia (a jornada normal); o
+  pagamento não muda. Mensagem nova: "N min além da jornada do dia...". Testes: 3 pytest novos (o caso real, feriado
+  acima de 10h e folga trabalhada).
+- Site de operação: as 79 inconsistências abertas foram reapuradas; 55 resolveram (o 12/10 ficou "Ok", com as 495 min
+  de HE a 100% mantidas) e 24 continuam (passaram de fato de 10h no dia).
+
+## Cartão ponto: banco de horas no cabeçalho (27/10/2026, pedido do RH)
+
+- `cartao_ponto.banco_do_cartao` (só para quem participa do banco no mês, por `banco_horas.participa`): saldo na data
+  (fim do mês ou hoje) pelo engine FIFO (`estado_banco`), créditos e débitos do mês, o que vence no prazo de alerta da
+  CCT e o link "Ver movimentos". Bloco "Banco de horas" no cartão. Teste Frappe novo (`test_cartao_ponto` 10);
+  e2e do cartão 8/8.
+- No site de operação o banco da recepção/ASG vale desde 01/11/2026 (AJ-05): o bloco aparece a partir de novembro.
+
+## Cobrança em todo o ponto do dia e convite para um turno (27/10/2026, pedido do RH)
+
+- `engine/sugestoes.py`: "Cobrar pelo WhatsApp" (texto pronto e editável) no fim de toda inconsistência do ponto do
+  dia (`COBRAVEIS`: batidas, falta, atraso, HE, intervalos, interjornada, descanso, domingos, 7º dia, aula, estágio,
+  horista); cadastro, EPI e Secullum continuam sem.
+- **Convite para um turno** (amplia o CE-14): DocTypes `Convite de Turno` (+ resposta por pessoa), evento de WhatsApp
+  "Escala: convite para turno", `apuracao/convite_turno.py` (`candidatos` — quem do cargo faz sem quebra, somando ao
+  que já tem no dia, menor carga primeiro —, `convidar`, página sem login `/ponto/convite` com "Posso"/"Não posso",
+  `abertos`, `preencher`, `cancelar`). No cockpit: "Convidar para um turno" (dia, turno padrão ou outro horário,
+  cargo, pessoas pré-marcadas quando sem quebra) e a seção "Convites para turno" com as respostas e "Escalar" (passa
+  pela validação/assistente e vira rascunho). O link do mês continua como "Pedir disponibilidade do mês".
+- Testes: pytest 960; Frappe `test_convite_turno` (3); e2e escalas 7, cartão 8, páginas sem login 2.
+- Site de operação migrado (backup antes); regra "Convite para turno" criada Em teste.
+
+## Cobrança com a mensagem padrão já escrita (27/10/2026)
+
+- Erro: o modal da cobrança abria vazio — `DialogoTexto` só lia o texto inicial ao mudar de fechado para aberto, e as
+  telas o montam já aberto. Agora lê na montagem (`immediate`); vale também para os minutos do abono parcial.
+- Mensagem padrão com o motivo em linguagem de RH (`whatsapp_escala.motivo_da_cobranca`: a explicação do tipo + o
+  detalhe do dia). Ex.: "Motivo: O intervalo de almoço ficou menor que o mínimo (Intervalo de 0 min; exigido 60 min)."
+- Sem celular no cadastro o modal abre do mesmo jeito (texto pronto para copiar) com o aviso.
+- e2e: turnos de teste ficam inativos no fim (turno usado em escala não pode ser apagado); cartão + escalas 16/16.
+
+## Cobrança: "procure o seu gerente" e atalho para a mensagem padrão (27/10/2026)
+
+- Texto padrão da cobrança termina em "Por favor, procure o seu gerente para justificar o mais breve possível" (o
+  colaborador não tem o aplicativo do Secullum). No site de operação, as 5 regras novas (cobrança, aviso de escala,
+  convite, disponibilidade, assinatura) receberam o texto padrão no campo da mensagem, para o RH ver e editar.
+- O modal de cobrança do RH tem o link "Editar a mensagem padrão (regra de envio)". Caminho no Desk: espaço Ponto →
+  cartão "Horistas e WhatsApp" → "Regras de envio do WhatsApp".
+
+## Intervalo do termo: ordem no cartão, só sem pausa e pausa remunerada (28/10/2026, decisões do RH)
+
+- Tela: o intervalo do termo entra na ordem do dia (`utils/cartao.inserirEmOrdem`): 09:18 / 13:34 + 11:26 e 11:41 →
+  E1 09:18, S1 11:26, E2 11:41, S2 13:34 (a saída original vai para a Saída 2). Antes ocupava Entrada 3/Saída 3.
+- Sugestão só no dia **sem nenhuma pausa** (entrada e saída): com pausa, mesmo curta (12/10: 14 min de 15), o termo não
+  aparece — fica Corrigir batida, Manter e Cobrar (`sugestoes.intervalo_do_termo`).
+- Pagamento: a pausa do termo é **remunerada** — o intervalo conta como dado (sem intervalo suprimido/indenização), mas
+  os minutos são pagos como trabalhados (02/10: 4h16). `adaptador.pausas_do_termo` → `EntradaDia.minutos_pausa_termo`,
+  somado ao `trabalhado` em `apuracao_dia`. Nada vai ao banco.
+- **Horista não tem banco de horas** (RH mudou de ideia no mesmo dia): `config_operacao.desligar_banco_horistas`
+  desligou os 34 instrutores ligados mais cedo (ainda não vigentes: `banco_horas_desde` volta a vazio, nenhum
+  movimento existia) e tirou o banco padrão dos cargos de instrutor; `ligar_banco_atuais` ignora horistas. Backup antes.
+- Testes: pytest 961 (termo só sem pausa; caso 02/10 → 11:26 às 11:41; pausa remunerada 4h16); Frappe
+  `TestPausaDoTermo` (9h com 1h do termo → 9h pagas, intervalo suprimido 0); e2e do cartão 9/9.
+
+## PRD do termo de ocorrências (29/10/2026)
+
+- Criado `docs/PRD-termo-ocorrencias.md` (TO-01…TO-13, decisões DO-1…DO-13, etapas TO-E1…TO-E7): termo por
+  colaborador com as ocorrências e a correção sugerida, WhatsApp ao colaborador, e-mail com PDF ao gerente da unidade,
+  página de confirmação (conforme / com alteração item a item / recusa com 2 testemunhas) que aplica direto, cobrança
+  diária ao gerente após 3 dias úteis e aviso ao RH no 10º, assinatura pelo celular, lote no cockpit, reincidência.
+- Revisão do RH (29/10/2026): o gerente é o **Reporta a** (cadastro que já existe) e a conta de e-mail é a tela
+  **Email Account** do Frappe (Google). Implementadas as etapas TO-E1 a TO-E7 (abaixo).
+
+## Termo de ocorrências: implementação (29/10/2026)
+
+- Engine `engine/termo_ocorrencias.py`: itens por dia, regularização proposta (batida repetida → batida prevista →
+  intervalo do termo; o resto "Ciente: …" com o texto do Manter), resumo do WhatsApp, dias úteis, cobrança
+  (`avisos_do_dia`) e reincidência. 13 testes; engine 978 testes, 98,85%.
+- DocTypes **Termo de Ocorrencias** (TOP-AAAA-#####, com trilha da confirmação e testemunhas) e **Item do Termo de
+  Ocorrencias**; status **Aguardando termo** e campo `termo` na Inconsistencia de Ponto (registrar/resolver/servico
+  tratam como Mantida: não reabre; se o problema some, resolve); tipos `termo_sem_gerente`, `termo_nao_assinado`,
+  `email_termo_nao_enviado` (sugestões, nomes no painel); Notificacao WhatsApp com destinatário RH e link `termo`;
+  eventos de regra "Termo de ocorrências", "Termo pendente — gerente/RH" com textos padrão; seção "Termo de
+  ocorrências" na Configuracao Apuracao; permissões por colaborador visível.
+- `apuracao/termo_ocorrencias.py`: `preparar`/`emitir` (um termo em aberto por colaborador), PDF (texto da seção 4 do
+  PRD, QR code para a página do gestor), e-mail ao Reporta a com cópia ao RH (sem gestor/sem conta → pendência),
+  WhatsApp ao colaborador, página `/ponto/termo` (`www/termo`: gestor confirma conforme / com alteração item a item /
+  recusa com 2 testemunhas; colaborador assina com CPF + código), aplicação direta pelo `cartao_ponto.salvar` (um
+  savepoint por dia; intervalo do termo com `MOTIVO_TERMO`), `cobrar_pendentes` (cron 9h, dias úteis),
+  `lista_semanal` (segunda 8h, se ligada), `lote`/`emitir_lote`/`pendentes`, `cancelar`, `reenviar`.
+  `cartao_ponto.contexto_do_dia` passou a ser a fonte única do contexto das sugestões (cartão e termo).
+- Painel: botão **Termo de ocorrências** no cartão (DialogoTermo), tela **Termos** (lote por problema + aguardando
+  assinatura), cartão no cockpit e "Aguardando termo" no balão do dia. Corrigido o link dos cartões do cockpit
+  ("Abrir a central", "Ver na central"), que saía sem href.
+- Testes: Frappe `test_termo_ocorrencias` (9: conforme, com alteração/não reconhece/ciente, recusa, intervalo do termo,
+  link inválido/papel errado, um aberto por vez/cancelar, sem gestor/sem conta, cobrança em dias úteis, lote); e2e
+  `termo.spec.js` (3, com axe). PDF real conferido (wkhtmltopdf + QR).
+- Suíte completa: Frappe 443 testes (2 falhas corrigidas depois: `test_monitoramento_horistas` esperava 4h01 — a pausa
+  do termo agora é paga, 252 min — e o commit dos testes do termo vazava dados; neutralizado com
+  `patch.object(frappe.db, "commit")`); e2e 64 (o teste de foco ganhou o item "Termos" do menu). Site de operação
+  migrado (backup antes) e `config_operacao.aplicar_termo` criou as 3 regras do termo Em teste.
+- Complemento (29/10/2026, o resto do PRD): filtro "Aguardando termo" na central; período desde o último termo
+  (editável) e "Ver PDF (prévia)" (`previa_pdf`) no diálogo; dias úteis restantes nos termos do cartão; explicação de
+  cada ocorrência no e-mail; **comprovante** da confirmação (PDF do termo + registro: quem, quando, IP, aparelho,
+  respostas, testemunhas) anexado ao termo e aos tratamentos — na via celular é o PDF assinado; histórico (`Version`)
+  das mudanças de status; "Ciente" do Alerta Horista no limite quando o termo tratou dias de intervalo; lote em fila
+  com barra de progresso (`emitir_lote`/`progresso_lote`); "Sugestão da semana" (`lista_sugerida`) e filtro de
+  atrasados na tela Termos; relatório **Termos de Ocorrencias** (`engine.termo_ocorrencias.estatisticas`). PRD ajustado
+  em dois pontos (link do colaborador na mesma página; batida repetida propõe desconsiderar). Testes: engine 979
+  (98,86%), Frappe `test_termo_ocorrencias` 12, e2e `termo.spec.js` 4 + central/filtros/foco.
+- Pendências: conta Google no Email Account (senha de app); preencher o Reporta a e o celular/e-mail dos gestores;
+  celular/e-mail do RH na Configuração; homologar as regras novas (Em teste); revisão do texto do termo por advogado;
+  migrar o site de operação.

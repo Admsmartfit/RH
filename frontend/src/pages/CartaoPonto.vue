@@ -30,6 +30,15 @@
 
 		<Bloco v-else :titulo="cartao.data ? cartao.data.colaborador.employee_name : 'Cartão ponto'" :recurso="cartao">
 			<template #acoes>
+				<button
+					v-if="cartao.data && podeEditar"
+					type="button"
+					class="botao text-sm"
+					data-testid="abrir-termo"
+					@click="termoAberto = true"
+				>
+					Termo de ocorrências
+				</button>
 				<router-link
 					:to="{ name: 'Colaborador', params: { employee }, query: { competencia: filtros.competencia } }"
 					class="text-sm text-primario-texto"
@@ -51,6 +60,26 @@
 						</dd>
 					</div>
 				</dl>
+				<section
+					v-if="cartao.data.banco"
+					class="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-md border border-borda px-3 py-2 text-sm"
+					aria-label="Banco de horas"
+					data-testid="banco"
+				>
+					<span class="font-semibold">Banco de horas</span>
+					<span>
+						Saldo em {{ dataBR(cartao.data.banco.referencia) }}:
+						<strong :class="cartao.data.banco.saldo < 0 ? 'text-perigo-texto' : 'text-conforme-texto'">
+							{{ cartao.data.banco.saldo > 0 ? "+" : "" }}<Minutos :minutos="cartao.data.banco.saldo" />
+						</strong>
+					</span>
+					<span>No mês: +<Minutos :minutos="cartao.data.banco.creditos_mes" /> crédito, −<Minutos :minutos="cartao.data.banco.debitos_mes" /> débito</span>
+					<span v-if="cartao.data.banco.a_vencer_em_breve" class="text-alerta-texto">
+						<Minutos :minutos="cartao.data.banco.a_vencer_em_breve" /> vencem em breve (o primeiro em
+						{{ dataBR(cartao.data.banco.proximo_vencimento) }})
+					</span>
+					<a :href="cartao.data.banco.lista" class="text-xs text-primario-texto underline">Ver movimentos</a>
+				</section>
 				<p id="ajuda-grade" class="mt-3 text-xs text-texto-suave">
 					Digite os horários (HH:MM). Enter ou ↓ desce para o dia seguinte, ↑ sobe, Esc desfaz a célula. As
 					alterações ficam marcadas até você clicar em Salvar. [ e ] trocam de colaborador.
@@ -74,7 +103,7 @@
 					<span class="text-xs text-texto-suave">Shift + clique seleciona um intervalo.</span>
 				</div>
 
-				<div class="mt-3 flex flex-col gap-4 xl:flex-row xl:items-start">
+				<div class="mt-3">
 					<div class="min-w-0 flex-1 overflow-x-auto rounded-md border border-borda">
 						<table class="w-full border-collapse text-sm" aria-describedby="ajuda-grade">
 							<caption class="sr-only">Cartão ponto do período, um dia por linha</caption>
@@ -115,17 +144,25 @@
 											type="button"
 											class="font-mono text-primario-texto underline-offset-2 hover:underline"
 											:aria-label="`Abrir o dia ${dataBR(d.data)}`"
-											@click="abrirDia(d.data)"
+											@click="abrirDia(d.data, $event)"
 										>
 											{{ d.data.slice(8, 10) }}/{{ d.data.slice(5, 7) }}
 										</button>
 										<span class="ml-1 text-xs text-texto-suave">{{ d.dia_semana }}</span>
+										<span
+											v-if="d.whatsapp && MARCA_WHATSAPP[d.whatsapp.situacao]"
+											class="block text-[10px] text-texto-suave"
+											data-testid="marca-whatsapp"
+										>
+											✓ {{ MARCA_WHATSAPP[d.whatsapp.situacao] }}
+										</span>
 										<button
 											v-if="d.inconsistencias.length"
 											type="button"
 											class="ml-1 rounded-full bg-perigo-suave px-1.5 text-xs font-medium text-perigo-texto"
 											:aria-label="`${d.inconsistencias.length} inconsistência(s) em ${dataBR(d.data)}: ver como resolver`"
-											@click="abrirDia(d.data)"
+											data-balao
+											@click="abrirDia(d.data, $event)"
 										>
 											! {{ d.inconsistencias.length }}
 										</button>
@@ -196,13 +233,48 @@
 						</table>
 					</div>
 
-					<PainelDoDia
-						v-if="diaAberto"
-						class="xl:sticky xl:top-36 xl:w-96"
-						:dia="diaAberto"
-						:rh="cartao.data.rh"
+					<!-- TI-01: balão junto do dia (não empurra a grade); as ações vêm do servidor (engine/sugestoes.py) -->
+					<PopoverInconsistencia
+						:aberto="Boolean(diaAberto)"
+						:ancora="ancora"
+						:titulo="diaAberto ? `${dataBR(diaAberto.data)} (${diaAberto.dia_semana}) — ${diaAberto.situacao}` : ''"
+						:subtitulo="diaAberto?.previsto.length ? `Previsto: ${diaAberto.previsto.map((p) => `${p.entrada} às ${p.saida}`).join(' e ')}` : ''"
+						:itens="itensDoDia"
+						vazio="Nenhuma inconsistência aberta neste dia."
 						@fechar="fecharDia"
-						@sugestao="aplicarSugestao"
+						@acao="aplicarSugestao"
+					>
+						<template #antes>
+							<p v-if="diaAberto?.motivo_nao_apurado" class="mt-2 text-sm text-alerta-texto">{{ diaAberto.motivo_nao_apurado }}</p>
+							<p v-if="diaAberto?.periodo_fechado" class="mt-2 rounded-md border border-alerta bg-alerta-suave p-2 text-sm text-alerta-texto">
+								Período fechado: este dia não muda.
+							</p>
+						</template>
+						<section v-if="diaAberto?.riscadas.length" class="mt-3 text-sm" aria-label="Batidas desconsideradas">
+							<h3 class="text-xs font-semibold text-texto-suave">Desconsideradas</h3>
+							<ul class="mt-1 space-y-1">
+								<li v-for="r in diaAberto.riscadas" :key="r.referencia">
+									<s class="font-mono">{{ r.hora }}</s>
+									<span class="text-xs text-texto-suave">
+										— {{ r.por === "Secullum" ? "no Secullum" : `por ${r.por}` }}{{ r.motivo ? `: ${r.motivo}` : "" }}
+									</span>
+								</li>
+							</ul>
+						</section>
+						<section v-if="diaAberto?.envio_secullum" class="mt-3 text-sm" aria-label="Envio ao Secullum">
+							<h3 class="text-xs font-semibold text-texto-suave">Envio ao Secullum</h3>
+							<p class="mt-1 flex flex-wrap items-center gap-2">
+								<BadgeStatus :valor="diaAberto.envio_secullum.situacao" />
+								<span class="text-xs text-texto-suave">{{ diaAberto.envio_secullum.resposta }}</span>
+							</p>
+						</section>
+					</PopoverInconsistencia>
+					<DialogoTexto
+						v-if="dialogo"
+						:aberto="true"
+						v-bind="dialogo"
+						@fechar="dialogo = null"
+						@concluido="concluirDialogo"
 					/>
 				</div>
 
@@ -285,6 +357,16 @@
 			@fechar="salvando = false"
 			@concluido="concluirSalvar"
 		/>
+		<DialogoTermo
+			v-if="termoAberto && cartao.data"
+			:employee="employee"
+			:nome="cartao.data.colaborador.employee_name"
+			:inicio="cartao.data.periodo[0]"
+			:fim="cartao.data.periodo[1]"
+			:rh="Boolean(cartao.data.rh)"
+			@fechar="termoAberto = false"
+			@concluido="termoAberto = false; cartao.reload()"
+		/>
 	</div>
 </template>
 
@@ -297,17 +379,35 @@ import { call, createResource } from "frappe-ui";
 import BadgeStatus from "@/components/BadgeStatus.vue";
 import Bloco from "@/components/Bloco.vue";
 import DialogoSalvarCartao from "@/components/DialogoSalvarCartao.vue";
+import DialogoTermo from "@/components/DialogoTermo.vue";
 import Minutos from "@/components/Minutos.vue";
-import PainelDoDia from "@/components/PainelDoDia.vue";
+import DialogoTexto from "@/components/DialogoTexto.vue";
+import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
 import { useAtalhos } from "@/composables/useAtalhos";
 import { useFiltros } from "@/composables/useFiltros";
-import { celulasOriginais, horaValida, montarAlteracoes, normalizarHora, quantasColunas, batidasMudaram } from "@/utils/cartao";
+import { celulasOriginais, horaValida, inserirEmOrdem, montarAlteracoes, normalizarHora, quantasColunas, batidasMudaram } from "@/utils/cartao";
 import { documentoDesk } from "@/utils/desk";
 import { mensagem } from "@/utils/erros";
+import { nomeDoTipo } from "@/utils/inconsistencias";
 import { dataBR, nomeDaCompetencia } from "@/utils/tempo";
 
 const ACOES = "hrms_secullum_brasil.apuracao.acoes";
 const MOTIVO_TERMO = "Intervalo não registrado — termo assinado";
+// ações do balão (docs/PRD-tratamento-inconsistencias.md, TI-04): quem pode usar cada uma
+const EDITAM_A_GRADE = new Set(["incluir", "desconsiderar", "abonar", "editar", "incluir_intervalo", "jornada_completa"]);
+const SO_RH = new Set(["jornada_fragmentada", "reenviar", "ciente", "reenviar_whatsapp"]);
+// imprimir o termo vale para RH e gestor (o gestor colhe a assinatura); manter, abono parcial, atestado e folga também
+const TODOS = new Set(["termo", "manter", "abono_parcial", "atestado", "folga_compensatoria", "cobrar_whatsapp"]);
+const WHATSAPP = "hrms_secullum_brasil.apuracao.whatsapp_escala";
+// TI-08: situação da cobrança mostrada sob a data
+const MARCA_WHATSAPP = {
+	Enviada: "WhatsApp enviado",
+	Entregue: "WhatsApp entregue",
+	Lida: "WhatsApp lido",
+	"Na fila": "WhatsApp na fila",
+	"Aguardando envio manual": "WhatsApp aguardando o RH",
+};
+const LINKS = new Set(["desk", "secullum", "folga_compensatoria"]);
 const TOTAIS = [
 	{ campo: "previsto", rotulo: "Previsto", minutos: true },
 	{ campo: "trabalhado", rotulo: "Trabalhado", minutos: true },
@@ -332,6 +432,9 @@ const salvando = ref(false);
 const previa = ref(null);
 const celulasDom = new Map();
 const selecionados = reactive(new Set());
+const ancora = ref(null);
+const dialogo = ref(null);
+const termoAberto = ref(false); // docs/PRD-termo-ocorrencias.md (TO-05)
 const justificativaDoLote = ref("");
 let ultimaSelecionada = -1;
 
@@ -389,7 +492,8 @@ function irPara(nome) {
 	router.replace({ name: "Cartao", params: { employee: nome }, query });
 }
 
-function abrirDia(data) {
+function abrirDia(data, evento) {
+	ancora.value = evento?.currentTarget || null;
 	router.replace({ query: { ...route.query, dia: data } });
 }
 
@@ -402,7 +506,9 @@ function fecharDia() {
 async function focarDiaDaRota() {
 	if (!diaFoco.value) return;
 	await nextTick();
-	document.querySelector(`[data-dia="${diaFoco.value}"]`)?.scrollIntoView?.({ block: "center" });
+	const linha = document.querySelector(`[data-dia="${diaFoco.value}"]`);
+	linha?.scrollIntoView?.({ block: "center" });
+	if (!ancora.value || !document.contains(ancora.value)) ancora.value = linha?.querySelector("[data-balao]") || linha?.querySelector("button");
 }
 
 onBeforeRouteLeave(() => {
@@ -544,12 +650,122 @@ function abonarSelecionados() {
 	aviso.value = abonados ? `${abonados} dia(s) marcados para abonar: salve para confirmar.` : "Os dias escolhidos já têm abono.";
 }
 
-// ------------------------------------------------------------------ sugestões do painel (CP-04)
+// ------------------------------------------------------------------ balão do dia (CP-04, TI-01 a TI-04)
 
-async function aplicarSugestao(s, inconsistencia) {
+const usavel = (s) => LINKS.has(s.acao) || EDITAM_A_GRADE.has(s.acao) || TODOS.has(s.acao) || (SO_RH.has(s.acao) && cartao.data?.rh);
+
+function hrefDaAcao(s, i, d) {
+	if (s.acao === "desk") return documentoDesk("Inconsistencia de Ponto", i.name);
+	if (s.acao === "folga_compensatoria") {
+		const [ano, mes] = d.data.split("-");
+		return documentoDesk("Escala Mensal", `ESC-${employee.value}-${ano}-${mes}`);
+	}
+	return undefined;
+}
+
+const itensDoDia = computed(() => {
+	const d = diaAberto.value;
+	if (!d) return [];
+	return d.inconsistencias.map((i) => ({
+		chave: i.name,
+		titulo: nomeDoTipo(i.tipo),
+		severidade: i.severidade,
+		status: i.status === "Aguardando termo" ? i.status : null,
+		explicacao: i.explicacao,
+		descricao: i.termo && i.status === "Aguardando termo" ? `No termo ${i.termo}, aguardando a assinatura. ${i.descricao || ""}` : i.descricao,
+		acoes: i.sugestoes.filter(usavel).map((s) => ({
+			...s,
+			href: hrefDaAcao(s, i, d),
+			desabilitada: s.acao === "secullum" || (!d.editavel && (EDITAM_A_GRADE.has(s.acao) || s.acao === "abono_parcial")),
+			dica: s.acao === "secullum" ? "Corrija no Secullum: vem na próxima coleta." : "",
+		})),
+	}));
+});
+
+function abrirDialogo(config) {
+	dialogo.value = config;
+}
+
+function concluirDialogo(mensagemFinal) {
+	dialogo.value = null;
+	if (typeof mensagemFinal === "string") aviso.value = mensagemFinal;
+	cartao.reload();
+}
+
+async function aplicarSugestao(s, item) {
 	const d = diaAberto.value;
 	if (!d) return;
+	const inconsistencia = d.inconsistencias.find((i) => i.name === item.chave) || item;
 	const linha = cartao.data.dias.indexOf(d);
+	if (s.acao === "manter") {
+		// TI-03: nada a corrigir no ponto; não cria verba (o que a apuração calcula fica valendo)
+		const alta = inconsistencia.severidade === "Alta";
+		return abrirDialogo({
+			titulo: "Manter com ressalva",
+			descricao: `${s.rotulo}. A inconsistência sai da fila e o dia fica "OK (ressalva)".`,
+			rotuloTexto: "Motivo",
+			obrigatorio: alta,
+			dica: alta ? "Severidade Alta: o motivo é obrigatório." : "",
+			rotuloConfirmar: "Manter",
+			enviar: async ({ texto }) => {
+				await call(`${ACOES}.manter`, { inconsistencias: [inconsistencia.name], motivo: texto });
+				return "Mantida com ressalva.";
+			},
+		});
+	}
+	if (s.acao === "abono_parcial") {
+		// TI-06: abona só os minutos (a batida não muda)
+		const atraso = d.totais?.atraso || null;
+		return abrirDialogo({
+			titulo: "Abonar só os minutos do atraso",
+			descricao: atraso ? `O dia tem ${atraso} min de atraso/saída antecipada.` : "",
+			comMinutos: true,
+			rotuloMinutos: "Minutos abonados",
+			minutosIniciais: atraso,
+			maxMinutos: atraso,
+			rotuloConfirmar: "Abonar",
+			enviar: async ({ texto, minutos }) => {
+				const r = await call(`${ACOES}.abono_parcial`, { inconsistencia: inconsistencia.name, minutos, motivo: texto });
+				return r?.aprovado ? `${minutos} min abonados.` : `${minutos} min abonados: aguardando o RH.`;
+			},
+		});
+	}
+	if (s.acao === "cobrar_whatsapp") {
+		let pronto;
+		try {
+			pronto = await call(`${WHATSAPP}.texto_cobranca`, { inconsistencia: inconsistencia.name });
+		} catch (e) {
+			return (aviso.value = mensagem(e));
+		}
+		return abrirDialogo({
+			titulo: "Cobrar pelo WhatsApp",
+			descricao: !pronto.tem_celular
+				? "Sem celular no cadastro: corrija o cadastro para enviar (o texto pode ser copiado)."
+				: pronto.em_teste
+					? "A regra de cobrança está em teste: a mensagem fica aguardando o RH conferir e enviar."
+					: "Mensagem padrão pronta: edite à vontade antes de enviar. Ela fica registrada no dia.",
+			rotuloTexto: "Mensagem",
+			textoInicial: pronto.texto,
+			link: cartao.data.rh ? { texto: "Editar a mensagem padrão (regra de envio)", href: pronto.editar_modelo } : null,
+			linhas: 7,
+			rotuloConfirmar: "Enviar mensagem",
+			enviar: async ({ texto }) => {
+				const r = await call(`${WHATSAPP}.cobrar_inconsistencia`, { inconsistencia: inconsistencia.name, texto });
+				return `WhatsApp: ${r.situacao}.`;
+			},
+		});
+	}
+	if (s.acao === "atestado") {
+		return abrirDialogo({
+			titulo: "Lançar atestado",
+			descricao: "Abono por atestado. Atestado com CID e controle do INSS: use o Atestado Médico no Desk (RH Saúde).",
+			rotuloConfirmar: "Lançar",
+			enviar: async ({ texto }) => {
+				const r = await call(`${ACOES}.lancar_atestado`, { inconsistencias: [inconsistencia.name], motivo: texto });
+				return [].concat(r || []).some((x) => x.aprovado === false) ? "Atestado lançado: aguardando o RH." : "Atestado lançado.";
+			},
+		});
+	}
 	if (s.acao === "incluir") {
 		const e = edicaoDe(d);
 		const livre = e.celulas.findIndex((c) => !c);
@@ -577,14 +793,27 @@ async function aplicarSugestao(s, inconsistencia) {
 	} else if (s.acao === "reenviar") {
 		const r = await executar("hrms_secullum_brasil.ingestion.envio_cartao.reenviar", { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = r === "Enviado" ? "Correção enviada ao Secullum." : `Envio: ${r}.`;
-	} else if (s.acao === "incluir_intervalo") {
-		// docs/PRD-monitoramento-horistas.md (MH-06): nada pré-preenchido; os horários vêm do termo assinado
+	} else if (s.acao === "jornada_completa") {
+		// docs/PRD-tratamento-inconsistencias.md (DT-9): horários previstos calculados no servidor; confirmar e salvar
 		const e = edicaoDe(d);
-		const livre = e.celulas.findIndex((c) => !c);
-		if (livre < 0 || livre + 1 >= e.celulas.length) return (aviso.value = "Não há duas colunas livres no dia.");
+		const livres = e.celulas.map((c, n) => (c ? -1 : n)).filter((n) => n >= 0);
+		if (livres.length < s.horas.length) return (aviso.value = "Não há colunas livres para a jornada prevista.");
+		s.horas.forEach((hora, n) => (e.celulas[livres[n]] = hora));
 		await nextTick();
-		mover(linha, livre);
-		aviso.value = `Digite o início e o fim do intervalo do termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado.`;
+		mover(linha, livres[0]);
+		aviso.value = `Jornada prevista (${s.horas.join(", ")}) incluída na grade: confira, informe o motivo e salve.`;
+	} else if (s.acao === "incluir_intervalo") {
+		// MH-06: o intervalo vem do termo assinado; o servidor sugere o meio do expediente (DT-10). Entra na ordem:
+		// a saída original passa para a Saída 2 e a pausa fica no meio (Saída 1 / Entrada 2)
+		const e = edicaoDe(d);
+		const novas = inserirEmOrdem(e.celulas, s.horas || []);
+		if (!novas) return (aviso.value = "Não há duas colunas livres no dia.");
+		e.celulas.splice(0, e.celulas.length, ...novas);
+		await nextTick();
+		mover(linha, Math.max(0, novas.indexOf((s.horas || [])[0])));
+		aviso.value = s.horas?.length
+			? `Intervalo ${s.horas.join(" às ")} incluído no meio do expediente: confira com o termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado. A pausa sai das horas pagas e vira crédito no banco de horas.`
+			: `Digite o início e o fim do intervalo do termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado.`;
 	} else if (s.acao === "termo") {
 		const alerta = inconsistencia.referencia_doctype === "Alerta Horista" ? inconsistencia.referencia_name : null;
 		if (!alerta) return (aviso.value = "O termo sai do alerta do mês (inconsistência Horista além de 4 h sem intervalo).");

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Convite para turno</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 30rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; }
+		.turno { border: 1px solid var(--borda); border-radius: 0.5rem; padding: 1rem; font-size: 1.1rem; }
+		.botoes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+		button { min-height: 48px; flex: 1; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.nao { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Convite para turno</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+		<section id="turno" class="turno" aria-label="Turno" hidden></section>
+		<div id="botoes" class="botoes" hidden>
+			<button type="button" id="posso">Posso trabalhar</button>
+			<button type="button" class="nao" id="nao">Não posso</button>
+		</div>
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.convite_turno";
+		const token = new URLSearchParams(location.search).get("token") || "";
+		const $ = (id) => document.getElementById(id);
+		const br = (iso) => iso.slice(0, 10).split("-").reverse().join("/");
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto;
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.dados?token=${encodeURIComponent(token)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido. Fale com o seu gestor.";
+				return;
+			}
+			const d = corpo.message;
+			$("cabecalho").textContent = `${d.nome}, você pode trabalhar neste turno?`;
+			$("turno").hidden = false;
+			$("turno").textContent = `${d.dia_semana}, ${br(d.data)} — ${d.horario}`;
+			if (d.resposta !== "Sem resposta") status(`Sua resposta: ${d.resposta}. Você pode mudar enquanto o convite estiver aberto.`, "suave");
+			if (d.aberto) $("botoes").hidden = false;
+			else status("Este convite já foi encerrado. Obrigado!", "suave");
+		}
+
+		async function responder(resposta) {
+			const r = await fetch(`${API}.responder`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ token, resposta }),
+			});
+			if (!r.ok) return status("Não foi possível responder: o convite pode ter sido encerrado.", "erro");
+			status(resposta === "Posso" ? "Obrigado! O seu gestor vai confirmar a escala." : "Tudo bem, obrigado por avisar.", "ok");
+		}
+
+		$("posso").addEventListener("click", () => responder("Posso"));
+		$("nao").addEventListener("click", () => responder("Não posso"));
+		carregar();
+	</script>
+</body>
+</html>

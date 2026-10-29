@@ -74,6 +74,10 @@ class EntradaDia:
 	regra: RegraApuracao = field(default_factory=RegraApuracao)
 	feriado: bool = False
 	abonado: bool = False  # atestado/abono aprovado para o dia inteiro
+	# docs/PRD-tratamento-inconsistencias.md (TI-06): abono parcial — minutos de atraso que contam como trabalhados
+	minutos_abonados: int = 0
+	# pausa incluída pelo termo assinado (horista): pausa remunerada, conta como trabalhado (RH, 28/10/2026)
+	minutos_pausa_termo: int = 0
 	marcacoes_dia_anterior: tuple[datetime, ...] = ()  # para a interjornada (inclui outros vínculos do CPF)
 	horista: bool = False  # horista/intermitente: sem jornada prevista; até 8h no dia é normal
 	feriado_compensado: bool = False  # AJ-03: feriado trabalhado com folga compensatória aprovada

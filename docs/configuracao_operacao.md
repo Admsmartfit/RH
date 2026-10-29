@@ -20,56 +20,50 @@ Rotinas: `utils/config_operacao.py` (idempotentes).
 - **Employee Grade:** Operacional 28, Instrutores 35, Docentes 24, Administrativo 3 (campo "Grade" visível de novo no
   cadastro).
 - **Tipos de licença** em português; **listas de feriados** registradas para o HRMS (férias e atestados).
-- **WhatsApp:** API da Evolution em Configuração Apuração → seção "WhatsApp (Evolution API)" (campos sempre visíveis desde 24/10/2026). Cadastro **Regra de Envio WhatsApp** (Ponto → Horistas e WhatsApp → Regras de envio): evento, para quem
+- **WhatsApp:** API da Evolution em Configuração Apuração → seção "WhatsApp (Evolution API)" (campos sempre visíveis desde 24/10/2026). Cadastro **Regra de Envio WhatsApp** (Ponto → cartão "Horistas e WhatsApp" → "Regras de envio do WhatsApp"): evento, para quem
   (colaborador e/ou gestor), empresas e cargos, hora, textos com marcadores, botões **Testar** e **Simular**.
   Regras criadas: "Batida esquecida (ponto do dia)" (ligada, 9h, colaborador e gestor), "Falta sem justificativa"
   (desligada), "Horista além de 4h sem intervalo" (ligada). Envio geral **desligado** até a Evolution ser configurada.
 - Do Secullum: horários de cada recepcionista e ASG (perfis com sábado/domingo neutros = rodízio) e a ginástica como
   horista sem dias fixos.
 
-## A informar pelo RH
+## Respostas do RH (26/10/2026) — aplicadas
 
-Preencha e devolva; o que ficar em branco continua sem configurar.
+Rotina `aplicar_respostas_rh` (backup do site antes). Confirmações no chat: salário = piso para todos do cargo;
+"Instrutor" = musculação; prêmio com 2 ocorrências não paga; VT de 2 trajetos por dia para todos de recepção e ASG.
 
-### Cargos
+| Cargo | Tipo | Salário = piso (desde 01/11/2026) | Banco de horas padrão (admissões) |
+|---|---|---|---|
+| Recepcionista | Mensalista (44h) | R$ 1.776,50 | Sim |
+| Auxiliar de serviços gerais | Mensalista (44h) | R$ 1.650,00 | Sim |
+| Instrutor de ginástica | Horista | R$ 40,15/h | Não |
+| Instrutor (musculação) | Horista | R$ 16,50/h (já valia desde 01/09) | Não |
 
-| Cargo | Valor (R$/mês ou R$/hora) | Igual para todos do cargo? | Piso da CCT 2026/2027 | Banco de horas por padrão | Mínimo de horas |
-|---|---|---|---|---|---|
-| Recepcionista |R$/mês | sim | (PRD: R$ 1776,50  para 44h ) | (PRD: sim) | — |
-| Auxiliar de serviços gerais |R$/mês |sim  | PRD: R$ 1650,00  para 44h  | (PRD: sim) | — |
-| Instrutor de ginástica | (R$/hora) | sim | (PRD: R$ 40,15/h) | (PRD: não) | (h por mês ou semana) |
-| Instrutor | (R$/hora) |sim  | (PRD: R$ 16,50/h) | (PRD: não) | (h por mês ou semana) |
-### ASG — insalubridade e segurança
+- **Salários:** 36 Atribuições de salário a partir de 01/11/2026 (15 recepção, 13 ASG, 8 ginástica); pisos e banco
+  padrão na CCT SENALBA × SINDELIVRE.
+- **VR** (Regra de Benefício em cada empresa do ES, desde 01/11/2026): R$ 22 por dia trabalhado, recepção e ASG;
+  desconta falta, atestado, afastamento, férias e abono. **VA:** não existe.
+- **Prêmio assiduidade da recepção** (Regra de Premiação em cada empresa, desde 01/11/2026): sem falta e sem atestado
+  R$ 250; uma falta **ou** um dia de atestado R$ 150; duas ocorrências ou mais, nada. Atraso não conta. ASG: sem prêmio.
+- **VT:** Tarifa "TRANSCOL" de R$ 5,10 por trajeto (desde 01/01/2026) em cada empresa; 25 colaboradores de recepção e
+  ASG com 2 trajetos por dia. Instrutores só a pedido (ligar no cadastro).
+- **Escala de novembro/2026** gerada pelo horário do Secullum para recepção, ASG e ginástica (36 escalas); o gestor
+  marca o rodízio do fim de semana (dias neutros).
 
-- Insalubridade: 20% (grau médio) sobre o **salário contratual** (como no PRD) ou sobre o **salário mínimo**? Número e
-  validade do laudo (LTCAT)? Vale para os ASG de todas as empresas?
-- EPI: para cada item, o **CA** e o **prazo de troca** (luvas: 30 dias no PRD): luvas, botas, óculos, avental, máscara.
-- Uniforme (todos os cargos): quantas peças e prazo de troca?
-- Treinamentos: "Uso de EPI" e "Produtos químicos": validade (meses). Instrutores: algum obrigatório (ex.: primeiros
-  socorros)?
-- ASO: periodicidade (12 meses?).
+## Segunda rodada (26/10/2026) — aplicada (`aplicar_respostas_rh_2`)
 
-### Benefícios e prêmio
+- **Banco de horas** ligado para os 28 atuais de recepção e ASG; vale a partir de 01/11/2026 (mudança no meio do mês
+  vale no mês seguinte).
+- **Mínimo de 40 horas semanais** para os 34 instrutores horistas (ginástica e musculação), no cadastro de cada um.
+- **Insalubridade do ASG:** 20% sobre o salário base (padrão do sistema), desde 01/11/2026, Regra de Adicional de
+  Risco em cada empresa do ES.
+- **VT:** todos pelo CartãoGV (descrição da tarifa ajustada).
+- **WhatsApp:** aviso às 9h do dia seguinte (já era o padrão das regras).
 
-- **VR:** valor por dia; quem recebe (todos? horistas também?); descontos (PRD: falta, atestado, férias, afastamento,
-  abono). Recebe recepcionista e asg, 22,00 o dia trabalhado.  
-- **VA:** existe? Valor e quem recebe.Nao existe
-- **Prêmio de assiduidade:** existe? Valor, cargos e regras (ex.: 100% sem falta; 50% com 1 falta).
-recepcao- 250,00 sem falta , sem atestados. e 150 se tiver apenas uma falta ou atestado. assima de dois dias perde o 250.
-ASG - ainda nao tem assiduidade
+## Ainda a informar pelo RH
 
-
-### Vale-transporte (Serra, Vitória, Vila Velha)
-
-- Tarifas de 2026: **Transcol** (Grande Vitória) e **ônibus municipal de Vitória** (e outra, se houver). r$5,10 por trajeto
-- Quem usa VT, quantas passagens por dia, número do CartãoGV e RG de cada um (pode ser uma planilha). Principalmente asg e recpcao, os instrutores nao recebem mas somente solicitando.
-
-### Escalas
-
-- Recepção e ASG: o Secullum tem o fim de semana em rodízio (neutro). Gerar a **Escala do mês** de novembro a partir do
-  horário do Secullum, para o gestor marcar quem trabalha em cada sábado/domingo? Ou o gestor monta do zero? pode criar a escala a partir horario secullum
-- Ginástica: os horários das aulas de cada instrutor (manhã/noite, sábados) para a Escala do mês, ou quem vai lançar.pode tirar do secummul tambem
-
-### WhatsApp
-
-- Hora do aviso de batida esquecida (proposta: 9h do dia seguinte). URL, chave e instância da Evolution quando for ligar.
+- **VT:** número do CartãoGV e RG de cada um (sem eles a pessoa fica fora do arquivo da GVBus) e o código GVBus da
+  tarifa (provisório "TRANSCOL").
+- **ASG:** número, data e validade do laudo (LTCAT), para anexar na Regra de Adicional de Risco; CA e prazo de troca
+  de cada EPI; uniforme; validade dos treinamentos; periodicidade do ASO.
+- **WhatsApp:** URL, chave e instância da Evolution quando for ligar o envio.

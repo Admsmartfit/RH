@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "tipo",
+  "designation",
+  "employee",
+  "user",
+  "nome",
+  "column_break_contato",
+  "email",
+  "celular",
+  "recebe_email",
+  "recebe_whatsapp"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Colaborador",
+   "description": "Colaborador: escolha o cargo e a pessoa. Usuário: quem tem acesso e não é funcionário (RH terceirizado, contabilidade).",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Quem",
+   "options": "Colaborador\nUsuário",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Colaborador'",
+   "description": "Só para filtrar a lista de pessoas.",
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Cargo",
+   "options": "Designation"
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Colaborador'",
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "label": "Colaborador",
+   "options": "Employee"
+  },
+  {
+   "depends_on": "eval:doc.tipo=='Usuário'",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Usuário",
+   "options": "User"
+  },
+  {
+   "fieldname": "nome",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_contato",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Vazio: o do cadastro (colaborador ou usuário).",
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "E-mail",
+   "options": "Email"
+  },
+  {
+   "description": "Vazio: o do cadastro.",
+   "fieldname": "celular",
+   "fieldtype": "Data",
+   "label": "Celular (WhatsApp)"
+  },
+  {
+   "default": "1",
+   "fieldname": "recebe_email",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "E-mail com o termo"
+  },
+  {
+   "default": "1",
+   "fieldname": "recebe_whatsapp",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Cobrança no WhatsApp"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Destinatario do Termo",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

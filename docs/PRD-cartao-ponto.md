@@ -184,6 +184,10 @@ típico do instrutor com jornada fragmentada, que a CCT do ES prevê.
   fora dela. A falha no envio nunca desfaz a correção no programa.
 
 ## 5. Encaixe com os outros PRDs
+- **PRD do tratamento de inconsistências** (`docs/PRD-tratamento-inconsistencias.md`, 26/10/2026): o painel lateral
+  do CP-03 vira um balão (popover) com ações de um clique, a inconsistência pode ficar "Mantida" com ressalva e o
+  gestor cobra pelo WhatsApp da linha do erro. As regras deste PRD (correção só por Tratamento com motivo, CP-09)
+  continuam valendo.
 - **PRD-frontend:** o cartão é uma tela nova da área Ponto do painel, com os mesmos tokens, componentes (`BadgeStatus`,
   `Minutos`, `AuditoriaMarcacao`) e regras (só tela, servidor decide). A tela "Colaborador" atual vira o modo leitura
   do cartão.

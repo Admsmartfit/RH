@@ -107,6 +107,14 @@ def condicao_troca(user=None):
 	return _condicao("Troca de Escala", user)
 
 
+def condicao_indisponibilidade(user=None):
+	return _condicao("Indisponibilidade", user)
+
+
+def condicao_rascunho_escala(user=None):
+	return _condicao("Rascunho de Escala", user)
+
+
 def condicao_entrega_epi(user=None):
 	return _condicao("Entrega de EPI", user)
 
@@ -117,6 +125,10 @@ def condicao_tce(user=None):
 
 def condicao_relatorio_estagio(user=None):
 	return _condicao("Relatorio de Estagio", user)
+
+
+def condicao_termo_ocorrencias(user=None):
+	return _condicao("Termo de Ocorrencias", user)
 
 
 def tem_permissao(doc, ptype=None, user=None, debug=False):

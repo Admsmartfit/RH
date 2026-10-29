@@ -72,8 +72,12 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 		return resultado
 
 	pares = [(minutos_relativos(e, entrada.data), minutos_relativos(s, entrada.data)) for e, s in pares_dt]
-	resultado.trabalhado = sum(s - e for e, s in pares)
+	# a pausa do termo assinado é remunerada: o intervalo foi dado (pares), mas o tempo é pago como trabalhado
+	resultado.trabalhado = sum(s - e for e, s in pares) + entrada.minutos_pausa_termo
 
+	sem_jornada_no_dia = (
+		False  # feriado/folga: todo o tempo é extra, mas o art. 59 conta só o que passa de 8h
+	)
 	if ((entrada.horista and entrada.horista_escalado) or entrada.jornada.neutro) and not setimo_dia:
 		# AJ-14: horista por escala não ganha HE por trabalhar em folga ou fim de semana; só acima de 8h no dia
 		# (44h na semana: DSR Semanal) ou em feriado sem folga compensatória. Sem tolerância: paga o trabalhado.
@@ -82,6 +86,7 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 		resultado.tipo_dia = tipo_do_dia(entrada.data, feriado=feriado_pago, folga=False, repouso=False)
 		normais = 0 if feriado_pago else min(resultado.trabalhado, d.JORNADA_DIARIA_MAXIMA_MIN)
 		previsto, atraso, hora_extra = normais, 0, resultado.trabalhado - normais
+		sem_jornada_no_dia = feriado_pago
 	elif (
 		entrada.horista
 		and not setimo_dia
@@ -99,8 +104,11 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 		previsto, atraso, hora_extra = resultado.trabalhado, 0, 0
 	else:
 		atraso, hora_extra = 0, resultado.trabalhado  # folga ou feriado: todo o tempo é extra
+		sem_jornada_no_dia = True
 	if entrada.abonado:
 		atraso = 0
+	elif entrada.minutos_abonados:  # TI-06: abono parcial reduz só o atraso/saída antecipada
+		atraso = max(0, atraso - entrada.minutos_abonados)
 	resultado.atraso = atraso
 	resultado.normais = previsto - atraso
 	resultado.hora_extra = hora_extra
@@ -109,12 +117,19 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 		resultado.inconsistencias.append(
 			Inconsistencia("atraso", BAIXA, f"{atraso} min de atraso/saída antecipada.")
 		)
-	if hora_extra > regra.limite_he_diaria:
+	# Art. 59: no máximo 2h além da jornada normal. Em feriado/folga todo o tempo é pago como extra, mas o limite
+	# vale só para o que passa de 8h no dia (a jornada normal); o pagamento continua sendo de todo o tempo.
+	acima_da_jornada = (
+		max(0, resultado.trabalhado - d.JORNADA_DIARIA_MAXIMA_MIN) if sem_jornada_no_dia else hora_extra
+	)
+	if acima_da_jornada > regra.limite_he_diaria:
 		resultado.inconsistencias.append(
 			Inconsistencia(
 				"he_acima_limite",
 				MEDIA,
-				f"{hora_extra} min de HE, acima de {regra.limite_he_diaria} min (Art. 59).",
+				f"{acima_da_jornada} min além da jornada do dia, acima de {regra.limite_he_diaria} min de HE (Art. 59)."
+				if sem_jornada_no_dia
+				else f"{hora_extra} min de HE, acima de {regra.limite_he_diaria} min (Art. 59).",
 			)
 		)
 

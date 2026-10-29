@@ -12,7 +12,16 @@
 // Status da apuração e severidade da inconsistência: sempre com texto, nunca só cor (WCAG 1.4.1).
 // Novo status de apuração, nova severidade ou nova situação de envio entra também aqui (regra do AGENTS.md).
 import { computed } from "vue";
-import { AlertOctagon, AlertTriangle, CheckCircle2, CircleDashed, Info, Wrench } from "lucide-vue-next";
+import {
+	AlertOctagon,
+	AlertTriangle,
+	CheckCircle2,
+	CircleDashed,
+	FileSignature,
+	Info,
+	ShieldCheck,
+	Wrench,
+} from "lucide-vue-next";
 
 const props = defineProps({
 	valor: { type: String, default: "" },
@@ -29,6 +38,7 @@ const TONS = {
 const MAPA = {
 	Ok: { texto: "Ok", tom: "conforme", icone: CheckCircle2 },
 	Tratado: { texto: "Tratado", tom: "primario", icone: Wrench },
+	Ressalva: { texto: "OK (ressalva)", tom: "primario", icone: ShieldCheck },
 	Inconsistente: { texto: "Inconsistente", tom: "perigo", icone: AlertTriangle },
 	"Nao Apurado": { texto: "Não apurado", tom: "neutro", icone: CircleDashed },
 	Alta: { texto: "Alta", tom: "perigo", icone: AlertOctagon },
@@ -36,6 +46,14 @@ const MAPA = {
 	Baixa: { texto: "Baixa", tom: "primario", icone: Info },
 	Aberta: { texto: "Aberta", tom: "alerta", icone: AlertTriangle },
 	Resolvida: { texto: "Resolvida", tom: "conforme", icone: CheckCircle2 },
+	Mantida: { texto: "Mantida (ressalva)", tom: "primario", icone: ShieldCheck },
+	// docs/PRD-termo-ocorrencias.md (TO-03)
+	"Aguardando termo": { texto: "Aguardando termo", tom: "alerta", icone: FileSignature },
+	"Aguardando assinatura": { texto: "Aguardando assinatura", tom: "alerta", icone: FileSignature },
+	"Assinado (conforme)": { texto: "Assinado conforme", tom: "conforme", icone: CheckCircle2 },
+	"Assinado (com alteração)": { texto: "Assinado com alteração", tom: "conforme", icone: CheckCircle2 },
+	Recusado: { texto: "Recusado", tom: "perigo", icone: AlertOctagon },
+	Cancelado: { texto: "Cancelado", tom: "neutro", icone: CircleDashed },
 	Aprovado: { texto: "Aprovado", tom: "conforme", icone: CheckCircle2 },
 	"Aguardando aprovação": { texto: "Aguardando aprovação", tom: "alerta", icone: CircleDashed },
 	// envio da correção ao Secullum (docs/PRD-cartao-ponto.md, CP-10)

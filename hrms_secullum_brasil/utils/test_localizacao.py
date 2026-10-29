@@ -59,11 +59,11 @@ class TestCincoAreas(FrappeTestCase):
 
 
 class TestCamposSemUso(FrappeTestCase):
-	"""AM-01: campos indianos ou sem uso escondidos por Property Setter (fixtures), sem editar o HRMS."""
+	"""AM-01: campos indianos ou sem uso escondidos por Property Setter (fixtures), sem editar o HRMS. O Grade do
+	Employee voltou a aparecer em 24/10/2026 (CO-3, Employee Grade por área)."""
 
 	def test_campos_escondidos(self):
 		for doctype, campo in (
-			("Employee", "grade"),
 			("Employee", "passport_details_section"),
 			("Salary Slip", "income_tax_calculation_breakup_section"),
 			("Salary Structure Assignment", "income_tax_slab"),

@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "data",
+  "ocorrencias",
+  "tipos",
+  "marcacoes",
+  "proposta",
+  "horarios_propostos",
+  "intervalo_termo",
+  "inconsistencias",
+  "column_break_resposta",
+  "resposta",
+  "horarios_informados",
+  "resultado"
+ ],
+ "fields": [
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Dia",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ocorrencias",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Ocorrência",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tipos",
+   "fieldtype": "Data",
+   "label": "Tipos",
+   "read_only": 1
+  },
+  {
+   "fieldname": "marcacoes",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Marcações registradas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "proposta",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Regularização proposta",
+   "read_only": 1
+  },
+  {
+   "description": "O dia inteiro depois da correção (vazio: ciente, sem mudar o ponto).",
+   "fieldname": "horarios_propostos",
+   "fieldtype": "Data",
+   "label": "Horários propostos",
+   "read_only": 1
+  },
+  {
+   "description": "Saída e volta do intervalo incluídas (motivo do termo assinado: pausa remunerada).",
+   "fieldname": "intervalo_termo",
+   "fieldtype": "Data",
+   "label": "Intervalo do termo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inconsistencias",
+   "fieldtype": "Small Text",
+   "label": "Inconsistências",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_resposta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "resposta",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Resposta",
+   "options": "\nDe acordo\nAlterado\nNão reconhece\nJá resolvido\nPeríodo fechado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "horarios_informados",
+   "fieldtype": "Data",
+   "label": "Horários informados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Small Text",
+   "label": "Resultado",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Item do Termo de Ocorrencias",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

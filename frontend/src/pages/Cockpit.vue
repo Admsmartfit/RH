@@ -107,6 +107,20 @@
 				</CardNumero>
 
 				<CardNumero
+					v-if="r.termos"
+					titulo="Termos aguardando assinatura"
+					:icone="FileSignature"
+					:rota="{ name: 'Termos', query: route.query }"
+					rotulo-link="Abrir os termos"
+					:destaque="r.termos.atrasados ? 'alerta' : ''"
+				>
+					<span data-testid="termos-aguardando">{{ r.termos.aguardando }}</span>
+					<template #detalhe>
+						{{ r.termos.atrasados }} com prazo vencido. Emita termos em lote para quem tem o mesmo problema.
+					</template>
+				</CardNumero>
+
+				<CardNumero
 					titulo="Inconsistências abertas"
 					:icone="AlertTriangle"
 					:rota="{ name: 'Inconsistencias', query: { ...route.query, status: undefined } }"
@@ -203,6 +217,7 @@ import {
 	AlertTriangle,
 	CalendarX,
 	Clock,
+	FileSignature,
 	Hourglass,
 	ListRestart,
 	Lock,

@@ -46,6 +46,8 @@ def test_conformidade_sem_dia_apurado():
 
 def test_conformidade_total():
 	assert taxa_conformidade({"Ok": 10}).percentual == Decimal("100.0")
+	# TI-03: dia com as inconsistências mantidas com ressalva conta como conforme
+	assert taxa_conformidade({"Ok": 1, "Ressalva": 1, "Inconsistente": 2}).conformes == 2
 
 
 # ------------------------------------------------------------------ HE por faixa

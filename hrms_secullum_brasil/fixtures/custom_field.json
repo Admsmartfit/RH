@@ -1078,5 +1078,33 @@
   "module": "Configuracao Ponto",
   "name": "Designation-cargo_resumo_html",
   "label": "Resumo"
+ },
+ {
+  "default": "0",
+  "description": "CE-16: a pessoa tem escala flexível em todos os dias (consta no contrato): mudar o horário não pede assinatura e nenhum dia fica travado no cockpit.",
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "escala_flexivel",
+  "fieldtype": "Check",
+  "insert_after": "historico_perfil_jornada",
+  "is_system_generated": 0,
+  "label": "Escala flexível",
+  "modified": "2026-10-27 16:00:00.000000",
+  "module": "Configuracao Ponto",
+  "name": "Employee-escala_flexivel"
+ },
+ {
+  "depends_on": "eval:!doc.escala_flexivel",
+  "description": "Dias da semana com escala flexível (consta no contrato), separados por vírgula. Ex.: Sábado, Domingo.",
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "dias_flexiveis",
+  "fieldtype": "Data",
+  "insert_after": "escala_flexivel",
+  "is_system_generated": 0,
+  "label": "Dias flexíveis",
+  "modified": "2026-10-27 16:00:00.000000",
+  "module": "Configuracao Ponto",
+  "name": "Employee-dias_flexiveis"
  }
 ]

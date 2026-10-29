@@ -1,5 +1,16 @@
 // docs/PRD-monitoramento-horistas.md (MH-01): teste do WhatsApp antes de ligar o envio
 frappe.ui.form.on("Configuracao Apuracao", {
+	setup(frm) {
+		// docs/PRD-termo-ocorrencias.md: destinatário do termo = pessoa da empresa (filtrada pelo cargo escolhido)
+		frm.set_query("employee", "termo_destinatarios", (_doc, cdt, cdn) => {
+			const linha = locals[cdt][cdn];
+			const filters = { status: "Active" };
+			if (linha.company) filters.company = linha.company;
+			if (linha.designation) filters.designation = linha.designation;
+			return { filters };
+		});
+		frm.set_query("user", "termo_destinatarios", () => ({ filters: { enabled: 1, user_type: "System User" } }));
+	},
 	refresh(frm) {
 		frm.add_custom_button(__("Enviar mensagem de teste"), () =>
 			frappe.prompt(

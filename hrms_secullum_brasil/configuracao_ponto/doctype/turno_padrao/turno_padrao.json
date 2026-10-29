@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "autoname": "TP-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "nome_turno",
+  "designation",
+  "ativo",
+  "column_break_horario",
+  "entrada",
+  "saida",
+  "pausa_minutos",
+  "pausa_inicio",
+  "cor",
+  "minutos_trabalhados",
+  "titulo"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Ex.: T1, T2, Manhã. Aparece na paleta do cockpit.",
+   "fieldname": "nome_turno",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome do turno",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio = vale para todos os cargos da empresa.",
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Cargo",
+   "options": "Designation"
+  },
+  {
+   "default": "1",
+   "fieldname": "ativo",
+   "fieldtype": "Check",
+   "label": "Ativo"
+  },
+  {
+   "fieldname": "column_break_horario",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "entrada",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Entrada",
+   "reqd": 1
+  },
+  {
+   "description": "Menor que a entrada = termina no dia seguinte.",
+   "fieldname": "saida",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Saída",
+   "reqd": 1
+  },
+  {
+   "default": "15",
+   "description": "Turno de 6h precisa de 15 min (CLT art. 71, §1º); acima de 6h, 1h ou o reduzido da CCT.",
+   "fieldname": "pausa_minutos",
+   "fieldtype": "Int",
+   "label": "Pausa (minutos)"
+  },
+  {
+   "description": "Vazio = no meio do turno.",
+   "fieldname": "pausa_inicio",
+   "fieldtype": "Time",
+   "label": "Início da pausa"
+  },
+  {
+   "fieldname": "cor",
+   "fieldtype": "Color",
+   "label": "Cor no cockpit"
+  },
+  {
+   "fieldname": "minutos_trabalhados",
+   "fieldtype": "Int",
+   "label": "Minutos trabalhados",
+   "read_only": 1
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Título"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Turno Padrao",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Colaborador",
+   "share": 1
+  }
+ ],
+ "search_fields": "nome_turno,company",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

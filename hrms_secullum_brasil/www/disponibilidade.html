@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Minha disponibilidade</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 34rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; margin: 0.5rem 0; }
+		fieldset { border: 1px solid var(--borda); border-radius: 0.5rem; padding: 0.75rem; margin: 0.75rem 0; }
+		label { display: block; margin: 0.5rem 0 0.25rem; font-weight: 600; }
+		input, textarea { width: 100%; min-height: 44px; padding: 0.5rem; border: 1px solid var(--borda); border-radius: 0.375rem; background: transparent; color: inherit; font: inherit; }
+		input[type="checkbox"] { width: auto; min-height: auto; }
+		.linha { display: flex; gap: 0.5rem; } .linha > div { flex: 1; }
+		button { min-height: 44px; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.secundario { background: transparent; color: var(--primario); }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+		ul { padding-left: 1.2rem; }
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Minha disponibilidade</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+		<section id="informadas" aria-labelledby="t-informadas" hidden>
+			<h2 id="t-informadas" style="font-size: 1rem">Já informado</h2>
+			<ul id="lista"></ul>
+		</section>
+		<form id="form" hidden>
+			<p class="suave">Marque os dias (ou horários) em que você <strong>não</strong> pode trabalhar. Não informe dados de saúde: atestado é com o RH.</p>
+			<div id="itens"></div>
+			<button type="button" class="secundario" id="mais">+ Outro período</button>
+			<p><button type="submit">Enviar</button></p>
+		</form>
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<template id="modelo">
+		<fieldset>
+			<legend>Período</legend>
+			<div class="linha">
+				<div><label>De<input type="date" name="data_inicio" required /></label></div>
+				<div><label>Até<input type="date" name="data_fim" required /></label></div>
+			</div>
+			<label style="font-weight: 400"><input type="checkbox" name="dia_inteiro" checked /> Dia inteiro</label>
+			<div class="linha horario" hidden>
+				<div><label>Das<input type="time" name="hora_inicio" /></label></div>
+				<div><label>Às<input type="time" name="hora_fim" /></label></div>
+			</div>
+			<label>Motivo<input type="text" name="motivo" maxlength="200" required placeholder="Ex.: faculdade, outro emprego" /></label>
+		</fieldset>
+	</template>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.disponibilidade";
+		const token = new URLSearchParams(location.search).get("token") || "";
+		const $ = (id) => document.getElementById(id);
+		const br = (iso) => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "");
+		let limites = {};
+
+		function novoPeriodo() {
+			const bloco = $("modelo").content.cloneNode(true);
+			const caixa = bloco.querySelector("[name=dia_inteiro]");
+			const horario = bloco.querySelector(".horario");
+			caixa.addEventListener("change", () => (horario.hidden = caixa.checked));
+			for (const campo of bloco.querySelectorAll("input[type=date]")) {
+				campo.min = limites.inicio;
+				campo.max = limites.fim;
+			}
+			$("itens").appendChild(bloco);
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.dados?token=${encodeURIComponent(token)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido ou vencido. Peça um novo ao seu gestor.";
+				return;
+			}
+			const d = corpo.message;
+			limites = d;
+			$("cabecalho").textContent = `${d.nome}, informe até ${br(d.prazo)} quando você não pode trabalhar em ${d.mes}.`;
+			if (d.informadas.length) {
+				$("informadas").hidden = false;
+				$("lista").innerHTML = "";
+				for (const i of d.informadas) {
+					const li = document.createElement("li");
+					const horas = i.dia_inteiro ? "dia inteiro" : `${String(i.hora_inicio).slice(0, 5)} às ${String(i.hora_fim).slice(0, 5)}`;
+					li.textContent = `${br(i.data_inicio)} a ${br(i.data_fim)} (${horas}): ${i.motivo} — ${i.situacao}`;
+					$("lista").appendChild(li);
+				}
+			}
+			if (!d.no_prazo) {
+				$("status").className = "erro";
+				$("status").textContent = "O prazo para informar terminou.";
+				return;
+			}
+			$("form").hidden = false;
+			if (!$("itens").children.length) novoPeriodo();
+		}
+
+		$("mais").addEventListener("click", novoPeriodo);
+		$("form").addEventListener("submit", async (e) => {
+			e.preventDefault();
+			const itens = [...$("itens").querySelectorAll("fieldset")].map((f) => ({
+				data_inicio: f.querySelector("[name=data_inicio]").value,
+				data_fim: f.querySelector("[name=data_fim]").value,
+				dia_inteiro: f.querySelector("[name=dia_inteiro]").checked ? 1 : 0,
+				hora_inicio: f.querySelector("[name=hora_inicio]").value,
+				hora_fim: f.querySelector("[name=hora_fim]").value,
+				motivo: f.querySelector("[name=motivo]").value,
+			}));
+			const r = await fetch(`${API}.enviar`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ token, itens: JSON.stringify(itens) }),
+			});
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("status").className = "erro";
+				$("status").textContent = (corpo._server_messages && JSON.parse(JSON.parse(corpo._server_messages)[0]).message) || "Não foi possível enviar.";
+				return;
+			}
+			$("status").className = "ok";
+			$("status").textContent = `Enviado: ${corpo.message} período(s). O seu gestor vai confirmar.`;
+			$("itens").innerHTML = "";
+			novoPeriodo();
+			carregar();
+		});
+		carregar();
+	</script>
+</body>
+</html>

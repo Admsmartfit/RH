@@ -17,7 +17,15 @@
   "enviada_em",
   "texto_section",
   "texto",
-  "resposta"
+  "resposta",
+  "origem_section",
+  "inconsistencia",
+  "publicacao",
+  "termo",
+  "id_mensagem",
+  "column_break_ciencia",
+  "entregue_em",
+  "lida_em"
  ],
  "fields": [
   {
@@ -42,7 +50,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Para",
-   "options": "Colaborador\nGestor\nTeste",
+   "options": "Colaborador\nGestor\nRH\nTeste",
    "read_only": 1
   },
   {
@@ -84,7 +92,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Situação",
-   "options": "Na fila\nEnviada\nErro\nNão enviada (desligado)\nSem telefone",
+   "options": "Na fila\nEnviada\nErro\nNão enviada (desligado)\nSem telefone\nAguardando envio manual\nEntregue\nLida",
    "read_only": 1
   },
   {
@@ -116,10 +124,56 @@
    "fieldtype": "Small Text",
    "label": "Resposta / erro",
    "read_only": 1
+  },
+  {
+   "fieldname": "origem_section",
+   "fieldtype": "Section Break",
+   "label": "Origem e ciência"
+  },
+  {
+   "fieldname": "inconsistencia",
+   "fieldtype": "Link",
+   "label": "Inconsistência",
+   "options": "Inconsistencia de Ponto"
+  },
+  {
+   "fieldname": "publicacao",
+   "fieldtype": "Link",
+   "label": "Publicação de escala",
+   "options": "Publicacao de Escala"
+  },
+  {
+   "fieldname": "termo",
+   "fieldtype": "Link",
+   "label": "Termo de ocorrências",
+   "options": "Termo de Ocorrencias",
+   "read_only": 1
+  },
+  {
+   "fieldname": "id_mensagem",
+   "fieldtype": "Data",
+   "label": "Id da mensagem (Evolution)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ciencia",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "entregue_em",
+   "fieldtype": "Datetime",
+   "label": "Entregue em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lida_em",
+   "fieldtype": "Datetime",
+   "label": "Lida em",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-10-24 10:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Notificacao WhatsApp",

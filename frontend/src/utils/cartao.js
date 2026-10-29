@@ -62,3 +62,18 @@ export function montarAlteracoes(dias, edicoes) {
 	}
 	return saida;
 }
+
+// inclui horários entre as batidas na ordem do dia: 09:18 e 13:34 + 11:26 e 11:41 → 09:18, 11:26, 11:41, 13:34
+// (a saída original vai para a Saída 2). Horário antes da primeira batida conta como do dia seguinte (virada).
+export function inserirEmOrdem(celulas, horas) {
+	const minutos = (h) => {
+		const [hh, mm] = h.split(":").map(Number);
+		return hh * 60 + mm;
+	};
+	const preenchidas = celulas.filter(Boolean);
+	if (preenchidas.length + horas.length > celulas.length) return null;
+	const inicio = preenchidas.length ? minutos(preenchidas[0]) : 0;
+	const chave = (h) => (minutos(h) < inicio ? minutos(h) + 1440 : minutos(h));
+	const ordenadas = [...preenchidas, ...horas].sort((a, b) => chave(a) - chave(b));
+	return celulas.map((_, n) => ordenadas[n] || "");
+}

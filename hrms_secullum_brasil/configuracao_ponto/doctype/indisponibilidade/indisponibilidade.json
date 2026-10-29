@@ -1,0 +1,201 @@
+{
+ "actions": [],
+ "autoname": "IND-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "gestor",
+  "column_break_periodo",
+  "data_inicio",
+  "data_fim",
+  "dia_inteiro",
+  "hora_inicio",
+  "hora_fim",
+  "motivo_section",
+  "motivo",
+  "situacao",
+  "origem",
+  "decidido_por",
+  "decidido_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_periodo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "De",
+   "reqd": 1
+  },
+  {
+   "fieldname": "data_fim",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Até",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "dia_inteiro",
+   "fieldtype": "Check",
+   "label": "Dia inteiro"
+  },
+  {
+   "depends_on": "eval:!doc.dia_inteiro",
+   "fieldname": "hora_inicio",
+   "fieldtype": "Time",
+   "label": "Das",
+   "mandatory_depends_on": "eval:!doc.dia_inteiro"
+  },
+  {
+   "depends_on": "eval:!doc.dia_inteiro",
+   "fieldname": "hora_fim",
+   "fieldtype": "Time",
+   "label": "Às",
+   "mandatory_depends_on": "eval:!doc.dia_inteiro"
+  },
+  {
+   "fieldname": "motivo_section",
+   "fieldtype": "Section Break",
+   "label": "Motivo"
+  },
+  {
+   "description": "Texto livre, sem dado de saúde: atestado continua pelo Atestado Médico (LGPD).",
+   "fieldname": "motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo",
+   "reqd": 1
+  },
+  {
+   "default": "Aprovada",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Pendente\nAprovada\nRecusada"
+  },
+  {
+   "default": "Gestor",
+   "fieldname": "origem",
+   "fieldtype": "Select",
+   "label": "Informada por",
+   "options": "Gestor\nColaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decidido_por",
+   "fieldtype": "Link",
+   "label": "Decidido por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decidido_em",
+   "fieldtype": "Datetime",
+   "label": "Decidido em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Indisponibilidade",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Colaborador",
+   "share": 1
+  }
+ ],
+ "search_fields": "employee_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

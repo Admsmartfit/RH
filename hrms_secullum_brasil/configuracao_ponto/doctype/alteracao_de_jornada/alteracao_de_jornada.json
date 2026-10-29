@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "autoname": "ALT-JOR-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "data_inicio",
+  "prazo_assinatura",
+  "column_break_situacao",
+  "situacao",
+  "observacao",
+  "linhas_section",
+  "linhas"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "data_inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vale a partir de",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prazo_assinatura",
+   "fieldtype": "Date",
+   "label": "Prazo para assinar"
+  },
+  {
+   "fieldname": "column_break_situacao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Rascunho",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Rascunho\nEm assinatura\nLiberada\nCancelada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  },
+  {
+   "fieldname": "linhas_section",
+   "fieldtype": "Section Break",
+   "label": "Colaboradores e novo horário"
+  },
+  {
+   "fieldname": "linhas",
+   "fieldtype": "Table",
+   "label": "Colaboradores",
+   "options": "Alteracao de Jornada Linha",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Alteracao de Jornada",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

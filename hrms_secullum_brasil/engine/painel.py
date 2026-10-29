@@ -17,6 +17,7 @@ from hrms_secullum_brasil.engine.jornada_prevista import MINUTOS_DIA
 # Status da Apuracao Diaria (D-2)
 OK = "Ok"
 TRATADO = "Tratado"
+RESSALVA = "Ressalva"  # TI-03: inconsistências mantidas com ressalva
 INCONSISTENTE = "Inconsistente"
 NAO_APURADO = "Nao Apurado"
 
@@ -48,8 +49,8 @@ class Conformidade:
 
 
 def taxa_conformidade(contagem_por_status: dict[str, int]) -> Conformidade:
-	"""Dias Ok ou Tratado ÷ dias apurados (Ok + Tratado + Inconsistente). "Não Apurado" fica de fora."""
-	conformes = contagem_por_status.get(OK, 0) + contagem_por_status.get(TRATADO, 0)
+	"""Dias Ok, Tratado ou Ressalva ÷ dias apurados (esses + Inconsistente). "Não Apurado" fica de fora."""
+	conformes = sum(contagem_por_status.get(s, 0) for s in (OK, TRATADO, RESSALVA))
 	apurados = conformes + contagem_por_status.get(INCONSISTENTE, 0)
 	percentual = (
 		(Decimal(conformes) * 100 / apurados).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)

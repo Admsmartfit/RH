@@ -14,7 +14,7 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	await page.goto("/ponto?competencia=2026-08&company=ES%20Fitness%20Ltda");
 	await expect(page.getByTestId("inconsistencias-abertas")).toHaveText("24");
 	const ordem = [];
-	for (let n = 0; n < 14; n++) {
+	for (let n = 0; n < 16; n++) {
 		await page.keyboard.press("Tab");
 		ordem.push(
 			await page.evaluate(() => {
@@ -30,17 +30,20 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	ordem.length = 0;
 	ordem.push(...campos);
 	expect(ordem[0]).toBe("Pular para o conteúdo");
-	expect(ordem.slice(1, 6)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Colaborador", "Abrir no Desk"]);
-	expect(ordem[6]).toContain("Competência");
-	expect(ordem[7]).toContain("Empresa");
-	expect(ordem[8]).toContain("Filial");
-	expect(ordem[9]).toContain("Departamento");
-	expect(ordem[10]).toContain("Status");
-	expect(ordem[11]).toContain("Ver lista");
+	expect(ordem.slice(1, 8)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Escalas", "Termos", "Colaborador", "Abrir no Desk"]);
+	expect(ordem[8]).toContain("Competência");
+	expect(ordem[9]).toContain("Empresa");
+	expect(ordem[10]).toContain("Filial");
+	expect(ordem[11]).toContain("Departamento");
+	expect(ordem[12]).toContain("Status");
+	expect(ordem[13]).toContain("Ver lista");
 });
 
 test("o 'Pular para o conteúdo' leva o foco ao conteúdo principal", async ({ page }) => {
 	await page.goto("/ponto/inconsistencias?competencia=2026-08&company=ES%20Fitness%20Ltda");
+	// espera a lista carregar (ela pode levar o foco para a primeira linha) e começa do topo da página
+	await expect(page.getByRole("region", { name: "Lista" })).toBeVisible();
+	await page.evaluate(() => document.activeElement?.blur());
 	await page.keyboard.press("Tab");
 	await expect(page.getByRole("link", { name: "Pular para o conteúdo" })).toBeFocused();
 	await page.keyboard.press("Enter");

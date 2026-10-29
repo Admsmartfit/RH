@@ -11,6 +11,7 @@ from frappe.utils import cint, date_diff, formatdate, get_datetime, getdate, now
 
 from hrms_secullum_brasil.apuracao.adaptador import (
 	ABONO,
+	ABONO_PARCIAL,
 	COMPENSACAO,
 	DESCONSIDERAR,
 	INCLUSAO,
@@ -40,6 +41,11 @@ class TratamentodePonto(Document):
 			self.justificativa = None
 		if self.tipo != COMPENSACAO:
 			self.data_folga = None
+		if self.tipo == ABONO_PARCIAL:
+			if cint(self.minutos_abonados) <= 0:
+				frappe.throw(_("Informe os minutos abonados."))
+		else:
+			self.minutos_abonados = 0
 		self._validar_duplicidade()
 
 	def before_cancel(self):
@@ -61,7 +67,8 @@ class TratamentodePonto(Document):
 
 	def _enviar_ao_secullum(self, **justificativas):
 		"""CP-10: correção marcada para enviar vai ao cartão do Secullum só depois de aprovada (fila, com a trava)."""
-		if not cint(self.enviar_secullum) or self.tipo == COMPENSACAO:
+		# abono parcial fica só no programa (a API do Secullum não tem abono por minutos)
+		if not cint(self.enviar_secullum) or self.tipo in (COMPENSACAO, ABONO_PARCIAL):
 			return
 		from hrms_secullum_brasil.ingestion.envio_cartao import agendar
 

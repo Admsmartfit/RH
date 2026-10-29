@@ -14,6 +14,8 @@ if [ ! -d "sites/$SITE" ]; then
 		--install-app erpnext --install-app hrms --install-app payments --install-app "$APP"
 	bench --site "$SITE" set-config developer_mode 1
 	bench --site "$SITE" set-config allow_tests true
+	# a suíte cria centenas de usuários em minutos: sem isto o Frappe recusa com "Throttled" (limite de 60 por hora)
+	bench --site "$SITE" set-config -p throttle_user_limit 100000
 	# v16: a política de senha vem ligada e os dados de teste do ERPNext usam senhas simples (só neste site de testes)
 	bench --site "$SITE" execute frappe.db.set_single_value --args "['System Settings', 'enable_password_policy', 0]"
 	# a mesma preparação que o `bench run-tests` faz antes dos testes do HRMS (no v16 ela também conclui o setup do ERPNext)

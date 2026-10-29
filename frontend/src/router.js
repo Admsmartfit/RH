@@ -20,6 +20,18 @@ const routes = [
 				meta: { titulo: "Cartão ponto" },
 			},
 			{
+				path: "escalas",
+				name: "Escalas",
+				component: () => import("@/pages/Escalas.vue"),
+				meta: { titulo: "Escalas" },
+			},
+			{
+				path: "termos",
+				name: "Termos",
+				component: () => import("@/pages/Termos.vue"),
+				meta: { titulo: "Termos de ocorrências" },
+			},
+			{
 				path: "colaborador/:employee?",
 				name: "Colaborador",
 				component: () => import("@/pages/Colaborador.vue"),

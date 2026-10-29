@@ -10,7 +10,11 @@ from frappe.utils import add_days, cint, date_diff, getdate, now_datetime, today
 from hrms_secullum_brasil.apuracao.adaptador import Contexto, dias_trabalhados, montar_entrada
 from hrms_secullum_brasil.apuracao.banco_horas import atualizar_dia, recalcular_colaborador
 from hrms_secullum_brasil.apuracao.dsr import atualizar_semana
-from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
+from hrms_secullum_brasil.apuracao.inconsistencias import (
+	registrar_inconsistencia,
+	resolver_inconsistencias,
+	tipos_mantidos,
+)
 from hrms_secullum_brasil.apuracao.lote import (
 	adiar_semana,
 	ativo,
@@ -104,8 +108,10 @@ def _descartar_fora_do_contrato(employee: str, data) -> None:
 def _status(ctx: Contexto, resultado: ResultadoDia | None, inconsistencias: list[Inconsistencia]) -> str:
 	if resultado is None or not resultado.apurado:
 		return "Nao Apurado"
-	if any(i.severidade != BAIXA for i in inconsistencias):
-		return "Inconsistente"
+	graves = {i.tipo for i in inconsistencias if i.severidade != BAIXA}
+	if graves:
+		# TI-03: todas mantidas com ressalva = dia "OK (ressalva)"
+		return "Ressalva" if graves <= tipos_mantidos(ctx.employee, ctx.data) else "Inconsistente"
 	if ctx.tratamentos:
 		return "Tratado"
 	return "Ok"
@@ -215,7 +221,7 @@ def _sincronizar_inconsistencias(ctx: Contexto, apuracao: str, atuais: list[Inco
 		{
 			"employee": ctx.employee,
 			"data": ctx.data,
-			"status": "Aberta",
+			"status": ["in", ["Aberta", "Aguardando termo"]],
 			"tipo": ["in", sorted(TIPOS_DA_APURACAO - set(por_tipo))],
 		},
 		["tipo"],

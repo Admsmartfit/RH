@@ -141,12 +141,44 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 	inconsistencias = defaultdict(list)
 	for i in frappe.get_list(
 		INCONSISTENCIA,
-		filters={"employee": employee, "data": ["between", [inicio, fim]], "status": "Aberta"},
-		fields=["name", "data", "tipo", "severidade", "descricao", "referencia_doctype", "referencia_name"],
+		filters={
+			"employee": employee,
+			"data": ["between", [inicio, fim]],
+			"status": ["in", ["Aberta", "Aguardando termo"]],
+		},
+		fields=[
+			"name",
+			"data",
+			"tipo",
+			"severidade",
+			"descricao",
+			"referencia_doctype",
+			"referencia_name",
+			"status",
+			"termo",
+		],
 		order_by="severidade asc",
 		limit_page_length=0,
 	):
 		inconsistencias[getdate(i.data)].append(i)
+	# TI-08: última cobrança por WhatsApp de cada dia (ícone "WhatsApp enviado" no cartão)
+	do_mes = {
+		i.name: getdate(i.data)
+		for i in frappe.get_all(
+			INCONSISTENCIA,
+			filters={"employee": employee, "data": ["between", [inicio, fim]]},
+			fields=["name", "data"],
+		)
+	}
+	cobrancas = {}
+	if do_mes:
+		for n in frappe.get_all(
+			"Notificacao WhatsApp",
+			filters={"employee": employee, "inconsistencia": ["in", list(do_mes)]},
+			fields=["inconsistencia", "situacao", "enviada_em", "entregue_em", "lida_em"],
+			order_by="creation asc",
+		):
+			cobrancas[do_mes[n.inconsistencia]] = n
 	envios = {}
 	for e in frappe.get_all(
 		"Envio Cartao Secullum",
@@ -161,6 +193,7 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 		"apuracoes": apuracoes,
 		"inconsistencias": inconsistencias,
 		"envios": envios,
+		"cobrancas": cobrancas,
 	}
 
 
@@ -255,15 +288,15 @@ def _abono(employee: str, data: date, grade: dict) -> dict | None:
 	return None
 
 
-def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict:
+def contexto_do_dia(employee: str, data: date, dados: dict) -> tuple:
+	"""(entrada montada, hora de virada, grade de batidas, previsto, ContextoDia): o que as sugestões do cartão usam
+	(o termo de ocorrências propõe a mesma correção, docs/PRD-termo-ocorrencias.md)."""
 	ctx = montar_entrada(employee, data)
 	perfil = documento("Perfil de Jornada", ctx.perfil) if ctx and ctx.perfil else None
 	virada = cint(perfil.hora_virada_dia) if perfil else 0
 	grade = batidas_do_dia(data, virada, dados)
 	jornada = ctx.entrada.jornada if ctx and ctx.entrada else None
 	previsto = [(p.inicio, p.fim) for p in jornada.periodos] if jornada else []
-	apuracao = dados["apuracoes"].get(data)
-	cartao = cartao_do_dia(employee, data)
 	inconsistencias = dados["inconsistencias"].get(data, [])
 	regra = ctx.entrada.regra if ctx and ctx.entrada else None
 	contexto = ContextoDia(
@@ -274,12 +307,27 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 		),
 		tuple(previsto),
 		**(
-			{"duplicidade_minutos": regra.duplicidade_minutos, "intervalo_minimo": regra.intervalo_minimo}
+			{
+				"duplicidade_minutos": regra.duplicidade_minutos,
+				"intervalo_minimo": regra.intervalo_minimo,
+				"intervalo_curto": regra.intervalo_curto,
+				"jornada_sem_intervalo_ate": regra.jornada_sem_intervalo_ate,
+				"jornada_intervalo_curto_ate": regra.jornada_intervalo_curto_ate,
+			}
 			if regra
 			else {}
 		),
 		horista=bool(ctx and ctx.entrada and ctx.entrada.horista),
+		**(_destino_do_dia(employee, data) if inconsistencias else {}),
 	)
+	return ctx, virada, grade, previsto, contexto
+
+
+def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict:
+	ctx, virada, grade, previsto, contexto = contexto_do_dia(employee, data, dados)
+	apuracao = dados["apuracoes"].get(data)
+	cartao = cartao_do_dia(employee, data)
+	inconsistencias = dados["inconsistencias"].get(data, [])
 	return {
 		"data": str(data),
 		"dia_semana": DIAS_SEMANA[data.weekday()],
@@ -305,6 +353,8 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 				"referencia_name": i.referencia_name,
 				"severidade": i.severidade,
 				"descricao": i.descricao,
+				"status": i.status,
+				"termo": i.termo,
 				**_orientacao(i.tipo, contexto),
 			}
 			for i in inconsistencias
@@ -312,7 +362,25 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 		"periodo_fechado": fechado,
 		"editavel": not fechado and ctx is not None,
 		"envio_secullum": dados["envios"].get(data),
+		"whatsapp": dados["cobrancas"].get(data),
 	}
+
+
+def _destino_do_dia(employee: str, data: date) -> dict:
+	"""Para o texto de "Manter" (docs/PRD-tratamento-inconsistencias.md, DT-4 e DT-7): banco ou folha e o DSR da falta
+	do horista. Só lido nos dias com inconsistência."""
+	from hrms_secullum_brasil.apuracao.banco_horas import config_banco, participa
+	from hrms_secullum_brasil.configuracao_ponto.regras import RegraAmbiguaError, get_regra_vigente
+
+	no_banco = participa(employee, data)
+	try:
+		cct = get_regra_vigente(employee, data)
+	except RegraAmbiguaError:
+		cct = None
+	destino = {"banco_he": no_banco, "banco_atraso": no_banco and config_banco(employee, data).debita_atrasos}
+	if cct:
+		destino["falta_horista_desconta_dsr"] = bool(cint(cct.falta_horista_desconta_dsr))
+	return destino
 
 
 def _orientacao(tipo: str, contexto: ContextoDia) -> dict:
@@ -324,6 +392,7 @@ def _orientacao(tipo: str, contexto: ContextoDia) -> dict:
 				"acao": s.acao,
 				"rotulo": s.rotulo,
 				"hora": ce.hhmm(s.minuto) if s.minuto is not None else None,
+				"horas": [ce.hhmm(m) for m in s.minutos],
 				"referencia": s.referencia,
 			}
 			for s in o.sugestoes
@@ -399,6 +468,7 @@ def cartao(employee: str, inicio: date, fim: date) -> dict:
 		"dias": dias,
 		"totais": totais,
 		"alteracoes": alteracoes,
+		"banco": banco_do_cartao(employee, inicio, fim),
 		"rh": painel.eh_rh(),
 		"pode_editar": bool(frappe.has_permission(TRATAMENTO, "create")),
 		"motivos": MOTIVOS,
@@ -409,6 +479,28 @@ def cartao(employee: str, inicio: date, fim: date) -> dict:
 			fields=["name", "nome_abreviado", "nome_completo"],
 			order_by="nome_completo asc",
 		),
+	}
+
+
+def banco_do_cartao(employee: str, inicio: date, fim: date) -> dict | None:
+	"""Banco de horas no cartão (só de quem participa no mês): saldo na data, créditos e débitos do mês e o que vence
+	no prazo de alerta da CCT. O saldo vem sempre do engine FIFO (`banco_horas.estado_banco`)."""
+	from hrms_secullum_brasil.apuracao.banco_horas import MOVIMENTO, estado_banco, participa
+
+	if not (participa(employee, inicio) or participa(employee, fim)):
+		return None
+	referencia = min(fim, getdate())
+	lancamentos, estados, resumo = estado_banco(employee, referencia)
+	do_mes = [x for x in lancamentos if inicio <= x.data <= fim]
+	vencendo = [x for x in lancamentos if x.id in set(resumo.creditos_a_vencer_em_breve)]
+	return {
+		"referencia": str(referencia),
+		"saldo": resumo.saldo,
+		"creditos_mes": sum(x.minutos for x in do_mes if x.minutos > 0),
+		"debitos_mes": -sum(x.minutos for x in do_mes if x.minutos < 0),
+		"a_vencer_em_breve": sum(estados[x.id].saldo for x in vencendo if x.id in estados),
+		"proximo_vencimento": str(min((x.vencimento for x in vencendo), default="")) or None,
+		"lista": f"/app/{MOVIMENTO.lower().replace(' ', '-')}?employee={employee}",
 	}
 
 

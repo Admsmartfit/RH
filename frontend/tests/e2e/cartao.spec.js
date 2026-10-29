@@ -22,13 +22,13 @@ test("um dia por linha, totais do servidor e o dia com problema em destaque", as
 	await expect(page.locator(`tr[data-dia="${comProblema.data}"]`).getByRole("button", { name: /inconsistência/ })).toBeVisible();
 });
 
-test("da inconsistência ao cartão: abre no dia com o painel de como resolver", async ({ page }) => {
+test("da inconsistência ao cartão: abre o balão do dia com como resolver", async ({ page }) => {
 	await page.goto(`/ponto/inconsistencias?${AGOSTO}`);
 	await expect(page.getByRole("region", { name: "Lista" })).toContainText("Renata");
 	await page.keyboard.press("j");
 	await page.getByRole("link", { name: "Abrir no cartão ponto" }).click();
 	await expect(page).toHaveURL(/\/ponto\/cartao\/.+dia=2026-08-/);
-	await expect(page.getByRole("complementary")).toBeVisible();
+	await expect(page.getByRole("dialog", { name: /\(.+\) —/ })).toBeVisible();
 	await expect(page.getByRole("group", { name: /Como resolver/ }).first()).toBeVisible();
 });
 
@@ -94,10 +94,57 @@ for (const esquema of ["light", "dark"]) {
 		const cartao = await api(page.request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: renata, competencia: "2026-08" });
 		const comProblema = cartao.dias.find((d) => d.inconsistencias.length);
 		await page.goto(`/ponto/cartao/${renata}?${AGOSTO}&dia=${comProblema.data}`);
-		await expect(page.getByRole("complementary")).toBeVisible();
+		await expect(page.getByRole("dialog", { name: /\(.+\) —/ })).toBeVisible();
 		const resultado = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
 		const graves = resultado.violations.filter((v) => ["serious", "critical"].includes(v.impact));
 		const resumo = graves.map((v) => `${v.id}: ${v.help} → ${v.nodes.map((n) => n.target.join(" ")).slice(0, 5).join(" | ")}`);
 		expect(resumo, resumo.join("\n")).toEqual([]);
 	});
 }
+
+// docs/PRD-tratamento-inconsistencias.md (TI-01, TI-03, TI-07): manter com ressalva pelo balão e desfazer
+test("manter com ressalva pelo balão tira o alerta do dia", async ({ page }) => {
+	const renata = await abrirCartao(page);
+	const cartao = await api(page.request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: renata, competencia: "2026-08" });
+	const dia = cartao.dias.find(
+		(d) =>
+			d.editavel &&
+			d.totais?.status === "Inconsistente" &&
+			d.inconsistencias.every((i) => i.sugestoes.some((s) => s.acao === "manter"))
+	);
+	test.skip(!dia, "cenário sem dia com 'Manter'");
+	const nomes = dia.inconsistencias.map((i) => i.name);
+	try {
+		await page.goto(`/ponto/cartao/${renata}?${AGOSTO}&dia=${dia.data}`);
+		const balao = page.getByRole("dialog", { name: /\(.+\) —/ });
+		await expect(balao).toBeVisible();
+		for (let n = 0; n < nomes.length; n++) {
+			await balao.getByRole("button", { name: /^Manter/ }).first().click();
+			const dialogo = page.getByRole("dialog", { name: "Manter com ressalva" });
+			await dialogo.getByRole("textbox", { name: "Motivo" }).fill("Combinado com o gestor (teste)");
+			await dialogo.getByRole("button", { name: "Manter" }).click();
+			await expect(page.getByRole("status")).toContainText("Mantida com ressalva");
+		}
+		const linha = page.locator(`tr[data-dia="${dia.data}"]`);
+		await expect(linha.getByRole("button", { name: /inconsistência/ })).toHaveCount(0);
+		await expect(linha).toContainText("OK (ressalva)");
+	} finally {
+		for (const nome of nomes) {
+			await api(page.request, "hrms_secullum_brasil.apuracao.acoes.desfazer_manter", { inconsistencia: nome }, "post").catch(() => {});
+		}
+	}
+});
+
+// TI-08: a cobrança abre com a mensagem padrão já escrita (editável), mesmo sem celular no cadastro
+test("cobrar pelo WhatsApp abre com a mensagem pronta", async ({ page }) => {
+	const renata = await abrirCartao(page);
+	const cartao = await api(page.request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: renata, competencia: "2026-08" });
+	const dia = cartao.dias.find((d) => d.inconsistencias.some((i) => i.sugestoes.some((s) => s.acao === "cobrar_whatsapp")));
+	test.skip(!dia, "cenário sem inconsistência cobrável");
+	await page.goto(`/ponto/cartao/${renata}?${AGOSTO}&dia=${dia.data}`);
+	const balao = page.getByRole("dialog", { name: /\(.+\) —/ });
+	await balao.getByRole("button", { name: "Cobrar pelo WhatsApp" }).first().click();
+	const dialogo = page.getByRole("dialog", { name: "Cobrar pelo WhatsApp" });
+	await expect(dialogo.getByRole("textbox", { name: "Mensagem" })).toHaveValue(/Notei uma pendência no seu cartão de ponto[\s\S]*Motivo: /);
+	await dialogo.getByRole("button", { name: "Cancelar" }).click();
+});

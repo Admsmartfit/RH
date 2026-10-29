@@ -218,7 +218,8 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 			["trabalhado", "intrajornada_suprimida"],
 			as_dict=True,
 		)
-		self.assertEqual((apuracao.trabalhado, apuracao.intrajornada_suprimida), (237, 0))
+		# a pausa do termo é remunerada (RH, 28/10/2026): 4h12 pagas, sem intervalo suprimido
+		self.assertEqual((apuracao.trabalhado, apuracao.intrajornada_suprimida), (252, 0))
 		alerta = self.alerta(employee)
 		self.assertEqual((alerta.ocorrencias, alerta.situacao), (3, "Abaixo do limite"))
 		self.assertNotIn("excesso_jornada_horista", inconsistencias(employee, FIM_DO_MES))
@@ -278,6 +279,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		regra = frappe.get_doc(
 			{
 				"doctype": "Regra Envio WhatsApp",
+				"situacao": "Em produção",  # CE-09: estes testes cobrem o envio automático
 				"nome_regra": f"Horista {hash_curto()}",
 				"evento": com.HORISTA,
 				"para_colaborador": 1,

@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "autoname": "MOD-ESC-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome_modelo",
+  "company",
+  "so_fim_de_semana",
+  "linhas_section",
+  "linhas"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_modelo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome do modelo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "so_fim_de_semana",
+   "fieldtype": "Check",
+   "label": "Só fim de semana e feriados"
+  },
+  {
+   "fieldname": "linhas_section",
+   "fieldtype": "Section Break",
+   "label": "Turnos"
+  },
+  {
+   "fieldname": "linhas",
+   "fieldtype": "Table",
+   "label": "Colaborador x dia da semana",
+   "options": "Modelo de Escala Linha"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Modelo de Escala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "nome_modelo"
+}

@@ -228,6 +228,27 @@ def _divisor(emp, data) -> int:
 	return cint(perfil.divisor) if perfil and cint(perfil.divisor) else d.DIVISOR_PADRAO
 
 
+def base_para_custo(employee: str, data) -> BaseValoracao:
+	"""Valor-hora e percentuais para a previsão de custo do cockpit de escalas (docs/PRD-cockpit-escalas.md, CE-06):
+	as mesmas fontes do fechamento (salário vigente, divisor, CCT, adicional de risco)."""
+	emp = frappe.get_cached_doc("Employee", employee)
+	cct = _cct(employee, data)
+	salario = salario_vigente(employee, data) or Decimal("0")
+	risco, _avisos = adicional_do_colaborador(employee, data, salario)
+	return BaseValoracao(
+		salario=salario,
+		divisor=_divisor(emp, data),
+		percentual_noturno=percentual_noturno(cct, emp.designation),
+		percentual_intrajornada=flt(cct.percentual_indenizacao_intrajornada)
+		if cct
+		else d.PERCENTUAL_INDENIZACAO_INTRAJORNADA,
+		percentual_interjornada=flt(cct.percentual_interjornada) if cct else d.PERCENTUAL_INTERJORNADA,
+		horista=(emp.tipo_remuneracao or "Mensalista") in HORISTAS,
+		adicional_risco=risco.valor_mensal if risco else Decimal("0"),
+		codigo_risco=risco.codigo if risco else "",
+	)
+
+
 def _cct(employee: str, data):
 	try:
 		return get_regra_vigente(employee, data)

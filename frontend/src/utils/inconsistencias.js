@@ -36,6 +36,12 @@ export const TIPOS = {
 	envio_cartao_secullum: "Correção não enviada ao Secullum",
 	excesso_jornada_horista: "Horista além de 4 h sem intervalo",
 	whatsapp_nao_enviado: "WhatsApp não enviado",
+	escala_nao_publicada: "Escala não publicada",
+	alteracao_jornada: "Alteração de horário parada",
+	envio_horario_secullum: "Horário não enviado ao Secullum",
+	termo_sem_gerente: "Termo sem gestor",
+	termo_nao_assinado: "Termo não assinado",
+	email_termo_nao_enviado: "E-mail do termo não enviado",
 };
 
 export const nomeDoTipo = (tipo) => TIPOS[tipo] || tipo;

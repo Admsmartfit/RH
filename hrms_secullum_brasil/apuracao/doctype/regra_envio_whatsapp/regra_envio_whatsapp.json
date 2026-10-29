@@ -8,6 +8,8 @@
  "field_order": [
   "nome_regra",
   "ativa",
+  "situacao",
+  "envios_teste",
   "evento",
   "column_break_1",
   "para_colaborador",
@@ -44,7 +46,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Quando enviar",
-   "options": "Ponto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)",
+   "options": "Ponto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)\nEscala: turno incluído/alterado/removido\nCobrança de inconsistência\nEscala: pedido de disponibilidade\nJornada: documento para assinar\nEscala: convite para turno\nTermo de ocorrências\nTermo pendente — gerente\nTermo pendente — RH",
    "reqd": 1
   },
   {
@@ -113,10 +115,26 @@
    "fieldtype": "Small Text",
    "label": "Mensagem ao gestor",
    "description": "Marcadores: {primeiro_nome} (do gestor), {colaborador}, {data}, {dia_semana}, {batidas}. No alerta de horista: {ocorrencias}, {dias}."
+  },
+  {
+   "default": "Em teste",
+   "description": "Em teste: as mensagens ficam aguardando o RH conferir e clicar em Enviar. Em produção: saem sozinhas (com a trava geral e o horário). Só RH Ponto muda para produção.",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Homologação",
+   "options": "Em teste\nEm produção"
+  },
+  {
+   "default": "0",
+   "fieldname": "envios_teste",
+   "fieldtype": "Int",
+   "label": "Envios de teste",
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-10-24 10:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Regra Envio WhatsApp",

@@ -1,0 +1,344 @@
+{
+ "actions": [],
+ "autoname": "TOP-.YYYY.-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "branch",
+  "gestor",
+  "inicio",
+  "fim",
+  "column_break_status",
+  "status",
+  "emitido_em",
+  "emitido_por",
+  "prazo",
+  "reincidente",
+  "rh_avisado",
+  "itens_section",
+  "itens",
+  "informativos",
+  "envio_section",
+  "texto_whatsapp",
+  "emails",
+  "pdf",
+  "confirmacao_section",
+  "via",
+  "confirmado_por",
+  "confirmado_em",
+  "confirmado_ip",
+  "comprovante",
+  "aparelho",
+  "observacoes",
+  "column_break_testemunhas",
+  "testemunha_1",
+  "testemunha_1_cpf",
+  "testemunha_2",
+  "testemunha_2_cpf",
+  "cancelado_motivo",
+  "assinatura_section",
+  "codigo_hash",
+  "codigo_expira"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Filial",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "gestor",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Gestor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "label": "Período de",
+   "reqd": 1
+  },
+  {
+   "fieldname": "fim",
+   "fieldtype": "Date",
+   "label": "Período até",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Aguardando assinatura",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Aguardando assinatura\nAssinado (conforme)\nAssinado (com alteração)\nRecusado\nCancelado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "emitido_em",
+   "fieldtype": "Datetime",
+   "label": "Emitido em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "emitido_por",
+   "fieldtype": "Link",
+   "label": "Emitido por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "prazo",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Prazo para assinar",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "reincidente",
+   "fieldtype": "Check",
+   "label": "Reincidente",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rh_avisado",
+   "fieldtype": "Check",
+   "label": "RH avisado do atraso",
+   "read_only": 1
+  },
+  {
+   "fieldname": "itens_section",
+   "fieldtype": "Section Break",
+   "label": "Ocorrências"
+  },
+  {
+   "fieldname": "itens",
+   "fieldtype": "Table",
+   "label": "Ocorrências",
+   "options": "Item do Termo de Ocorrencias"
+  },
+  {
+   "fieldname": "informativos",
+   "fieldtype": "Small Text",
+   "label": "Informação (sem dia a confirmar)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "envio_section",
+   "fieldtype": "Section Break",
+   "label": "Envio"
+  },
+  {
+   "fieldname": "texto_whatsapp",
+   "fieldtype": "Small Text",
+   "label": "Texto do WhatsApp ao colaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "emails",
+   "fieldtype": "Small Text",
+   "label": "E-mail enviado para",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf",
+   "fieldtype": "Attach",
+   "label": "PDF do termo",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.confirmado_em",
+   "fieldname": "confirmacao_section",
+   "fieldtype": "Section Break",
+   "label": "Confirmação"
+  },
+  {
+   "fieldname": "via",
+   "fieldtype": "Select",
+   "label": "Via",
+   "options": "\nPapel (gestor)\nCelular (colaborador)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmado_por",
+   "fieldtype": "Data",
+   "label": "Confirmado por",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmado_em",
+   "fieldtype": "Datetime",
+   "label": "Confirmado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmado_ip",
+   "fieldtype": "Data",
+   "label": "IP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comprovante",
+   "fieldtype": "Attach",
+   "label": "Comprovante da confirmação (PDF)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aparelho",
+   "fieldtype": "Data",
+   "label": "Aparelho",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacoes",
+   "fieldtype": "Small Text",
+   "label": "Observações do colaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_testemunhas",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "testemunha_1",
+   "fieldtype": "Data",
+   "label": "Testemunha 1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "testemunha_1_cpf",
+   "fieldtype": "Data",
+   "label": "CPF da testemunha 1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "testemunha_2",
+   "fieldtype": "Data",
+   "label": "Testemunha 2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "testemunha_2_cpf",
+   "fieldtype": "Data",
+   "label": "CPF da testemunha 2",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Cancelado'",
+   "fieldname": "cancelado_motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo do cancelamento",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "assinatura_section",
+   "fieldtype": "Section Break",
+   "label": "Assinatura pelo celular"
+  },
+  {
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Código (hash)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_expira",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Código expira",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-29 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Termo de Ocorrencias",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

@@ -98,7 +98,14 @@ add_to_apps_screen = [
 doctype_js = {"Employee": "public/js/employee.js", "Designation": "public/js/designation.js"}
 
 # Painel de Ponto (docs/PRD-frontend.md): app Vue em /ponto, como o /hrms do HRMS
-website_route_rules = [{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"}]
+website_route_rules = [
+	# CE-14: página sem login do colaborador (antes da regra geral do painel)
+	{"from_route": "/ponto/disponibilidade", "to_route": "disponibilidade"},
+	{"from_route": "/ponto/assinar", "to_route": "assinar"},  # CE-16
+	{"from_route": "/ponto/convite", "to_route": "convite"},  # convite para turno
+	{"from_route": "/ponto/termo", "to_route": "termo"},  # docs/PRD-termo-ocorrencias.md (TO-08, TO-10)
+	{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"},
+]
 
 doc_events = {
 	"Employee": {
@@ -157,11 +164,16 @@ scheduler_events = {
 		"0 * * * *": [
 			"hrms_secullum_brasil.apuracao.whatsapp.enviar_pendentes",
 			"hrms_secullum_brasil.apuracao.regras_whatsapp.enviar_ponto_do_dia",  # regras do ponto do dia
+			# docs/PRD-cockpit-escalas.md (CE-11): rascunho a menos de 48h do dia vira inconsistência
+			"hrms_secullum_brasil.apuracao.cockpit_escala.avisar_rascunhos_esquecidos",
 		],
 		# AJ-11: feriados do ano seguinte, todo 1º de dezembro
 		"0 6 1 12 *": ["hrms_secullum_brasil.apuracao.feriados.gerar_ano_seguinte"],
 		# AJ-08: contribuições da CCT da folha anterior, todo dia 1º
 		"0 7 1 * *": ["hrms_secullum_brasil.apuracao.custeio_cct.enviar_relatorio_mensal"],
+		# docs/PRD-termo-ocorrencias.md: cobrança dos termos (dia útil, 9h) e lista semanal (segunda, 8h)
+		"0 9 * * *": ["hrms_secullum_brasil.apuracao.termo_ocorrencias.cobrar_pendentes"],
+		"0 8 * * 1": ["hrms_secullum_brasil.apuracao.termo_ocorrencias.lista_semanal"],
 	},
 	"daily": [
 		"hrms_secullum_brasil.ingestion.sync_colaboradores.reconciliar_cadastros",
@@ -173,6 +185,8 @@ scheduler_events = {
 		"hrms_secullum_brasil.seguranca_trabalho.alertas.verificar_epi",  # AJ-18
 		"hrms_secullum_brasil.seguranca_trabalho.alertas.verificar_aso_treinamentos",  # AJ-19
 		"hrms_secullum_brasil.estagio.alertas.verificar_estagios",  # EST-08
+		# CE-16: prazo de assinatura, horário criado no Secullum e envio na data de início
+		"hrms_secullum_brasil.apuracao.jornada_assinatura.acompanhar",
 	],
 }
 
@@ -193,9 +207,12 @@ permission_query_conditions = {
 	"Espelho de Ponto": f"{_PERM}.condicao_espelho",
 	"Escala Mensal": f"{_PERM}.condicao_escala",
 	"Troca de Escala": f"{_PERM}.condicao_troca",
+	"Indisponibilidade": f"{_PERM}.condicao_indisponibilidade",
+	"Rascunho de Escala": f"{_PERM}.condicao_rascunho_escala",
 	"Entrega de EPI": f"{_PERM}.condicao_entrega_epi",
 	"Termo de Compromisso de Estagio": f"{_PERM}.condicao_tce",
 	"Relatorio de Estagio": f"{_PERM}.condicao_relatorio_estagio",
+	"Termo de Ocorrencias": f"{_PERM}.condicao_termo_ocorrencias",
 }
 has_permission = {
 	"File": f"{_PERM}.permissao_arquivo",
@@ -216,9 +233,12 @@ has_permission = {
 			"Espelho de Ponto",
 			"Escala Mensal",
 			"Troca de Escala",
+			"Indisponibilidade",
+			"Rascunho de Escala",
 			"Entrega de EPI",
 			"Termo de Compromisso de Estagio",
 			"Relatorio de Estagio",
+			"Termo de Ocorrencias",
 		)
 	},
 }

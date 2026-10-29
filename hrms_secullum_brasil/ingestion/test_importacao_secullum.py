@@ -13,6 +13,7 @@ from hrms_secullum_brasil.apuracao.adaptador import abonos_do_dia
 from hrms_secullum_brasil.configuracao_ponto.regras import regra_vigente_para
 from hrms_secullum_brasil.engine.documentos import somente_digitos
 from hrms_secullum_brasil.ingestion.importacao_secullum import SINDICATO_IMPORTADO, ImportacaoSecullum
+from hrms_secullum_brasil.integrations.secullum.importacao import _sem_acento
 from hrms_secullum_brasil.integrations.secullum.mock import REAIS_DIR, MockSecullumClient
 
 HOJE = date(2026, 10, 19)
@@ -233,7 +234,8 @@ class TestImportacaoSecullum(FrappeTestCase):
 			emp = self.colaborador(c.id_secullum)
 			empresa = self.empresa(c.empresa_documento)
 			self.assertEqual((emp.cpf, emp.company), (c.cpf, empresa.name))
-			self.assertEqual(emp.designation.lower(), c.funcao.lower())
+			# o banco compara sem acento: reaproveita um cargo já cadastrado com acento (ex.: "Educação Física")
+			self.assertEqual(_sem_acento(emp.designation).lower(), _sem_acento(c.funcao).lower())
 			self.assertEqual(emp.department.lower(), f"{c.departamento} - {empresa.abbr}".lower())
 			self.assertEqual(getdate(emp.date_of_joining), c.admissao)
 			self.assertEqual(emp.status, "Left" if c.demissao else "Active")

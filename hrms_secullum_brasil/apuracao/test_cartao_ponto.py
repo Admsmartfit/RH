@@ -126,6 +126,29 @@ class TestCartaoPonto(FrappeTestCase):
 		self.assertEqual(cartao["totais"]["falta"], soma)
 		self.assertTrue(cartao["pode_editar"] and cartao["rh"])
 
+	def test_banco_de_horas_aparece_para_quem_participa(self):
+		self.assertIsNone(painel.cartao(self.do_rh, COMPETENCIA)["banco"])  # não participa do banco
+		with patch.object(frappe, "enqueue"):
+			employee = self.pessoa()
+		frappe.db.set_value("Employee", employee, {"participa_banco_horas": 1, "banco_horas_desde": None})
+		for hora in (8, 12, 13, 19):  # 2h além do previsto (17h)
+			criar_raw(employee, MUDAR, hora)
+		reapurar_dia(employee, MUDAR)
+		banco = painel.cartao(employee, COMPETENCIA)["banco"]
+		self.assertEqual((banco["creditos_mes"], banco["debitos_mes"]), (120, 0))
+		self.assertEqual(banco["saldo"], 120)
+		self.assertIn(f"employee={employee}", banco["lista"])
+
+	def test_falta_traz_a_jornada_prevista_e_o_efeito_de_manter(self):
+		# docs/PRD-tratamento-inconsistencias.md (TI-04, DT-4, DT-9)
+		frappe.set_user(self.rh_email)
+		falta = self.dia(painel.cartao(self.do_rh, COMPETENCIA), FALTA)
+		sugestoes = next(i for i in falta["inconsistencias"] if i["tipo"] == "falta")["sugestoes"]
+		completa = next(s for s in sugestoes if s["acao"] == "jornada_completa")
+		self.assertEqual(completa["horas"], ["08:00", "12:00", "13:00", "17:00"])
+		manter = next(s for s in sugestoes if s["acao"] == "manter")
+		self.assertIn("desconta o dia e o DSR", manter["rotulo"])
+
 	def test_gestor_so_ve_a_equipe(self):
 		frappe.set_user(self.gestor_email)
 		self.assertTrue(painel.cartao(self.da_equipe, COMPETENCIA)["dias"])

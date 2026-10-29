@@ -35,9 +35,22 @@
   "evolution_url",
   "evolution_apikey",
   "evolution_instancia",
+  "evolution_webhook_token",
+  "dia_limite_disponibilidade",
   "whatsapp_col",
   "mensagem_horista",
-  "mensagem_gestor"
+  "mensagem_gestor",
+  "termo_section",
+  "termo_celular_rh",
+  "termo_email_rh",
+  "termo_prazo_dias_uteis",
+  "termo_aviso_rh_dias_uteis",
+  "termo_col",
+  "termo_reincidencia_limite",
+  "termo_reincidencia_dias",
+  "termo_rotina_semanal",
+  "termo_destinatarios_section",
+  "termo_destinatarios"
  ],
  "fields": [
   {
@@ -242,11 +255,94 @@
    "fieldtype": "Small Text",
    "label": "Mensagem ao gestor",
    "description": "Marcadores: {primeiro_nome} (do gestor), {colaborador}, {ocorrencias}, {dias}. Em branco: o texto padrão."
+  },
+  {
+   "description": "CE-12: comprovante de entrega e leitura. Na Evolution, configure o webhook com o evento MESSAGES_UPDATE e a URL https://SEU-SITE/api/method/hrms_secullum_brasil.apuracao.whatsapp.webhook_evolution?token=ESTE_TOKEN (ou o cabeçalho x-webhook-token).",
+   "fieldname": "evolution_webhook_token",
+   "fieldtype": "Password",
+   "label": "Token do webhook da Evolution"
+  },
+  {
+   "default": "20",
+   "description": "CE-14: até que dia do mês anterior o colaborador informa as indisponibilidades pelo link.",
+   "fieldname": "dia_limite_disponibilidade",
+   "fieldtype": "Int",
+   "label": "Dia limite para informar indisponibilidade"
+  },
+  {
+   "fieldname": "termo_section",
+   "fieldtype": "Section Break",
+   "label": "Termo de ocorrências",
+   "description": "Quem recebe o termo: tabela por empresa abaixo (ou o Reporta a do colaborador). Conta de envio: Email Account (Google: serviço GMail, senha de app, marque Enviar e-mails e Conta de saída padrão)."
+  },
+  {
+   "fieldname": "termo_celular_rh",
+   "fieldtype": "Data",
+   "label": "Celular do RH (cobrança de termos)",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "termo_email_rh",
+   "fieldtype": "Data",
+   "label": "E-mail do RH (termos)",
+   "options": "Email",
+   "description": "Recebe o aviso dos termos vencidos e o e-mail de quem não tem gestor."
+  },
+  {
+   "default": "3",
+   "fieldname": "termo_prazo_dias_uteis",
+   "fieldtype": "Int",
+   "label": "Prazo para assinar (dias úteis)",
+   "non_negative": 1
+  },
+  {
+   "default": "10",
+   "fieldname": "termo_aviso_rh_dias_uteis",
+   "fieldtype": "Int",
+   "label": "Avisar o RH no dia útil",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "termo_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "3",
+   "fieldname": "termo_reincidencia_limite",
+   "fieldtype": "Int",
+   "label": "Reincidência: termos",
+   "non_negative": 1,
+   "description": "Ao chegar a este número de termos na janela, o RH é avisado (0 = não avisa)."
+  },
+  {
+   "default": "90",
+   "fieldname": "termo_reincidencia_dias",
+   "fieldtype": "Int",
+   "label": "Reincidência: janela (dias)",
+   "non_negative": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "termo_rotina_semanal",
+   "fieldtype": "Check",
+   "label": "Lista semanal de quem precisa de termo (segunda-feira)"
+  },
+  {
+   "fieldname": "termo_destinatarios_section",
+   "fieldtype": "Section Break",
+   "label": "Quem recebe o termo (por empresa)",
+   "description": "Uma ou mais pessoas por empresa recebem o e-mail com o PDF, registram a assinatura e recebem a cobrança diária. Sem ninguém na empresa: o Reporta a do colaborador; sem ele, o e-mail do RH."
+  },
+  {
+   "fieldname": "termo_destinatarios",
+   "fieldtype": "Table",
+   "label": "Destinatários do termo",
+   "options": "Destinatario do Termo"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-24 12:00:00.000000",
+ "modified": "2026-10-30 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",
