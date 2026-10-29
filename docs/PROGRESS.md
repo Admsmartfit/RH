@@ -1632,3 +1632,17 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Pendências: conta Google no Email Account (senha de app); preencher o Reporta a e o celular/e-mail dos gestores;
   celular/e-mail do RH na Configuração; homologar as regras novas (Em teste); revisão do texto do termo por advogado;
   migrar o site de operação.
+
+## Termo: quem recebe por empresa (30/10/2026, revisão do RH)
+
+- O RH pediu que o destinatário seja **por empresa, uma ou mais pessoas, colaborador ou usuário** (o RH é
+  terceirizado; contabilidade e outros têm acesso e não são funcionários). Nova tabela filha **Destinatario do Termo**
+  na Configuracao Apuracao (empresa; Colaborador — cargo para filtrar e a pessoa — ou Usuário; e-mail e celular do
+  cadastro ou digitados; recebe e-mail; recebe cobrança). `termo_ocorrencias.destinatarios(emp)`: a tabela da empresa;
+  sem ninguém, o Reporta a. E-mail único para todos os destinatários; cobrança diária a cada um (chave por celular);
+  lista semanal agrupada por destinatário; pendentes e diálogo mostram os nomes. `whatsapp.reenviar` não troca o
+  número de mensagem de termo.
+- A conta Google o RH cadastra direto no Email Account.
+- Testes: `test_termo_ocorrencias` 13 (novo: colaborador + usuário não funcionário recebem e-mail e cobrança). Suíte
+  completa antes desta mudança: Frappe 446 OK, e2e 65 OK.
+

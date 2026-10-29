@@ -51,7 +51,7 @@ gerente confirma a assinatura por um link. Quem não assina recebe cobrança di�
 | # | Ponto | Decisão |
 |---|---|---|
 | DO-1 | Quem recebe o e-mail e quem confirma | O **gerente da unidade** recebe o e-mail com o PDF, imprime, colhe a assinatura e confirma pelo link. O colaborador recebe só o WhatsApp. O e-mail pessoal do colaborador **não** é usado |
-| DO-2 | Como saber o gerente | O gerente é o **"Reporta a"** do colaborador, que já existe (revisão do RH, 29/10/2026). O celular e o e-mail vêm do cadastro do gerente, também Employee (`cell_number`; e-mail preferido, da empresa ou pessoal). O celular e o e-mail do RH que recebe o aviso dos 10 dias ficam na Configuracao Apuracao |
+| DO-2 | Como saber o gerente | **Por empresa, uma ou mais pessoas** (revisão do RH, 30/10/2026): tabela "Quem recebe o termo" na Configuracao Apuracao. Cada linha é um **colaborador** (escolhe o cargo e depois a pessoa) ou um **usuário que não é funcionário** (RH terceirizado, contabilidade), com e-mail e celular do cadastro (ou informados na linha) e as opções "e-mail com o termo" e "cobrança no WhatsApp". Empresa sem ninguém: o **Reporta a** do colaborador; sem ele, o e-mail do RH. O celular e o e-mail do RH que recebe o aviso dos 10 dias ficam na Configuracao Apuracao |
 | DO-3 | O que vai no termo | As ocorrências do período **com a correção sugerida pelo sistema** em cada uma (ex.: "incluir intervalo 11:26 às 11:41", "incluir saída 17:00"). Ocorrência sem horário a sugerir (atraso, falta) aparece como "Ciente — mantém o registro" |
 | DO-4 | Confirmação | O link do e-mail **abre uma página**; nunca confirma sozinho, porque o antivírus de e-mail abre links automaticamente. A página tem três opções: **Assinado conforme a sugestão**, **Assinado com alteração** e **Recusou assinar** |
 | DO-5 | "Com alteração" | A página mostra **item a item**, já preenchido com a sugestão. O gerente só troca o horário que o colaborador corrigiu no papel, ou marca **"não reconhece"** |
@@ -112,9 +112,10 @@ O PDF nunca traz CID, atestado ou outro dado de saúde (LGPD; o atestado continu
 ## 5. Requisitos
 
 ### TO-01 — Gerente e contatos (DO-2)
-- O gerente de cada colaborador é o **"Reporta a"**, que já existe no cadastro. Para preencher muitos de uma vez, use
-  a lista de Colaboradores do Desk (selecionar, depois **Editar** e "Reporta a"). O celular e o e-mail vêm do cadastro
-  do gerente. O e-mail segue a ordem do cadastro: o preferido, depois o da empresa, depois o pessoal.
+- Quem recebe o termo é definido **por empresa** na Configuracao Apuracao (tabela filha **Destinatario do Termo**:
+  empresa, colaborador — filtrado pelo cargo — ou usuário, e-mail, celular, recebe e-mail, recebe cobrança). Todos os
+  da empresa recebem o e-mail (um só e-mail, vários destinatários) e cada um a cobrança diária. Sem ninguém na
+  empresa vale o **Reporta a** do colaborador (e-mail preferido, da empresa ou pessoal).
 - A Configuracao Apuracao ganha uma seção "Termo de ocorrências" com:
   - o celular e o e-mail do RH para o escalonamento;
   - o prazo para assinar (padrão 3 dias úteis);
@@ -303,6 +304,6 @@ Cada etapa termina com ruff, `pytest --cov` (engine ≥ 90%), `bench run-tests` 
 | # | Pendência |
 |---|---|
 | P-1 | Conta Google para envio: criar a senha de app e cadastrar na tela Email Account (a senha fica só no campo Password) |
-| P-2 | Preencher o "Reporta a" de cada colaborador e o celular e e-mail dos gerentes; informar o celular e e-mail do RH para o aviso dos 10 dias |
+| P-2 | Cadastrar quem recebe o termo de cada empresa (Configuração Apuração → Quem recebe o termo); informar o celular e e-mail do RH para o aviso dos 10 dias |
 | P-3 | Revisar os textos padrão do WhatsApp (colaborador, gerente, RH) quando estiverem "Em teste" |
 | P-4 | **Revisão do texto do termo (seção 4) por advogado trabalhista** antes de usar em produção |

@@ -163,8 +163,9 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   sugestão do cartão —, resumo, prazos em dias úteis e reincidência); Frappe em `apuracao/termo_ocorrencias.py`
   (emissão, PDF, e-mail, página `/ponto/termo`, cobrança diária e lote). Tipo novo que caiba num termo entra em
   `termo_ocorrencias.NOMES` (há teste).
-- O gestor é o **Reporta a** do colaborador (celular e e-mail do cadastro dele); o e-mail sai pela conta padrão do
-  Email Account (Google: serviço GMail e senha de app). Sem gestor ou sem conta: pendência, nunca erro.
+- Quem recebe o termo vem de `termo_ocorrencias.destinatarios(emp)`: a tabela por empresa da Configuracao Apuracao
+  (colaborador ou **usuário que não é funcionário**: RH terceirizado, contabilidade) e, sem ninguém, o Reporta a. O
+  e-mail sai pela conta padrão do Email Account (Google). Sem destinatário ou sem conta: pendência, nunca erro.
 - Inconsistência no termo fica **Aguardando termo** (a reapuração não reabre; se o problema some, resolve). Um termo
   em aberto por colaborador.
 - A confirmação (link do e-mail/QR do gestor ou assinatura pelo celular) **aplica direto** pelo

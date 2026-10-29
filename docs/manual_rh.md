@@ -502,7 +502,10 @@ Para quem acumula ocorrências (intervalo, batida faltando, atraso, falta…), o
 - **Configurar uma vez:** Configuração Apuração → seção *Termo de ocorrências* (celular e e-mail do RH, prazos, lista
   semanal) e **Conta de e-mail (Google)** no espaço Ponto: Email Account com o serviço **GMail**, o e-mail da conta, a
   **senha de app** do Google (exige verificação em duas etapas) e "Enviar e-mails" + "Conta de saída padrão" marcados.
-  Preencha o **Reporta a** de cada colaborador (lista de Colaboradores → selecionar → Editar → Reporta a).
+  Em **Quem recebe o termo (por empresa)**, adicione uma linha por pessoa: a empresa, se é **Colaborador** (escolha o
+  cargo e depois a pessoa) ou **Usuário** (quem acessa o sistema e não é funcionário, como o RH terceirizado ou a
+  contabilidade), e marque se recebe o e-mail com o termo e/ou a cobrança no WhatsApp. E-mail e celular vêm do
+  cadastro (ou digite na linha). Empresa sem ninguém: vale o Reporta a do colaborador.
 - No diálogo dá para mudar o período (por padrão começa depois do último termo) e abrir **Ver PDF (prévia)** antes de
   emitir. Na tela Termos, a **Sugestão da semana** leva quem tem ocorrências nas últimas 2 semanas para o lote; o lote
   mostra uma barra de progresso.

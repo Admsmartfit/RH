@@ -107,7 +107,8 @@ apuração calcula (desconto, banco, indenização) continua valendo. Nada é gr
 
 ## Termo de ocorrências (assinatura do colaborador)
 
-Quando o RH (ou você) emite o termo, você recebe um **e-mail** com o assunto "Termo de ocorrências de ponto — NOME —
+Se você está cadastrado para receber os termos da sua empresa (ou é o Reporta a do colaborador), quando o RH (ou
+você) emite o termo você recebe um **e-mail** com o assunto "Termo de ocorrências de ponto — NOME —
 TOP-…" e o PDF anexado. O e-mail lista cada dia com a **correção sugerida pelo sistema**.
 
 1. Imprima o PDF e apresente ao colaborador. Ele confere cada linha: **De acordo**, escreve o **horário correto** ou
