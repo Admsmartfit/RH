@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint
+from frappe.utils import cint, getdate, today
 
 from hrms_secullum_brasil.configuracao_ponto.horarios import descartar_hora_automatica
 from hrms_secullum_brasil.configuracao_ponto.regras import (
@@ -75,10 +75,15 @@ class PerfildeJornada(Document):
 		return erros
 
 	def _avisar_carga_semanal(self):
+		from hrms_secullum_brasil.configuracao_ponto.regime_jornada import teto_semanal
+
 		carga = cint(self.carga_semanal_minutos)
-		if carga > defaults_legais.CARGA_SEMANAL_MAXIMA_MIN:
+		teto = teto_semanal(getdate(self.vigencia_inicio or today()))
+		if carga > teto:
 			frappe.msgprint(
-				_("Carga semanal de {0} min ultrapassa 44h (Art. 7º, XIII CF).").format(carga),
+				_("Carga semanal de {0} min ultrapassa o teto do regime de jornada ({1} min).").format(
+					carga, teto
+				),
 				title=_("Atenção: risco jurídico"),
 				indicator="orange",
 			)

@@ -122,6 +122,13 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 		"Trabalhou 7 dias seguidos sem descanso semanal (CLT, art. 67).",
 		(Sugestao(MANTER, "Manter: o 7º dia é pago em dobro"),),
 	),
+	"folgas_semanais": (
+		"A semana teve menos folgas do que o regime de jornada exige (EC 141/2026: 2 repousos por semana).",
+		(
+			Sugestao(EDITAR, "Conferir as batidas da semana"),
+			Sugestao(MANTER, "Manter: confira a escala das próximas semanas"),
+		),
+	),
 	"descanso_semanal": (
 		"O descanso da semana ficou menor que 35 h (24 h do repouso + 11 h da interjornada).",
 		(CORRIGIR_BATIDA, Sugestao(MANTER, "Manter: as horas que faltaram são pagas como extra")),
@@ -228,7 +235,7 @@ FOLGA = Sugestao(FOLGA_COMPENSATORIA, "Dar folga compensatória (Escala do mês)
 
 DO_DIA = ("marcacao_impar", "marcacao_duplicada", "falta", "intrajornada", "atraso", "he_acima_limite")
 TIPOS = frozenset(FIXOS) | frozenset(DO_DIA)
-COM_FOLGA = ("sete_dias_seguidos", "domingos_sem_folga", "descanso_semanal")  # DT-8
+COM_FOLGA = ("sete_dias_seguidos", "domingos_sem_folga", "descanso_semanal", "folgas_semanais")  # DT-8
 
 
 # inconsistências do ponto do dia em que vale avisar o colaborador (TI-08): "Cobrar pelo WhatsApp" entra no fim
@@ -245,6 +252,7 @@ COBRAVEIS = frozenset(
 		"aula_nao_registrada",
 		"sete_dias_seguidos",
 		"descanso_semanal",
+		"folgas_semanais",
 		"domingos_sem_folga",
 		"excesso_jornada_estagio",
 		"excesso_jornada_horista",

@@ -9,6 +9,7 @@
 				</p>
 			</div>
 			<div class="flex flex-wrap items-end gap-3">
+				<router-link :to="{ name: 'Planejador', query: route.query }" class="botao" data-testid="abrir-planejador">Planejador 5x2</router-link>
 				<fieldset class="flex rounded-md border border-borda text-sm" aria-label="Dias mostrados">
 					<label v-for="m in MODOS" :key="m.valor" class="cursor-pointer px-3 py-1.5" :class="modo === m.valor ? 'bg-primario-suave font-medium text-primario-texto' : ''">
 						<input v-model="modo" type="radio" name="modo" :value="m.valor" class="sr-only" />
@@ -126,6 +127,8 @@
 				</li>
 			</ul>
 		</section>
+
+		<PainelConsulta v-if="filtros.company" :company="filtros.company" :inicio="periodoDoMes[0]" :fim="periodoDoMes[1]" />
 
 		<p v-if="!filtros.company" class="rounded-md border border-alerta bg-alerta-suave p-3 text-sm text-alerta-texto">
 			Escolha a empresa no filtro acima para montar a escala.
@@ -331,6 +334,7 @@ import DialogoTexto from "@/components/DialogoTexto.vue";
 import DialogoConvite from "@/components/DialogoConvite.vue";
 import DialogoTurno from "@/components/DialogoTurno.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
+import PainelConsulta from "@/components/planejador/PainelConsulta.vue";
 import { useFiltros } from "@/composables/useFiltros";
 import { mensagem } from "@/utils/erros";
 import { alteracoesDoMovimento, cartao, diasVisiveis, montarGrade, moeda, nomeDaQuebra, rotuloDoTurno } from "@/utils/escalas";
@@ -353,6 +357,11 @@ const MODOS = [
 const route = useRoute();
 const router = useRouter();
 const { filtros } = useFiltros();
+// docs/PRD-planejador-5x2.md (PE-10): o painel de consulta do planejador lê as mudanças do mês
+const periodoDoMes = computed(() => {
+	const [ano, mes] = filtros.value.competencia.split("-").map(Number);
+	return [`${filtros.value.competencia}-01`, `${filtros.value.competencia}-${String(new Date(ano, mes, 0).getDate()).padStart(2, "0")}`];
+});
 
 const modo = computed({
 	get: () => (route.query.modo === "mes" ? "mes" : "fds"),

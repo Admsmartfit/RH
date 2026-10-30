@@ -298,7 +298,9 @@ def aplicar_respostas_rh() -> dict:
 
 # ------------------------------------------------------------------ segunda rodada de respostas (26/10/2026)
 
-MINIMO_INSTRUTOR = 40  # horas por semana
+# 40h por semana é a MARGEM da escala do instrutor horista (não passar disso para nunca chegar à hora extra das
+# 44h), não um mínimo pago (RH, 30/10/2026). O planejador usa como teto semanal; o cadastro fica sem mínimo.
+TETO_ESCALA_INSTRUTOR = 40
 INSALUBRIDADE_ASG = 20  # grau médio, sobre o salário base (padrão do sistema)
 
 
@@ -325,27 +327,39 @@ def ligar_banco_atuais(cargos=(RECEPCAO, ASG)) -> dict:
 	return {"ligados": ligados}
 
 
-def aplicar_minimo_instrutores() -> dict:
-	"""Mínimo de 40 horas semanais para os instrutores horistas (ginástica e musculação)."""
-	atualizados = 0
-	for employee in frappe.get_all(
+def tirar_minimo_instrutores() -> dict:
+	"""Corrige a leitura errada de 26/10/2026: as 40h dos instrutores são o teto da escala, não um mínimo pago. Tira o
+	mínimo do cadastro e recalcula as semanas que tinham complemento (só as de período aberto)."""
+	from hrms_secullum_brasil.apuracao.dsr import atualizar_semana
+	from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
+
+	instrutores = frappe.get_all(
 		"Employee",
-		filters={
-			"designation": ["in", (GINASTICA, MUSCULACAO)],
-			"status": "Active",
-			"tipo_remuneracao": "Horista",
-		},
+		filters={"designation": ["in", (GINASTICA, MUSCULACAO)], "minimo_horas": [">", 0]},
 		pluck="name",
-	):
+	)
+	for employee in instrutores:
 		frappe.db.set_value(
-			"Employee",
-			employee,
-			{"minimo_horas": MINIMO_INSTRUTOR, "minimo_periodo": "Semana"},
-			update_modified=False,
+			"Employee", employee, {"minimo_horas": 0, "minimo_periodo": None}, update_modified=False
 		)
-		atualizados += 1
+	semanas = frappe.get_all(
+		"DSR Semanal",
+		filters={"employee": ["in", instrutores or [""]], "complemento_minimo_minutos": [">", 0]},
+		fields=["employee", "semana_inicio"],
+	)
+	recalculadas = fechadas = 0
+	for s in semanas:
+		if periodo_fechado(s.employee, s.semana_inicio):
+			fechadas += 1
+			continue
+		atualizar_semana(s.employee, s.semana_inicio)
+		recalculadas += 1
 	frappe.db.commit()
-	return {"instrutores": atualizados}
+	return {
+		"instrutores": len(instrutores),
+		"semanas_recalculadas": recalculadas,
+		"semanas_fechadas": fechadas,
+	}
 
 
 def aplicar_insalubridade() -> dict:
@@ -370,7 +384,7 @@ def aplicar_insalubridade() -> dict:
 def aplicar_respostas_rh_2() -> dict:
 	return {
 		"banco": ligar_banco_atuais(),
-		"minimo": aplicar_minimo_instrutores(),
+		"minimo": tirar_minimo_instrutores(),
 		"insalubridade": aplicar_insalubridade(),
 	}
 

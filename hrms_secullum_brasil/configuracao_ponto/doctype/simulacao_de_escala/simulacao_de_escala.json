@@ -1,0 +1,220 @@
+{
+ "actions": [],
+ "autoname": "SIM-.YYYY.-.#####",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "designation",
+  "inicio",
+  "semanas",
+  "regime",
+  "historico_semanas",
+  "limite_segundos",
+  "column_break_situacao",
+  "situacao",
+  "progresso",
+  "etapa",
+  "rodada_em",
+  "proposta_escolhida",
+  "escolhida_por",
+  "escolhida_em",
+  "erro",
+  "dados_section",
+  "premissas",
+  "minimos",
+  "resultado",
+  "lancados"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Os instrutores de musculação (DP-15); os estagiários da empresa entram junto.",
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cargo",
+   "options": "Designation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início (segunda-feira)",
+   "reqd": 1
+  },
+  {
+   "default": "4",
+   "fieldname": "semanas",
+   "fieldtype": "Int",
+   "label": "Semanas",
+   "reqd": 1
+  },
+  {
+   "description": "Vazio: o regime ativo na data de início. Pode ser um regime só preparado.",
+   "fieldname": "regime",
+   "fieldtype": "Link",
+   "label": "Simular com o regime",
+   "options": "Regime de Jornada Legal"
+  },
+  {
+   "default": "8",
+   "fieldname": "historico_semanas",
+   "fieldtype": "Int",
+   "label": "Semanas de histórico (demanda)"
+  },
+  {
+   "default": "30",
+   "fieldname": "limite_segundos",
+   "fieldtype": "Int",
+   "label": "Tempo por proposta (s)"
+  },
+  {
+   "fieldname": "column_break_situacao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Rascunho",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Rascunho\nNa fila\nRodando\nPronta\nParada\nErro",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "progresso",
+   "fieldtype": "Percent",
+   "label": "Progresso",
+   "read_only": 1
+  },
+  {
+   "fieldname": "etapa",
+   "fieldtype": "Data",
+   "label": "Etapa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rodada_em",
+   "fieldtype": "Datetime",
+   "label": "Rodada em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "proposta_escolhida",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Proposta escolhida",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escolhida_por",
+   "fieldtype": "Link",
+   "label": "Escolhida por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "escolhida_em",
+   "fieldtype": "Datetime",
+   "label": "Escolhida em",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.situacao=='Erro'",
+   "fieldname": "erro",
+   "fieldtype": "Small Text",
+   "label": "Erro",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "dados_section",
+   "fieldtype": "Section Break",
+   "label": "Premissas e resultado"
+  },
+  {
+   "fieldname": "premissas",
+   "fieldtype": "Long Text",
+   "label": "Premissas (JSON)"
+  },
+  {
+   "fieldname": "minimos",
+   "fieldtype": "Long Text",
+   "label": "Mínimos do gestor (JSON)"
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Long Text",
+   "label": "Resultado (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lancados",
+   "fieldtype": "Long Text",
+   "label": "Mudanças já lançadas na escala (JSON)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Simulacao de Escala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "company",
+ "track_changes": 1
+}

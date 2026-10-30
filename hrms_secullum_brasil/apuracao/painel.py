@@ -227,6 +227,7 @@ def resumo(competencia: str, company=None, branch=None, department=None) -> dict
 		"alertas_inss": _alertas_inss(filtros),
 		"horistas_no_limite": _horistas_no_limite(filtros, f"{inicio.year}-{inicio.month:02d}"),
 		"termos": _termos_aguardando(filtros),
+		"regime": _regime(),
 		"inconsistencias": _inconsistencias_por_severidade(filtros, inicio, fim),
 		"reapuracao": _fila_reapuracao(filtros, inicio, fim),
 		"secullum": _ultimo_sync(),
@@ -271,6 +272,13 @@ def _banco_a_vencer(filtros: dict) -> dict | None:
 		"colaboradores": cint(linha.colaboradores),
 		"primeiro_vencimento": str(linha.primeiro) if linha.primeiro else None,
 	}
+
+
+def _regime() -> dict:
+	"""docs/PRD-planejador-5x2.md (PE-01): o regime de jornada em vigor e o preparado a ativar."""
+	from hrms_secullum_brasil.configuracao_ponto.regime_jornada import resumo_do_cockpit
+
+	return resumo_do_cockpit()
 
 
 def _termos_aguardando(filtros: dict) -> dict | None:

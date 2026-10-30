@@ -15,6 +15,7 @@ from frappe.utils import cint, flt, getdate, now_datetime
 from hrms_secullum_brasil.apuracao.adaptador import eh_feriado, lista_de_feriados, marcacoes
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
 from hrms_secullum_brasil.apuracao.lote import consultar, documento, silenciar
+from hrms_secullum_brasil.configuracao_ponto import regime_jornada as regime
 from hrms_secullum_brasil.configuracao_ponto.escala import horista_escalado
 from hrms_secullum_brasil.configuracao_ponto.regras import (
 	RegraAmbiguaError,
@@ -24,7 +25,6 @@ from hrms_secullum_brasil.configuracao_ponto.regras import (
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.descanso_semanal import descanso_suprimido, maior_descanso
 from hrms_secullum_brasil.engine.dsr import (
-	contar_dias,
 	dias_da_semana,
 	dsr_horista,
 	dsr_perdido_mensalista,
@@ -41,10 +41,13 @@ def nome_dsr(employee: str, segunda) -> str:
 
 
 def _divisor(emp, segunda) -> int:
+	"""Divisor do contrato (ou do perfil), limitado ao do regime de jornada no domingo da semana (PE-01)."""
 	if cint(emp.divisor_horas):
-		return cint(emp.divisor_horas)
-	perfil = get_perfil_vigente(emp.name, segunda)
-	return cint(perfil.divisor) if perfil and cint(perfil.divisor) else d.DIVISOR_PADRAO
+		contrato = cint(emp.divisor_horas)
+	else:
+		perfil = get_perfil_vigente(emp.name, segunda)
+		contrato = cint(perfil.divisor) if perfil and cint(perfil.divisor) else d.DIVISOR_PADRAO
+	return regime.divisor_efetivo(contrato, segunda + timedelta(days=6))
 
 
 def _pares_do_dia(employee: str, dia) -> list:
@@ -83,12 +86,28 @@ def _inconsistencia_descanso(employee: str, domingo, maior, suprimido: int, cct)
 		resolver_inconsistencias(employee, "descanso_semanal", domingo)
 
 
+def _inconsistencia_folgas(employee: str, segunda, apuracoes) -> None:
+	"""PE-01: no regime de 2 folgas (EC 141/2026), a semana com menos folgas vira inconsistência (no domingo)."""
+	domingo = segunda + timedelta(days=6)
+	faltam = regime.folgas_faltando(segunda, [getdate(a.data) for a in apuracoes if cint(a.trabalhado)])
+	if faltam:
+		registrar_inconsistencia(
+			employee,
+			"folgas_semanais",
+			f"Semana com {faltam} folga(s) a menos do que o regime de jornada exige.",
+			severidade="Média",
+			data=domingo,
+		)
+	else:
+		resolver_inconsistencias(employee, "folgas_semanais", domingo)
+
+
 def _horista_semana(emp, segunda, apuracoes, normais: int) -> tuple[int, int]:
-	"""AJ-14: (HE acima de 44h na semana, complemento do mínimo semanal) do horista com escala."""
+	"""AJ-14: (HE acima do teto semanal do regime, complemento do mínimo semanal) do horista com escala."""
 	perfil = get_perfil_vigente(emp.name, segunda)
 	if not perfil or not horista_escalado(emp.name, segunda, perfil):
 		return 0, 0
-	he_semanal = max(0, normais - d.CARGA_SEMANAL_MAXIMA_MIN)
+	he_semanal = max(0, normais - regime.teto_semanal(segunda))
 	complemento = 0
 	if flt(emp.get("minimo_horas")) and emp.get("minimo_periodo") == "Semana":
 		minimo = round(flt(emp.minimo_horas) * 60)
@@ -99,11 +118,11 @@ def _horista_semana(emp, segunda, apuracoes, normais: int) -> tuple[int, int]:
 
 
 def _he_semanal_neutro(emp, segunda, normais: int) -> int:
-	"""Dia neutro (rodízio do Secullum): as horas dele são normais, mas o que passar de 44h na semana é HE."""
+	"""Dia neutro (rodízio do Secullum): as horas dele são normais, mas o que passar do teto da semana é HE."""
 	perfil = get_perfil_vigente(emp.name, segunda)
 	if not perfil or not any(cint(linha.get("neutro")) for linha in perfil.dias):
 		return 0
-	return max(0, normais - d.CARGA_SEMANAL_MAXIMA_MIN)
+	return max(0, normais - regime.teto_semanal(segunda))
 
 
 def atualizar_semana(employee: str, data) -> str | None:
@@ -122,7 +141,7 @@ def atualizar_semana(employee: str, data) -> str | None:
 	emp = documento("Employee", employee)
 	lista = lista_de_feriados(emp)
 	feriados = {dia for dia in dias if eh_feriado(lista, dia)}
-	uteis, descanso = contar_dias(dias, feriados)
+	uteis, descanso = regime.contar_dias(dias, feriados)  # com 2 repousos remunerados, o sábado também
 	try:
 		cct = get_regra_vigente(employee, segunda)
 	except RegraAmbiguaError:
@@ -178,6 +197,7 @@ def atualizar_semana(employee: str, data) -> str | None:
 	valores["maior_descanso_minutos"] = maior or 0
 	valores["descanso_suprimido_minutos"] = suprimido
 	_inconsistencia_descanso(employee, dias[-1], maior, suprimido, cct)
+	_inconsistencia_folgas(employee, segunda, apuracoes)
 
 	nome = nome_dsr(employee, segunda)
 	doc = frappe.get_doc(DSR, nome) if frappe.db.exists(DSR, nome) else frappe.new_doc(DSR)

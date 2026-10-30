@@ -221,11 +221,25 @@ def salario_vigente(employee: str, data) -> Decimal | None:
 	return Decimal(str(flt(ssa[0].base))) if ssa else None
 
 
-def _divisor(emp, data) -> int:
+def _divisor_do_contrato(emp, data) -> int:
 	if cint(emp.divisor_horas):
 		return cint(emp.divisor_horas)
 	perfil = get_perfil_vigente(emp.name, data)
 	return cint(perfil.divisor) if perfil and cint(perfil.divisor) else d.DIVISOR_PADRAO
+
+
+def _divisor(emp, data) -> int:
+	"""PE-01: o divisor do contrato/perfil limitado ao do regime de jornada ativo na data."""
+	from hrms_secullum_brasil.configuracao_ponto.regime_jornada import divisor_efetivo
+
+	return divisor_efetivo(_divisor_do_contrato(emp, data), data)
+
+
+def _divisor_do_periodo(emp, inicio, fim):
+	"""No fechamento: proporcional aos dias de cada regime no período (RH, 30/10/2026)."""
+	from hrms_secullum_brasil.configuracao_ponto.regime_jornada import divisor_do_periodo
+
+	return divisor_do_periodo(_divisor_do_contrato(emp, fim), inicio, fim)
 
 
 def base_para_custo(employee: str, data) -> BaseValoracao:
@@ -395,7 +409,7 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 	)
 	base = BaseValoracao(
 		salario=salario,
-		divisor=_divisor(emp, fim),
+		divisor=_divisor_do_periodo(emp, inicio, fim),
 		percentual_noturno=percentual_noturno(cct, emp.designation),  # AJ-04: o do cargo, se houver
 		percentual_intrajornada=flt(cct.percentual_indenizacao_intrajornada)
 		if cct

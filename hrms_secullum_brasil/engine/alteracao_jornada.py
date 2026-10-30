@@ -37,6 +37,7 @@ class Contexto:
 	reduz_salario: bool = False
 	intervalo_minimo: int = d.INTERVALO_MINIMO_MIN
 	jornada_fragmentada: bool = False
+	teto_semanal: int = d.CARGA_SEMANAL_MAXIMA_MIN  # PE-01: o do regime de jornada na data de início
 
 
 @dataclass(frozen=True)
@@ -89,9 +90,10 @@ def erros_legais(horario: Horario, ctx: Contexto) -> list[str]:
 			and q.tipo in (ev.EXCESSO, ev.INTERVALO, ev.INTERJORNADA, ev.SOBREPOSICAO, ev.INTERVALO_LONGO)
 		}
 	)
-	if carga(horario) > d.CARGA_SEMANAL_MAXIMA_MIN:
+	if carga(horario) > ctx.teto_semanal:
 		erros.append(
-			f"carga semanal de {carga(horario) // 60}h{carga(horario) % 60:02d}, acima de 44h (CF art. 7º, XIII)."
+			f"carga semanal de {carga(horario) // 60}h{carga(horario) % 60:02d}, acima do teto de "
+			f"{ctx.teto_semanal // 60}h{ctx.teto_semanal % 60:02d} do regime de jornada (CF art. 7º, XIII)."
 		)
 	return erros
 

@@ -124,6 +124,12 @@ O prazo é de **3 dias úteis**. Depois dele, você recebe um WhatsApp por dia �
 avisado. O colaborador também pode assinar pelo celular, pelo link do WhatsApp dele (CPF e código): aí você não precisa
 registrar nada.
 
+## Planejador de escalas 5x2
+
+Painel → **Planejador**: simula propostas de escala dos instrutores com o ponto real e as regras da jornada. Nada é
+gravado: escolha a proposta, abra a tela Escalas e lance as mudanças da lista "O que mudar" (o painel do planejador
+aparece lá); marque cada uma como lançada.
+
 ## Escala e trocas
 
 - **Relatório "Escala do Mes"**: o calendário da equipe (horário, R = repouso, FC = folga compensada, F = feriado),

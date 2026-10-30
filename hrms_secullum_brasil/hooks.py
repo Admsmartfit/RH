@@ -187,6 +187,8 @@ scheduler_events = {
 		"hrms_secullum_brasil.estagio.alertas.verificar_estagios",  # EST-08
 		# CE-16: prazo de assinatura, horário criado no Secullum e envio na data de início
 		"hrms_secullum_brasil.apuracao.jornada_assinatura.acompanhar",
+		# docs/PRD-planejador-5x2.md (PE-01): lembra o RH de ativar o regime de jornada preparado (EC 141/2026)
+		"hrms_secullum_brasil.configuracao_ponto.regime_jornada.lembrar",
 	],
 }
 

@@ -30,6 +30,7 @@ TIPOS_DO_TERMO = tuple(NOMES)  # uma linha a confirmar por dia
 INFORMATIVOS = {
 	"sete_dias_seguidos": "7 dias seguidos de trabalho",
 	"descanso_semanal": "Descanso semanal menor que 35 h",
+	"folgas_semanais": "Semana com menos folgas do que o regime exige",
 	"domingos_sem_folga": "Domingos seguidos sem folga",
 	"excesso_jornada_horista": "Mais de 4 h sem intervalo além do limite do mês",
 }

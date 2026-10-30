@@ -174,3 +174,16 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - Toda confirmação gera o **comprovante** (PDF do termo + página do registro: quem, quando, IP, aparelho, respostas),
   que é o anexo dos tratamentos; mudança de status grava `Version` (`_versao`). O lote roda em fila
   (`emitir_lote` → `progresso_lote`); o relatório "Termos de Ocorrencias" usa `engine.termo_ocorrencias.estatisticas`.
+
+## Jornada legal com vigência e planejador 5x2 — docs/PRD-planejador-5x2.md
+
+- **Nunca** use `defaults_legais.CARGA_SEMANAL_MAXIMA_MIN` nem `DIVISOR_PADRAO` direto no Frappe: leia o regime da
+  data por `configuracao_ponto/regime_jornada.py` (`teto_semanal`, `divisor_padrao`, `contar_dias`, `folgas_faltando`);
+  a regra pura é `engine/regime_jornada.py`. Os regimes da EC 141/2026 ficam **Preparados** e só valem quando o RH
+  ativa (`regime_jornada.ativar`, data depois do último fechamento); a semana da troca tem teto proporcional.
+- O planejador de escalas é **só simulação**: nunca grava escala, rascunho, alteração de jornada ou cadastro; o
+  gestor lança à mão na tela Escalas (lista "o que mudar", painel de consulta e exportação).
+- Regra pura do planejador em `engine/planejador/` (modelos, demanda, turnos, restrições, custo, índice, avaliação,
+  heurística); o otimizador CP-SAT fica em `otimizacao/` (pode importar `ortools`; o engine não — há teste). O Frappe
+  (`apuracao/planejador.py`, DocType Simulacao de Escala) só lê dados, roda em fila e confere cada proposta com o
+  `escala_validacao` do cockpit (DP-5). O custo do horista considera o mínimo semanal pago (complemento).

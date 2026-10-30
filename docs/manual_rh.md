@@ -514,6 +514,45 @@ Para quem acumula ocorrências (intervalo, batida faltando, atraso, falta…), o
   colaborador: emitidos, assinados, recusados, tempo até assinar e taxa de recusa).
 - O texto do termo é de ciência e regularização, **não é advertência**. Peça a revisão do advogado antes do uso.
 
+## Planejador de escalas 5x2
+
+Painel → **Planejador** (ou o botão "Planejador 5x2" na tela Escalas). É **só uma simulação**: nada muda na escala.
+
+1. Escolha a empresa, o cargo (instrutor de musculação), o início (segunda-feira), as semanas e o regime — pode simular
+   já com o de 42h, mesmo antes de ativar.
+2. Ajuste as premissas: teto diário do horista (4h/6h/8h), quem pode ter a carga ampliada (por índice, todos ou uma
+   lista), "não mexer", estagiários e cota, aumento máximo da folha, pesos de cobertura/custo/estabilidade, mínimos por
+   faixa ("mín. 4 das 18h às 20h") e, se quiser, contratação (proposta D).
+3. **Rodar simulação** (de 1 a 2 minutos; dá para parar e usar o melhor até ali). O planejador lê a presença real dos
+   instrutores nas últimas semanas (a demanda) e monta as propostas A (menor custo), B (qualidade técnica), C (rodízio
+   de folgas), D (contratar) e E (personalizada).
+4. Compare no quadro do topo (custo, cobertura, déficit, quebras, mudanças, carga ampliada), veja a grade e o mapa de
+   calor (vermelho = abaixo do mínimo; o número é presentes/mínimo) e o **"O que mudar"** de cada pessoa, com o motivo.
+5. Trave células que não podem mudar e **rode de novo**. **Escolha** a proposta e lance as mudanças **à mão** na tela
+   Escalas (o painel do planejador aparece lá com a lista); marque o que já lançou. Exporte em planilha para a diretoria.
+6. Depois, o **Acompanhamento** compara o planejado com o realizado e avisa semana acima do teto e estagiário sem
+   profissional no salão.
+
+O índice de cada instrutor (0 a 100) vem do histórico de 90 dias: assiduidade, pontualidade, inconsistências e
+disponibilidade (convites aceitos). Mudança de contrato (ampliar a carga) é só recomendação: a Alteração de Jornada
+continua sendo aberta à mão.
+
+## Quem não cumpre a escala
+
+Espaço Ponto → **Cumprimento da escala (quem não cumpre)**: escolha a empresa, o cargo e o período. A lista vai do
+colaborador com mais problema ao com menos: cumprimento (%), faltas, atrasos e saídas antes (acima da tolerância), dias
+em outro horário e horas não cumpridas, com os dias de cada problema. Em **Comparar com: Automático**, vale a escala
+publicada no cockpit; sem ela, o horista é comparado com o **horário de costume** (o que costuma fazer em cada dia da
+semana) e os demais com o perfil — o perfil que vem do Secullum costuma ser só nominal para o horista.
+
+## Nova jornada legal (EC 141/2026)
+
+A emenda reduz a jornada para 42h (e depois 40h) com 2 folgas por semana, mas **o programa não muda sozinho**. Os
+regimes já estão cadastrados como "Preparados" (espaço Ponto → Regime de Jornada Legal). A partir de 30 dias antes da
+data prevista, o cockpit mostra o aviso e o RH recebe um WhatsApp por semana. Quando a troca for confirmada, clique em
+**Ativar regime** no cockpit e escolha a data. Desde ela, hora extra semanal, DSR do horista, divisor padrão e folgas
+seguem o novo regime; a semana da troca tem teto proporcional. Não dá para ativar numa data já fechada.
+
 ## Dúvidas frequentes
 
 - **O dia está como falta, mas a pessoa trabalhou.** Confira em Marcações originais se as batidas chegaram. Se

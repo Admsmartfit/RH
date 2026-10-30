@@ -54,6 +54,7 @@ const menu = [
 	{ nome: "Inconsistencias", rotulo: "Inconsistências" },
 	{ nome: "Cartao", rotulo: "Cartão ponto" },
 	{ nome: "Escalas", rotulo: "Escalas" },
+	{ nome: "Planejador", rotulo: "Planejador" },
 	{ nome: "Termos", rotulo: "Termos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },
 ];

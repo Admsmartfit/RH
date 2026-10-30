@@ -7,7 +7,10 @@ description = "Motor de pré-folha e gestão de ponto (CLT/CCT) para Frappe HRMS
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+	# docs/PRD-planejador-5x2.md (DP-4): otimizador de escalas (CP-SAT), usado só em hrms_secullum_brasil/otimizacao
+	"ortools==9.15.6755",
+]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]
@@ -50,13 +53,13 @@ docstring-code-format = true
 # Os testes do engine e do cliente Secullum rodam sem bench: `pytest` na raiz do repositório.
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations"]
+testpaths = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations", "hrms_secullum_brasil/otimizacao"]
 addopts = "-ra --strict-markers"
 
 # ---------------------------------------------------------------- coverage
 # Meta de cobertura do engine e do cliente Secullum: >= 90% (PRD, Seção 10).
 [tool.coverage.run]
-source = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations"]
+source = ["hrms_secullum_brasil/engine", "hrms_secullum_brasil/integrations", "hrms_secullum_brasil/otimizacao"]
 omit = ["*/tests/*"]
 branch = true
 

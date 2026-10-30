@@ -2,6 +2,39 @@
 	<div class="space-y-6">
 		<h1 class="text-xl font-semibold">Cockpit — {{ nomeDaCompetencia(filtros.competencia) }}</h1>
 
+		<section
+			v-if="r?.regime?.proximo"
+			class="rounded-lg border border-alerta bg-alerta-suave p-4 text-sm text-alerta-texto"
+			aria-labelledby="titulo-regime"
+			data-testid="aviso-regime"
+		>
+			<h2 id="titulo-regime" class="font-semibold">Nova jornada legal: {{ r.regime.proximo.nome }}</h2>
+			<p class="mt-1">
+				Prevista para {{ dataBR(r.regime.proximo.inicio_previsto) }} ({{ r.regime.proximo.horas }}h semanais e 2
+				folgas por semana). <strong>Nada muda até ser ativada.</strong> Hoje vale: {{ r.regime.atual }}.
+			</p>
+			<p v-if="r.regime.perfis_acima_do_teto" class="mt-1">
+				{{ r.regime.perfis_acima_do_teto }} perfil(is) de jornada passam de {{ r.regime.proximo.horas }}h por semana:
+				ao ativar, o divisor deles cai ao do regime (sem redução de salário) e o horário precisa ser revisto no Secullum.
+			</p>
+			<form v-if="r.regime.pode_ativar" class="mt-3 flex flex-wrap items-end gap-2" @submit.prevent="ativarRegime">
+				<label class="flex flex-col text-xs font-medium">
+					Vale a partir de
+					<input v-model="inicioRegime" type="date" required class="mt-1 rounded-md border border-borda bg-superficie px-2 py-1.5 text-texto" />
+				</label>
+				<button type="submit" class="rounded-md bg-primario-forte px-3 py-2 font-medium text-sobre-primario" :disabled="ativando">
+					{{ ativando ? "Ativando…" : "Ativar regime" }}
+				</button>
+				<button type="button" class="rounded-md border border-borda bg-superficie px-3 py-2 text-texto" @click="lembrarDepois">
+					Lembrar em 7 dias
+				</button>
+			</form>
+			<p v-if="avisoRegime" role="status" class="mt-2">{{ avisoRegime }}</p>
+		</section>
+		<p v-else-if="r?.regime" class="text-xs text-texto-suave" data-testid="regime-atual">
+			Jornada legal em vigor: {{ r.regime.atual }} · {{ r.regime.teto_horas }}h semanais · {{ r.regime.folgas }} folga(s) por semana
+		</p>
+
 		<Bloco titulo="Números do mês" :recurso="resumo">
 			<template #carregando><SkeletonCockpit /></template>
 			<div v-if="r" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -210,9 +243,9 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import { createResource } from "frappe-ui";
+import { call, createResource } from "frappe-ui";
 import {
 	AlertTriangle,
 	CalendarX,
@@ -232,6 +265,7 @@ import Minutos from "@/components/Minutos.vue";
 import SkeletonCockpit from "@/components/SkeletonCockpit.vue";
 import { useFiltros } from "@/composables/useFiltros";
 import { filtrosDeOrganizacao, listaDesk } from "@/utils/desk";
+import { mensagem } from "@/utils/erros";
 import { dataBR, nomeDaCompetencia } from "@/utils/tempo";
 
 const route = useRoute();
@@ -253,6 +287,40 @@ watch(parametros, () => {
 });
 
 const r = computed(() => resumo.data);
+
+// docs/PRD-planejador-5x2.md (PE-01, DP-1): o regime da EC 141/2026 só vale quando o RH ativa
+const inicioRegime = ref("");
+const ativando = ref(false);
+const avisoRegime = ref("");
+watch(
+	() => r.value?.regime?.proximo?.inicio_previsto,
+	(previsto) => {
+		if (previsto && !inicioRegime.value) inicioRegime.value = previsto;
+	},
+	{ immediate: true }
+);
+
+async function ativarRegime() {
+	const proximo = r.value.regime.proximo;
+	if (!window.confirm(`Ativar "${proximo.nome}" a partir de ${dataBR(inicioRegime.value)}? A apuração, o DSR, a hora extra semanal e a folha passam a seguir o novo regime desde essa data.`)) return;
+	ativando.value = true;
+	avisoRegime.value = "";
+	try {
+		await call("hrms_secullum_brasil.configuracao_ponto.regime_jornada.ativar", { regime: proximo.name, inicio: inicioRegime.value });
+		avisoRegime.value = "Regime ativado. Os dias já apurados desde a data entram na fila de reapuração.";
+		resumo.reload();
+	} catch (e) {
+		avisoRegime.value = mensagem(e) || "Não foi possível ativar.";
+	} finally {
+		ativando.value = false;
+	}
+}
+
+async function lembrarDepois() {
+	const data = await call("hrms_secullum_brasil.configuracao_ponto.regime_jornada.lembrar_depois", { regime: r.value.regime.proximo.name, dias: 7 });
+	avisoRegime.value = `Vamos lembrar de novo em ${dataBR(data)}.`;
+	resumo.reload();
+}
 const org = computed(() => filtrosDeOrganizacao(parametros.value));
 const periodo = computed(() => ["Between", r.value?.periodo || []]);
 const fechamentos = computed(() => Object.entries(r.value?.fechado_ate || {}));

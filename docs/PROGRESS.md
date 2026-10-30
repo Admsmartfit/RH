@@ -1646,3 +1646,104 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Testes: `test_termo_ocorrencias` 13 (novo: colaborador + usuário não funcionário recebem e-mail e cobrança). Suíte
   completa antes desta mudança: Frappe 446 OK, e2e 65 OK.
 
+
+## PRD do planejador de escalas 5x2 (29/10/2026)
+
+- Analisado o PDF "PRD: Módulo Simulador de Transição 5x2" e criado `docs/PRD-planejador-5x2.md` (PE-01…PE-12,
+  DP-1…DP-10, Q-1…Q-8, etapas PE-E0…PE-E6). Principais mudanças em relação ao PDF: divisor 210 com 42h (não 200);
+  DSR do horista proporcional (não "exponencial"); Timefold descartado (repositório arquivado em 06/10/2025, só
+  Python ≤ 3.12 + JDK) → OR-Tools CP-SAT em `otimizacao/` com heurística pura de reserva; proposta D (contratar);
+  aplicação via Rascunho de Escala e Alteração de Jornada; e a etapa urgente PE-E0: jornada legal com vigência na
+  apuração (44h e divisor 220 estão fixos em `defaults_legais`).
+- Nada implementado. Aguardando as respostas Q-1 a Q-8.
+
+## PE-E0: jornada legal com vigência e ativação manual (30/10/2026)
+
+- Respostas do RH no PRD (`docs/PRD-planejador-5x2.md`): a troca não está garantida (nada muda sozinho, o RH ativa);
+  compensação na CCT preparada e desligada; alunos depois (layout PE-13); 6º turno não existe com 2 folgas; domingos
+  como hoje; semana da troca proporcional; planejador só para instrutores de musculação; OR-Tools liberado; **o
+  planejador é só simulação** (a aplicação na escala é manual, DP-9/PE-10 reescritos).
+- `engine/regime_jornada.py` (puro): regime na data, teto semanal proporcional (44h × 1/7 + 42h × 6/7 ≈ 2537 min),
+  divisor, dias de descanso do DSR do horista,
+  folgas da semana. 5 testes.
+- DocType **Regime de Jornada Legal** (Preparado/Ativo; início previsto; jornada; divisor; folgas; repousos
+  remunerados; quem ativou). Patch `regimes_ec141` cria "EC 141/2026 — 42h" (15/12/2026, 210, 2 folgas) e "— 40h"
+  (15/12/2027, 200) **Preparados**. `configuracao_ponto/regime_jornada.py`: `ativar` (RH; nunca antes do último
+  fechamento; reapura desde a segunda da semana do início), `lembrar_depois`, `lembrar` (job diário: WhatsApp ao RH
+  uma vez por semana a partir de 30 dias antes) e o cartão do cockpit com o botão **Ativar regime**.
+- A apuração usa o regime da data: HE semanal do horista e do dia neutro (`dsr.py`), dias úteis/descanso do DSR,
+  divisor padrão (`dsr.py`, `fechamento.py`), aviso de carga do Perfil de Jornada e da Alteração de Jornada; nova
+  inconsistência **folgas_semanais** (semana com menos folgas que o regime). CCT ganhou "permite compensação de
+  jornada" e "jornada diária máxima com compensação" (para o planejador).
+- Testes: engine 988; Frappe `test_regime_jornada` 4. Com nenhum regime ativo, tudo continua como antes (44h/220).
+- Revisão do RH (30/10/2026): os 2 repousos **não têm dia fixo** (qualquer dia, um preferencialmente no domingo; a
+  regra de domingos — 1 por mês homem, quinzenal mulher — é a que já está parametrizada): o DSR do horista conta os
+  repousos do regime + feriados fora do domingo, sem fixar o sábado. **Divisor:** o do contrato/perfil limitado ao do
+  regime (220 → 210; perfis com carga menor ficam como estão; na operação os perfis têm 220, 217, 183, 144…) e, no
+  fechamento do mês da troca, **proporcional** aos dias (`divisor_do_periodo`: dezembro 220×14 + 210×17 → 214,5161).
+  O cockpit avisa quantos perfis passam do teto do regime preparado (horário a rever no Secullum).
+
+## Planejador de escalas 5x2: PE-E1 a PE-E6 (30/10/2026)
+
+- **Engine puro `engine/planejador/`:** `modelos` (Turno com pausa, Pessoa, Horizonte de semanas, Regras do regime,
+  Demanda, Premissas, diária permitida/quem pode ampliar); `turnos` (candidatos de 4h/6h/8h a cada hora das 06h às 23h
+  com a pausa legal, mais os de hoje e os Turnos Padrão); `demanda` (presença histórica por faixa de 30 min: mediana =
+  mínimo, p75 = ideal, mais os mínimos do gestor); `restricoes` (diária, teto semanal, mínimo semanal, folgas, 7º dia,
+  interjornada, indisponibilidade, domingos seguidos, supervisão e cota de estagiário); `custo` (horista com o mínimo
+  semanal pago, DSR proporcional e HE; mensalista; bolsa); `indice` (DP-6, pesos à mostra); `avaliacao` (perfis A–E,
+  cobertura, mapa de calor, indicadores, mudanças com motivo); `heuristica` (busca local incremental de reserva).
+- **`otimizacao/` (OR-Tools CP-SAT 9.15, cp314):** modelo pessoa × dia × turno com as restrições duras e o objetivo
+  (déficit, ideal, sobra, custo pago, mudanças, ampliação, vagas, equidade, budget), rodízio por turmas na C,
+  contratação na D, travas, parada pelo Redis. `gerar_propostas` confere cada proposta com as restrições do engine.
+  Dependência no `pyproject.toml`; teste de isolamento: engine sem `ortools`, `otimizacao` sem `frappe`.
+- **Frappe:** DocType **Simulacao de Escala**; `apuracao/planejador.py` (opções, criar/refazer em fila com progresso,
+  parar, resultado, escolher, marcar lançado, exportar CSV, consulta para a tela Escalas, acompanhamento planejado ×
+  realizado com alertas) e a conferência de cada proposta pelo `escala_validacao` do cockpit (DP-5).
+- **Painel:** página **Planejador** (premissas, comparador, grade com travas, mapa de calor animado, o que mudar,
+  quebras, acompanhamento), painel de consulta e botão na tela Escalas, item no menu e atalhos no Desk.
+- Erros achados e corrigidos: o "parar" é lido pelas threads do CP-SAT (Redis direto, sem `frappe.local`); o budget
+  comparava horas trabalhadas com o custo de hoje que já inclui o mínimo de 40h (passou a usar o custo pago); o
+  `bench start` de desenvolvimento tinha um worker de 28/10 com o Frappe antigo (reiniciado).
+- **Simulação real (ponto.localhost, MATRIZ, 7 instrutores, 4 semanas, regime de 42h, 20 s/proposta, 83 s):** hoje
+  cobre o mínimo em 20,9% das faixas; A 91,9% sem ampliar; B 99,2% (5 ampliações); C 93,5%; E 98,3% — todas válidas e
+  com o mesmo custo (R$ 27.720/mês), porque os instrutores já recebem o mínimo de 40h semanais.
+- Testes: pytest 1200 (97,93%); Frappe `test_planejador` 3 + `test_regime_jornada` 4; e2e `planejador.spec.js` 2 (com
+  axe) e `foco.spec.js` com o item novo do menu.
+
+## Instrutores: 40h é teto, não mínimo; "hoje" = o realizado (30/10/2026, revisão do RH)
+
+- O RH esclareceu que as 40h semanais dos instrutores horistas são a **margem da escala** (para nunca chegar à hora
+  extra das 44h), **não um mínimo pago**. A leitura de 26/10 tinha cadastrado `minimo_horas = 40` nos 34 instrutores
+  (musculação e ginástica), e a apuração calculou 1.626 h de complemento em 70 semanas (07/09 a 26/10). **Nada foi
+  pago:** nenhum Additional Salary e o único Fechamento de Ponto (FP-2026-00001) é rascunho e vazio.
+  `config_operacao.tirar_minimo_instrutores` (operação, backup antes) zerou o mínimo e recalculou as 70 semanas (0
+  complementos restantes). `docs/configuracao_operacao.md` corrigido.
+- Planejador: premissa **teto semanal do horista** (padrão 40h) e a **escala de hoje = o realizado** das últimas semanas
+  inteiras (`planejador.base_do_realizado`; o resultado mostra o período usado). O otimizador passou ao paralelo comum
+  (o determinístico ficava preso em soluções piores).
+- Simulação real (MATRIZ, 7 instrutores, 4 semanas, 42h, 20 s/proposta): hoje (realizado 28/09–25/10) cobre o mínimo em
+  70,9% das faixas por R$ 12.976,83/mês; A 89,5% (+8,5%); B 99,9% (+18,7%, acima do budget de 15%); C 97,1% (+16,3%);
+  E 98,3% (+14,1%). Todas válidas.
+
+## Relatório "Cumprimento da Escala" e o termo do Arthur (30/10/2026)
+
+- Pedido do RH: ver quem não cumpre a escala, do com mais problema ao com menos. `engine/cumprimento_escala.py` compara
+  a escala do dia com as batidas: falta, atraso e saída antecipada (acima da tolerância, padrão 10 min), **horário
+  diferente** (presente em menos da metade do escalado — não vira "atraso" de horas), minutos não cumpridos, dias fora da
+  escala; cumprimento = minutos escalados com a pessoa presente; ranking do menor ao maior. Relatório Desk **Cumprimento
+  da Escala** (empresa, cargo, período, tolerância, "comparar com": escala publicada no cockpit ou perfil do cadastro),
+  com gráfico; atalho no espaço Ponto.
+- Achado: para os horistas, o perfil que vem do Secullum é nominal (ex.: Eidinara cadastrada 07-11 e trabalha 19-23) e a
+  Escala Mensal só existe a partir de novembro (gerada a partir dos perfis). Setembro/outubro pela escala publicada ficam
+  vazios; pelo perfil, quase todos os dias aparecem como "outro horário". **Decisão do RH:** para horista, a referência é
+  o **padrão habitual** (`cumprimento_escala.padrao_habitual`: por dia da semana, a mediana da entrada e da saída nos dias
+  em que trabalhou, se trabalhou em ≥ 50% das vezes; o histórico só conta a partir da primeira batida). O relatório tem
+  "Comparar com: Automático" (escala publicada no dia; sem ela, o costume do horista ou o perfil dos demais). Real
+  (MATRIZ, outubro): Gabrielle 77,1% (10 atrasos, 589 min), Lúcio 80,9% (11 saídas antes), Renata 91,8%, Monalisa 92,6%,
+  Leandro 93,3%, Eidinara 93,8%.
+- Termo TOP-2026-00001 (Arthur Lyrio Rangel): o texto de mensalista ("atraso descontado", "desconta o dia e o DSR") é
+  porque os dois vínculos dele (MATRIZ e VILA VELHA, ambos desligados) estão como **Mensalista** com perfil fixo
+  SEC-2-EFM; os 26 instrutores ativos são horistas. **Feito (decisão do RH):** termo cancelado; os dois vínculos passaram
+  a Horista com a cópia -H do perfil (SEC-2-EFM-H, SEC-2-EFVV-H); 01 a 09/09 reapurados — os atrasos sumiram, ficaram 2
+  faltas (dias escalados sem batida). Backup antes. O termo pode ser emitido de novo pelo cartão.
+

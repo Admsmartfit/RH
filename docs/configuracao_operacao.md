@@ -54,7 +54,7 @@ Rotina `aplicar_respostas_rh` (backup do site antes). Confirmações no chat: sa
 
 - **Banco de horas** ligado para os 28 atuais de recepção e ASG; vale a partir de 01/11/2026 (mudança no meio do mês
   vale no mês seguinte).
-- **Mínimo de 40 horas semanais** para os 34 instrutores horistas (ginástica e musculação), no cadastro de cada um.
+- **40 horas semanais é o teto (margem) da escala** dos 34 instrutores horistas (ginástica e musculação), para nunca chegar à hora extra das 44h — **não é mínimo pago** (correção do RH em 30/10/2026: o mínimo foi tirado do cadastro). O planejador de escalas usa as 40h como teto semanal do horista.
 - **Insalubridade do ASG:** 20% sobre o salário base (padrão do sistema), desde 01/11/2026, Regra de Adicional de
   Risco em cada empresa do ES.
 - **VT:** todos pelo CartãoGV (descrição da tarifa ajustada).

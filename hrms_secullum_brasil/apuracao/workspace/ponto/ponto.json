@@ -93,7 +93,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Escalas",
-   "link_count": 9,
+   "link_count": 12,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -194,6 +194,40 @@
    "link_count": 0,
    "link_to": "Alteracao de Jornada",
    "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Planejador de escalas 5x2 (painel)",
+   "link_count": 0,
+   "link_to": null,
+   "link_type": "URL",
+   "onboard": 0,
+   "type": "Link",
+   "url": "/ponto/planejador"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Simulações de escala",
+   "link_count": 0,
+   "link_to": "Simulacao de Escala",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Cumprimento da escala (quem não cumpre)",
+   "link_count": 0,
+   "link_to": "Cumprimento da Escala",
+   "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   },
@@ -350,7 +384,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Regras",
-   "link_count": 4,
+   "link_count": 5,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -394,6 +428,17 @@
    "label": "Configuração da apuração",
    "link_count": 0,
    "link_to": "Configuracao Apuracao",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "doctype": "Workspace Link",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Regime de jornada legal (EC 141/2026)",
+   "link_count": 0,
+   "link_to": "Regime de Jornada Legal",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

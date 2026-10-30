@@ -29,7 +29,7 @@ def _pct(valor) -> Decimal:
 @dataclass(frozen=True)
 class BaseValoracao:
 	salario: Decimal
-	divisor: int
+	divisor: int | Decimal  # no mês da troca de regime, a média proporcional (PE-01)
 	percentual_noturno: float = d.PERCENTUAL_ADICIONAL_NOTURNO
 	percentual_intrajornada: float = d.PERCENTUAL_INDENIZACAO_INTRAJORNADA
 	percentual_interjornada: float = 50  # interjornada suprimida paga como HE (OJ 355): percentual de HE útil

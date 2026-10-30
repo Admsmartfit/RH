@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "autoname": "field:nome_regime",
+ "creation": "2026-10-27 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome_regime",
+  "situacao",
+  "inicio_previsto",
+  "inicio",
+  "base_legal",
+  "column_break_regras",
+  "carga_semanal_horas",
+  "divisor",
+  "folgas_semana",
+  "repousos_remunerados",
+  "jornada_diaria_horas",
+  "controle_section",
+  "ativado_por",
+  "ativado_em",
+  "column_break_lembrete",
+  "lembrar_depois_de"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_regime",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Regime",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Preparado",
+   "description": "Preparado: cadastrado, mas não vale. Só passa a valer quando o RH clica em Ativar regime e escolhe a data de início.",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Situação",
+   "options": "Preparado\nAtivo",
+   "read_only": 1
+  },
+  {
+   "description": "Data prevista na lei; a partir de 30 dias antes o RH é lembrado de ativar.",
+   "fieldname": "inicio_previsto",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Início previsto"
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Vale a partir de",
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_legal",
+   "fieldtype": "Small Text",
+   "label": "Base legal"
+  },
+  {
+   "fieldname": "column_break_regras",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "carga_semanal_horas",
+   "fieldtype": "Float",
+   "label": "Jornada semanal máxima (horas)",
+   "reqd": 1
+  },
+  {
+   "description": "Jornada semanal × 5 (42h → 210; 40h → 200). Limita o divisor do contrato/perfil (220 → 210); quem tem divisor menor fica como está. No mês da troca, o fechamento usa a média proporcional aos dias.",
+   "fieldname": "divisor",
+   "fieldtype": "Int",
+   "label": "Divisor padrão do salário-hora",
+   "reqd": 1
+  },
+  {
+   "default": "2",
+   "fieldname": "folgas_semana",
+   "fieldtype": "Int",
+   "label": "Folgas por semana",
+   "reqd": 1
+  },
+  {
+   "default": "2",
+   "description": "Dias de descanso remunerado por semana no DSR do horista, em qualquer dia (um preferencialmente no domingo; a regra de domingos é a da CCT/CLT de sempre).",
+   "fieldname": "repousos_remunerados",
+   "fieldtype": "Int",
+   "label": "Repousos remunerados por semana (DSR do horista)",
+   "reqd": 1
+  },
+  {
+   "default": "8",
+   "fieldname": "jornada_diaria_horas",
+   "fieldtype": "Float",
+   "label": "Jornada diária normal (horas)"
+  },
+  {
+   "fieldname": "controle_section",
+   "fieldtype": "Section Break",
+   "label": "Ativação"
+  },
+  {
+   "fieldname": "ativado_por",
+   "fieldtype": "Link",
+   "label": "Ativado por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ativado_em",
+   "fieldtype": "Datetime",
+   "label": "Ativado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_lembrete",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lembrar_depois_de",
+   "fieldtype": "Date",
+   "label": "Lembrar de novo em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Configuracao Ponto",
+ "name": "Regime de Jornada Legal",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Gestor Ponto",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

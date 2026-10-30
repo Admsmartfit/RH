@@ -83,7 +83,10 @@
   "column_break_prof",
   "percentual_hora_atividade",
   "janela_remunerada",
-  "percentual_janela"
+  "percentual_janela",
+  "compensacao_section",
+  "compensacao_jornada",
+  "jornada_diaria_compensada_min"
  ],
  "fields": [
   {
@@ -569,10 +572,31 @@
    "fieldname": "percentual_janela",
    "fieldtype": "Percent",
    "label": "Valor da janela (% da hora-aula)"
+  },
+  {
+   "fieldname": "compensacao_section",
+   "fieldtype": "Section Break",
+   "label": "Compensação de jornada (EC 141/2026)",
+   "collapsible": 1,
+   "description": "Quando a CCT permitir compensar (ex.: 8h24 por dia para fechar 42h em 5 dias). Usado pelo planejador de escalas."
+  },
+  {
+   "default": "0",
+   "fieldname": "compensacao_jornada",
+   "fieldtype": "Check",
+   "label": "Permite compensação de jornada"
+  },
+  {
+   "depends_on": "compensacao_jornada",
+   "fieldname": "jornada_diaria_compensada_min",
+   "fieldtype": "Int",
+   "label": "Jornada diária máxima com compensação (min)",
+   "non_negative": 1,
+   "description": "Ex.: 504 = 8h24."
   }
  ],
  "links": [],
- "modified": "2026-10-19 10:00:00.000000",
+ "modified": "2026-10-30 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra Sindical CCT",

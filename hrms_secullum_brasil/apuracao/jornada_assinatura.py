@@ -26,6 +26,7 @@ from hrms_secullum_brasil.apuracao import whatsapp
 from hrms_secullum_brasil.apuracao.cockpit_escala import hhmm, periodos_do_texto
 from hrms_secullum_brasil.apuracao.permissoes import employees_visiveis
 from hrms_secullum_brasil.configuracao_ponto.escala import periodos_da_linha
+from hrms_secullum_brasil.configuracao_ponto.regime_jornada import teto_semanal
 from hrms_secullum_brasil.configuracao_ponto.regras import get_perfil_vigente
 from hrms_secullum_brasil.engine import alteracao_jornada as aj
 from hrms_secullum_brasil.engine import comunicacao as com
@@ -135,6 +136,7 @@ def validar_cenario(doc) -> None:
 		ctx = aj.Contexto(
 			horista=(emp.get("tipo_remuneracao") or "") in ("Horista", "Intermitente"),
 			he_habituais=he_habituais(linha.employee, inicio),
+			teto_semanal=teto_semanal(inicio),
 		)
 		if aj.mesmo_horario(_fixo(antes, flex), _fixo(depois, flex)):
 			classificacao, motivos = (
