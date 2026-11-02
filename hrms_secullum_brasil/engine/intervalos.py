@@ -23,12 +23,15 @@ def intrajornada(
 ) -> tuple[int, list[Inconsistencia]]:
 	"""(minutos suprimidos, inconsistências). Considera o maior intervalo do dia.
 
-	O tempo suprimido é indenizado com acréscimo (Art. 71, §4º) — o percentual é aplicado na valoração.
+	O tempo suprimido é indenizado com acréscimo (Art. 71, §4º) — o percentual é aplicado na valoração. Redução de até
+	`tolerancia_intervalo` min no total (variação de marcação) não é supressão: nem pendência, nem indenização.
 	"""
 	trabalhado = sum(saida - entrada for entrada, saida in pares)
 	maior = max((b[0] - a[1] for a, b in pairwise(pares)), default=0)
 	avisos = []
 	suprimida = max(intervalo_exigido(trabalhado, regra) - maior, 0)
+	if suprimida <= regra.tolerancia_intervalo:
+		suprimida = 0
 	if suprimida:
 		avisos.append(
 			Inconsistencia(

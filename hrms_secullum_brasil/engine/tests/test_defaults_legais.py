@@ -25,6 +25,7 @@ def _como_texto(valor):
 DEFAULTS_CCT = {
 	"tolerancia_por_marcacao": d.TOLERANCIA_POR_MARCACAO_MIN,
 	"tolerancia_diaria": d.TOLERANCIA_DIARIA_MIN,
+	"atraso_minimo_pendencia": d.ATRASO_MINIMO_PENDENCIA_MIN,
 	"computar_todo_tempo_ao_exceder": d.COMPUTAR_TODO_TEMPO_AO_EXCEDER,
 	"compensar_atraso_com_he": d.COMPENSAR_ATRASO_COM_HE,
 	"duplicidade_minutos": d.DUPLICIDADE_MIN,
@@ -47,6 +48,7 @@ DEFAULTS_CCT = {
 	"jornada_intervalo_curto_ate": d.JORNADA_INTERVALO_CURTO_ATE_MIN,
 	"intervalo_minimo": d.INTERVALO_MINIMO_MIN,
 	"intervalo_maximo": d.INTERVALO_MAXIMO_MIN,
+	"tolerancia_intervalo": d.TOLERANCIA_INTERVALO_MIN,
 	"permite_reducao_intrajornada": d.PERMITE_REDUCAO_INTRAJORNADA,
 	"intervalo_reduzido": d.INTERVALO_REDUZIDO_MIN,
 	"percentual_indenizacao_intrajornada": d.PERCENTUAL_INDENIZACAO_INTRAJORNADA,

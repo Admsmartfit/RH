@@ -237,6 +237,11 @@ oficial é o do Secullum.
 
 ## Alterar o horário fixo com assinatura
 
+**Pelo cartão ponto** (mais rápido para uma pessoa): no topo do cartão aparece o **Horário fixo** vigente; "Ver semana
+e histórico" mostra os 7 dias e as trocas anteriores. **Alterar horário fixo** pede o novo horário (perfil) e a data
+de início (sempre futura) e abre a Alteração de Jornada já preenchida: confira a classificação e siga do passo 3.
+Enquanto não for assinada, o cartão mostra a alteração em andamento e o horário antigo continua valendo.
+
 1. Crie o novo horário como **Perfil de Jornada** (pode ser um modelo) e abra **Ponto → Escalas → Alterações de
    horário (assinatura)**: empresa, data de início e, para cada pessoa, o perfil com o novo horário.
 2. Ao salvar, cada linha mostra o horário de hoje e o novo, a carga e o noturno, e a **classificação**: *Ciência*
@@ -487,6 +492,36 @@ do Secullum depois — passam a aparecer para ele.
    A contabilidade ou o RH terceirizado que só recebem o termo ficam com "Gestor da unidade" desmarcado.
 
 Empresa sem ninguém marcado continua usando o "Reporta a" do cadastro do colaborador.
+
+## Escala fixa, rodízio e o "neutro"
+
+- **Neutro** (dia do perfil sem horário previsto) serve para o dia em que a pessoa *às vezes* trabalha, como o sábado
+  de quem é de segunda a sexta: se trabalhar, conta como dia comum (até 8h); se não trabalhar, não é falta.
+- **Rodízio fixo** (ex.: sábado a quarta, com folga na quinta e na sexta) **não** cabe no neutro: o perfil de segunda
+  a sexta transforma a quinta e a sexta de folga em **falta** (desconta na folha). Para essas pessoas use a **Escala do
+  mês** (Painel → Escalas): ela vale por cima do perfil, e o cockpit já confere a regra do domingo (folga no domingo a
+  cada 3 semanas para homens e a cada 2 para mulheres; "Folga no domingo a cada" no cadastro da empresa).
+- Se o rodízio é permanente, o ideal é também ter o horário certo no Secullum e trocar o perfil pela Alteração de
+  Jornada (com o termo).
+
+## Tolerâncias que reduzem pendências (CCT)
+
+- **Tolerância do intervalo** (padrão 5 min): voltar do almoço até 5 min antes, no total, não é supressão (nem
+  pendência, nem indenização do Art. 71, §4º — redução ínfima, entendimento do TST). 0 = exige o intervalo exato.
+- **Pendência de atraso só acima de** (padrão 15 min): o atraso menor continua descontado ou debitado do banco de
+  horas, mas não aparece na central de inconsistências. 0 = todo atraso vira pendência.
+
+## Período da folha (dia de fechamento)
+
+- Em **Empresa → Dia de fechamento da folha** informe o último dia do período. Ex.: **25** = de 26 do mês anterior a
+  25. Vazio = mês cheio. Cada empresa pode ter o seu.
+- A competência leva o nome do mês em que o período termina: com fechamento no dia 25, **Novembro/2026 = 26/10 a
+  25/11**. O painel `/ponto` mostra as datas ao lado do mês; o cockpit, a central de inconsistências, o mês do
+  colaborador, as aprovações e o cartão ponto mostram só esse período.
+- Sem empresa escolhida no filtro, se as empresas fecham em dias diferentes, o painel avisa e mostra o mês cheio:
+  escolha a empresa para analisar o período da folha.
+- **Fechamento de Ponto novo:** ao escolher a empresa, o período é preenchido com o último período já encerrado.
+- A escala do mês e o planejador continuam por mês do calendário.
 
 ## Turno noturno: hora de virada e prorrogação
 

@@ -1820,3 +1820,38 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   painel `mes` 0,18 s → 0,06 s (113 → 56 consultas).
 - Suíte Frappe completa: 464 testes, 1 falha que dependia do relógio (`test_cockpit_escala`, datas de novembro dentro
   da antecedência de 48h): o teste fixa "agora" em 20/10/2026 e passa. Engine 1214 OK (99%).
+
+## Dia de fechamento da folha por empresa (02/11/2026, pedido do RH)
+
+- Campo `Company.dia_fechamento_folha` (fixture). Regra pura `engine/competencia.py` (`periodo_da_competencia`,
+  `competencia_da_data`; nome = mês em que o período termina; dia maior que o mês = último dia; vazio = mês cheio).
+- `apuracao/competencia.py`: `resolver`/`periodo` (empresa, ou a do colaborador; sem empresa, o dia comum das empresas
+  visíveis ou mês cheio com `misto`), `periodo_do_painel` (cabeçalho do /ponto mostra as datas e o aviso),
+  `periodo_sugerido` (Fechamento de Ponto novo: último período encerrado), `competencia_do_periodo` e
+  `validar_empresa` (Company.validate, 1 a 31).
+- `painel.periodo_da_competencia(competencia, company, employee)`: resumo, central de inconsistências, aprovações,
+  mês do colaborador e cartão ponto (`cartao_ponto.periodo(..., employee)`, `salvar_cartao`). O link "Abrir no
+  cartão" do Fechamento usa a competência do fim do período.
+- Testes: `apuracao/test_competencia.py` (4), `engine/tests/test_competencia.py` (5); painel, cartão e fechamento OK;
+  `yarn lint`/`build` e e2e (67) OK. Operação migrada com backup; o campo está vazio (mês cheio) até o RH preencher.
+
+## Horário fixo no cartão ponto (02/11/2026, pedido do RH)
+
+- O cartão (`cartao_ponto.cartao` → `horario`) traz o perfil vigente, a semana, o histórico de horário e a alteração
+  com assinatura em andamento (`jornada_assinatura.horario_do_colaborador`, `semana_do_perfil`).
+- "Alterar horário fixo" (`HorarioColaborador.vue`): `perfis_para_troca` e `nova_alteracao` criam a Alteração de
+  Jornada em rascunho (data futura) e abrem no Desk; classificação, termo e assinatura seguem o fluxo CE-16. Nada muda
+  no ponto antes de assinado.
+- Testes: `apuracao/test_horario_cartao.py` (2), cartão e assinatura OK; e2e do cartão 10/10 (com axe no diálogo).
+
+## Recepcionistas: tolerância do intervalo, pendência de atraso e escala real (02/11/2026, pedido do RH)
+
+- Análise (set/out, 15 recepcionistas): intrajornada 159 (118 de 54-59 min), atraso 109 (metade até 10 min), falta 77
+  (61 em quinta/sexta: rodízio sábado a quarta lançado como seg-sex com fim de semana neutro), domingos sem folga 11.
+- Decisões do RH: CCT `tolerancia_intervalo` (padrão 5; redução ínfima não é supressão — `engine/intervalos.py`) e
+  `atraso_minimo_pendencia` (padrão 15; o desconto/débito não muda — `engine/apuracao_dia.py`). Defaults em
+  `defaults_legais` (TOLERANCIA_INTERVALO_MIN, ATRASO_MINIMO_PENDENCIA_MIN), testes no engine.
+- Operação: backup, migrate (as 12 CCTs ficaram 5/15) e reapuração de 01/09 a 01/11 de todos.
+- Escala real de set/out do rodízio (Vaniere, Diego, Caroline, Arthur Muzzi): proposta montada pelas batidas (folga = até
+  2 dias sem batida por semana, preferindo os dias habituais de folga; a partir da admissão); aplicação aguardando a
+  conferência do RH. Carlos ficou de fora (trabalha seg-sex).

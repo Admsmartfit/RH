@@ -26,6 +26,8 @@ TIPOS_DIA = (
 # 5.2 Tolerância — Art. 58, §1º CLT
 TOLERANCIA_POR_MARCACAO_MIN = 5
 TOLERANCIA_DIARIA_MIN = 10
+# Pendência de atraso só acima disto (decisão do RH, 02/11/2026); o desconto/débito no banco não muda.
+ATRASO_MINIMO_PENDENCIA_MIN = 15
 COMPUTAR_TODO_TEMPO_AO_EXCEDER = True  # passou de 10 min no dia: computa tudo, não só o excedente
 
 # 5.1 Pareamento: marcações a menos de N minutos da anterior são duplicidade (ignoradas e sinalizadas)
@@ -82,6 +84,9 @@ INTERVALO_CURTO_MIN = 15  # > 4h até 6h
 JORNADA_INTERVALO_CURTO_ATE_MIN = 360
 INTERVALO_MINIMO_MIN = 60  # > 6h
 INTERVALO_MAXIMO_MIN = 120
+# Redução ínfima do intervalo (até 5 min no total, variação de marcação) não gera a indenização do Art. 71, §4º
+# (entendimento do TST em recursos repetitivos; decisão do RH de 02/11/2026). 0 = exige o intervalo exato.
+TOLERANCIA_INTERVALO_MIN = 5
 PERMITE_REDUCAO_INTRAJORNADA = False
 INTERVALO_REDUZIDO_MIN = 30  # piso legal da redução por CCT — Art. 611-A, III
 PERCENTUAL_INDENIZACAO_INTRAJORNADA = 50  # Art. 71, §4º

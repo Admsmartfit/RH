@@ -133,6 +133,8 @@ doc_events = {
 			"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.on_update_employee",
 		],
 	},
+	# dia de fechamento da folha (competência do painel e do cartão)
+	"Company": {"validate": "hrms_secullum_brasil.apuracao.competencia.validar_empresa"},
 	# docs/PRD-cargo.md: tela única do cargo (aplica tipo, valor e parâmetros da CCT a todos do cargo)
 	"Designation": {
 		"validate": "hrms_secullum_brasil.configuracao_ponto.cargo_padrao.validate_designation",

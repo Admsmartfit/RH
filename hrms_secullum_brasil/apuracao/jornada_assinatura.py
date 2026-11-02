@@ -62,6 +62,102 @@ def horario_do_perfil(perfil) -> dict:
 	return horario
 
 
+# ------------------------------------------------------------------ horário no cartão ponto (pedido do RH, 02/11/2026)
+
+
+def semana_do_perfil(perfil) -> list[dict]:
+	"""Os 7 dias do perfil em texto (ex.: {"dia": "Segunda-feira", "texto": "05:00-10:30 11:30-14:40"})."""
+	por_dia = {linha.dia_semana: linha for linha in perfil.dias} if perfil else {}
+	saida = []
+	for dia in DIAS_SEMANA:
+		linha = por_dia.get(dia)
+		if not linha:
+			texto = _("Folga")
+		elif cint(linha.get("neutro")):
+			texto = _("Neutro")
+		else:
+			texto = " ".join(f"{hhmm(p.inicio)}-{hhmm(p.fim)}" for p in periodos_da_linha(linha)) or _(
+				"Folga"
+			)
+		saida.append({"dia": dia, "texto": texto})
+	return saida
+
+
+def horario_do_colaborador(employee: str, data) -> dict:
+	"""Para o cartão ponto: o horário fixo vigente na data, o histórico e a alteração com assinatura em andamento."""
+	data = getdate(data)
+	perfil = get_perfil_vigente(employee, data)
+	historico = frappe.get_all(
+		"Historico Perfil Jornada",
+		filters={"parent": employee, "parenttype": "Employee"},
+		fields=["desde", "perfil_jornada", "observacao"],
+		order_by="desde desc",
+	)
+	em_andamento = frappe.db.sql(
+		f"""select c.name, c.situacao, c.data_inicio, l.assinatura, l.perfil_desejado
+		from `tab{LINHA}` l join `tab{CENARIO}` c on c.name = l.parent
+		where l.employee = %s and c.situacao in ('Rascunho', 'Em assinatura')
+		order by c.creation desc limit 1""",
+		employee,
+		as_dict=True,
+	)
+	return {
+		"perfil": perfil.name if perfil else None,
+		"titulo": (perfil.get("titulo") or perfil.name) if perfil else None,
+		"carga_semanal": cint(perfil.minutos_semana_previstos) if perfil else 0,
+		"semana": semana_do_perfil(perfil),
+		"historico": [{**h, "desde": str(h.desde)} for h in historico],
+		"em_andamento": {**em_andamento[0], "data_inicio": str(em_andamento[0].data_inicio)}
+		if em_andamento
+		else None,
+		"pode_alterar": bool(set(frappe.get_roles()) & set(PAPEIS)),
+	}
+
+
+@frappe.whitelist()
+def perfis_para_troca(employee: str) -> list[dict]:
+	"""Perfis vigentes da empresa do colaborador (ou sem empresa), menos o atual, com o resumo da semana."""
+	frappe.only_for(PAPEIS)
+	_checar_visivel(employee)
+	company = frappe.db.get_value("Employee", employee, "company")
+	atual = get_perfil_vigente(employee, getdate())
+	nomes = frappe.get_all(
+		PERFIL,
+		filters={"company": ["in", [company, ""]], "name": ["!=", atual.name if atual else ""]},
+		or_filters=[["vigencia_fim", "is", "not set"], ["vigencia_fim", ">=", getdate()]],
+		pluck="name",
+		order_by="codigo asc",
+	)
+	saida = []
+	for nome in nomes:
+		perfil = frappe.get_cached_doc(PERFIL, nome)
+		semana = [
+			f"{d['dia'][:3]} {d['texto']}" for d in semana_do_perfil(perfil) if d["texto"] != _("Folga")
+		]
+		saida.append({"name": nome, "titulo": perfil.titulo or nome, "resumo": " · ".join(semana)})
+	return saida
+
+
+@frappe.whitelist()
+def nova_alteracao(employee: str, perfil_desejado: str, data_inicio: str) -> str:
+	"""Atalho do cartão ponto: cria o cenário (rascunho) com esta pessoa; a classificação e o envio para assinatura
+	seguem na tela da Alteração de Jornada. O horário só muda depois de assinado (nunca direto no cadastro)."""
+	frappe.only_for(PAPEIS)
+	_checar_visivel(employee)
+	if getdate(data_inicio) <= getdate():
+		frappe.throw(_("A data de início precisa ser futura: o novo horário só vale depois da assinatura."))
+	doc = frappe.get_doc(
+		{
+			"doctype": CENARIO,
+			"company": frappe.db.get_value("Employee", employee, "company"),
+			"data_inicio": data_inicio,
+			"situacao": "Rascunho",
+			"linhas": [{"employee": employee, "perfil_desejado": perfil_desejado}],
+		}
+	).insert()
+	return doc.name
+
+
 def dias_flexiveis(emp) -> set[int]:
 	"""Dias da semana com escala flexível no cadastro (todos, se "Escala flexível")."""
 	if cint(emp.get("escala_flexivel")):

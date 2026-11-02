@@ -53,6 +53,10 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Classe do controller:** nome do DocType sem espaços, preservando maiúsculas/minúsculas (`Perfil de Jornada` → `PerfildeJornada`).
 - **API Secullum:** referência em `docs/secullum_api.md`. Toda chamada passa por `SecullumClient`; nunca use `requests` direto fora dos clientes de `integrations/` (`secullum/client.py`, `feriados/client.py`). Testes Frappe usam o modo mock (`Configuracao Secullum.modo_mock`).
 - **Marcação original (`Secullum Checkin Raw`) é imutável:** nunca use `doc.save()`/`delete_doc` nela. Só `ingestion/coleta_batidas.py` muda os campos de controle (status, substituição, espelho) via `frappe.db.set_value`. Correções do RH vão para Tratamento de Ponto (Etapa 5).
+- **Competência da folha:** o período de uma competência vem sempre de `apuracao/competencia.py` (`periodo`,
+  `resolver`; regra pura em `engine/competencia.py`), pelo `Company.dia_fechamento_folha` (25 = de 26 a 25; a
+  competência leva o nome do mês em que termina; vazio/0 = mês cheio). Nunca `calendar.monthrange` para o que vai à
+  folha. Escala e planejamento continuam por mês do calendário.
 - **Período fechado:** consulte `apuracao/periodos.py` (`periodo_fechado`, `fechado_ate`) antes de alterar qualquer dado de ponto de um dia.
 - **Mudou o dado de um dia → `apuracao/reapuracao.py:marcar_para_reapuracao`.**
 - **Campos `Time`:** o Frappe (v15 e v16) grava a hora atual em todo campo Time vazio de documento novo criado no servidor (inclusive sobre o `default`). Todo DocType com campo Time deve chamar `configuracao_ponto/horarios.py:descartar_hora_automatica` no `before_validate`.

@@ -118,6 +118,15 @@ def test_abono_parcial_reduz_so_o_atraso():
 	# docs/PRD-tratamento-inconsistencias.md (TI-06): 30 min de atraso, 20 abonados
 	r = apurar("08:30", "12:00", "13:00", "17:00", minutos_abonados=20)
 	assert (r.atraso, r.normais) == (10, 470)
+	assert r.tipos_inconsistencia() == []  # 10 min: abaixo do mínimo para pendência (15), mas descontado
+	r = apurar(
+		"08:30",
+		"12:00",
+		"13:00",
+		"17:00",
+		minutos_abonados=20,
+		regra=RegraApuracao(atraso_minimo_pendencia=0),
+	)
 	assert r.tipos_inconsistencia() == ["atraso"]
 	r = apurar("08:30", "12:00", "13:00", "17:00", minutos_abonados=45)
 	assert (r.atraso, r.normais, r.hora_extra) == (0, 480, 0)
@@ -158,3 +167,11 @@ def test_regra_padrao_usa_defaults_legais():
 	)
 	assert r.compensar_atraso_com_he is True
 	assert r.duplicidade_minutos == 2
+
+
+def test_pendencia_de_atraso_so_acima_do_minimo():
+	# decisão do RH (02/11/2026): até 15 min no dia não vira pendência; o desconto continua
+	r = apurar("08:15", "12:00", "13:00", "17:00")
+	assert (r.atraso, r.tipos_inconsistencia()) == (15, [])
+	r = apurar("08:16", "12:00", "13:00", "17:00")
+	assert (r.atraso, r.tipos_inconsistencia()) == (16, ["atraso"])

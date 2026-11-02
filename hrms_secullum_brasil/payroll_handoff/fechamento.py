@@ -12,6 +12,7 @@ from frappe.utils import cint, flt, formatdate, getdate, today
 
 from hrms_secullum_brasil.apuracao.adaptador import eh_feriado, lista_de_feriados
 from hrms_secullum_brasil.apuracao.beneficios import avaliar_colaborador
+from hrms_secullum_brasil.apuracao.competencia import competencia_do_periodo
 from hrms_secullum_brasil.apuracao.doctype.fechamento_banco_de_horas.fechamento_banco_de_horas import (
 	minutos_pagos,
 )
@@ -173,7 +174,7 @@ def pendencias_guiadas(company: str, periodo_inicio, periodo_fim) -> dict:
 		"total": len(colaboradores),
 		"pendentes": len(itens),
 		"prontos": len([e for e in colaboradores if e not in por_colaborador]),
-		"competencia": f"{inicio.year}-{inicio.month:02d}",
+		"competencia": competencia_do_periodo(company, fim),
 		"colaboradores": itens,
 	}
 

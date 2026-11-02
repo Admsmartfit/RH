@@ -9,6 +9,9 @@
 				required
 				@change="(e) => e.target.value && definir({ competencia: e.target.value })"
 			/>
+			<span v-if="periodo.data" class="mt-1 font-normal" data-testid="periodo-folha">
+				{{ periodo.data.texto }}<template v-if="periodo.data.dia_fechamento"> · fecha dia {{ periodo.data.dia_fechamento }}</template>
+			</span>
 		</label>
 		<label class="flex flex-col text-xs font-medium text-texto-suave">
 			Empresa
@@ -39,11 +42,15 @@
 				</option>
 			</select>
 		</label>
+		<p v-if="periodo.data?.misto" class="basis-full text-xs text-alerta-texto" role="status">
+			As empresas fecham a folha em dias diferentes: escolha a empresa para ver o período da folha (sem empresa, o mês
+			cheio).
+		</p>
 	</form>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { createResource } from "frappe-ui";
 import { useFiltros } from "@/composables/useFiltros";
 
@@ -54,6 +61,17 @@ const opcoes = createResource({
 	auto: true,
 	cache: "ponto-opcoes-filtros",
 });
+
+// período da folha da competência (dia de fechamento no cadastro da empresa; ex.: 26/10 a 25/11)
+const periodo = createResource({
+	url: "hrms_secullum_brasil.apuracao.competencia.periodo_do_painel",
+	makeParams: () => ({ competencia: filtros.value.competencia, company: filtros.value.company || null }),
+	auto: true,
+});
+watch(
+	() => [filtros.value.competencia, filtros.value.company],
+	() => periodo.reload(),
+);
 
 const daEmpresa = (pares) =>
 	(pares || []).filter(([empresa]) => !filtros.value.company || empresa === filtros.value.company).map(([, nome]) => nome);

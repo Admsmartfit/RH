@@ -170,7 +170,7 @@ def salvar_cartao(
 		_lista(alteracoes),
 		motivo,
 		bool(int(simular or 0)),
-		*cartao_ponto.periodo(inicio, fim, competencia),
+		*cartao_ponto.periodo(inicio, fim, competencia, employee),
 		enviar=enviar_secullum,
 		anexo=anexo,
 	)

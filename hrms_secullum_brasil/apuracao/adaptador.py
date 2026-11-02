@@ -82,6 +82,7 @@ def regra_de_cct(cct) -> RegraApuracao:
 	return RegraApuracao(
 		tolerancia_por_marcacao=cint(cct.tolerancia_por_marcacao),
 		tolerancia_diaria=cint(cct.tolerancia_diaria),
+		atraso_minimo_pendencia=cint(cct.get("atraso_minimo_pendencia")),
 		computar_todo_tempo_ao_exceder=bool(cint(cct.computar_todo_tempo_ao_exceder)),
 		compensar_atraso_com_he=bool(cint(cct.compensar_atraso_com_he)),
 		duplicidade_minutos=cint(cct.duplicidade_minutos),
@@ -107,6 +108,7 @@ def regra_de_cct(cct) -> RegraApuracao:
 		jornada_intervalo_curto_ate=cint(cct.jornada_intervalo_curto_ate),
 		intervalo_minimo=cint(cct.intervalo_minimo),
 		intervalo_maximo=cint(cct.intervalo_maximo),
+		tolerancia_intervalo=cint(cct.get("tolerancia_intervalo")),
 		permite_reducao_intrajornada=bool(cint(cct.permite_reducao_intrajornada)),
 		intervalo_reduzido=cint(cct.intervalo_reduzido),
 		interjornada_minima=cint(cct.interjornada_minima),

@@ -64,9 +64,9 @@ ORIGENS = {
 }
 
 
-def periodo(inicio=None, fim=None, competencia=None) -> tuple[date, date]:
+def periodo(inicio=None, fim=None, competencia=None, employee=None) -> tuple[date, date]:
 	if competencia and not (inicio and fim):
-		return painel.periodo_da_competencia(competencia)
+		return painel.periodo_da_competencia(competencia, employee=employee)
 	if not (inicio and fim):
 		frappe.throw(_("Informe a competência ou o período."))
 	inicio, fim = getdate(inicio), getdate(fim)
@@ -450,6 +450,8 @@ def _alteracoes(dados: dict, inicio: date, fim: date) -> list[dict]:
 
 
 def cartao(employee: str, inicio: date, fim: date) -> dict:
+	from hrms_secullum_brasil.apuracao.jornada_assinatura import horario_do_colaborador
+
 	painel.exigir_colaborador_visivel(employee)
 	dados = _carregar(employee, inicio, fim)
 	with modo_lote():
@@ -469,6 +471,8 @@ def cartao(employee: str, inicio: date, fim: date) -> dict:
 		"totais": totais,
 		"alteracoes": alteracoes,
 		"banco": banco_do_cartao(employee, inicio, fim),
+		# horário fixo vigente, histórico e alteração com assinatura em andamento (pedido do RH, 02/11/2026)
+		"horario": horario_do_colaborador(employee, fim),
 		"rh": painel.eh_rh(),
 		"pode_editar": bool(frappe.has_permission(TRATAMENTO, "create")),
 		"motivos": MOTIVOS,

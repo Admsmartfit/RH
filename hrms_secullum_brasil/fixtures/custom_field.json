@@ -379,6 +379,20 @@
   "name": "Company-ponto_fechado_ate"
  },
  {
+  "description": "Último dia do período da folha. Ex.: 25 = de 26 do mês anterior a 25 (a competência leva o nome do mês em que termina: 26/10 a 25/11 = novembro). Vazio = mês cheio. Vale para o painel /ponto, o cartão ponto e o período sugerido no Fechamento de Ponto.",
+  "doctype": "Custom Field",
+  "dt": "Company",
+  "fieldname": "dia_fechamento_folha",
+  "fieldtype": "Int",
+  "insert_after": "ponto_fechado_ate",
+  "is_system_generated": 0,
+  "label": "Dia de fechamento da folha",
+  "modified": "2026-11-02 14:00:00.000000",
+  "module": "Apuracao",
+  "name": "Company-dia_fechamento_folha",
+  "non_negative": 1
+ },
+ {
   "doctype": "Custom Field",
   "dt": "Employee Checkin",
   "fieldname": "secullum_checkin_raw",

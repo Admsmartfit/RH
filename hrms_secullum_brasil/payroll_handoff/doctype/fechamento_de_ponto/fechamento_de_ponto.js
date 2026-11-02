@@ -1,4 +1,14 @@
 frappe.ui.form.on("Fechamento de Ponto", {
+	// período da folha pelo "Dia de fechamento da folha" da empresa: sugere o último período encerrado
+	company(frm) {
+		if (!frm.is_new() || !frm.doc.company || (frm.doc.periodo_inicio && frm.doc.periodo_fim)) return;
+		frappe
+			.call("hrms_secullum_brasil.apuracao.competencia.periodo_sugerido", { company: frm.doc.company })
+			.then(({ message: r }) => {
+				frm.set_value({ periodo_inicio: r.periodo_inicio, periodo_fim: r.periodo_fim });
+				frappe.show_alert({ message: __("Período da folha sugerido: {0}", [r.texto]), indicator: "blue" });
+			});
+	},
 	refresh(frm) {
 		if (frm.doc.docstatus === 0 && frm.doc.company && frm.doc.periodo_inicio && frm.doc.periodo_fim) {
 			frm.add_custom_button(__("Calcular prévia"), () =>

@@ -113,7 +113,9 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	resultado.normais = previsto - atraso
 	resultado.hora_extra = hora_extra
 	resultado.he_faixas = distribuir_em_faixas(hora_extra, resultado.tipo_dia, regra.faixas_he)
-	if atraso:
+	if (
+		atraso > regra.atraso_minimo_pendencia
+	):  # o atraso menor é descontado/debitado do mesmo jeito, sem pendência
 		resultado.inconsistencias.append(
 			Inconsistencia("atraso", BAIXA, f"{atraso} min de atraso/saída antecipada.")
 		)

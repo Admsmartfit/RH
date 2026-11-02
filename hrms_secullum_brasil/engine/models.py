@@ -46,6 +46,7 @@ class RegraApuracao:
 
 	tolerancia_por_marcacao: int = d.TOLERANCIA_POR_MARCACAO_MIN
 	tolerancia_diaria: int = d.TOLERANCIA_DIARIA_MIN
+	atraso_minimo_pendencia: int = d.ATRASO_MINIMO_PENDENCIA_MIN
 	computar_todo_tempo_ao_exceder: bool = d.COMPUTAR_TODO_TEMPO_AO_EXCEDER
 	compensar_atraso_com_he: bool = d.COMPENSAR_ATRASO_COM_HE
 	duplicidade_minutos: int = d.DUPLICIDADE_MIN
@@ -62,6 +63,7 @@ class RegraApuracao:
 	jornada_intervalo_curto_ate: int = d.JORNADA_INTERVALO_CURTO_ATE_MIN
 	intervalo_minimo: int = d.INTERVALO_MINIMO_MIN
 	intervalo_maximo: int = d.INTERVALO_MAXIMO_MIN
+	tolerancia_intervalo: int = d.TOLERANCIA_INTERVALO_MIN
 	permite_reducao_intrajornada: bool = d.PERMITE_REDUCAO_INTRAJORNADA
 	intervalo_reduzido: int = d.INTERVALO_REDUZIDO_MIN
 	interjornada_minima: int = d.INTERJORNADA_MIN

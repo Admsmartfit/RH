@@ -62,3 +62,20 @@ class TestInterjornada:
 
 	def test_sem_dia_anterior(self):
 		assert interjornada_suprimida(datetime(2026, 10, 13, 8), [], 660) == 0
+
+
+class TestToleranciaDoIntervalo:
+	"""Redução ínfima (até 5 min no total): nem pendência, nem indenização (decisão do RH, 02/11/2026)."""
+
+	def test_voltou_ate_5_min_antes(self):
+		assert intrajornada([(8 * H, 12 * H), (12 * H + 55, 17 * H)], R, permite_estendido=False) == (0, [])
+
+	def test_6_min_a_menos_conta_tudo(self):
+		suprimida, avisos = intrajornada([(8 * H, 12 * H), (12 * H + 54, 17 * H)], R, permite_estendido=False)
+		assert suprimida == 6
+		assert [a.tipo for a in avisos] == ["intrajornada"]
+
+	def test_tolerancia_zero_exige_o_exato(self):
+		regra = RegraApuracao(tolerancia_intervalo=0)
+		suprimida, _ = intrajornada([(8 * H, 12 * H), (12 * H + 59, 17 * H)], regra, permite_estendido=False)
+		assert suprimida == 1

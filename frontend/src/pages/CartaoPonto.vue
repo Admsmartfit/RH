@@ -51,6 +51,13 @@
 					{{ cartao.data.colaborador.designation || "Sem cargo" }} · {{ cartao.data.colaborador.company }}
 					<template v-if="cartao.data.colaborador.cpf"> · CPF {{ cartao.data.colaborador.cpf }}</template>
 				</p>
+				<HorarioColaborador
+					v-if="cartao.data.horario"
+					:key="employee"
+					:employee="employee"
+					:nome="cartao.data.colaborador.employee_name"
+					:horario="cartao.data.horario"
+				/>
 				<dl class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:grid-cols-8" aria-label="Totais do período">
 					<div v-for="t in totais" :key="t.campo">
 						<dt class="text-texto-suave">{{ t.rotulo }}</dt>
@@ -380,6 +387,7 @@ import BadgeStatus from "@/components/BadgeStatus.vue";
 import Bloco from "@/components/Bloco.vue";
 import DialogoSalvarCartao from "@/components/DialogoSalvarCartao.vue";
 import DialogoTermo from "@/components/DialogoTermo.vue";
+import HorarioColaborador from "@/components/HorarioColaborador.vue";
 import Minutos from "@/components/Minutos.vue";
 import DialogoTexto from "@/components/DialogoTexto.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";

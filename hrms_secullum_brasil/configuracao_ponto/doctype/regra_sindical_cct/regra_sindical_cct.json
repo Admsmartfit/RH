@@ -21,6 +21,7 @@
   "tolerancia_section",
   "tolerancia_por_marcacao",
   "tolerancia_diaria",
+  "atraso_minimo_pendencia",
   "column_break_tol",
   "computar_todo_tempo_ao_exceder",
   "compensar_atraso_com_he",
@@ -47,6 +48,7 @@
   "column_break_intra",
   "intervalo_minimo",
   "intervalo_maximo",
+  "tolerancia_intervalo",
   "permite_reducao_intrajornada",
   "intervalo_reduzido",
   "interjornada_section",
@@ -190,6 +192,14 @@
    "fieldtype": "Int",
    "label": "Tolerância diária (min)",
    "reqd": 1
+  },
+  {
+   "default": "15",
+   "description": "Atraso ou saída antecipada até este total no dia não vira pendência na central. O desconto ou o débito no banco de horas continuam iguais. 0 = todo atraso vira pendência.",
+   "fieldname": "atraso_minimo_pendencia",
+   "fieldtype": "Int",
+   "label": "Pendência de atraso só acima de (min)",
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_tol",
@@ -360,6 +370,14 @@
    "fieldtype": "Int",
    "label": "Intervalo máximo acima de 6h (min)",
    "reqd": 1
+  },
+  {
+   "default": "5",
+   "description": "Redução do intervalo de até este total (ex.: voltou do almoço 3 min antes) não é supressão: nem pendência, nem indenização do Art. 71, §4º (redução ínfima, entendimento do TST). 0 = exige o intervalo exato.",
+   "fieldname": "tolerancia_intervalo",
+   "fieldtype": "Int",
+   "label": "Tolerância do intervalo (min)",
+   "non_negative": 1
   },
   {
    "default": "0",
@@ -605,7 +623,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-02 12:00:00.000000",
+ "modified": "2026-11-02 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra Sindical CCT",

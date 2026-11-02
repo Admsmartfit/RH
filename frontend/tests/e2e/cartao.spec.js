@@ -148,3 +148,20 @@ test("cobrar pelo WhatsApp abre com a mensagem pronta", async ({ page }) => {
 	await expect(dialogo.getByRole("textbox", { name: "Mensagem" })).toHaveValue(/Notei uma pendência no seu cartão de ponto[\s\S]*Motivo: /);
 	await dialogo.getByRole("button", { name: "Cancelar" }).click();
 });
+
+test("horário fixo no cartão: semana, histórico e alteração com assinatura", async ({ page }) => {
+	await abrirCartao(page);
+	const bloco = page.getByTestId("horario-colaborador");
+	await expect(bloco).toContainText("Horário fixo:");
+	await bloco.getByRole("button", { name: "Ver semana e histórico" }).click();
+	await expect(bloco.locator("#horario-detalhes tbody tr")).toHaveCount(7);
+	await expect(bloco).toContainText("Histórico de horário");
+	await bloco.getByTestId("alterar-horario").click();
+	const dialogo = page.getByRole("dialog", { name: /Alterar horário fixo/ });
+	await expect(dialogo).toContainText("precisa da assinatura");
+	await expect(dialogo.getByLabel("Novo horário (perfil de jornada)")).toBeVisible();
+	const axe = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
+	expect(axe.violations).toEqual([]);
+	await dialogo.getByRole("button", { name: "Cancelar" }).click();
+	await expect(dialogo).toHaveCount(0);
+});

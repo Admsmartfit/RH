@@ -5,7 +5,6 @@ e, além disso, pelo filtro explícito de employees_visiveis. Nenhum campo de pe
 PIS e CPF vão mascarados para quem não é RH Ponto (D-5). As regras de cálculo ficam em engine/painel.py.
 """
 
-import calendar
 import json
 from datetime import date, datetime, timedelta
 
@@ -99,14 +98,11 @@ def opcoes_filtros() -> dict:
 	}
 
 
-def periodo_da_competencia(competencia: str) -> tuple[date, date]:
-	"""'2026-08' → (01/08/2026, 31/08/2026)."""
-	try:
-		ano, mes = (int(x) for x in str(competencia).split("-")[:2])
-		inicio = date(ano, mes, 1)
-	except (TypeError, ValueError):
-		frappe.throw(_("Competência inválida: {0}. Use AAAA-MM.").format(competencia))
-	return inicio, date(ano, mes, calendar.monthrange(ano, mes)[1])
+def periodo_da_competencia(competencia: str, company=None, employee=None) -> tuple[date, date]:
+	"""'2026-11' → período da folha da empresa (dia de fechamento 25: 26/10 a 25/11; sem dia: o mês cheio)."""
+	from hrms_secullum_brasil.apuracao.competencia import periodo
+
+	return periodo(competencia, company, employee)
 
 
 def _dict(valor) -> dict:
@@ -165,7 +161,7 @@ def _contar(doctype: str, filtros: dict | None) -> int:
 def resumo(competencia: str, company=None, branch=None, department=None) -> dict:
 	"""Números do cockpit (FE-04). Blocos que o usuário não pode ler vêm como None."""
 	exigir_acesso()
-	inicio, fim = periodo_da_competencia(competencia)
+	inicio, fim = periodo_da_competencia(competencia, company)
 	visiveis = employees_visiveis()
 	filtros = {"company": company, "branch": branch, "department": department, "visiveis": visiveis}
 	no_mes = _filtros(APURACAO, **filtros)
@@ -424,7 +420,7 @@ def _filtros_inconsistencias(filtros: dict, visiveis) -> dict | None:
 	if saida is None:
 		return None
 	if filtros.get("competencia"):
-		inicio, fim = periodo_da_competencia(filtros["competencia"])
+		inicio, fim = periodo_da_competencia(filtros["competencia"], filtros.get("company"))
 		saida["data"] = ["between", [inicio, fim]]
 	status = filtros.get("status") or "Aberta"
 	if status != "Todas":
@@ -900,7 +896,7 @@ def mes(employee: str, competencia: str) -> dict:
 	from hrms_secullum_brasil.apuracao.lote import definir_janela, modo_lote
 
 	exigir_colaborador_visivel(employee)
-	inicio, fim = periodo_da_competencia(competencia)
+	inicio, fim = periodo_da_competencia(competencia, employee=employee)
 	dias = []
 	with modo_lote():
 		definir_janela(inicio, fim)
@@ -1013,7 +1009,7 @@ def tratamentos_pendentes(filtros=None) -> list[dict]:
 		return []
 	condicoes["docstatus"] = 0
 	if filtros.get("competencia"):
-		inicio, fim = periodo_da_competencia(filtros["competencia"])
+		inicio, fim = periodo_da_competencia(filtros["competencia"], filtros.get("company"))
 		condicoes["data"] = ["between", [inicio, fim]]
 	itens = frappe.get_list(
 		TRATAMENTO,
@@ -1048,4 +1044,4 @@ def cartao(employee: str, competencia: str | None = None, inicio=None, fim=None)
 	totais, as inconsistências (com explicação e sugestões) e o que está pendente de aprovação."""
 	from hrms_secullum_brasil.apuracao import cartao_ponto
 
-	return cartao_ponto.cartao(employee, *cartao_ponto.periodo(inicio, fim, competencia))
+	return cartao_ponto.cartao(employee, *cartao_ponto.periodo(inicio, fim, competencia, employee))
