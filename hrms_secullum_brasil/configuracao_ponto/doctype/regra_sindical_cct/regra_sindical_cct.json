@@ -38,6 +38,7 @@
   "column_break_not",
   "percentual_adicional_noturno",
   "prorrogacao_noturna",
+  "prorrogacao_inicio_noturno",
   "intrajornada_section",
   "jornada_sem_intervalo_ate",
   "intervalo_curto",
@@ -300,6 +301,14 @@
    "fieldname": "prorrogacao_noturna",
    "fieldtype": "Check",
    "label": "Prorrogação da jornada noturna (Súmula 60, II TST)"
+  },
+  {
+   "default": "0",
+   "depends_on": "prorrogacao_noturna",
+   "description": "Leitura ampliada da Súmula 60, II: jornada que começa depois das 22h e é predominantemente noturna (metade ou mais no período noturno, ex.: 23h-07h) também recebe a prorrogação após as 05h. Ligue só por orientação do jurídico.",
+   "fieldname": "prorrogacao_inicio_noturno",
+   "fieldtype": "Check",
+   "label": "Prorrogação também para jornada iniciada no período noturno"
   },
   {
    "fieldname": "intrajornada_section",
@@ -596,7 +605,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-30 10:00:00.000000",
+ "modified": "2026-11-02 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra Sindical CCT",

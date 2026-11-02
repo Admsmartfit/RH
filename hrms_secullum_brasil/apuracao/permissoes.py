@@ -1,7 +1,8 @@
 """Visibilidade dos dados de ponto (PRD, 7.1 e Seção 10).
 
 - RH Ponto e System Manager: tudo.
-- Gestor Ponto: a si mesmo e a toda a sua hierarquia (reports_to, pela árvore do Employee).
+- Gestor Ponto: a si mesmo, a toda a sua hierarquia (reports_to, pela árvore do Employee) e a todos das empresas em
+  que é gestor da unidade (configuracao_ponto/gestores.py; pode ser usuário que não é funcionário).
 - Colaborador: só os próprios registros.
 Restrição por departamento continua com o User Permission nativo (os DocTypes têm o campo department).
 """
@@ -31,14 +32,18 @@ def employees_visiveis(user: str | None = None) -> list[str] | None:
 	if papeis & PRIVILEGIADOS or not papeis & RESTRITOS:
 		return None
 	proprio = frappe.db.get_value("Employee", {"user_id": user}, ["name", "lft", "rgt"], as_dict=True)
-	if not proprio:
-		return []
-	visiveis = [proprio.name]
+	visiveis = [proprio.name] if proprio else []
 	if "Gestor Ponto" in papeis:
-		visiveis += frappe.get_all(
-			"Employee", filters={"lft": [">", proprio.lft], "rgt": ["<", proprio.rgt]}, pluck="name"
-		)
-	return visiveis
+		from hrms_secullum_brasil.configuracao_ponto.gestores import empresas_do_gestor
+
+		if proprio:
+			visiveis += frappe.get_all(
+				"Employee", filters={"lft": [">", proprio.lft], "rgt": ["<", proprio.rgt]}, pluck="name"
+			)
+		empresas = empresas_do_gestor(user)
+		if empresas:
+			visiveis += frappe.get_all("Employee", filters={"company": ["in", empresas]}, pluck="name")
+	return list(dict.fromkeys(visiveis))
 
 
 def _condicao(doctype: str, user: str | None) -> str:

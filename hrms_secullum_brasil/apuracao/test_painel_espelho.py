@@ -17,6 +17,7 @@ from hrms_secullum_brasil.apuracao import painel
 from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 from hrms_secullum_brasil.apuracao.test_apuracao import DIAS_UTEIS, criar_raw, hash_curto
 from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
+from hrms_secullum_brasil.payroll_handoff.test_fechamento import TRAVA_CONFERENCIA
 from hrms_secullum_brasil.reports.espelho import hhmm
 
 EMPRESA = "_Test Company"
@@ -81,7 +82,8 @@ class TestEspelhoNoPainel(FrappeTestCase):
 				"periodo_fim": FIM,
 			}
 		).insert()
-		cls.fechamento.submit()
+		with patch(TRAVA_CONFERENCIA, return_value=[]):
+			cls.fechamento.submit()
 
 	def test_totais_da_tela_batem_com_o_espelho(self):
 		espelho = frappe.get_doc(

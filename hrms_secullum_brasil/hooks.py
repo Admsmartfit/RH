@@ -55,6 +55,11 @@ fixtures = [
 		"dt": "Role",
 		"filters": [["name", "in", ["RH Ponto", "RH Saúde", "Gestor Ponto", "Colaborador", "Gestor DP"]]],
 	},
+	# perfis de papéis prontos para o cadastro de usuário (campo "Perfis de Função" do Novo Usuário)
+	{
+		"dt": "Role Profile",
+		"filters": [["name", "in", ["RH Ponto", "RH Saúde", "Gestor Ponto", "Gestor DP", "Colaborador"]]],
+	},
 	{"dt": "Leave Type", "filters": [["name", "in", ["Atestado Médico", "Recesso de Estagio"]]]},
 	{"dt": "Agente de Integracao", "filters": [["name", "in", ["CIEE-ES", "IEL-ES"]]]},
 	{
@@ -173,6 +178,8 @@ scheduler_events = {
 		"0 7 1 * *": ["hrms_secullum_brasil.apuracao.custeio_cct.enviar_relatorio_mensal"],
 		# docs/PRD-termo-ocorrencias.md: cobrança dos termos (dia útil, 9h) e lista semanal (segunda, 8h)
 		"0 9 * * *": ["hrms_secullum_brasil.apuracao.termo_ocorrencias.cobrar_pendentes"],
+		# conferência completa com o Secullum (a cada N dias; pedido do RH, 30/10/2026)
+		"30 2 * * *": ["hrms_secullum_brasil.ingestion.conferencia_secullum.conferir_periodo_aberto"],
 		"0 8 * * 1": ["hrms_secullum_brasil.apuracao.termo_ocorrencias.lista_semanal"],
 	},
 	"daily": [
@@ -180,6 +187,8 @@ scheduler_events = {
 		# IS-08: origem Secullum — repete a importação dos cadastros (se ligada na Configuracao Secullum)
 		"hrms_secullum_brasil.ingestion.importacao_secullum.sincronizar",
 		"hrms_secullum_brasil.apuracao.servico.marcar_dia_anterior",
+		# auditoria 02/11/2026: a fila de reapuração não cresce para sempre
+		"hrms_secullum_brasil.apuracao.reapuracao.limpar_fila_processada",
 		"hrms_secullum_brasil.apuracao.banco_horas.alertar_saldos_a_vencer",
 		"hrms_secullum_brasil.apuracao.instrutores.verificar_cref",
 		"hrms_secullum_brasil.seguranca_trabalho.alertas.verificar_epi",  # AJ-18
@@ -192,7 +201,7 @@ scheduler_events = {
 	],
 }
 
-# Gestor Ponto vê a própria hierarquia (reports_to); Colaborador vê só os próprios registros.
+# Gestor Ponto vê a própria hierarquia (reports_to) e as unidades de que é gestor; Colaborador vê só os próprios registros.
 _PERM = "hrms_secullum_brasil.apuracao.permissoes"
 permission_query_conditions = {
 	"Apuracao Diaria": f"{_PERM}.condicao_apuracao",

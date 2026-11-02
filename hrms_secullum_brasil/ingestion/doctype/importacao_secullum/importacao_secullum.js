@@ -77,8 +77,15 @@ function conectar(frm) {
 }
 
 function conferir(frm) {
-	frappe.call({ method: `${METODOS}.conferir`, freeze: true, freeze_message: __("Lendo o Secullum e simulando a importação (nada é gravado)...") })
-		.then(() => frm.reload_doc());
+	// roda em fila (pode demorar mais que o tempo da requisição); o servidor avisa quando terminar
+	frappe.realtime.off("importacao_conferida");
+	frappe.realtime.on("importacao_conferida", (r) => {
+		frappe.realtime.off("importacao_conferida");
+		if (r && r.erro) frappe.msgprint({ title: __("Conferência não concluída"), message: r.erro, indicator: "red" });
+		else frappe.show_alert({ message: __("Conferência concluída."), indicator: "green" });
+		frm.reload_doc();
+	});
+	frappe.call({ method: `${METODOS}.conferir` }).then((r) => frappe.show_alert({ message: r.message, indicator: "blue" }, 10));
 }
 
 function mostrar_conferencia(frm) {

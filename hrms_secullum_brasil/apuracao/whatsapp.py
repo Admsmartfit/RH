@@ -164,12 +164,15 @@ def reenviar(nome: str | None = None, inconsistencia: str | None = None) -> str:
 		frappe.throw(_("Mensagem de WhatsApp não encontrada."))
 	doc = frappe.get_doc(NOTIFICACAO, nome)
 	# o celular pode ter sido corrigido no cadastro depois do erro (no termo, o destinatário vem da Configuração)
+	# (gestor da unidade: o celular vem da Configuração Apuração; só o Reporta a é relido)
 	if doc.employee and doc.destinatario in ("Colaborador", "Gestor") and not doc.get("termo"):
-		quem = (
-			frappe.db.get_value("Employee", doc.employee, "reports_to")
-			if doc.destinatario == "Gestor"
-			else doc.employee
-		)
+		from hrms_secullum_brasil.configuracao_ponto.gestores import tem_gestor_na_unidade
+
+		emp = frappe.db.get_value("Employee", doc.employee, ["reports_to", "company"], as_dict=True)
+		if doc.destinatario == "Colaborador":
+			quem = doc.employee
+		else:
+			quem = None if tem_gestor_na_unidade(emp.company) else emp.reports_to
 		celular = frappe.db.get_value("Employee", quem, "cell_number") if quem else None
 		if celular:
 			doc.db_set("numero", celular)

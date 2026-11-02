@@ -56,6 +56,7 @@ class RegraApuracao:
 	noturno_fim: int = minutos_do_dia(d.NOTURNO_FIM)
 	minutos_hora_noturna: float = d.MINUTOS_HORA_NOTURNA
 	prorrogacao_noturna: bool = d.PRORROGACAO_NOTURNA
+	prorrogacao_inicio_noturno: bool = d.PRORROGACAO_INICIO_NOTURNO
 	jornada_sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN
 	intervalo_curto: int = d.INTERVALO_CURTO_MIN
 	jornada_intervalo_curto_ate: int = d.JORNADA_INTERVALO_CURTO_ATE_MIN

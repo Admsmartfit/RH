@@ -224,6 +224,14 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 		"O e-mail com o termo não saiu (conta de e-mail de saída ausente ou recusada). O termo continua valendo.",
 		(Sugestao(DESK, "Conferir a conta de e-mail (Email Account) e reenviar o termo"),),
 	),
+	"alteracao_retroativa_secullum": (
+		"Alguém mudou no Secullum um dia já passado (batida manual, atestado, folga). O dia foi reapurado; confira se "
+		"bate com o que foi combinado e com o que já foi corrigido no programa.",
+		(
+			Sugestao(EDITAR, "Conferir o dia no cartão ponto"),
+			Sugestao(MANTER, "Ciente: a mudança está certa"),
+		),
+	),
 	"alteracao_periodo_fechado": (
 		"O Secullum mudou um dado de um dia de período já fechado: a mudança não entrou na apuração.",
 		(Sugestao(DESK, "Reabrir o fechamento, se a mudança precisar valer"), Sugestao(MANTER, "Manter")),

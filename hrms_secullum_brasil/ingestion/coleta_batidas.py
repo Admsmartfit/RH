@@ -51,7 +51,9 @@ class Resumo:
 	sem_colaborador: int = 0
 	bloqueadas_periodo_fechado: int = 0
 	espelho_nao_criado: int = 0
+	retroativas: int = 0  # dias antigos mudados no Secullum (pedido do RH, 30/10/2026)
 	erros: list[str] = field(default_factory=list)
+	retroativas_itens: list[dict] = field(default_factory=list)
 
 	def texto(self) -> str:
 		linhas = [
@@ -61,6 +63,7 @@ class Resumo:
 			f"Sem colaborador no Frappe: {self.sem_colaborador}",
 			f"Bloqueadas (período fechado): {self.bloqueadas_periodo_fechado}",
 			f"Sem espelho em Employee Checkin: {self.espelho_nao_criado}",
+			f"Mudanças retroativas (dias antigos): {self.retroativas}",
 		]
 		return "\n".join(linhas + [f"Erro: {e}" for e in self.erros[:20]])
 
@@ -100,20 +103,29 @@ def bancos_configurados() -> list[str]:
 	return sorted(b for b in bancos if b)
 
 
-def coletar_batidas(hoje=None) -> dict:
+def coletar_batidas(hoje=None, inicio=None, bancos=None, gravar_saude: bool = True) -> dict:
+	"""Coleta de [inicio, hoje] (padrão: os últimos `dias_reprocessamento` dias). A conferência completa
+	(ingestion/conferencia_secullum.py) passa o período aberto inteiro e o banco."""
+	from hrms_secullum_brasil.ingestion.retroativas import Avisos
+
 	if not integracao_ativa():
 		return {}
 	hoje = getdate(hoje or today())
-	inicio = add_days(hoje, -max(cint(frappe.db.get_single_value(CONFIG, "dias_reprocessamento")), 0))
+	if inicio is None:
+		inicio = add_days(hoje, -max(cint(frappe.db.get_single_value(CONFIG, "dias_reprocessamento")), 0))
 	resumo = Resumo()
-	for banco in bancos_configurados():
-		_Coleta(banco, getdate(inicio), hoje, resumo).executar()
+	avisos = Avisos(getdate(today()))
+	for banco in bancos or bancos_configurados():
+		_Coleta(banco, getdate(inicio), hoje, resumo, avisos).executar()
 		if origem_secullum():
 			# folgas e justificativas lançadas no cartão do Secullum (Cartao Secullum Dia)
 			from hrms_secullum_brasil.ingestion.cartao_secullum import sincronizar_cartao
 
-			resumo.erros += sincronizar_cartao(get_client(banco), getdate(inicio), hoje)["erros"]
-
+			resumo.erros += sincronizar_cartao(get_client(banco), getdate(inicio), hoje, avisos)["erros"]
+	resumo.retroativas_itens = avisos.registrar()
+	resumo.retroativas = len(resumo.retroativas_itens)
+	if not gravar_saude:
+		return asdict(resumo)
 	status = "Erro" if resumo.erros else "Sucesso"
 	frappe.db.set_single_value(
 		CONFIG,
@@ -129,8 +141,13 @@ def coletar_batidas(hoje=None) -> dict:
 	return asdict(resumo)
 
 
+def _hora(data_hora) -> str:
+	return frappe.utils.get_datetime(data_hora).strftime("%H:%M") if data_hora else "-"
+
+
 class _Coleta:
-	def __init__(self, banco: str, inicio, fim, resumo: Resumo):
+	def __init__(self, banco: str, inicio, fim, resumo: Resumo, avisos=None):
+		self.avisos = avisos
 		self.banco = banco
 		self.inicio = inicio
 		self.fim = fim
@@ -167,6 +184,7 @@ class _Coleta:
 			if self._bloquear_se_fechado(raw.employee, raw.data, raw.data_hora, "excluída", nome):
 				continue
 			self._substituir(raw, _("Batida excluída no Secullum."))
+			self._anotar(raw.employee, raw.data, _("batida das {0} excluída").format(_hora(raw.data_hora)))
 
 		for batida, nome_antiga in plano.inserir:
 			employee = self._resolver(batida, vinculos)
@@ -181,7 +199,18 @@ class _Coleta:
 				antiga.employee, antiga.data, antiga.data_hora, acao, nome_antiga
 			):
 				continue
-			self._gravar(batida, employee, antiga)
+			if self._gravar(batida, employee, antiga):
+				self._anotar(
+					employee,
+					batida.data,
+					_("batida das {0} {1} (origem: {2})").format(
+						_hora(batida.data_hora), acao, batida.origem or "-"
+					),
+				)
+
+	def _anotar(self, employee, data, texto: str) -> None:
+		if self.avisos:
+			self.avisos.anotar(employee, data, texto)
 
 	# ------------------------------------------------------------------ leitura
 
@@ -309,7 +338,7 @@ class _Coleta:
 		except (frappe.DuplicateEntryError, frappe.UniqueValidationError):
 			frappe.db.rollback(save_point="secullum_batida")
 			self.resumo.inalteradas += 1
-			return
+			return False
 
 		if antiga:
 			frappe.db.set_value(RAW, antiga.name, "substituida_por", raw.name)
@@ -317,6 +346,7 @@ class _Coleta:
 		if self.espelhar and not batida.desconsiderada:
 			self._espelhar(raw.name, batida, employee)
 		marcar_para_reapuracao(employee, batida.data, _("Nova batida importada do Secullum."))
+		return True
 
 	def _espelhar(self, nome_raw: str, batida: BatidaSecullum, employee: str):
 		frappe.db.savepoint("secullum_espelho")

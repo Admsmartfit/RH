@@ -649,23 +649,36 @@ def _segmentos(ctx: dict, data: date) -> list[dict]:
 	return [{"inicio": s.inicio, "fim": s.fim, "tipo": s.tipo} for s in segmentos]
 
 
-def _totais(employee: str, data: date) -> dict | None:
+def _totais_do_periodo(employee: str, inicio: date, fim: date) -> dict[date, dict]:
+	"""Totais e faixas de HE de cada dia do período em duas consultas (auditoria de 02/11/2026: eram duas por dia)."""
 	linhas = frappe.get_list(
 		APURACAO,
-		filters={"employee": employee, "data": data},
-		fields=list(CAMPOS_TOTAIS),
-		limit_page_length=1,
+		filters={"employee": employee, "data": ["between", [inicio, fim]]},
+		fields=list(dict.fromkeys([*CAMPOS_TOTAIS, "data"])),
+		limit_page_length=0,
 	)
-	if not linhas:
-		return None
-	totais = linhas[0]
-	totais["he_faixas"] = frappe.get_all(
+	faixas: dict[str, list] = {}
+	for faixa in frappe.get_all(
 		"Apuracao HE Faixa",
-		filters={"parent": totais.name, "parenttype": APURACAO},
-		fields=["tipo_dia", "percentual", "minutos", "banco"],
+		filters={"parent": ["in", [x.name for x in linhas] or [""]], "parenttype": APURACAO},
+		fields=["parent", "tipo_dia", "percentual", "minutos", "banco"],
 		order_by="idx asc",
-	)
-	return totais
+	):
+		faixas.setdefault(faixa.pop("parent"), []).append(faixa)
+	saida = {}
+	for totais in linhas:
+		totais["he_faixas"] = faixas.get(totais.name, [])
+		saida[getdate(totais.data)] = totais
+	return saida
+
+
+def _totais(employee: str, data: date) -> dict | None:
+	from hrms_secullum_brasil.apuracao.lote import ativo, janela, memo
+
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		return memo(("painel_totais", employee), lambda: _totais_do_periodo(employee, *periodo)).get(data)
+	return _totais_do_periodo(employee, data, data).get(data)
 
 
 def _marca(momento, data: date, virada: int) -> dict:

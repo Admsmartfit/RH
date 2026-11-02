@@ -330,19 +330,19 @@
   {
    "fieldname": "termo_destinatarios_section",
    "fieldtype": "Section Break",
-   "label": "Quem recebe o termo (por empresa)",
-   "description": "Uma ou mais pessoas por empresa recebem o e-mail com o PDF, registram a assinatura e recebem a cobrança diária. Sem ninguém na empresa: o Reporta a do colaborador; sem ele, o e-mail do RH."
+   "label": "Gestores e responsáveis da unidade (por empresa)",
+   "description": "Uma ou mais pessoas por empresa, funcionário ou usuário (gerente terceirizado, contabilidade). Gestor da unidade: vê e trata o ponto de todos da empresa. Avisos: WhatsApp do gestor. Termo: e-mail com o PDF, assinatura e cobrança diária. Empresa sem ninguém: vale o Reporta a do colaborador."
   },
   {
    "fieldname": "termo_destinatarios",
    "fieldtype": "Table",
-   "label": "Destinatários do termo",
+   "label": "Gestores e responsáveis",
    "options": "Destinatario do Termo"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-30 09:00:00.000000",
+ "modified": "2026-10-30 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",

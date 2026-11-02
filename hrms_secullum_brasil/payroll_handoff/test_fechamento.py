@@ -23,6 +23,8 @@ from hrms_secullum_brasil.ingestion.secullum import get_client, resetar_mocks
 from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
 from hrms_secullum_brasil.payroll_handoff.planilha_salarios import _garantir_conta_da_folha
 
+TRAVA_CONFERENCIA = "hrms_secullum_brasil.ingestion.conferencia_secullum.bloqueios_do_fechamento"
+
 EMPRESA = "_Test Company"
 INICIO, FIM = date(2026, 9, 1), date(2026, 9, 30)
 ESTRUTURA = "Estrutura Ponto Teste"
@@ -88,6 +90,10 @@ class TestFechamentoDePonto(FrappeTestCase):
 			frappe.db.delete(doctype)
 		frappe.db.delete("Salary Slip", {"start_date": INICIO})
 		frappe.db.set_value("Company", EMPRESA, {"ponto_fechado_ate": None, "holiday_list_ponto": None})
+		# a trava da conferência com o Secullum tem o próprio teste (ingestion/test_conferencia_secullum.py)
+		trava = patch(TRAVA_CONFERENCIA, return_value=[])
+		trava.start()
+		self.addCleanup(trava.stop)
 		self.employee = self.colaborador()
 
 	def colaborador(self):

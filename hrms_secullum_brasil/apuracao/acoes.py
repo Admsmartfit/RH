@@ -124,15 +124,16 @@ def marcacoes_do_dia(inconsistencia: str) -> list[dict]:
 
 @frappe.whitelist()
 def atribuir_ao_gestor(inconsistencias) -> int:
-	"""Responsável = usuário do gestor (reports_to) do colaborador."""
+	"""Responsável = o (primeiro) gestor da unidade do colaborador; sem gestor na unidade, o Reporta a."""
+	from hrms_secullum_brasil.configuracao_ponto.gestores import usuarios_gestores
+
 	atribuidas = 0
 	for nome in _lista(inconsistencias):
 		inc = frappe.get_doc(INCONSISTENCIA, nome)
 		inc.check_permission("write")
-		gestor = frappe.db.get_value("Employee", inc.employee, "reports_to")
-		usuario = frappe.db.get_value("Employee", gestor, "user_id") if gestor else None
-		if usuario:
-			inc.responsavel = usuario
+		usuarios = usuarios_gestores(inc.employee)
+		if usuarios:
+			inc.responsavel = usuarios[0]
 			inc.save()
 			atribuidas += 1
 	return atribuidas

@@ -1747,3 +1747,76 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   a Horista com a cópia -H do perfil (SEC-2-EFM-H, SEC-2-EFVV-H); 01 a 09/09 reapurados — os atrasos sumiram, ficaram 2
   faltas (dias escalados sem batida). Backup antes. O termo pode ser emitido de novo pelo cartão.
 
+## Conferência com o Secullum, aviso retroativo e trava do fechamento (30/10/2026, pedido do RH)
+
+- Diagnóstico: a coleta (de hora em hora) relê só os últimos `dias_reprocessamento` (7 na operação); mudanças no
+  Secullum em dias mais antigos do período aberto (batida manual, atestado, folga) não chegavam.
+- `engine/conferencia_secullum.py` (puro): início da conferência (dia seguinte ao menor fechamento das empresas do
+  banco, no máximo 62 dias), periodicidade (a cada N dias, folga de 30 min), mudança retroativa (> 3 dias) e as travas
+  do fechamento (conferência há menos de 24h, batidas chegadas depois, divergências sem justificativa).
+- `ingestion/retroativas.py` (`Avisos`): a coleta e o cartão anotam o que mudou (batida incluída/alterada/excluída com
+  hora e origem; folga/justificativa) e, no fim, uma pendência `alteracao_retroativa_secullum` por dia (Média se o dia
+  tem termo aguardando ou correção do programa). Primeira carga de um dia (sem apuração) não é mudança.
+- `coletar_batidas(hoje, inicio, bancos, gravar_saude)`; `ingestion/conferencia_secullum.py`:
+  `conferir_periodo_aberto` (cron 02:30; roda a cada `conferencia_intervalo_dias`; batidas + cartão + afastamentos;
+  WhatsApp/e-mail ao RH com as retroativas), `conferir_agora` (botão na Configuração Secullum),
+  `conferir_fechamento`/`executar_conferencia_do_fechamento` (botão no Fechamento: relê o período, processa a fila de
+  reapuração, compara os totais e grava situação, resumo e divergências) e `bloqueios_do_fechamento` (no before_submit).
+- Configuração Secullum: intervalo (3), máximo de dias (62), aviso retroativo (3), tolerância de totais (5 min),
+  validade da conferência (24h) e a saúde da última conferência. Fechamento de Ponto: situação, data, resumo,
+  divergências e justificativa.
+- Parâmetros vazios ou 0 da Configuração Secullum (campos novos numa configuração já existente) valem o padrão.
+  Testes que concluem Fechamento de Ponto neutralizam a trava (`TRAVA_CONFERENCIA`); ela tem teste próprio.
+- Testes: conferência 4, coleta 11, cartão 6, fechamento 16, painel/espelho 2, estágio 1 OK; engine 1207 OK (99%);
+  `yarn lint`/`yarn build` OK.
+
+## Perfis de acesso (Role Profile) como fixture (30/10/2026)
+
+- `fixtures/role_profile.json`: RH Ponto, RH Saúde, Gestor Ponto, Gestor DP e Colaborador aparecem em "Perfis de
+  Função" no Novo Usuário. O gestor também precisa do usuário ligado ao Employee dele (campo "ID do Usuário") e ser o
+  "Reporta a" da equipe para ver os colaboradores.
+
+## Gerente da unidade (30/10/2026, pedido do RH)
+
+- O gerente (funcionário ou terceirizado) é ligado à empresa na mesma tabela de quem recebe o termo (Configuração
+  Apuração → "Gestores e responsáveis da unidade"), com as marcações novas **Gestor da unidade** (`ve_ponto`) e
+  **Avisos do gestor no WhatsApp** (`recebe_avisos`). Decisão do RH: cadastro por unidade (não preencher o Reporta a
+  de cada um) e lista única com o termo.
+- `configuracao_ponto/gestores.py`: `empresas_do_gestor`, `usuarios_gestores`, `contatos_de_aviso`, `garantir_papel`
+  (ao salvar a configuração, quem é gestor ganha o papel Gestor Ponto). Sem ninguém na unidade, vale o Reporta a.
+- Usam o gestor da unidade: visibilidade (`permissoes.employees_visiveis`, inclusive usuário sem cadastro de
+  funcionário), "Atribuir ao gestor", alertas do banco de horas, regras de WhatsApp e monitoramento de horistas (uma
+  mensagem por gestor) e o reenvio do WhatsApp. O termo só vai para as linhas com e-mail/cobrança marcados.
+- Testes: `configuracao_ponto/test_gestores.py` (3) e os de termo, regras de WhatsApp, monitoramento, banco de horas e
+  painel OK. Operação: backup e migrate em ponto.localhost (a tabela estava vazia; ninguém ganhou acesso sozinho).
+
+## Auditoria de dados, desempenho e cálculo (02/11/2026)
+
+- Relatório em `docs/auditoria-2026-11.md`; script `utils/higienizacao.py` (`diagnosticar`, `corrigir(aplicar=0)`).
+- Operação: nenhum dado duplicado; nenhum erro de cálculo. Pendências propostas (não implementadas): índices
+  compostos (Raw, Apuracao Diaria, Inconsistencia, Reapuracao Pendente, Tratamento), limpeza diária da fila
+  processada, importação do Secullum em fila, `painel.mes` sem consulta por dia, validação de virada do dia em perfil
+  que cruza a meia-noite, decisão jurídica sobre prorrogação noturna em jornada iniciada após 22h.
+
+## Correções da auditoria (02/11/2026, "faça tudo")
+
+- Índices compostos (`on_doctype_update`): Apuracao Diaria (employee, data) e (company, data); Inconsistencia de
+  Ponto (employee, data, status) e (status, tipo, data); Reapuracao Pendente (status, creation) e (employee, data);
+  Tratamento de Ponto (employee, data, docstatus); Secullum Checkin Raw (employee, status, data_hora).
+- Job diário `reapuracao.limpar_fila_processada` (só "Processada" com mais de 30 dias; pendente nunca é apagada).
+- Importação do Secullum: o botão "Conferir" (simulação) vai para a fila (`executar_conferencia`/`simular_importacao`)
+  e a tela recarrega pelo aviso em tempo real `importacao_conferida`. O "Importar" já era em fila.
+- `painel.mes`: totais e faixas de HE do mês em 2 consultas (`_totais_do_periodo`, memo do modo lote).
+  `fechamento.calcular`: nomes e pendências de ASO/treinamento lidos uma vez; `regras_whatsapp.avisos_do_dia`: os
+  cadastros numa consulta.
+- Perfil de Jornada: `engine/jornada_prevista.py:erro_virada` / `virada_sugerida` — período fora do dia de trabalho
+  que começa na hora de virada é erro (sugere a hora). Os 75 perfis da operação passam.
+- Regra Sindical CCT: `prorrogacao_inicio_noturno` (padrão desligado, `defaults_legais.PRORROGACAO_INICIO_NOTURNO`):
+  jornada que começa no período noturno e tem metade ou mais nele também prorroga (decisão do RH: opção na CCT).
+- Descrição de `Company.holiday_list_ponto` com a ordem real das listas de feriados.
+- Orçamento do planejador: continua preferência (decisão do RH, 02/11/2026).
+- Índices criados pelo patch `patches/indices_auditoria.py` (o `on_doctype_update` só roda quando o JSON muda);
+  operação migrada com backup: buscas por colaborador e dia passam de varredura (4.508/11.164 linhas) a 1-2 linhas;
+  painel `mes` 0,18 s → 0,06 s (113 → 56 consultas).
+- Suíte Frappe completa: 464 testes, 1 falha que dependia do relógio (`test_cockpit_escala`, datas de novembro dentro
+  da antecedência de 48h): o teste fixa "agora" em 20/10/2026 e passa. Engine 1214 OK (99%).

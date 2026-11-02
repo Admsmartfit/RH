@@ -33,15 +33,34 @@ frappe.ui.form.on("Fechamento de Ponto", {
 				)
 			);
 		}
-		if (frm.doc.company && frm.doc.periodo_inicio && frm.doc.periodo_fim) {
-			frm.add_custom_button(__("Divergência com o Secullum"), () =>
+		if (frm.doc.docstatus === 0 && !frm.is_new() && frm.doc.company && frm.doc.periodo_inicio && frm.doc.periodo_fim) {
+			// conferência com o Secullum (pedido do RH, 30/10/2026): relê o período, reapura e compara os totais
+			frm.add_custom_button(__("Conferir com o Secullum"), () =>
 				frappe
-					.call("hrms_secullum_brasil.ingestion.divergencia_totais.gerar_divergencia_totais", {
-						company: frm.doc.company,
-						periodo_inicio: frm.doc.periodo_inicio,
-						periodo_fim: frm.doc.periodo_fim,
+					.call("hrms_secullum_brasil.ingestion.conferencia_secullum.conferir_fechamento", { fechamento: frm.doc.name })
+					.then((r) => {
+						frappe.show_alert({ message: r.message, indicator: "blue" });
+						acompanhar_conferencia(frm);
 					})
-					.then((r) => frappe.show_alert(r.message))
+			);
+			const cores = { Concluída: frm.doc.divergencias ? "orange" : "green", Erro: "red", Conferindo: "blue", "Na fila": "blue" };
+			if (frm.doc.conferencia_situacao) {
+				frm.dashboard.set_headline_alert(
+					`${__("Conferência com o Secullum")}: ${frappe.utils.escape_html(frm.doc.conferencia_situacao)}${
+						frm.doc.conferencia_resumo ? ` — ${frappe.utils.escape_html(frm.doc.conferencia_resumo)}` : ""
+					}`,
+					cores[frm.doc.conferencia_situacao] || "blue"
+				);
+			}
+			if (["Na fila", "Conferindo"].includes(frm.doc.conferencia_situacao)) acompanhar_conferencia(frm);
+		}
+		if (frm.doc.company && frm.doc.periodo_inicio && frm.doc.periodo_fim) {
+			frm.add_custom_button(__("Divergências com o Secullum"), () =>
+				frappe.set_route("List", "Divergencia Totais Secullum", {
+					company: frm.doc.company,
+					periodo_inicio: frm.doc.periodo_inicio,
+					periodo_fim: frm.doc.periodo_fim,
+				})
 			);
 		}
 		if (frm.doc.docstatus === 1) {
@@ -51,6 +70,19 @@ frappe.ui.form.on("Fechamento de Ponto", {
 		}
 	},
 });
+
+// acompanha a conferência em segundo plano até concluir (recarrega o fechamento)
+function acompanhar_conferencia(frm) {
+	if (frm._conferencia_timer) return;
+	frm._conferencia_timer = setInterval(async () => {
+		const { message: d } = await frappe.db.get_value("Fechamento de Ponto", frm.doc.name, "conferencia_situacao");
+		if (!["Na fila", "Conferindo"].includes(d?.conferencia_situacao)) {
+			clearInterval(frm._conferencia_timer);
+			frm._conferencia_timer = null;
+			frm.reload_doc();
+		}
+	}, 5000);
+}
 
 // docs/PRD-cartao-ponto.md, CP-08: cada colaborador com pendência abre o cartão ponto no primeiro dia com problema
 function pendencias_guiadas(frm) {

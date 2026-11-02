@@ -177,8 +177,8 @@ def destinatarios(emp) -> list[dict]:
 	Configuração Apuração (colaboradores ou usuários, que podem não ser funcionários); sem ninguém, o Reporta a."""
 	saida = []
 	for linha in _cfg().get("termo_destinatarios") or []:
-		if linha.company != emp.company:
-			continue
+		if linha.company != emp.company or not (cint(linha.recebe_email) or cint(linha.recebe_whatsapp)):
+			continue  # o gestor da unidade só para ver o ponto não recebe o termo
 		contato = contato_do_destinatario(linha)
 		saida.append(
 			{

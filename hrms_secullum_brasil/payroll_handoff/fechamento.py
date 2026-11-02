@@ -530,7 +530,29 @@ def calcular(doc) -> None:
 	doc.set("lancamentos", [])
 	avisos = []
 	mes_inteiro = inicio.day == 1 and (fim + timedelta(days=1)).day == 1 and inicio.month == fim.month
-	for employee in colaboradores_do_periodo(doc.company, inicio, fim):
+	colaboradores = colaboradores_do_periodo(doc.company, inicio, fim)
+	# nomes e pendências de ASO/treinamento de todos de uma vez (auditoria de 02/11/2026: eram por colaborador)
+	nomes = dict(
+		frappe.get_all(
+			"Employee",
+			filters={"name": ["in", colaboradores or [""]]},
+			fields=["name", "employee_name"],
+			as_list=True,
+		)
+	)
+	vencidos = {
+		(x.employee, x.tipo)
+		for x in frappe.get_all(
+			"Inconsistencia de Ponto",
+			filters={
+				"employee": ["in", colaboradores or [""]],
+				"tipo": ["in", ["aso_vencido", "treinamento_vencido"]],
+				"status": "Aberta",
+			},
+			fields=["employee", "tipo"],
+		)
+	}
+	for employee in colaboradores:
 		if mes_inteiro:
 			avaliar_colaborador(employee, inicio.year, inicio.month)
 		base, minutos, info = consolidar(employee, inicio, fim)
@@ -539,14 +561,12 @@ def calcular(doc) -> None:
 			("aso_vencido", "ASO vencido"),
 			("treinamento_vencido", "treinamento vencido"),
 		):  # AJ-19
-			if frappe.db.exists(
-				"Inconsistencia de Ponto", {"employee": employee, "tipo": tipo, "status": "Aberta"}
-			):
-				avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {texto}")
+			if (employee, tipo) in vencidos:
+				avisos.append(f"{nomes.get(employee)}: {texto}")
 		for aviso_risco in info.get("avisos") or []:  # AJ-17: laudo vencido ou ausente
-			avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {aviso_risco}")
+			avisos.append(f"{nomes.get(employee)}: {aviso_risco}")
 		if aviso:
-			avisos.append(f"{frappe.db.get_value('Employee', employee, 'employee_name')}: {aviso}")
+			avisos.append(f"{nomes.get(employee)}: {aviso}")
 		premios, coparticipacao = premios_e_coparticipacao(employee, inicio, fim)
 		lancamentos: list[LancamentoValorado] = valorar(
 			base, minutos, premios=premios, coparticipacao=coparticipacao

@@ -22,6 +22,14 @@
   "pendencias_section",
   "pendencias",
   "avisos",
+  "conferencia_section",
+  "conferencia_situacao",
+  "conferido_em",
+  "divergencias",
+  "column_break_conferencia",
+  "conferencia_resumo",
+  "conferencia_erro",
+  "justificativa_divergencias",
   "colaboradores_section",
   "colaboradores",
   "ajustes_manuais_section",
@@ -143,6 +151,59 @@
    "no_copy": 1
   },
   {
+   "fieldname": "conferencia_section",
+   "fieldtype": "Section Break",
+   "label": "Conferência com o Secullum",
+   "description": "Antes de fechar: botão \"Conferir com o Secullum\" (relê o período, reapura e compara os totais). Só fecha com a conferência recente, sem batida chegada depois e sem divergência — ou com a divergência justificada."
+  },
+  {
+   "fieldname": "conferencia_situacao",
+   "fieldtype": "Select",
+   "label": "Situação da conferência",
+   "options": "\nNa fila\nConferindo\nConcluída\nErro",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "conferido_em",
+   "fieldtype": "Datetime",
+   "label": "Conferido em",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "divergencias",
+   "fieldtype": "Int",
+   "label": "Divergências de totais",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_conferencia",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "conferencia_resumo",
+   "fieldtype": "Small Text",
+   "label": "Resumo da conferência",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "conferencia_erro",
+   "fieldtype": "Small Text",
+   "label": "Erro da conferência",
+   "read_only": 1,
+   "no_copy": 1,
+   "depends_on": "eval:doc.conferencia_situacao=='Erro'"
+  },
+  {
+   "fieldname": "justificativa_divergencias",
+   "fieldtype": "Small Text",
+   "label": "Justificativa das divergências",
+   "description": "Obrigatória para fechar com divergência de totais com o Secullum (ex.: regra diferente no Secullum)."
+  },
+  {
    "fieldname": "colaboradores_section",
    "fieldtype": "Section Break",
    "label": "Colaboradores"
@@ -191,7 +252,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-22 12:00:00.000000",
+ "modified": "2026-10-30 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Payroll Handoff",
  "name": "Fechamento de Ponto",

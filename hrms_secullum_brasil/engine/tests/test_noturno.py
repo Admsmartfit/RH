@@ -43,3 +43,23 @@ def test_sem_pares():
 @pytest.mark.parametrize(("real", "ficto"), [(420, 480), (540, 617), (0, 0), (35, 40), (1, 1)])
 def test_hora_ficta(real, ficto):
 	assert minutos_fictos(real, 52.5) == ficto
+
+
+# ------------------------------------------------------------------ prorrogação ampliada (opção da CCT, 02/11/2026)
+
+AMPLIADA = RegraApuracao(prorrogacao_inicio_noturno=True)
+
+
+def test_jornada_iniciada_as_23_so_prorroga_com_a_opcao():
+	assert minutos_noturnos([(23 * H, 31 * H)], R) == 360  # 23-05, sem prorrogação (leitura literal)
+	assert minutos_noturnos([(23 * H, 31 * H)], AMPLIADA) == 360 + 120  # + 05-07
+
+
+def test_entrada_de_madrugada_nao_vira_noturno_o_dia_todo():
+	# abre a academia às 04:50 e sai às 13:00: só 10 min no período noturno
+	assert minutos_noturnos([(4 * H + 50, 13 * H)], AMPLIADA) == 10
+
+
+def test_opcao_ampliada_nao_vale_sem_a_prorrogacao():
+	regra = RegraApuracao(prorrogacao_noturna=False, prorrogacao_inicio_noturno=True)
+	assert minutos_noturnos([(23 * H, 31 * H)], regra) == 360

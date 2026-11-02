@@ -29,6 +29,8 @@ def minutos_noturnos(pares: list[Par], regra: RegraApuracao) -> int:
 
 	Prorrogação (Súmula 60, II): se a jornada do dia cobriu integralmente um período noturno (começou
 	até o início dele e terminou depois do fim), o trabalho após o fim também é noturno.
+	Com `prorrogacao_inicio_noturno` (opção da CCT), vale também para a jornada que começa dentro do período noturno
+	e é predominantemente noturna (metade ou mais do trabalhado nele), como 23h-07h; 04:50-13:00 não.
 	"""
 	if not pares:
 		return 0
@@ -37,11 +39,23 @@ def minutos_noturnos(pares: list[Par], regra: RegraApuracao) -> int:
 	total = sum(_sobreposicao(pares, inicio, fim) for inicio, fim in janelas)
 	if regra.prorrogacao_noturna:
 		for indice, (inicio, fim) in enumerate(janelas):
-			if inicio_jornada <= inicio and fim_jornada > fim:
+			if fim_jornada > fim and (
+				inicio_jornada <= inicio
+				or _predominantemente_noturna(pares, regra, inicio, fim, inicio_jornada)
+			):
 				limite = janelas[indice + 1][0] if indice + 1 < len(janelas) else fim_jornada
 				total += _sobreposicao(pares, fim, min(limite, fim_jornada))
 				break
 	return total
+
+
+def _predominantemente_noturna(
+	pares: list[Par], regra: RegraApuracao, inicio: int, fim: int, entrada: int
+) -> bool:
+	if not regra.prorrogacao_inicio_noturno or not inicio < entrada < fim:
+		return False
+	trabalhado = sum(saida - e for e, saida in pares)
+	return 2 * _sobreposicao(pares, inicio, fim) >= trabalhado
 
 
 def minutos_fictos(minutos_reais: int, minutos_hora_noturna: float) -> int:

@@ -1,6 +1,7 @@
 """Assistente (IS-11, Etapa 11) e revisão pós-importação (Etapa 12), com o mock nas amostras reais."""
 
 from collections import Counter
+from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
@@ -47,7 +48,12 @@ class TestAssistenteImportacao(FrappeTestCase):
 
 	def test_2_conferir_nao_grava_nada(self):
 		antes = self.importados()
-		dados = assistente.conferir()
+		with patch.object(
+			frappe, "enqueue"
+		) as fila:  # o botão só enfileira (pode passar do tempo da requisição)
+			assistente.conferir()
+		self.assertTrue(fila.call_args.args[0].endswith(".executar_conferencia"))
+		dados = assistente.simular_importacao()
 		self.assertEqual(self.importados(), antes)
 		self.assertGreater(dados["secullum"]["Funcionários ativos"], 0)
 		self.assertGreater(dados["importar"]["Ativos"], 0)

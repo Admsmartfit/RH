@@ -1,0 +1,96 @@
+[
+ {
+  "doctype": "Role Profile",
+  "name": "RH Ponto",
+  "role_profile": "RH Ponto",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "RH Ponto"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "HR User"
+   }
+  ],
+  "modified": "2026-10-30 16:00:00.000000"
+ },
+ {
+  "doctype": "Role Profile",
+  "name": "RH Saúde",
+  "role_profile": "RH Saúde",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "RH Saúde"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "RH Ponto"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "HR User"
+   }
+  ],
+  "modified": "2026-10-30 16:00:00.000000"
+ },
+ {
+  "doctype": "Role Profile",
+  "name": "Gestor Ponto",
+  "role_profile": "Gestor Ponto",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Gestor Ponto"
+   }
+  ],
+  "modified": "2026-10-30 16:00:00.000000"
+ },
+ {
+  "doctype": "Role Profile",
+  "name": "Gestor DP",
+  "role_profile": "Gestor DP",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Gestor DP"
+   },
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "HR User"
+   }
+  ],
+  "modified": "2026-10-30 16:00:00.000000"
+ },
+ {
+  "doctype": "Role Profile",
+  "name": "Colaborador",
+  "role_profile": "Colaborador",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Colaborador"
+   }
+  ],
+  "modified": "2026-10-30 16:00:00.000000"
+ }
+]

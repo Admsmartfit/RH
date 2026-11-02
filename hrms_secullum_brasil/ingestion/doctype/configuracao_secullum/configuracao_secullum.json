@@ -31,6 +31,16 @@
   "ultima_coleta_status",
   "column_break_saude",
   "ultima_coleta_resumo",
+  "conferencia_section",
+  "conferencia_intervalo_dias",
+  "conferencia_dias_maximo",
+  "aviso_retroativo_dias",
+  "conferencia_tolerancia_min",
+  "conferencia_validade_horas",
+  "column_break_conferencia",
+  "ultima_conferencia",
+  "ultima_conferencia_status",
+  "ultima_conferencia_resumo",
   "totais_section",
   "mapeamento_totais"
  ],
@@ -190,6 +200,69 @@
    "read_only": 1
   },
   {
+   "fieldname": "conferencia_section",
+   "fieldtype": "Section Break",
+   "label": "Conferência com o Secullum",
+   "description": "De madrugada, a cada N dias, o programa relê todo o período aberto no Secullum (batidas, cartão e afastamentos) e avisa o RH do que mudou em dias antigos. O Fechamento de Ponto só fecha com uma conferência recente."
+  },
+  {
+   "default": "3",
+   "fieldname": "conferencia_intervalo_dias",
+   "fieldtype": "Int",
+   "label": "Conferência completa a cada (dias)",
+   "non_negative": 1
+  },
+  {
+   "default": "62",
+   "fieldname": "conferencia_dias_maximo",
+   "fieldtype": "Int",
+   "label": "Período aberto relido no máximo (dias)",
+   "non_negative": 1
+  },
+  {
+   "default": "3",
+   "fieldname": "aviso_retroativo_dias",
+   "fieldtype": "Int",
+   "label": "Avisar mudança em dia com mais de (dias)",
+   "non_negative": 1
+  },
+  {
+   "default": "5",
+   "fieldname": "conferencia_tolerancia_min",
+   "fieldtype": "Int",
+   "label": "Tolerância de divergência de totais (min)",
+   "non_negative": 1
+  },
+  {
+   "default": "24",
+   "fieldname": "conferencia_validade_horas",
+   "fieldtype": "Int",
+   "label": "Conferência vale para fechar por (horas)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_conferencia",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ultima_conferencia",
+   "fieldtype": "Datetime",
+   "label": "Última conferência completa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ultima_conferencia_status",
+   "fieldtype": "Data",
+   "label": "Situação",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ultima_conferencia_resumo",
+   "fieldtype": "Small Text",
+   "label": "Resumo",
+   "read_only": 1
+  },
+  {
    "fieldname": "totais_section",
    "fieldtype": "Section Break",
    "label": "Relatório de divergência (Calcular/SomenteTotais)"
@@ -212,7 +285,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-27 17:00:00.000000",
+ "modified": "2026-10-30 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Ingestion",
  "name": "Configuracao Secullum",

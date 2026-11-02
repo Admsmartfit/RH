@@ -1,7 +1,7 @@
 """API do cockpit de escalas (docs/PRD-cockpit-escalas.md, CE-01, CE-03 a CE-07, CE-10)."""
 
 import json
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import patch
 
 import frappe
@@ -60,6 +60,11 @@ class TestCockpitEscala(FrappeTestCase):
 			)
 
 	def setUp(self):
+		# "agora" fixo antes de novembro: as datas de teste (04 e 07/11/2026) não podem cair na antecedência mínima
+		# de 48h conforme o calendário real avança
+		agora = patch.object(ce, "now_datetime", return_value=datetime(2026, 10, 20, 9, 0))
+		agora.start()
+		self.addCleanup(agora.stop)
 		self.bia = self.pessoa()  # nova a cada teste: as escalas gravadas não se misturam
 
 	def alteracao(self, data=SABADO, periodos=None):

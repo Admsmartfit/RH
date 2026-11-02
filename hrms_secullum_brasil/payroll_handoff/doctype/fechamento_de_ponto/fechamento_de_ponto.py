@@ -65,7 +65,10 @@ class FechamentodePonto(Document):
 		return self
 
 	def before_submit(self):
+		from hrms_secullum_brasil.ingestion.conferencia_secullum import bloqueios_do_fechamento
+
 		bloqueios = pendencias(self.company, self.periodo_inicio, self.periodo_fim)
+		bloqueios += bloqueios_do_fechamento(self)  # conferência com o Secullum (pedido do RH, 30/10/2026)
 		if bloqueios:
 			frappe.throw(bloqueios, title=_("O período não pode ser fechado"), as_list=True)
 		calcular(self)

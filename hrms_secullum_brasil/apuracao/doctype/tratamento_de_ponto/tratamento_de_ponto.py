@@ -161,3 +161,8 @@ def _cct(employee: str, data):
 		return get_regra_vigente(employee, data)
 	except RegraAmbiguaError:
 		return None
+
+
+def on_doctype_update():
+	# auditoria 02/11/2026: tratamentos do dia na montagem da apuração
+	frappe.db.add_index("Tratamento de Ponto", ["employee", "data", "docstatus"])

@@ -16,6 +16,7 @@ from frappe.utils import cint, getdate, now_datetime, today
 
 from hrms_secullum_brasil.apuracao import whatsapp
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
+from hrms_secullum_brasil.configuracao_ponto.gestores import contatos_de_aviso
 from hrms_secullum_brasil.configuracao_ponto.regras import RegraAmbiguaError, get_regra_vigente
 from hrms_secullum_brasil.engine import comunicacao as com
 from hrms_secullum_brasil.engine import defaults_legais as d
@@ -168,7 +169,7 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 	emp = frappe.db.get_value(
 		"Employee",
 		alerta.employee,
-		["first_name", "employee_name", "cell_number", "reports_to"],
+		["name", "first_name", "employee_name", "cell_number", "reports_to", "company"],
 		as_dict=True,
 	)
 	nomes = []
@@ -180,18 +181,15 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 		dias=mh.dias_curtos(datas),
 	)
 	nomes.append(whatsapp.criar(alerta.employee, "Colaborador", emp.cell_number, texto, alerta.name))
-	if cfg.avisar_gestor and emp.reports_to:
-		gestor = frappe.db.get_value(
-			"Employee", emp.reports_to, ["first_name", "employee_name", "cell_number"], as_dict=True
-		)
+	for gestor in contatos_de_aviso(emp) if cfg.avisar_gestor else []:
 		texto_gestor = mh.montar_mensagem(
 			cfg.mensagem_gestor,
-			primeiro_nome=com.primeiro_nome(gestor.first_name or gestor.employee_name),
+			primeiro_nome=gestor["primeiro_nome"],
 			colaborador=com.nome_proprio(emp.employee_name),
 			ocorrencias=len(datas),
 			dias=mh.dias_curtos(datas),
 		)
-		nomes.append(whatsapp.criar(alerta.employee, "Gestor", gestor.cell_number, texto_gestor, alerta.name))
+		nomes.append(whatsapp.criar(alerta.employee, "Gestor", gestor["celular"], texto_gestor, alerta.name))
 	for nome in nomes:
 		whatsapp.enviar(nome)
 	return nomes

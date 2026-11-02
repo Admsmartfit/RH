@@ -65,9 +65,11 @@ class TestPerfilDeJornada(FrappeTestCase):
 		self.assertEqual(perfil.dias[0].minutos_previstos, 480)
 
 	def test_jornada_noturna_atravessa_meia_noite(self):
-		perfil = criar_perfil(
-			codigo_unico(), dias=[{"dia_semana": "Segunda-feira", "entrada1": "22:00", "saida1": "05:00"}]
-		)
+		noturno = [{"dia_semana": "Segunda-feira", "entrada1": "22:00", "saida1": "05:00"}]
+		# com a virada às 00:00 o turno seria partido em dois dias (auditoria de 02/11/2026)
+		with self.assertRaisesRegex(frappe.ValidationError, "sugestão: 13"):
+			criar_perfil(codigo_unico(), dias=noturno)
+		perfil = criar_perfil(codigo_unico(), dias=noturno, hora_virada_dia=13)
 		self.assertEqual(perfil.dias[0].minutos_previstos, 420)
 
 	def test_periodo_incompleto_bloqueia(self):

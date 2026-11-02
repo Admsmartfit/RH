@@ -26,3 +26,5 @@ class SecullumCheckinRaw(Document):
 
 def on_doctype_update():
 	frappe.db.add_index("Secullum Checkin Raw", ["id_banco", "status", "data"])
+	# auditoria 02/11/2026: batidas do dia de trabalho por colaborador (adaptador.marcacoes)
+	frappe.db.add_index("Secullum Checkin Raw", ["employee", "status", "data_hora"])

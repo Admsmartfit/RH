@@ -9,6 +9,7 @@ fechado). O efeito na jornada fica em `engine/cartao.py`.
 from datetime import timedelta
 
 import frappe
+from frappe import _
 from frappe.utils import getdate
 
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
@@ -24,8 +25,9 @@ def _justificativas_texto(dia) -> str | None:
 	return ",".join(f"{g}:{j}" for g, j in sorted(dia.justificativas.items())) or None
 
 
-def sincronizar_cartao(client, inicio, fim) -> dict:
-	"""Lê o cartão de [inicio, fim] e grava as mudanças. Devolve {gravados, removidos, erros}."""
+def sincronizar_cartao(client, inicio, fim, avisos=None) -> dict:
+	"""Lê o cartão de [inicio, fim] e grava as mudanças. Devolve {gravados, removidos, erros}. `avisos`: anota as
+	mudanças em dias antigos (ingestion/retroativas.py)."""
 	inicio, fim = getdate(inicio), getdate(fim)
 	por_id = dict(
 		frappe.get_all(
@@ -76,6 +78,10 @@ def sincronizar_cartao(client, inicio, fim) -> dict:
 				frappe.get_doc({"doctype": CARTAO, **valores}).insert(ignore_permissions=True)
 			resultado["gravados"] += 1
 			_reapurar(employee, cartao.data)
+			if avisos:
+				avisos.anotar(
+					employee, cartao.data, _("folga ou justificativa lançada no cartão do Secullum")
+				)
 		dia += timedelta(days=1)
 	for chave, antigo in existentes.items():
 		if chave in vistos or getdate(antigo.data) not in dias_ok:
@@ -83,6 +89,10 @@ def sincronizar_cartao(client, inicio, fim) -> dict:
 		frappe.db.delete(CARTAO, {"name": antigo.name})
 		resultado["removidos"] += 1
 		_reapurar(antigo.employee, antigo.data)
+		if avisos:
+			avisos.anotar(
+				antigo.employee, antigo.data, _("folga ou justificativa retirada do cartão do Secullum")
+			)
 	return resultado
 
 

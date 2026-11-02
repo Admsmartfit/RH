@@ -72,6 +72,9 @@ NOTURNO_FIM = "05:00:00"
 MINUTOS_HORA_NOTURNA = 52.5  # hora ficta de 52min30s
 PERCENTUAL_ADICIONAL_NOTURNO = 20
 PRORROGACAO_NOTURNA = True  # Súmula 60, II TST
+# Leitura ampliada (decisão do jurídico, desligada por padrão): jornada que começa no período noturno e é
+# predominantemente noturna (ex.: 23h-07h) também tem a prorrogação após as 05h.
+PRORROGACAO_INICIO_NOTURNO = False
 
 # 5.5 Intrajornada — Art. 71 CLT
 JORNADA_SEM_INTERVALO_ATE_MIN = 240  # até 4h: intervalo não obrigatório

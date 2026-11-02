@@ -232,11 +232,9 @@ def alertar_saldos_a_vencer(hoje=None) -> int:
 
 
 def notificar_rh_e_gestor(employee: str, assunto: str) -> None:
-	gestor = frappe.db.get_value("Employee", employee, "reports_to")
-	destinatarios = set(usuarios_rh())
-	usuario_gestor = frappe.db.get_value("Employee", gestor, "user_id") if gestor else None
-	if usuario_gestor:
-		destinatarios.add(usuario_gestor)
+	from hrms_secullum_brasil.configuracao_ponto.gestores import usuarios_gestores
+
+	destinatarios = set(usuarios_rh()) | set(usuarios_gestores(employee))
 	for usuario in sorted(destinatarios):
 		frappe.get_doc(
 			{

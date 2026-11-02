@@ -36,3 +36,15 @@ frappe.ui.form.on("Configuracao Secullum", {
 		}
 	},
 });
+
+// conferência completa com o Secullum (pedido do RH, 30/10/2026)
+frappe.ui.form.on("Configuracao Secullum", {
+	refresh(frm) {
+		if (!frm.doc.ativo) return;
+		frm.add_custom_button(__("Conferir agora o período aberto"), () =>
+			frappe
+				.call("hrms_secullum_brasil.ingestion.conferencia_secullum.conferir_agora")
+				.then((r) => frappe.show_alert({ message: r.message, indicator: "blue" }))
+		);
+	},
+});

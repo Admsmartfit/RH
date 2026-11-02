@@ -85,3 +85,24 @@ def minutos_previstos(periodos: list[Periodo]) -> int:
 def intervalos(periodos: list[Periodo]) -> list[int]:
 	"""Duração, em minutos, dos intervalos entre períodos consecutivos."""
 	return [b.inicio - a.fim for a, b in pairwise(periodos)]
+
+
+def virada_sugerida(periodos: list[Periodo]) -> int:
+	"""Hora de virada no meio da folga entre a saída do dia e a entrada do dia seguinte."""
+	inicio, fim = periodos[0].inicio, periodos[-1].fim
+	return ((fim + inicio + MINUTOS_DIA) // 2 // 60) % 24
+
+
+def erro_virada(periodos: list[Periodo], hora_virada: int) -> str | None:
+	"""Auditoria de 02/11/2026: a apuração junta as batidas de [virada, virada + 24h) num dia de trabalho. Um período
+	fora dessa janela (ex.: 22:00-06:00 com virada 0) parte o turno em dois dias e deixa os dois com marcação ímpar."""
+	if not periodos:
+		return None
+	janela_inicio = hora_virada * 60
+	if periodos[0].inicio >= janela_inicio and periodos[-1].fim <= janela_inicio + MINUTOS_DIA:
+		return None
+	sugestao = virada_sugerida(periodos)
+	return (
+		f"o horário sai do dia de trabalho que começa na hora de virada ({hora_virada:02d}:00) e o turno seria partido "
+		f"em dois dias. Ajuste a hora de virada do dia (sugestão: {sugestao})."
+	)

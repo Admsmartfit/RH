@@ -101,6 +101,7 @@ def regra_de_cct(cct) -> RegraApuracao:
 		noturno_fim=minutos_do_dia(cct.noturno_fim),
 		minutos_hora_noturna=flt(cct.minutos_hora_noturna),
 		prorrogacao_noturna=bool(cint(cct.prorrogacao_noturna)),
+		prorrogacao_inicio_noturno=bool(cint(cct.get("prorrogacao_inicio_noturno"))),
 		jornada_sem_intervalo_ate=cint(cct.jornada_sem_intervalo_ate),
 		intervalo_curto=cint(cct.intervalo_curto),
 		jornada_intervalo_curto_ate=cint(cct.jornada_intervalo_curto_ate),

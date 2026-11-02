@@ -470,6 +470,34 @@ afastamentos com essa justificativa. O motivo em texto livre do afastamento não
 **Dia neutro (rodízio):** os horários do Secullum com sábado ou domingo "neutro" entram com o dia marcado como
 Neutro no Perfil de Jornada (ver "Escala do mês e trocas de escala").
 
+## Gerente da unidade (acesso do gestor)
+
+O gerente é ligado à **unidade (empresa)**, não a cada colaborador: todos da empresa — inclusive quem for importado
+do Secullum depois — passam a aparecer para ele.
+
+1. Crie o usuário (Usuário → Novo). Para o gerente terceirizado basta o usuário; para o gerente funcionário, ligue o
+   usuário no campo **ID do Usuário** do cadastro dele.
+2. Em **Configuração Apuração → Gestores e responsáveis da unidade**, adicione uma linha: a empresa, "Quem"
+   (Colaborador — escolha o cargo e a pessoa — ou Usuário) e marque **Gestor da unidade**. Ao salvar, a pessoa ganha o
+   papel Gestor Ponto.
+3. Marcações de cada linha: **Gestor da unidade** (vê e trata o ponto da empresa, é o responsável das pendências e
+   recebe os alertas do banco de horas), **Avisos do gestor no WhatsApp** (regras de WhatsApp e monitoramento de
+   horistas), **E-mail com o termo** e **Cobrança no WhatsApp** (termo de ocorrências).
+4. Uma empresa pode ter mais de um gerente, e um gerente pode cuidar de mais de uma empresa (uma linha para cada).
+   A contabilidade ou o RH terceirizado que só recebem o termo ficam com "Gestor da unidade" desmarcado.
+
+Empresa sem ninguém marcado continua usando o "Reporta a" do cadastro do colaborador.
+
+## Turno noturno: hora de virada e prorrogação
+
+- **Hora de virada do dia** (Perfil de Jornada): as batidas antes dessa hora pertencem ao dia anterior. Com virada 0
+  (o padrão), um turno 22:00–06:00 seria partido em dois dias; por isso o perfil não salva nesse caso e sugere a hora
+  certa (no exemplo, 14). Turnos de dia, inclusive a abertura às 05:00, ficam com virada 0.
+- **Prorrogação do adicional noturno** (Regra Sindical CCT): ligada, quem trabalhou o período noturno inteiro (entrou
+  até as 22h) e continuou depois das 05h recebe noturno também depois das 05h (Súmula 60, II). A opção **"Prorrogação
+  também para jornada iniciada no período noturno"** (desligada) estende para a jornada que começa depois das 22h e é
+  predominantemente noturna, como 23h–07h. Ligue só por orientação do jurídico.
+
 ## Cadastros e regras (RH Ponto)
 
 | Cadastro | Para quê |
@@ -536,6 +564,20 @@ Painel → **Planejador** (ou o botão "Planejador 5x2" na tela Escalas). É **s
 O índice de cada instrutor (0 a 100) vem do histórico de 90 dias: assiduidade, pontualidade, inconsistências e
 disponibilidade (convites aceitos). Mudança de contrato (ampliar a carga) é só recomendação: a Alteração de Jornada
 continua sendo aberta à mão.
+
+## Conferência com o Secullum (para não divergir)
+
+- **De hora em hora** o programa busca as batidas dos últimos dias. **A cada 3 dias, de madrugada**, ele relê **todo o
+  período ainda aberto** no Secullum (batidas, folgas e justificativas do cartão, atestados/afastamentos). Para rodar na
+  hora: Configuração Secullum → **Conferir agora o período aberto**.
+- Se alguém mudar no Secullum um **dia já passado** (mais de 3 dias), o programa reapura o dia e abre a pendência
+  **"Mudança retroativa no Secullum"** dizendo o que mudou — e se o dia já tinha termo aguardando assinatura ou
+  correção feita no programa. O RH recebe um WhatsApp/e-mail com o resumo.
+- **Para fechar o ponto:** no Fechamento de Ponto, clique em **Conferir com o Secullum** (relê o período, reapura e
+  compara os totais). O fechamento só é concluído com a conferência feita nas últimas 24h, sem batida chegada depois
+  dela e sem divergência de totais — ou com a divergência justificada no campo do fechamento.
+- Ao fechar no programa, bloqueie também o período no Secullum: o que mudar lá depois vira a pendência "Batida em
+  período fechado".
 
 ## Quem não cumpre a escala
 

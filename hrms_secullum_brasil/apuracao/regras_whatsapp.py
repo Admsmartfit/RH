@@ -11,6 +11,7 @@ from frappe import _
 from frappe.utils import cint, getdate, now_datetime, today
 
 from hrms_secullum_brasil.apuracao import whatsapp
+from hrms_secullum_brasil.configuracao_ponto.gestores import contatos_de_aviso
 from hrms_secullum_brasil.engine import comunicacao as com
 from hrms_secullum_brasil.engine.monitoramento_horista import montar_mensagem
 
@@ -42,29 +43,30 @@ def avisos_do_dia(regra, dia) -> list[dict]:
 	if not tipo:
 		return []
 	empresas, cargos = _filtros(regra)
-	saida = []
-	for inc in frappe.get_all(
+	com_pendencia = frappe.get_all(
 		"Inconsistencia de Ponto",
 		filters={"tipo": tipo, "status": "Aberta", "data": getdate(dia)},
-		fields=["employee", "data"],
+		pluck="employee",
 		distinct=True,
+	)
+	# os cadastros numa consulta só (auditoria de 02/11/2026: era uma por pendência)
+	saida = []
+	for emp in frappe.get_all(
+		"Employee",
+		filters={"name": ["in", com_pendencia or [""]], "status": "Active"},
+		fields=[
+			"name",
+			"first_name",
+			"employee_name",
+			"company",
+			"designation",
+			"cell_number",
+			"reports_to",
+			"status",
+		],
+		order_by="name asc",
 	):
-		emp = frappe.db.get_value(
-			"Employee",
-			inc.employee,
-			[
-				"name",
-				"first_name",
-				"employee_name",
-				"company",
-				"designation",
-				"cell_number",
-				"reports_to",
-				"status",
-			],
-			as_dict=True,
-		)
-		if emp and emp.status == "Active" and com.alcanca(emp.company, emp.designation, empresas, cargos):
+		if com.alcanca(emp.company, emp.designation, empresas, cargos):
 			saida.append(emp)
 	return saida
 
@@ -86,20 +88,19 @@ def avisar(regra, emp, dia, valores: dict, alerta: str | None = None) -> list[st
 	nomes = []
 	destinos = []
 	if cint(regra.para_colaborador):
-		destinos.append(("Colaborador", emp.cell_number, valores))
-	if cint(regra.para_gestor) and emp.reports_to:
-		gestor = frappe.db.get_value(
-			"Employee", emp.reports_to, ["first_name", "employee_name", "cell_number"], as_dict=True
-		)
+		destinos.append(("Colaborador", emp.cell_number, valores, "Colaborador"))
+	for gestor in contatos_de_aviso(emp) if cint(regra.para_gestor) else []:
+		# vários gestores na unidade: uma mensagem (e uma chave) para cada um
 		destinos.append(
 			(
 				"Gestor",
-				gestor.cell_number,
-				{**valores, "primeiro_nome": com.primeiro_nome(gestor.first_name or gestor.employee_name)},
+				gestor["celular"],
+				{**valores, "primeiro_nome": gestor["primeiro_nome"]},
+				gestor["chave"],
 			)
 		)
-	for destinatario, numero, dados in destinos:
-		chave = com.chave(regra.name, emp.name, dia, destinatario)
+	for destinatario, numero, dados, quem in destinos:
+		chave = com.chave(regra.name, emp.name, dia, quem)
 		if frappe.db.exists(whatsapp.NOTIFICACAO, {"chave": chave}):
 			continue
 		modelo = (

@@ -41,6 +41,7 @@ DEFAULTS_CCT = {
 	"minutos_hora_noturna": d.MINUTOS_HORA_NOTURNA,
 	"percentual_adicional_noturno": d.PERCENTUAL_ADICIONAL_NOTURNO,
 	"prorrogacao_noturna": d.PRORROGACAO_NOTURNA,
+	"prorrogacao_inicio_noturno": d.PRORROGACAO_INICIO_NOTURNO,
 	"jornada_sem_intervalo_ate": d.JORNADA_SEM_INTERVALO_ATE_MIN,
 	"intervalo_curto": d.INTERVALO_CURTO_MIN,
 	"jornada_intervalo_curto_ate": d.JORNADA_INTERVALO_CURTO_ATE_MIN,

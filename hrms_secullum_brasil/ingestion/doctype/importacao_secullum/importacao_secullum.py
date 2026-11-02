@@ -97,9 +97,40 @@ def conectar(usuario: str, senha: str | None = None, id_banco: str | None = None
 
 
 @frappe.whitelist()
-def conferir() -> dict:
-	"""Pré-visualização (simulação, nada é gravado): contagens, ativos/demitidos e problemas com o que fazer."""
+def conferir() -> str:
+	"""Botão "Conferir": a simulação lê o Secullum inteiro e pode passar do tempo da requisição (auditoria de
+	02/11/2026), então roda em fila; ao terminar, a tela recarrega (aviso em tempo real "importacao_conferida")."""
 	frappe.only_for(PAPEIS)
+	frappe.enqueue(
+		"hrms_secullum_brasil.ingestion.doctype.importacao_secullum.importacao_secullum.executar_conferencia",
+		queue="long",
+		timeout=3600,
+		job_id="secullum-importacao-conferencia",
+		deduplicate=True,
+		now=bool(frappe.in_test),
+		usuario=frappe.session.user,
+	)
+	return _(
+		"Lendo o Secullum e simulando a importação (nada é gravado). A tela atualiza sozinha ao terminar."
+	)
+
+
+def executar_conferencia(usuario: str | None = None) -> dict | None:
+	try:
+		dados = simular_importacao()
+	except Exception as exc:
+		frappe.log_error(title=_("Conferência da importação do Secullum"))
+		if usuario:
+			frappe.publish_realtime("importacao_conferida", {"erro": str(exc)[:300]}, user=usuario)
+		return None
+	frappe.db.commit()
+	if usuario:
+		frappe.publish_realtime("importacao_conferida", {"erro": None}, user=usuario)
+	return dados
+
+
+def simular_importacao() -> dict:
+	"""Pré-visualização (simulação, nada é gravado): contagens, ativos/demitidos e problemas com o que fazer."""
 	importacao = importador.ImportacaoSecullum(simular=True)
 	resultado = importacao.executar()
 	funcionarios = importacao.client.listar_funcionarios()

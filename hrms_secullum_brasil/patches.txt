@@ -8,3 +8,4 @@ hrms_secullum_brasil.patches.renomear_dsr_he
 hrms_secullum_brasil.patches.faixa_folga_compensada
 hrms_secullum_brasil.patches.feriado_pagar_em_dobro
 hrms_secullum_brasil.patches.regimes_ec141
+hrms_secullum_brasil.patches.indices_auditoria

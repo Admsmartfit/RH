@@ -4,10 +4,12 @@ import pytest
 
 from hrms_secullum_brasil.engine.jornada_prevista import (
 	Periodo,
+	erro_virada,
 	intervalos,
 	minutos_do_dia,
 	minutos_previstos,
 	montar_periodos,
+	virada_sugerida,
 )
 
 
@@ -90,3 +92,26 @@ class TestMontarPeriodos:
 	def test_mais_de_tres_periodos(self):
 		_, erros = montar_periodos([(h("01:00"), h("02:00"))] * 4)
 		assert erros == ["Máximo de 3 períodos por dia."]
+
+
+# ------------------------------------------------------------------ hora de virada (auditoria de 02/11/2026)
+
+
+def test_turno_diurno_cabe_na_virada_zero():
+	periodos, _ = montar_periodos([(8 * 60, 12 * 60), (13 * 60, 17 * 60)])
+	assert erro_virada(periodos, 0) is None
+	assert erro_virada([], 0) is None
+
+
+def test_turno_noturno_com_virada_zero_e_partido():
+	periodos, _ = montar_periodos([(22 * 60, 2 * 60), (3 * 60, 6 * 60)])
+	erro = erro_virada(periodos, 0)
+	assert "partido" in erro and "sugestão: 14" in erro
+	assert erro_virada(periodos, 14) is None
+	assert virada_sugerida(periodos) == 14
+
+
+def test_virada_tarde_demais_tira_a_entrada_da_manha():
+	periodos, _ = montar_periodos([(5 * 60, 12 * 60)])
+	assert erro_virada(periodos, 6) is not None  # a entrada das 05:00 iria para o dia anterior
+	assert erro_virada(periodos, 4) is None

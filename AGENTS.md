@@ -60,11 +60,18 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Motor de apuração:** entrada única `engine.models.EntradaDia` → `engine.apuracao_dia.apurar_dia` → `ResultadoDia`. Regras da CCT chegam em `RegraApuracao`; nunca leia DocType dentro do engine. Todo tipo de inconsistência emitido pelo engine deve existir no Select de Inconsistencia de Ponto (há teste).
 - **Apuração no Frappe:** sempre via `apuracao/servico.py:reapurar_dia` (ou a fila `Reapuracao Pendente`); nunca grave `Apuracao Diaria` direto. Novas fontes de dados entram em `apuracao/adaptador.py:montar_entrada`.
 - **Visibilidade:** DocTypes com campo `employee` usados por gestores/colaboradores devem entrar em `permission_query_conditions` e `has_permission` (`apuracao/permissoes.py`).
+- **Gestor da unidade:** um cadastro por empresa (Configuracao Apuracao, tabela `termo_destinatarios`: colaborador ou
+  usuário que não é funcionário). `ve_ponto` = vê e trata o ponto de todos da empresa e ganha o papel Gestor Ponto;
+  `recebe_avisos` = WhatsApp do gestor; `recebe_email`/`recebe_whatsapp` = termo. Quem é o gestor de um colaborador
+  vem sempre de `configuracao_ponto/gestores.py` (`usuarios_gestores`, `contatos_de_aviso`, `empresas_do_gestor`);
+  sem ninguém na unidade vale o Reporta a. Não leia `reports_to` direto para achar o gestor.
 - **Banco de horas:** saldo e status vêm sempre de `apuracao/banco_horas.py:recalcular_colaborador` (engine FIFO); não edite `saldo`/`status` de Banco de Horas Movimento à mão. Lançamentos nascem só da apuração; liquidação só pelo Fechamento Banco de Horas.
 - **Dados de saúde (LGPD):** CID e anexos de atestado ficam em permlevel 1 (RH Saúde). Nunca copie o CID para outro DocType sem permlevel 1 (ex.: Leave Application, Inconsistência, notificações).
 - **Folha:** valores só pelo `engine/valoracao.py` e Additional Salary só pelo Fechamento de Ponto (`payroll_handoff/fechamento.py`). Período fechado = `Company.ponto_fechado_ate`, mantido por `atualizar_trava`; regras com vigência chamam `validar_edicao_em_periodo_fechado` no `validate`.
 - **Testes que usam rotinas do HRMS** (Payroll Entry, `get_payroll_entry`) podem fazer `frappe.db.commit()`: neutralize com `patch.object(frappe.db, "commit")`.
-- **Desempenho / modo lote** (`apuracao/lote.py`): leituras repetidas por dia (Employee, perfil/CCT vigentes, feriados, configurações) passam por `lote.memo`/`lote.documento`/`lote.valor_single`, que só fazem cache dentro de `modo_lote()` (fila de reapuração). Fora dele tudo é lido na hora. Efeitos por semana/colaborador (DSR, recálculo do banco) usam `adiar_semana`/`adiar_banco` e são concluídos em `servico._concluir_colaborador`. Nova leitura no caminho de `reapurar_dia` → memoize ou pré-carregue na `janela()`; meça com `utils/carga.py` (meta: 500 × 31 em < 5 min).
+- **Desempenho / modo lote** (`apuracao/lote.py`): leituras repetidas por dia (Employee, perfil/CCT vigentes, feriados, configurações) passam por `lote.memo`/`lote.documento`/`lote.valor_single`, que só fazem cache dentro de `modo_lote()` (fila de reapuração). Fora dele tudo é lido na hora. Efeitos por semana/colaborador (DSR, recálculo do banco) usam `adiar_semana`/`adiar_banco` e são concluídos em `servico._concluir_colaborador`. Nova leitura no caminho de `reapurar_dia` → memoize ou pré-carregue na `janela()`; meça com `utils/carga.py` (meta: 500 × 31 em < 5 min). Consulta frequente nova numa tabela grande → índice composto
+  no `on_doctype_update` do controller (padrão da auditoria de 02/11/2026, `docs/auditoria-2026-11.md`); nada de
+  consulta ao banco por dia/colaborador dentro de laço quando dá para ler o período de uma vez.
 - **Parâmetros do cargo** (piso, noturno, banco padrão) vêm de `configuracao_ponto/cargo.py`; participação no banco é sempre por data (`banco_horas.participa(employee, data)`, que respeita `banco_horas_desde`).
 - **Jornada do dia:** sempre por `configuracao_ponto/escala.py:dia_da_escala` (Escala Mensal com as trocas, senão o perfil). Troca de Escala nunca é lida na apuração: ao ser aprovada, ela grava na Escala Mensal.
 - **Erros operacionais** (sync, coleta) viram `Inconsistencia de Ponto` via `apuracao/inconsistencias.py`; jobs não devem levantar exceção por erro de negócio.
@@ -77,6 +84,11 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - O que o RH ajusta depois de importado (efeito da justificativa, tipo de remuneração, CCT, banco, chefe, cópia `-H` do perfil, histórico de horário) **não é sobrescrito** pela importação seguinte.
 - **Perfil na data:** a troca de horário vai para o Histórico de horário do colaborador (`historico_perfil_jornada`); a apuração usa `regras.perfil_na_data` (via `get_perfil_vigente`), nunca só o `perfil_jornada` do cadastro.
 - **Mudança que afeta dias já apurados** (afastamento, demissão, histórico) → `importacao_secullum.reapurar_dias_apurados` (respeita período fechado; o fechado vira inconsistência). Dia fora do contrato perde a apuração em `servico.reapurar_dia`.
+- **Conferência com o Secullum** (`ingestion/conferencia_secullum.py`, regras puras em `engine/conferencia_secullum.py`):
+  a coleta de hora em hora relê só `dias_reprocessamento`; de madrugada, a cada `conferencia_intervalo_dias` (3), o
+  período aberto inteiro é relido (batidas, cartão, afastamentos). Mudança em dia antigo vira a pendência
+  `alteracao_retroativa_secullum` (`ingestion/retroativas.py`; a primeira carga de um dia não conta). O Fechamento de
+  Ponto só é concluído com a conferência recente do período (`bloqueios_do_fechamento`): botão "Conferir com o Secullum".
 - **Cartão do Secullum** (`Cartao Secullum Dia`, rota GET Batidas): folga, neutro e justificativas lançadas no Secullum valem na apuração via `engine/cartao.py` em `adaptador.montar_entrada`; é lido junto com as batidas (carga e coleta).
 - Nada de dados reais de pessoas no repositório: amostras só anonimizadas (`integrations/secullum/anonimizar.py`, `fixtures/reais/`); credenciais só no campo Password da Configuracao Secullum.
 

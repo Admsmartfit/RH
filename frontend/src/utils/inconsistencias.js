@@ -20,6 +20,7 @@ export const TIPOS = {
 	sete_dias_seguidos: "7 dias seguidos de trabalho",
 	descanso_semanal: "Descanso semanal menor que 35 h",
 	folgas_semanais: "Menos folgas na semana do que o regime exige",
+	alteracao_retroativa_secullum: "Mudança retroativa no Secullum",
 	epi_sem_entrega: "EPI sem entrega",
 	epi_troca_vencida: "Troca de EPI vencida",
 	epi_ca_vencido: "CA do EPI vencido",
