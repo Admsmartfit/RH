@@ -105,7 +105,11 @@ class TestTermoOcorrencias(FrappeTestCase):
 	def test_emite_com_a_correcao_sugerida_e_confirma_conforme(self):
 		self.batidas(TERCA, "08:00", "12:00", "13:00")  # esqueceu a saída de 17:00
 		previa = top.preparar(self.employee, str(TERCA), str(TERCA))
-		self.assertEqual([i["proposta"] for i in previa["itens"]], ["Incluir a batida prevista 17:00"])
+		# RH, 09/11/2026: sem sugerir horário; o "Horário correto" fica aberto
+		self.assertEqual(
+			[(i["proposta"], i["sem_horario"]) for i in previa["itens"]],
+			[("Não houve registro da saída. Escreva o horário correto.", 0)],
+		)
 		self.assertIn("Batida faltando (entrada ou saída): 01/09", previa["texto"])
 		self.assertEqual(
 			[(d["celular"], d["origem"]) for d in previa["destinatarios"]], [("27999990000", "Reporta a")]
@@ -133,16 +137,38 @@ class TestTermoOcorrencias(FrappeTestCase):
 			(doc.status, doc.via, doc.confirmado_por), (top.CONFORME, top.VIA_PAPEL, "Gerente Teste")
 		)
 		self.assertEqual(doc.itens[0].resposta, "De acordo")
-		feitos = tratamentos(self.employee, TERCA)
-		self.assertEqual(len(feitos), 1)
-		self.assertEqual(feitos[0].motivo, f"Termo de ocorrências {doc.name} assinado")
-		self.assertEqual(status_inc(self.employee, TERCA, "marcacao_impar"), "Resolvida")
-		self.assertEqual(
-			frappe.db.get_value("Apuracao Diaria", {"employee": self.employee, "data": TERCA}, "trabalhado"),
-			480,
-		)
+		# de acordo sem o horário escrito: nada muda no ponto e a batida faltando volta para o RH
+		self.assertEqual(tratamentos(self.employee, TERCA), [])
+		self.assertEqual(status_inc(self.employee, TERCA, "marcacao_impar"), "Aberta")
+		self.assertIn("voltou para o RH", doc.itens[0].resultado)
 		with self.assertRaises(frappe.ValidationError):  # o link não confirma de novo
 			self.confirmar(doc, "conforme")
+
+	def test_previa_da_pagina_ordena_rotula_e_mostra_a_pendencia(self):
+		# página do termo (pedido do RH, 04/11/2026): a pessoa só inclui o horário; o servidor põe em ordem e confere
+		self.batidas(TERCA, "08:00", "12:00", "13:00")
+		doc = self.emitir(TERCA, TERCA)
+		t = top.gerar_token(doc.name, top.COLABORADOR)
+		item = doc.itens[0].name
+		r = top.previa(t, item, "12:00 13:00 08:00")  # fora de ordem e ainda falta a saída
+		self.assertEqual(
+			[(b["rotulo"], b["hora"]) for b in r["batidas"]],
+			[("Entrada 1", "08:00"), ("Saída 1", "12:00"), ("Entrada 2", "13:00")],
+		)
+		self.assertIn("marcacao_impar", [i["tipo"] for i in r["inconsistencias"]])
+		r = top.previa(t, item, "08:00 12:00 13:00 17:00")
+		self.assertEqual((r["normais"], r["inconsistencias"]), (480, []))
+		self.assertEqual(r["batidas"][-1], {"hora": "17:00", "rotulo": "Saída 2"})
+		with self.assertRaises(frappe.ValidationError):
+			top.previa(t, item, "8h")
+		with self.assertRaises(frappe.ValidationError):
+			top.previa(t, "outro-item", "08:00")
+		self.assertEqual(
+			status_inc(self.employee, TERCA, "marcacao_impar"), "Aguardando termo"
+		)  # nada gravado
+		top.cancelar(doc.name, "teste")
+		with self.assertRaises(frappe.ValidationError):
+			top.previa(t, item, "08:00 12:00 13:00 17:00")
 
 	def test_com_alteracao_nao_reconhece_e_ciente(self):
 		self.batidas(TERCA, "08:00", "12:00", "13:00")
@@ -150,7 +176,10 @@ class TestTermoOcorrencias(FrappeTestCase):
 		self.batidas(QUINTA, "08:00", "12:00", "13:00")
 		doc = self.emitir()
 		por_dia = {str(i.data): i for i in doc.itens}
-		self.assertTrue(por_dia[str(QUARTA)].proposta.startswith("Ciente"))
+		self.assertEqual(
+			por_dia[str(QUARTA)].proposta, "Entrada às 08:40, 40 min depois do horário previsto (08:00)."
+		)
+		self.assertEqual(por_dia[str(QUARTA)].sem_horario, 1)
 		self.confirmar(
 			doc,
 			"alteracao",
@@ -334,7 +363,14 @@ class TestTermoOcorrencias(FrappeTestCase):
 			top.previa_pdf(self.employee, str(TERCA), str(TERCA))
 			self.assertEqual(frappe.local.response.type, "pdf")
 		doc = self.emitir(TERCA, TERCA)
-		self.confirmar(doc, "conforme", observacoes="ok")
+		self.confirmar(
+			doc,
+			"alteracao",
+			respostas=[
+				{"item": doc.itens[0].name, "resposta": "Alterado", "horarios": "08:00 12:00 13:00 17:00"}
+			],
+			observacoes="ok",
+		)
 		doc.reload()
 		self.assertTrue(doc.comprovante)
 		anexos = {
@@ -351,7 +387,7 @@ class TestTermoOcorrencias(FrappeTestCase):
 		)
 		_colunas, linhas = execute({"de": "2026-01-01", "ate": "2026-12-31"})
 		minha = next(x for x in linhas if x["employee"] == self.employee)
-		self.assertEqual((minha["emitidos"], minha["conforme"], minha["taxa_recusa"]), (1, 1, 0.0))
+		self.assertEqual((minha["emitidos"], minha["taxa_recusa"]), (1, 0.0))
 
 	def test_periodo_comeca_depois_do_ultimo_termo(self):
 		self.batidas(TERCA, "08:00", "12:00", "13:00")

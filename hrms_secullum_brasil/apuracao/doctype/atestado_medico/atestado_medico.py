@@ -68,6 +68,8 @@ class AtestadoMedico(Document):
 		Atestados sobrepostos (ex.: um segundo atestado que estende o primeiro) não podem gerar licenças com
 		datas em comum: o HRMS recusa a sobreposição.
 		"""
+		from hrms_secullum_brasil.apuracao.lancamentos import aprovador_da_licenca
+
 		tipo = frappe.db.get_single_value(CONFIG, "leave_type_atestado") or "Atestado Médico"
 		criadas = []
 		for inicio, fim in self._trechos_sem_licenca():
@@ -83,6 +85,7 @@ class AtestadoMedico(Document):
 					"status": "Approved",
 					"description": _("Atestado médico {0}").format(self.name),  # nunca o CID (LGPD)
 					"atestado_medico": self.name,
+					"leave_approver": aprovador_da_licenca(self.employee),  # o HR Settings pode exigir
 				}
 			)
 			leave.flags.ignore_permissions = True

@@ -244,7 +244,25 @@ class MockSecullumClient(SecullumClient):
 			)
 		elif rota == "CartaoPonto/Justificativa":
 			grupo = int(corpo["Grupo"])
+			if ":" in str(registro.get(f"Entrada{grupo}") or "") or ":" in str(
+				registro.get(f"Saida{grupo}") or ""
+			):
+				raise SecullumValidacaoError(
+					[
+						{
+							"Property": "Grupo",
+							"Message": "O grupo tem batida original: justificativa não incluída.",
+						}
+					]
+				)
 			registro[f"Entrada{grupo}"] = registro[f"Saida{grupo}"] = corpo["Justificativa"]
+		elif rota == "CartaoPonto/Troca":  # troca o conteúdo das duas colunas (a batida mantém a origem)
+			de, para = corpo["ColunaOrigem"], corpo["ColunaDestino"]
+			valor_de, valor_para = registro.pop(de, None), registro.pop(para, None)
+			if valor_de:
+				registro[para] = valor_de
+			if valor_para:
+				registro[de] = valor_para
 		else:
 			coluna = corpo["Coluna"]
 			valor = str(registro.get(coluna) or "")
@@ -262,3 +280,54 @@ class MockSecullumClient(SecullumClient):
 			{"dataInicio": data_inicio.isoformat(), "dataFim": data_fim.isoformat()},
 		)
 		return [dict(a) for a in self.cadastros["afastamentos"] if _no_periodo(a, data_inicio, data_fim)]
+
+	# ------------------------------------------------------------------ envio de cadastros (sincronização)
+
+	def salvar_justificativa(self, corpo: dict) -> None:
+		"""Upsert pelo nome abreviado, devolvido no formato do GET (PascalCase)."""
+		self._chamada("POST", "Justificativas", corpo)
+		if not corpo.get("nomeAbreviado"):
+			raise SecullumValidacaoError([{"Property": "NomeAbreviado", "Message": "Obrigatório."}])
+		lista = self.cadastros["justificativas"]
+		atual = next((j for j in lista if j.get("NomeAbreviado") == corpo["nomeAbreviado"]), None)
+		novo = {k[0].upper() + k[1:]: v for k, v in corpo.items()}
+		if atual:
+			atual.update(novo)
+		else:
+			lista.append({"Id": len(lista) + 1000, **novo})
+
+	def salvar_afastamento(self, corpo: dict) -> None:
+		self._chamada("POST", "FuncionariosAfastamentos", corpo)
+		self.cadastros["afastamentos"].append(
+			{
+				"Cpf": corpo.get("cpf"),
+				"Inicio": f"{corpo['inicio']}T00:00:00",
+				"Fim": f"{corpo['fim']}T00:00:00",
+				"Motivo": corpo.get("motivo"),
+				"JustificativaNome": corpo.get("justificativaNome"),
+			}
+		)
+
+	def excluir_afastamento(self, params: dict) -> None:
+		self._chamada("DELETE", "FuncionariosAfastamentos/Cpf", params)
+		cpf = somente_digitos(params["funcionarioCpf"])
+		self.cadastros["afastamentos"] = [
+			a
+			for a in self.cadastros["afastamentos"]
+			if not (
+				somente_digitos(a.get("Cpf") or "") == cpf
+				and str(a.get("Inicio"))[:10] == params["dataInicio"]
+				and str(a.get("Fim"))[:10] == params["dataFim"]
+			)
+		]
+
+	def salvar_estrutura(self, corpo: dict) -> None:
+		self._chamada("POST", "Estruturas", corpo)
+		self.estruturas = [e for e in self.estruturas if e.get("Descricao") != corpo["descricao"]]
+		self.estruturas.append(
+			{
+				"Descricao": corpo["descricao"],
+				"Responsaveis": corpo.get("responsaveis", []),
+				"FuncionariosVinculados": corpo.get("funcionariosVinculados", []),
+			}
+		)

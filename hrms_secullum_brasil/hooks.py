@@ -22,6 +22,7 @@ _RUBRICAS_FOLHA = [
 	"HATIV",
 	"JANELA",
 	"INTRA_IND",
+	"PAUSA_PAGA",  # pausa paga por liberalidade (instrutor; RH, 04/11/2026)
 	"INTER",
 	"BH_PAG",
 	"PREMIO",
@@ -60,7 +61,31 @@ fixtures = [
 		"dt": "Role Profile",
 		"filters": [["name", "in", ["RH Ponto", "RH Saúde", "Gestor Ponto", "Gestor DP", "Colaborador"]]],
 	},
-	{"dt": "Leave Type", "filters": [["name", "in", ["Atestado Médico", "Recesso de Estagio"]]]},
+	{
+		"dt": "Leave Type",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Atestado Médico",
+					"Recesso de Estagio",
+					# faltas legais (CLT art. 473) e licenças (docs/PRD-sincronizacao-secullum.md, seção 6)
+					"Casamento",
+					"Falecimento",
+					"Licença-paternidade",
+					"Licença-maternidade",
+					"Doação de sangue",
+					"Alistamento eleitoral",
+					"Comparecimento em juízo",
+					"Vestibular",
+					"Acompanhar consulta da gestante",
+					"Filho até 6 anos ao médico",
+					"Exames preventivos de câncer",
+				],
+			]
+		],
+	},
 	{"dt": "Agente de Integracao", "filters": [["name", "in", ["CIEE-ES", "IEL-ES"]]]},
 	{
 		"dt": "Feriado Regional",
@@ -102,6 +127,16 @@ add_to_apps_screen = [
 
 doctype_js = {"Employee": "public/js/employee.js", "Designation": "public/js/designation.js"}
 
+# Entrada no programa (RH, 04/11/2026; utils/acesso.py): todo usuário do painel entra no /ponto; o "/" vai para lá; só
+# RH e administrador abrem o Desk
+get_website_user_home_page = "hrms_secullum_brasil.utils.acesso.pagina_inicial"
+website_redirects = [{"source": "/", "target": "/ponto", "redirect_http_status": 302}]
+before_request = [
+	"hrms_secullum_brasil.utils.acesso.barrar_desk",
+	# docs/PRD-whatsapp-aceite-auditoria.md (CW-10): página aberta pelo link do modo de teste não grava nada
+	"hrms_secullum_brasil.utils.sem_login.recusar_post_de_teste",
+]
+
 # Painel de Ponto (docs/PRD-frontend.md): app Vue em /ponto, como o /hrms do HRMS
 website_route_rules = [
 	# CE-14: página sem login do colaborador (antes da regra geral do painel)
@@ -109,6 +144,9 @@ website_route_rules = [
 	{"from_route": "/ponto/assinar", "to_route": "assinar"},  # CE-16
 	{"from_route": "/ponto/convite", "to_route": "convite"},  # convite para turno
 	{"from_route": "/ponto/termo", "to_route": "termo"},  # docs/PRD-termo-ocorrencias.md (TO-08, TO-10)
+	{"from_route": "/ponto/resposta", "to_route": "resposta"},  # docs/PRD-whatsapp-dia-seguinte.md (W-5)
+	# docs/PRD-whatsapp-aceite-auditoria.md (CW-01): aceite do WhatsApp pelo QR code do cartaz
+	{"from_route": "/ponto/whatsapp", "to_route": "whatsapp"},
 	{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"},
 ]
 
@@ -121,6 +159,8 @@ doc_events = {
 			"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.validate_employee",
 			# EST-03: perfil do estagiário dentro da carga do TCE
 			"hrms_secullum_brasil.estagio.tce.validar_perfil_do_estagiario",
+			# docs/PRD-whatsapp-aceite-auditoria.md (CW-07): celular trocado depois do aceite volta a Pendente
+			"hrms_secullum_brasil.apuracao.aceite_whatsapp.celular_mudou",
 		],
 		# on_update também roda na inclusão; só enfileira se o payload do Secullum mudou.
 		"on_update": [
@@ -133,6 +173,8 @@ doc_events = {
 			"hrms_secullum_brasil.configuracao_ponto.cargo_padrao.on_update_employee",
 		],
 	},
+	# docs/PRD-sincronizacao-secullum.md: folgas da escala vão ao Secullum (pela fila, com trava)
+	"Escala Mensal": {"on_update": "hrms_secullum_brasil.ingestion.envios_secullum.on_update_escala"},
 	# dia de fechamento da folha (competência do painel e do cartão)
 	"Company": {"validate": "hrms_secullum_brasil.apuracao.competencia.validar_empresa"},
 	# docs/PRD-cargo.md: tela única do cargo (aplica tipo, valor e parâmetros da CCT a todos do cargo)
@@ -148,29 +190,51 @@ doc_events = {
 		"validate": "hrms_secullum_brasil.apuracao.feriados.validate_holiday_list",
 		"on_update": "hrms_secullum_brasil.apuracao.feriados.on_update_holiday_list",
 	},
-	# EST-06: recesso do estagiário (saldo e férias escolares)
+	# EST-06: recesso do estagiário (saldo e férias escolares); licenças vão ao Secullum (sincronização, com trava)
 	"Leave Application": {
 		"validate": "hrms_secullum_brasil.estagio.recesso.validate_leave_application",
-		"on_submit": "hrms_secullum_brasil.estagio.recesso.atualizar_saldo",
-		"on_cancel": "hrms_secullum_brasil.estagio.recesso.atualizar_saldo",
+		"on_submit": [
+			"hrms_secullum_brasil.estagio.recesso.atualizar_saldo",
+			"hrms_secullum_brasil.apuracao.lancamentos.reapurar_licenca",
+		],
+		"on_update": "hrms_secullum_brasil.ingestion.envios_secullum.on_update_licenca",
+		"on_cancel": [
+			"hrms_secullum_brasil.estagio.recesso.atualizar_saldo",
+			"hrms_secullum_brasil.ingestion.envios_secullum.on_cancel_licenca",
+			"hrms_secullum_brasil.apuracao.lancamentos.reapurar_licenca",
+		],
 	},
 	# AJ-01: alerta de salário abaixo do piso do cargo
 	"Salary Structure Assignment": {
 		"validate": "hrms_secullum_brasil.configuracao_ponto.cargo.validate_salary_structure_assignment",
 	},
+	# docs/PRD-whatsapp-aceite-auditoria.md (AU-01): relatório de auditoria mensal ao concluir o fechamento
+	"Fechamento de Ponto": {"on_submit": "hrms_secullum_brasil.reports.auditoria.agendar_mensal"},
 }
 
 scheduler_events = {
 	# A coleta roda quando vence o intervalo_coleta da Configuracao Secullum (checado a cada 5 min).
 	"cron": {
+		# docs/PRD-whatsapp-aceite-auditoria.md (CW-11): mensagens da fila saem espaçadas, até o limite do dia
+		"* * * * *": ["hrms_secullum_brasil.apuracao.whatsapp.enviar_na_hora"],
 		"*/5 * * * *": ["hrms_secullum_brasil.ingestion.coleta_batidas.tick"],
 		# processa a fila Reapuracao Pendente (marcada pela coleta, por tratamentos e pelo job diário)
-		"*/10 * * * *": ["hrms_secullum_brasil.apuracao.servico.tick_reapuracao"],
+		"*/10 * * * *": [
+			"hrms_secullum_brasil.apuracao.servico.tick_reapuracao",
+			# docs/PRD-sincronizacao-secullum.md: o que ficou na fila de envio ao Secullum
+			"hrms_secullum_brasil.ingestion.sincronizacao.processar_fila",
+		],
+		# falta e atestado dos horistas de ontem e anteontem (AT/FT com a carga do dia) e auditoria dos horários
+		"20 6 * * *": ["hrms_secullum_brasil.ingestion.envios_secullum.preparar_horistas"],
+		"0 3 * * *": ["hrms_secullum_brasil.ingestion.auditoria_secullum.auditar"],
 		# docs/PRD-monitoramento-horistas.md: contagem do mês às 19h e WhatsApp que ficou na fila (8h-20h)
 		"0 19 * * *": ["hrms_secullum_brasil.apuracao.monitoramento_horistas.verificar"],
+		# instrutor horista que passou de 4h15 sem marcar o intervalo: um WhatsApp por dia ao RH (09/11/2026)
+		"30 8 * * *": ["hrms_secullum_brasil.apuracao.intervalo_horista.avisar_rh"],
 		"0 * * * *": [
 			"hrms_secullum_brasil.apuracao.whatsapp.enviar_pendentes",
-			"hrms_secullum_brasil.apuracao.regras_whatsapp.enviar_ponto_do_dia",  # regras do ponto do dia
+			# docs/PRD-whatsapp-dia-seguinte.md: o ponto do dia anterior (D+1), com filtros e fila de conferência
+			"hrms_secullum_brasil.apuracao.regras_whatsapp.enviar_ponto_do_dia",
 			# docs/PRD-cockpit-escalas.md (CE-11): rascunho a menos de 48h do dia vira inconsistência
 			"hrms_secullum_brasil.apuracao.cockpit_escala.avisar_rascunhos_esquecidos",
 		],
@@ -183,6 +247,10 @@ scheduler_events = {
 		# conferência completa com o Secullum (a cada N dias; pedido do RH, 30/10/2026)
 		"30 2 * * *": ["hrms_secullum_brasil.ingestion.conferencia_secullum.conferir_periodo_aberto"],
 		"0 8 * * 1": ["hrms_secullum_brasil.apuracao.termo_ocorrencias.lista_semanal"],
+		# docs/PRD-whatsapp-aceite-auditoria.md (AU-01): relatório de auditoria da semana anterior (segunda, 7h)
+		"0 7 * * 1": ["hrms_secullum_brasil.reports.auditoria.enviar_semanal"],
+		# docs/PRD-whatsapp-dia-seguinte.md (W-7): aviso sem resposta no prazo vai para o termo
+		"30 7 * * *": ["hrms_secullum_brasil.apuracao.dia_seguinte.escalonar"],
 	},
 	"daily": [
 		"hrms_secullum_brasil.ingestion.sync_colaboradores.reconciliar_cadastros",
@@ -226,6 +294,8 @@ permission_query_conditions = {
 	"Termo de Compromisso de Estagio": f"{_PERM}.condicao_tce",
 	"Relatorio de Estagio": f"{_PERM}.condicao_relatorio_estagio",
 	"Termo de Ocorrencias": f"{_PERM}.condicao_termo_ocorrencias",
+	"Resposta WhatsApp Ponto": f"{_PERM}.condicao_resposta_whatsapp",
+	"Aceite WhatsApp": f"{_PERM}.condicao_aceite_whatsapp",
 }
 has_permission = {
 	"File": f"{_PERM}.permissao_arquivo",
@@ -252,6 +322,8 @@ has_permission = {
 			"Termo de Compromisso de Estagio",
 			"Relatorio de Estagio",
 			"Termo de Ocorrencias",
+			"Resposta WhatsApp Ponto",
+			"Aceite WhatsApp",
 		)
 	},
 }

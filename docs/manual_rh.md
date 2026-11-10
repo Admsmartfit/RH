@@ -85,6 +85,18 @@ situação. As setas **◀ Anterior / Próximo ▶** (ou `[` e `]`) trocam de co
   último fica lembrado) e confirme. Cada alteração vira um Tratamento de Ponto aprovado, o dia é recalculado na hora
   e a grade volta com os totais novos. Um dia com erro (ex.: período fechado, horário inválido) não impede os outros.
 - **Histórico:** "Alterações do período", no fim da tela: quem corrigiu, quando, o motivo e se foi ao Secullum.
+- **Falta, atestado, férias, licença e afastamento:** botão **Lançar ausência** no topo do cartão (ou, com dias
+  marcados, **Lançar ausência nos dias**). Escolha o que lançar, o período (ou os dias marcados) e o motivo:
+  - **Falta:** escolha a justificativa do Secullum com efeito "Falta". O dia **continua sendo falta** (desconto e
+    DSR); a justificativa só registra o motivo, tira a falta da lista de pendências e vai ao Secullum. Só entram dias
+    de trabalho que já passaram, sem batida e sem abono (dia com batida: desconsidere as batidas antes);
+  - **Atestado médico:** cria o Atestado Médico do período (conta para o alerta de 15 dias do INSS) e abona os dias.
+    Não escreva o CID no motivo: CID, anexo e médico o RH Saúde completa no Atestado Médico, no Desk;
+  - **Férias, licença ou afastamento:** escolha o tipo (Férias, Casamento, Licença-maternidade...). Os dias ficam
+    abonados e vão ao Secullum pela fila de licenças. O saldo de férias não é controlado no programa. A licença **não
+    remunerada** se lança no Desk.
+  - O que o **gestor** lança fica aguardando o RH, na aba **Aguardando aprovação** da central. Para desfazer o que já
+    foi aprovado, o RH clica no texto da coluna Abono (abre o documento no Desk) e cancela.
 
 ### Enviar as correções ao Secullum
 
@@ -219,10 +231,37 @@ Botão **Espelhos de ponto** no fechamento enviado. Cada espelho tem os dias, os
 espaço para assinatura e o código de verificação (hash) no rodapé. É um relatório **gerencial**: o espelho
 oficial é o do Secullum.
 
+## Testar o envio ao Secullum
+
+Passo a passo completo, caso a caso, em `docs/manual-teste-envio-secullum.md`.
+
+## Escala conjunta (empresas no mesmo endereço)
+
+Desk → Empresa → seção "Ponto e folha (programa)" → **Grupo de escala**: escreva o mesmo nome (ex.: "Praia") nas
+empresas que dividem o endereço. Na tela Escalas, escolhendo qualquer uma delas, aparecem os colaboradores das duas
+(com a empresa de cada um) e os turnos padrão das duas, para montar uma escala só. Os turnos padrão continuam
+cadastrados e editados em cada empresa; apuração, folha e CCT seguem separadas. Hoje: FUNCIONAL DA PRAIA FITNESS e
+PRAIA FITNESS no grupo "Praia".
+
 ## Cockpit de escalas e WhatsApp da escala
 
-- **Turnos padrão** (Ponto → Escalas → Turnos padrão): por empresa e, se quiser, por cargo; entrada, saída e pausa
-  (6h seguidas pedem 15 min: T1 08:00–14:15 e T2 14:00–20:15). Aparecem na paleta do cockpit.
+- **Turnos padrão** (Ponto → Escalas → Turnos padrão): por empresa e, se quiser, por cargo e por **tipo de dia**
+  (dia útil, sábado, domingo ou feriado; vazio = qualquer dia); entrada, saída e pausa (6h seguidas pedem 15 min).
+  Aparecem na paleta do cockpit e, no convite, só os do tipo do dia escolhido.
+- **Criar, editar ou apagar turnos:** na tela Escalas, logo abaixo de "Turnos padrão", os atalhos **+ Novo turno** (já
+  com a empresa e o cargo escolhidos) e **Editar ou apagar turnos** abrem o cadastro no Desk; clique duplo num turno da
+  paleta abre ele. Para tirar um turno da paleta sem apagar, desmarque "Ativo". Depois, atualize a tela Escalas. Só o RH
+  (e o Administrador) cadastra turnos.
+- **Turnos pelo histórico** (botão na tela Escalas): lê as batidas dos últimos 90 dias do cargo escolhido e mostra os
+  turnos mais feitos em cada tipo de dia (arredondados a 30 min, com quantas vezes e quem fez). Marque e crie: eles
+  ficam com nome curto ("Útil manhã", "Sáb tarde", "Fer manhã") e a cor do tipo de dia.
+- **Feriado é dia de escala:** fica **em aberto** (sem ninguém) até alguém ser escalado nele. O horário do perfil não
+  vale no feriado; a Escala do Mês já nasce com o feriado em aberto. Quem trabalhar sem estar escalado recebe como
+  feriado trabalhado, pela apuração.
+- **Convidar para um turno (WhatsApp):** escolha o dia, o turno (ou "Outro horário…", com pausa opcional) e marque
+  quem recebe (botões "Marcar todos", "Só quem pode sem quebra", "Desmarcar"). Quem responde "Posso" aparece em
+  "Convites para turno" com o botão **Escalar**. O antigo "Pedir disponibilidade do mês" saiu da tela; as
+  indisponibilidades já informadas continuam chegando para aprovar.
 - **Indisponibilidades**: períodos (dia inteiro ou horário) em que a pessoa não pode; sem dado de saúde.
 - **Publicações de escala**: registro de cada publicação (quem, quando, antes e depois de cada dia e o WhatsApp).
 - **Quebras assumidas** (relatório): o que foi mantido com justificativa, o custo previsto e o realizado da apuração.
@@ -373,6 +412,153 @@ noturno do cargo (nunca menos que 20% nem que o da CCT), banco de horas padrão 
 - Custeio do benefício social: valor por trabalhador, vencimento e início. O relatório **Contribuicoes da CCT**
   chega por e-mail todo dia 1º (Configuração Apuração → e-mails).
 
+## WhatsApp do dia seguinte (D+1)
+
+No dia seguinte, quem teve problema no ponto recebe uma mensagem com o dia e um link para responder. Passo a passo:
+
+1. **Regras** (Desk → Regra Envio WhatsApp, evento "Ponto do dia (D+1)"): uma por tipo de inconsistência (batida
+   esquecida, falta, atraso...), com a mensagem, a hora e os filtros de empresa e cargo. Toda regra nasce **Em
+   teste**.
+2. **Conferir** (Painel → Inconsistências → aba **WhatsApp do dia seguinte**): as mensagens de hoje aparecem com o
+   texto. **Enviar** (pode editar antes), **Enviar todas** ou **Descartar** com o motivo. "Erro de escala" e "Erro de
+   batida" contam contra a regra.
+3. **Produção**: a regra só pode ir para Em produção depois de 20 mensagens dela conferidas e enviadas
+   (Configuração Apuração → WhatsApp do dia seguinte). Em produção, 3 descartes por erro em 7 dias a devolvem
+   sozinha para teste.
+4. **O que nunca sai** (fica em "Barradas pelos filtros", com o motivo): dia já em termo, já cobrado ou já
+   respondido; férias, afastamento, licença ou abono no dia; falta ou atraso em dia sem jornada (neutro, feriado,
+   folga); falta de quem trabalha em escala sem a Escala do Mês publicada; pendência aberta há menos de 2 horas;
+   período fechado.
+5. **A resposta**: pelo link, a pessoa inclui o horário que faltou (vê na hora se o dia fica certo), explica ou
+   marca "Não reconheço este dia", e confirma com o **CPF e o código** que chega no WhatsApp dela — essa
+   confirmação é a assinatura dela. A correção fica **aguardando aprovação**.
+6. **Aprovar**: na mesma aba, em "Respostas dos colaboradores", **Aprovar** (entra no cartão e reapura) ou
+   **Recusar** (com motivo). O comprovante (PDF) fica anexado.
+7. **Sem resposta** em 2 dias úteis: o dia vai para o termo de ocorrências com "(avisado pelo WhatsApp em dd/mm, sem
+   resposta)". Dia que já está num termo: no cartão, o botão vira **Reenviar o link do termo**.
+
+Nada sai com o **Envio de WhatsApp** (Configuração Apuração) em Desligado.
+
+**Pelo cartão:** no balão do dia, **Enviar o WhatsApp do dia seguinte** mostra a mesma mensagem (com o link de
+resposta) para conferir e editar antes de enviar. Só fica liberado se o dia ainda não foi avisado ou se o aviso ficou
+sem resposta além do prazo; senão o botão aparece travado com o motivo. As ações que mexem nas batidas (incluir,
+desconsiderar, intervalo, abonar, atestado) aparecem só para o RH e o Administrador.
+
+**Acompanhar:** na central, cada pendência mostra o selo do WhatsApp (enviado, lido, prazo, respondeu, barrado).
+O que está no prazo de resposta fica em **Com o colaborador (N)** e não aparece na lista do RH; volta sozinho se o
+prazo vencer. A marcação de várias pendências fica em **Tratar várias de uma vez** (para casos coletivos: relógio
+parado, treinamento da equipe). No cartão, o dia corrigido mostra quem corrigiu, quem aprovou e se chegou ao
+Secullum; no topo, o resumo das correções do período.
+
+## Termo pelo celular: como o colaborador corrige um dia
+
+Na página do termo, cada dia mostra as batidas em ordem (Entrada 1, Saída 1...). Se faltou uma, ele escreve o
+horário em **Incluir um horário** e toca em **Incluir**: o horário entra no lugar certo e o quadro abaixo diz se o dia
+fica certo ("08:00 de horas normais e nenhuma pendência") ou o que ainda falta. O × tira um horário incluído. Não há
+lista de respostas: dia em que ele mexeu nos horários = corrigido; dia sem mudança = de acordo. Para contestar, ele
+marca **Não reconheço este dia** (o dia volta para o RH).
+
+## Prévia antes de salvar e feriado no cartão
+
+- Mudou uma batida? A linha mostra na hora, em itálico, como ficariam as horas normais, extra, falta e atraso, e
+  quantas pendências sobram ("prévia"). Só vale depois de **Salvar** (o DSR e o banco da semana entram no salvar).
+- Em feriado, a coluna Previsto mostra **Feriado**: não há jornada prevista e todo o trabalhado é hora extra de
+  feriado (ex.: 02/11, 07:49–17:03 com 1h de almoço = 8h14 de extra).
+
+## Ordem das batidas no cartão
+
+As batidas ficam sempre em ordem crescente (Entrada 1, Saída 1, Entrada 2...). Ao inserir uma batida (sugestão do
+balão ou digitando numa coluna livre), as outras se movem: 11:00, 12:07, 14:42 + 05:00 vira 05:00, 11:00, 12:07,
+14:42. Horário de madrugada só vai para o fim no turno que passa da meia-noite (hora de virada do perfil).
+
+## Horista sem intervalo: termo e intervalos no cartão
+
+- Todo dia em que o horista passou de 4h sem registrar pausa entra no **alerta do mês** e no **Termo de Ajuste**,
+  inclusive quando trabalhou 4h15 ou mais seguidas. O termo sai com o intervalo proposto de cada dia (no meio do
+  expediente); se o horário foi outro, o colaborador corrige à mão.
+- No cartão, a inconsistência "Horista além de 4 h sem intervalo" tem **Incluir os intervalos no cartão**: põe o
+  intervalo de cada dia na grade (a saída real passa para a Saída 2). Confira, anexe o termo assinado e salve com o
+  motivo do termo. A pausa do termo é paga: as horas do dia não mudam.
+- O **Termo de ocorrências** do horista traz esses dias só como registro ("Jornada de 4h12 sem o registro do
+  intervalo mínimo de 15 min. Se fez o intervalo, escreva o horário."); se ele escrever, o intervalo entra pela assinatura.
+
+## Pausa paga do instrutor (15 min) e horas sem autorização
+
+- No **Cargo** (ex.: Instrutor), preencha **Pausa paga por liberalidade (min) = 15**. O valor vai para a CCT
+  vigente sozinho.
+- A pausa paga vale **só para o intervalo incluído pelo sistema**: pela resposta do WhatsApp, pelo termo ou pelo RH
+  no cartão. Esse intervalo **não conta como trabalho** e é pago à parte na rubrica **PAUSA_PAGA**, até 15 min
+  (lançou 20 min → paga 15). Ex.: 4h15 do início ao fim com o intervalo incluído = 4h00 + 0h15 de pausa paga.
+- Pausa **batida no relógio** do Secullum é só tempo não trabalhado: recebe as horas trabalhadas, sem pausa paga.
+- Pelo link do WhatsApp, o instrutor inclui **uma pausa por dia** (a segunda é recusada).
+- Sem a pausa, o dia aceita até **jornada + 15 + 10 min** (4h sem pausa → até 4h25) sem pendência.
+- Se passar disso, abre **"Horas além da jornada sem autorização"**. As horas são pagas. O aviso oficial ao
+  colaborador vai para a **fila do WhatsApp** (Painel → Fila do WhatsApp) e só sai quando o RH confere e envia.
+- No Secullum, a pausa pode ser lançada pela justificativa **PAUSA15**, depois dos testes T-P1/T-P2 (manual de
+  teste do envio, Etapa H).
+- As duas regras acima (até 4h25 sem pendência e "Horas além da jornada sem autorização") valem para o **instrutor
+  mensalista**. O instrutor **horista** segue a seção seguinte.
+
+### Instrutor horista que passou de 4h15 sem marcar o intervalo (desde 09/11/2026)
+
+- **O instrutor não recebe WhatsApp** sobre isso: nem cobrança do intervalo, nem aviso de horas sem autorização.
+- O dia com **mais de 4h15** (exato, sem tolerância) e **sem intervalo batido no relógio** abre a pendência
+  **"Instrutor horista: passou de 4h15 sem intervalo"**.
+- **WhatsApp do RH:** todo dia às **8h30** chega uma mensagem com os instrutores do dia anterior e o link do cartão de
+  cada um. Os números ficam na [Configuração Apuração](http://localhost:8000/app/configuracao-apuracao), campo
+  **"WhatsApp do RH: instrutor horista sem intervalo"** (um por linha). Vazio: ninguém recebe.
+- **Lançar o intervalo:** no link, clique no `!` do dia e em **"Lançar o intervalo de 15 min (não remunerado)"**.
+  - O programa põe 15 min no meio da jornada (ex.: 16:55–21:27 → 19:03 às 19:18) e o intervalo **desconta das horas**:
+    4h32 → 4h17 pagas.
+  - Nesse dia o intervalo **não é pago** (não vai para a PAUSA_PAGA). Até 4h15, a pausa incluída continua paga como
+    antes.
+- **Termo do mês:** a pendência fica aberta até o termo. Na linha do dia, o instrutor assina "Ciente: excedi o
+  horário de trabalho de 4 h e deveria ter marcado o intervalo". Se o RH lançou o intervalo, a linha acrescenta "o
+  intervalo de 15 min foi lançado pelo RH, sem remuneração".
+
+## Batida do relógio nunca sai sem confirmar duas vezes
+
+- Toda batida que o colaborador fez no relógio, tablet ou app é protegida. Para tirá-la do dia (desconsiderar ou
+  trocar o horário), o programa pergunta **duas vezes**: no cartão ponto (aviso vermelho + caixa "Confirmo…" + a
+  pergunta final), na central de inconsistências, no Tratamento de Ponto do Desk e ao aprovar a resposta do WhatsApp.
+- O colaborador não consegue tirar batida do relógio pelo termo: o dia volta para o RH.
+- No Secullum, o programa só apaga um horário que foi tirado no programa com tratamento. Se o Secullum tiver uma
+  batida que o programa não conhece, **nada é enviado** e aparece a pendência "Envio ao Secullum não feito".
+
+## WhatsApp: modo de teste, aceite do colaborador e ritmo
+
+O passo a passo completo está em `docs/manual-teste-whatsapp.md`. Em resumo:
+
+- **Envio de WhatsApp** (Configuração Apuração) tem três posições:
+  - **Desligado:** nada sai;
+  - **Teste:** tudo vai só para o **Número de teste**, com o aviso `[TESTE] para: Fulano`. Não conta como aviso ao
+    colaborador, e o link abre com a faixa "nada será gravado";
+  - **Ligado:** envio de verdade.
+- **Aceite:**
+  - com o envio Ligado, o colaborador só recebe se **aceitou** pelo QR code do cartaz (botão **Cartaz do
+    WhatsApp**);
+  - na página do QR, ele também salva o contato da empresa e manda a primeira mensagem;
+  - sem aceite, a mensagem fica "Barrada" com o motivo, e o Cockpit mostra quantos aceitaram;
+  - os gestores não precisam aceitar.
+- **Parar:** o colaborador pede ao gerente ou ao RH, que usa **Parar o WhatsApp** na tela Colaborador do painel.
+  Celular trocado no cadastro volta o aceite para Pendente.
+- **Ritmo:** as mensagens saem espaçadas (de 20 a 90 segundos), das 8h às 20h, até 150 por dia. O chip novo começa
+  com 30 por dia nos 7 primeiros dias.
+
+## Relatório de auditoria (PDF por e-mail)
+
+- **O que traz:**
+  - correções do ponto e, em destaque, as **batidas do relógio desconsideradas**;
+  - respostas do colaborador, termos, mensagens de WhatsApp (enviada, entregue, lida, barrada) e e-mails do termo;
+  - envios ao Secullum, alterações vindas do Secullum, escala (publicações, trocas, convites);
+  - inconsistências mantidas, mudanças de regras (CCT, cargo, perfil, configurações) e aceites de WhatsApp.
+- **O que nunca traz:** CID nem atestado (aparece só "Atestado"). Cada linha tem o link para o registro no programa.
+- **Automático:** **semanal** (segunda às 7h, sobre a semana anterior) e **mensal** (ao concluir o Fechamento de
+  Ponto, anexado também ao fechamento). Vai para os **E-mails do RH** da Configuração Apuração (seção "Relatório de
+  auditoria"). Sem e-mail ou sem conta de saída, o relatório fica registrado e o RH recebe um aviso no sino.
+- **Sob demanda:** em **Relatorio de Auditoria**, clique em Novo, escolha o período (e a unidade, se quiser) e
+  salve. O PDF fica pronto em instantes e você é avisado; use **Baixar PDF**.
+
 ## Horista com escala
 
 Perfil "Horista" com semana padrão ou Escala do Mês: dia previsto sem batida = falta das horas do dia (vai à folha
@@ -475,6 +661,56 @@ afastamentos com essa justificativa. O motivo em texto livre do afastamento não
 **Dia neutro (rodízio):** os horários do Secullum com sábado ou domingo "neutro" entram com o dia marcado como
 Neutro no Perfil de Jornada (ver "Escala do mês e trocas de escala").
 
+## Mandar ao Secullum as correções do cartão
+
+1. **Ligue o envio:** Configuração Secullum → **Envio de correções** = **Teste** (só para quem tem Caso de Teste
+   aberto no dia — use os casos T-C1/T-C2 para os primeiros) ou **Sempre enviar** (todos), ou **Perguntar ao salvar**
+   (o Salvar do cartão mostra a caixa "Enviar também ao Secullum").
+2. **Correção nova:** salve no cartão normalmente; com a trava ligada ela vai para a fila e aparece em "Alterações do
+   período" → coluna Secullum (Enviado / Erro).
+3. **Correção salva antes (com a trava em Bloqueado):** no cartão, em **Alterações do período**, clique **Enviar ao
+   Secullum o que ainda não foi** — ou, no balão do dia, **Enviar este dia ao Secullum**. Abono precisa ter a
+   justificativa do Secullum escolhida (o programa avisa quais dias faltam).
+4. Erro de envio vira a pendência "Envio ao Secullum não feito", com **Reenviar**.
+
+## Manter para tratar no Secullum
+
+Toda inconsistência tem a opção **"Manter: será tratada no Secullum"** — no balão do dia do cartão ponto (última
+opção) e na central de inconsistências (botão **Manter (tratar no Secullum)**, também em lote para as marcadas). Ela
+grava o motivo "Será tratada no Secullum", tira a pendência da fila e deixa o dia com ressalva. Não cria nenhum
+valor no programa: o que a apuração calculou continua valendo até a correção chegar do Secullum (a coleta traz a
+mudança e o dia é reapurado). Para voltar atrás, o RH usa "Desfazer manter".
+
+## Envio ao Secullum (sincronização)
+
+O programa é onde o RH trabalha; o **Secullum continua oficial** (cartão, espelho e totais da folha). O programa
+envia ao Secullum, sozinho, o que já está decidido aqui:
+
+| O que | Quando |
+|---|---|
+| Folgas da escala (justificativa FOLGA no dia) | ao publicar a escala, aprovar troca ou mudança urgente (só dias futuros) |
+| Falta e atestado do horista com as horas do dia (FT0300, AT0130…) | todo dia de manhã, sobre ontem e anteontem; a falta é retirada se a batida chegar depois |
+| Licenças (casamento, luto, doação de sangue…) | ao aprovar a licença; acima de 3 dias, férias e maternidade vão como afastamento |
+| Justificativas da regra | botão **Preparar justificativas** |
+| Estrutura com o gestor da unidade | botão **Enviar estruturas** |
+
+**Como ligar com segurança (não há banco de testes):**
+
+1. Configuração Secullum → **Sincronização**: cada tipo começa em **Bloqueado**.
+2. Ponha o tipo em **Teste** e abra um **Caso de Teste Secullum** (qualquer funcionário, de preferência um dia
+   futuro). O caso mostra **o que será enviado** e **o que conferir no Secullum, passo a passo**.
+3. **Enviar ao Secullum** → confira na tela do Secullum → anexe o **print** → **Ficou certo** ou **Ficou errado**.
+   Teste também o **Desfazer**.
+4. Com todos os casos do tipo aprovados (botão **Matriz de testes**), ponha o tipo em **Ligado**. Para ir uma
+   empresa por vez, use **Empresas liberadas**.
+5. Algo estranho? **Suspender todos os envios** para tudo na hora. Cada envio fica na **Fila de envio** (Confirmado,
+   Divergente, Erro, Cancelado) com **Reenviar**.
+
+**Tarefas no Secullum:** o que a API não altera (opções dos horários, feriados, banco de horas) aparece em
+**Tarefa Secullum** com o passo a passo e o valor exato. Faça na tela do Secullum e clique **Marquei como feita**: o
+programa relê e confirma (ou pede o print quando não consegue ler). Tarefa pendente que muda valor **bloqueia o
+fechamento**. A auditoria roda toda madrugada e no botão **Auditar horários agora**.
+
 ## Gerente da unidade (acesso do gestor)
 
 O gerente é ligado à **unidade (empresa)**, não a cada colaborador: todos da empresa — inclusive quem for importado
@@ -508,12 +744,27 @@ Empresa sem ninguém marcado continua usando o "Reporta a" do cadastro do colabo
 
 - **Tolerância do intervalo** (padrão 5 min): voltar do almoço até 5 min antes, no total, não é supressão (nem
   pendência, nem indenização do Art. 71, §4º — redução ínfima, entendimento do TST). 0 = exige o intervalo exato.
+- **Tolerância para exigir o intervalo** (padrão 10 min): trabalhar sem pausa até 4h10 não exige os 15 min, e até
+  6h10 não exige 1h (art. 58, § 1º aplicado ao intervalo). Ex.: 15:54–20:00 (4h06) não é intervalo suprimido, não
+  abre pendência e não conta no alerta do horista. A partir de 4h11 vale a regra normal. 0 = qualquer minuto conta.
+  Atraso e hora extra de até 10 min no dia já não eram pendência (tolerância do art. 58).
+- **Intervalo em outro horário:** quem almoça mais cedo ou mais tarde que o horário (ex.: 10:30–11:30 em vez de
+  10:00–11:00) não perde a tolerância do dia: valem a entrada, a saída e o total do dia.
+- **Horista:** até 10 min a menos que a carga do dia não é descontado (vale a carga); o que passar da carga é pago
+  como hora normal. O horário do perfil Horista é só a carga diária: a hora de entrada não importa.
+- **Intervalo no começo ou no fim do expediente** (padrão: mínimo de 60 min de trabalho depois da volta e antes da
+  saída): almoço colado ao fim do turno (ex.: 1h de almoço faltando 1h para ir embora) ou ao começo vira a pendência
+  "Intervalo no começo ou no fim do expediente" — a Justiça do Trabalho não aceita, mesmo a pedido do empregado.
+  Para 2h, mude "Trabalho mínimo depois do intervalo" na CCT; 0 desliga. Se a pausa mais tarde for pedido do
+  colaborador, faça um termo escrito de alteração do horário do intervalo (com o motivo) e mantenha a batida real.
 - **Pendência de atraso só acima de** (padrão 15 min): o atraso menor continua descontado ou debitado do banco de
   horas, mas não aparece na central de inconsistências. 0 = todo atraso vira pendência.
 
 ## Período da folha (dia de fechamento)
 
-- Em **Empresa → Dia de fechamento da folha** informe o último dia do período. Ex.: **25** = de 26 do mês anterior a
+- **No painel (mais rápido):** escolha a **Empresa** no filtro; embaixo da competência aparece o período e o link
+  **definir dia de fechamento** (ou **alterar**). Informe o dia e salve.
+- **No Desk:** Empresa → seção **Ponto e folha (programa)** → **Dia de fechamento da folha**. Informe o último dia do período. Ex.: **25** = de 26 do mês anterior a
   25. Vazio = mês cheio. Cada empresa pode ter o seu.
 - A competência leva o nome do mês em que o período termina: com fechamento no dia 25, **Novembro/2026 = 26/10 a
   25/11**. O painel `/ponto` mostra as datas ao lado do mês; o cockpit, a central de inconsistências, o mês do
@@ -550,7 +801,37 @@ um período já fechado.
 ## Termo de ocorrências
 
 Para quem acumula ocorrências (intervalo, batida faltando, atraso, falta…), o termo junta tudo do período com a
-**correção que o sistema sugere** em cada dia.
+**situação de cada dia**.
+
+**O que cada linha diz (desde 09/11/2026):** o fato do dia, neutro, sem citar lei e sem dizer o efeito na folha. A
+coluna **Horário correto** só fica aberta em **batida faltando**, **intervalo**, **falta** e **aula sem batida**; nas outras sai
+**hachurada** (só registro). **Não reconheço** vale em todas.
+
+| Ocorrência | Exemplo do texto |
+|---|---|
+| Batida faltando | Não houve registro da saída. Escreva o horário correto. (sem sugerir horário) |
+| Batida repetida | Batida 08:01 registrada em duplicidade (1 min depois de 08:00); a repetida é desconsiderada. |
+| Intervalo | Jornada de 8 h sem o registro do intervalo mínimo de 1 h. Se fez o intervalo, escreva o horário. (o colaborador escreve o horário do intervalo) |
+| Falta | Não houve registro de ponto neste dia de trabalho previsto. |
+| Atraso | Entrada às 08:30, 30 min depois do horário previsto (08:00). |
+| Hora extra acima do limite | Jornada de 11 h, com 3 h além do previsto, acima do limite de 2 h extras por dia. |
+| Intervalo maior que 2 h | Intervalo de 2h30, maior que o máximo de 2 h. |
+| Intervalo no começo ou no fim | Intervalo registrado no fim do expediente (16:40 às 17:00); o descanso deve ser feito no meio da jornada. |
+| Aula sem batida | Aula prevista na grade sem registro de ponto. |
+| Estágio acima do TCE | Jornada de 7 h, acima do limite diário do termo de estágio. |
+| Instrutor horista acima de 4h15 | Jornada de 4h32, acima de 4 h, sem o registro do intervalo. |
+
+- O **descanso menor que 11 h** entre um dia e outro **não entra no termo**: pode ser da escala ou de ter chegado
+  antes do horário.
+- **O que o colaborador corrigiu pelo link do WhatsApp aparece no termo** como registro, com a coluna hachurada:
+  "Horário 23:00 informado pelo(a) empregado(a) pelo link em 07/11; aprovado pelo RH em 08/11" (ou "aguardando
+  aprovação do RH" / "não aprovado pelo RH"). Aguardando o RH, a assinatura não mexe no dia: a aprovação continua com
+  você.
+- Batida faltando assinada **"De acordo" sem o horário escrito**: nada muda no ponto e a pendência volta para a sua
+  fila.
+- O termo **não inclui mais o intervalo** do horista: ele só registra o fato (o intervalo do instrutor horista é
+  lançado pelo RH no cartão).
+- Termos emitidos antes de 09/11/2026 continuam com o texto antigo; para o texto novo, cancele e emita de novo.
 
 - **Um colaborador:** no cartão ponto, botão **Termo de ocorrências** → confira os dias e o texto do WhatsApp → **Emitir
   e enviar**.
@@ -579,7 +860,7 @@ Para quem acumula ocorrências (intervalo, batida faltando, atraso, falta…), o
 
 ## Planejador de escalas 5x2
 
-Painel → **Planejador** (ou o botão "Planejador 5x2" na tela Escalas). É **só uma simulação**: nada muda na escala.
+Painel → **Planejador** (no menu do painel). É **só uma simulação**: nada muda na escala.
 
 1. Escolha a empresa, o cargo (instrutor de musculação), o início (segunda-feira), as semanas e o regime — pode simular
    já com o de 42h, mesmo antes de ativar.

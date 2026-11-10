@@ -2,37 +2,109 @@
 <html lang="pt-BR">
 <head>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 	<meta name="robots" content="noindex" />
+	<meta name="theme-color" content="#1d4ed8" />
 	<title>Termo de ocorrências</title>
 	<style>
-		:root { --fundo: #f8fafc; --superficie: #ffffff; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --sobre: #ffffff; --perigo: #b91c1c; --ok: #15803d; }
-		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --superficie: #1e293b; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --sobre: #0f172a; --perigo: #fca5a5; --ok: #86efac; } }
+		/* Mobile-first (pedido do RH, 04/11/2026): coluna única, toque de 48px, inputs de 16px (sem zoom no iOS), ação
+		   principal fixa no rodapé, termo integral recolhível, código com campos automáticos e tela de sucesso. */
+		:root { --fundo: #f1f5f9; --superficie: #ffffff; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --primario-forte: #1e40af; --sobre: #ffffff; --perigo: #b91c1c; --ok: #15803d; --ok-suave: #dcfce7; --perigo-suave: #fee2e2; --sombra: 0 -4px 16px rgb(15 23 42 / 0.12); }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0b1220; --superficie: #1e293b; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --primario-forte: #bfdbfe; --sobre: #0f172a; --perigo: #fca5a5; --ok: #86efac; --ok-suave: #14532d; --perigo-suave: #450a0a; --sombra: 0 -4px 16px rgb(0 0 0 / 0.5); } }
 		* { box-sizing: border-box; }
-		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
-		main { max-width: 46rem; margin: 0 auto; padding: 1rem; }
-		h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
-		h2 { font-size: 1.05rem; margin: 1.25rem 0 0.5rem; }
-		.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; }
-		.dia { font-weight: 600; }
+		html { -webkit-text-size-adjust: 100%; }
+		body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 40rem; margin: 0 auto; padding: 16px 18px calc(112px + env(safe-area-inset-bottom)); }
+		h1 { font-size: 1.25rem; line-height: 1.3; margin: 4px 0 12px; }
+		h2 { font-size: 1.05rem; margin: 20px 0 8px; }
+		p { margin: 8px 0; }
+		.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
 		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
-		.opcoes { display: grid; gap: 0.5rem; }
-		button { min-height: 48px; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--sobre); font: inherit; font-weight: 600; cursor: pointer; }
+		/* resumo */
+		.resumo dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+		.resumo dt { color: var(--suave); font-size: 0.875rem; }
+		.resumo dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+		.codigo-termo { display: inline-block; font-family: ui-monospace, monospace; font-size: 0.875rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--borda); }
+		/* termo integral */
+		details.termo-integral > summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-weight: 600; list-style: none; }
+		details.termo-integral > summary::after { content: "▾"; margin-left: auto; transition: transform 0.15s; }
+		details.termo-integral[open] > summary::after { transform: rotate(180deg); }
+		.rolagem { max-height: 45vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-right: 4px; font-size: 0.95rem; }
+		.rolagem ol { padding-left: 1.25rem; margin: 0; }
+		.rolagem li { margin-bottom: 8px; }
+		/* dias */
+		.dia-topo { display: flex; align-items: flex-start; gap: 8px; }
+		.dia-topo strong { flex: 1; }
+		.chip { flex: none; font-size: 0.8rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; background: var(--ok-suave); color: var(--ok); }
+		.chip.corrigido { background: transparent; color: var(--primario); border: 1px solid var(--primario); }
+		.chip.nao { background: var(--perigo-suave); color: var(--perigo); }
+		/* controles: toque mínimo de 48px */
+		button { min-height: 48px; min-width: 48px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--primario); background: var(--primario); color: var(--sobre); font: inherit; font-weight: 600; cursor: pointer; touch-action: manipulation; }
 		button.secundario { background: transparent; color: var(--primario); }
 		button.perigo { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		button.link { border: 0; background: transparent; color: var(--primario); padding: 10px 4px; text-decoration: underline; }
 		button[aria-pressed="true"] { outline: 3px solid var(--texto); outline-offset: 2px; }
-		button:disabled { opacity: 0.6; cursor: wait; }
-		label { display: block; font-weight: 500; margin-top: 0.75rem; }
-		input, select, textarea { width: 100%; min-height: 44px; margin-top: 0.25rem; padding: 0.4rem 0.6rem; font: inherit; color: var(--texto); background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.375rem; }
-		.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-		@media (max-width: 30rem) { .linha { grid-template-columns: 1fr; } }
+		button:disabled { opacity: 0.55; cursor: not-allowed; }
+		.largo { width: 100%; }
+		label { display: block; font-weight: 500; margin-top: 12px; }
+		input, select, textarea { width: 100%; min-height: 48px; margin-top: 4px; padding: 10px 12px; font-size: 16px; font-family: inherit; color: var(--texto); background: var(--superficie); border: 1px solid var(--borda); border-radius: 10px; }
+		input[aria-invalid="true"] { border-color: var(--perigo); }
+		.ajuda { font-size: 0.875rem; margin-top: 4px; min-height: 1.3em; }
+		.marcar { display: flex; align-items: center; gap: 12px; min-height: 48px; font-weight: 400; margin-top: 8px; }
+		.marcar input { width: 24px; height: 24px; min-height: 24px; margin: 0; flex: none; accent-color: var(--primario); }
+		.linha { display: grid; grid-template-columns: 1fr; gap: 0 12px; }
+		@media (min-width: 30rem) { .linha { grid-template-columns: 1fr 1fr; } }
+		.opcoes { display: grid; gap: 8px; }
 		:focus-visible { outline: 3px solid var(--primario); outline-offset: 2px; }
+		[hidden] { display: none !important; }
+		/* editor de horários (compartilhado) */
+		.batidas { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+		.batidas li { display: flex; align-items: center; gap: 6px; border: 1px solid var(--borda); border-radius: 10px; padding: 0 0 0 10px; }
+		.batidas li.nova { border-color: var(--primario); }
+		.batidas .rotulo { color: var(--suave); font-size: 0.85rem; }
+		.batidas button { min-height: 48px; min-width: 48px; padding: 0; border: 0; background: transparent; color: var(--perigo); font-size: 1.25rem; }
+		.incluir { display: flex; gap: 8px; align-items: flex-end; }
+		.incluir label { flex: 1; }
+		.previa { margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--borda); }
+		/* código de 6 dígitos */
+		.otp { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+		.otp input { text-align: center; font-size: 1.375rem; font-weight: 700; padding: 8px 0; font-family: ui-monospace, monospace; }
+		/* barra fixa */
+		.barra { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--superficie); border-top: 1px solid var(--borda); box-shadow: var(--sombra); padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }
+		.barra .dentro { max-width: 40rem; margin: 0 auto; }
+		.barra .resumo-barra { font-size: 0.875rem; margin: 0 0 8px; color: var(--suave); }
+		.barra button { width: 100%; min-height: 56px; font-size: 1.0625rem; background: var(--primario-forte); border-color: var(--primario-forte); }
+		.giro { display: inline-block; width: 1em; height: 1em; margin-right: 8px; vertical-align: -0.15em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: giro 0.7s linear infinite; }
+		@keyframes giro { to { transform: rotate(360deg); } }
+		@media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
+		/* sucesso */
+		.sucesso { text-align: center; padding: 32px 16px; }
+		.sucesso .icone { width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-suave); color: var(--ok); font-size: 2.25rem; font-weight: 700; }
+		.sucesso h2 { font-size: 1.375rem; margin: 8px 0; }
 	</style>
 </head>
 <body>
-	<main>
+{{ faixa_teste or "" }}
+	<main id="principal">
 		<h1>Termo de ocorrências de ponto</h1>
-		<p id="cabecalho" class="suave">Carregando…</p>
+		<p id="carregando" class="suave">Carregando…</p>
+
+		<section id="resumo" class="cartao resumo" aria-label="Resumo do termo" hidden>
+			<dl>
+				<dt>Termo</dt><dd><span id="r-codigo" class="codigo-termo"></span></dd>
+				<dt>Nome</dt><dd id="r-nome"></dd>
+				<dt>Empresa</dt><dd id="r-empresa"></dd>
+				<dt>Período</dt><dd id="r-periodo"></dd>
+				<dt>Dias</dt><dd id="r-dias"></dd>
+				<dt id="r-prazo-rot">Prazo</dt><dd id="r-prazo"></dd>
+			</dl>
+		</section>
+
+		<details id="termo-integral" class="cartao termo-integral" hidden>
+			<summary>Ler o termo completo</summary>
+			<div class="rolagem" tabindex="0" aria-label="Texto integral do termo"><ol id="clausulas"></ol></div>
+		</details>
+
 		<section id="itens" aria-label="Ocorrências" hidden></section>
 		<p id="informativos" class="suave" hidden></p>
 
@@ -47,42 +119,68 @@
 				<p id="explica-opcao" class="suave"></p>
 				<div id="testemunhas" hidden>
 					<div class="linha">
-						<label>Testemunha 1 — nome<input id="t1" autocomplete="off" /></label>
-						<label>CPF<input id="t1cpf" inputmode="numeric" autocomplete="off" /></label>
+						<label>Testemunha 1 — nome<input id="t1" autocomplete="off" autocapitalize="words" /></label>
+						<label>CPF<input id="t1cpf" class="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" /></label>
 					</div>
 					<div class="linha">
-						<label>Testemunha 2 — nome<input id="t2" autocomplete="off" /></label>
-						<label>CPF<input id="t2cpf" inputmode="numeric" autocomplete="off" /></label>
+						<label>Testemunha 2 — nome<input id="t2" autocomplete="off" autocapitalize="words" /></label>
+						<label>CPF<input id="t2cpf" class="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" /></label>
 					</div>
 				</div>
 				<label>Observações do colaborador (opcional)<textarea id="obs" rows="2" maxlength="1000"></textarea></label>
-				<label>Seu nome (quem está registrando)<input id="nome" required autocomplete="name" /></label>
-				<p><button type="submit" id="enviar-gestor">Confirmar</button></p>
+				<label>Seu nome (quem está registrando)<input id="nome" required autocomplete="name" autocapitalize="words" /></label>
+				<p><button type="submit" id="enviar-gestor" class="largo">Confirmar</button></p>
 			</form>
 		</section>
 
 		<section id="colaborador" hidden aria-labelledby="titulo-colab">
-			<h2 id="titulo-colab">Conferir e assinar pelo celular</h2>
-			<p class="suave">Confira cada dia acima. Se algum horário estiver errado, escolha "Corrigir horário" e escreva os horários certos do dia.</p>
-			<label>Observações (opcional)<textarea id="obs-c" rows="2" maxlength="1000"></textarea></label>
-			<label>Seu CPF<input id="cpf" inputmode="numeric" autocomplete="off" /></label>
-			<p><button type="button" class="secundario" id="pedir">Receber o código no WhatsApp</button></p>
-			<label>Código recebido<input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" /></label>
-			<p><button type="button" id="assinar">Assinar o termo</button></p>
+			<h2 id="titulo-colab">Assinar pelo celular</h2>
+			<p class="suave">Está tudo certo? É só assinar. Se algum dia estiver errado, toque em "Corrigir este dia".</p>
+			<label for="cpf">Seu CPF</label>
+			<input id="cpf" class="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" aria-describedby="cpf-ajuda" />
+			<p id="cpf-ajuda" class="ajuda suave" aria-live="polite"></p>
+			<div id="bloco-codigo" hidden>
+				<p id="rotulo-codigo" class="suave" style="margin-top: 12px">Código de 6 dígitos que chegou no seu WhatsApp</p>
+				<div class="otp" role="group" aria-labelledby="rotulo-codigo" id="otp"></div>
+				<p class="ajuda"><span id="reenvio" class="suave"></span><button type="button" id="reenviar" class="link" hidden>Reenviar o código</button></p>
+			</div>
+			<details style="margin-top: 8px">
+				<summary class="suave" style="min-height: 48px; display: flex; align-items: center; cursor: pointer">Quer deixar uma observação? (opcional)</summary>
+				<label>Observações<textarea id="obs-c" rows="3" maxlength="1000"></textarea></label>
+			</details>
 		</section>
 
 		<p id="status" role="status" aria-live="polite"></p>
+
+		<section id="sucesso" class="cartao sucesso" hidden tabindex="-1" aria-labelledby="titulo-sucesso">
+			<div class="icone" aria-hidden="true">✓</div>
+			<h2 id="titulo-sucesso">Termo assinado</h2>
+			<p id="sucesso-texto"></p>
+			<p class="suave">Você pode fechar esta página.</p>
+		</section>
 	</main>
+
+	<div id="barra" class="barra" hidden>
+		<div class="dentro">
+			<p id="barra-resumo" class="resumo-barra" aria-live="polite"></p>
+			<button type="button" id="principal-acao">Receber o código no WhatsApp</button>
+		</div>
+	</div>
+
+	<script src="/assets/hrms_secullum_brasil/js/editor_horarios.js"></script>
 	<script>
 		// quem já está logado no Desk (ex.: o RH testando) precisa do token CSRF no POST
-		window.csrf_token = "{{ frappe.session.csrf_token or '' }}";
+		window.csrf_token = "{{ csrf_token or '' }}";
 		const API = "/api/method/hrms_secullum_brasil.apuracao.termo_ocorrencias";
 		const t = new URLSearchParams(location.search).get("t") || "";
 		const $ = (id) => document.getElementById(id);
 		const br = (iso) => iso.slice(0, 10).split("-").reverse().join("/");
+		const REENVIO_SEGUNDOS = 60;
 		let dados = null;
 		let opcao = null;
 		let enviando = false;
+		let codigoPedido = false;
+		let relogioReenvio = null;
 
 		function status(texto, classe) {
 			$("status").className = classe || "";
@@ -115,71 +213,328 @@
 			return e;
 		}
 
+		// ------------------------------------------------------------ CPF: máscara e conferência em tempo real
+		const digitos = (texto) => String(texto || "").replace(/\D/g, "").slice(0, 11);
+		function mascaraCpf(texto) {
+			const d = digitos(texto);
+			return d.replace(/^(\d{3})(\d)/, "$1.$2").replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1-$2");
+		}
+		function cpfValido(texto) {
+			const d = digitos(texto);
+			if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+			const dv = (n) => {
+				const soma = [...d.slice(0, n)].reduce((s, x, i) => s + Number(x) * (n + 1 - i), 0);
+				return ((soma * 10) % 11) % 10;
+			};
+			return dv(9) === Number(d[9]) && dv(10) === Number(d[10]);
+		}
+		document.querySelectorAll("input.cpf").forEach((campo) =>
+			campo.addEventListener("input", () => {
+				campo.value = mascaraCpf(campo.value);
+				if (campo.id === "cpf") conferirCpf(false);
+			})
+		);
+		function conferirCpf(final) {
+			const campo = $("cpf");
+			const d = digitos(campo.value);
+			const ok = cpfValido(campo.value);
+			const mostrar = final || d.length === 11;
+			campo.setAttribute("aria-invalid", mostrar && !ok ? "true" : "false");
+			$("cpf-ajuda").className = `ajuda ${mostrar && !ok ? "erro" : ok ? "ok" : "suave"}`;
+			$("cpf-ajuda").textContent = mostrar && !ok ? "CPF inválido: confira os números." : d.length === 11 ? "CPF ok." : "";
+			atualizarBarra();
+			return ok;
+		}
+		$("cpf").addEventListener("blur", () => digitos($("cpf").value).length && conferirCpf(true));
+
+		// ------------------------------------------------------------ código: 6 campos com foco automático e colar
+		const caixasOtp = [];
+		for (let n = 0; n < 6; n++) {
+			// sem maxlength: o preenchimento automático do celular (one-time-code) entrega os 6 dígitos na 1ª caixa
+			const c = el("input", { inputmode: "numeric", pattern: "[0-9]*", "aria-label": `Dígito ${n + 1} do código`, autocomplete: n === 0 ? "one-time-code" : "off" });
+			c.addEventListener("input", () => {
+				const v = c.value.replace(/\D/g, "");
+				if (v.length > 1) return preencherOtp(v, n); // colou ou o celular preencheu o código inteiro
+				c.value = v;
+				if (v && n < 5) caixasOtp[n + 1].focus();
+				atualizarBarra();
+			});
+			c.addEventListener("keydown", (ev) => {
+				if (ev.key === "Backspace" && !c.value && n > 0) caixasOtp[n - 1].focus();
+				if (ev.key === "Enter") $("principal-acao").click();
+			});
+			c.addEventListener("paste", (ev) => {
+				ev.preventDefault();
+				preencherOtp((ev.clipboardData || window.clipboardData).getData("text"), n);
+			});
+			caixasOtp.push(c);
+			$("otp").append(c);
+		}
+		function preencherOtp(texto, inicio = 0) {
+			const v = String(texto).replace(/\D/g, "").slice(0, 6 - inicio);
+			[...v].forEach((x, i) => (caixasOtp[inicio + i].value = x));
+			caixasOtp[Math.min(5, inicio + v.length)].focus();
+			atualizarBarra();
+		}
+		const codigo = () => caixasOtp.map((c) => c.value).join("");
+
+		function iniciarReenvio() {
+			let resta = REENVIO_SEGUNDOS;
+			$("reenviar").hidden = true;
+			clearInterval(relogioReenvio);
+			const passo = () => {
+				$("reenvio").textContent = resta > 0 ? `Reenviar o código em ${resta}s` : "";
+				if (resta <= 0) {
+					clearInterval(relogioReenvio);
+					$("reenviar").hidden = false;
+				}
+				resta -= 1;
+			};
+			passo();
+			relogioReenvio = setInterval(passo, 1000);
+		}
+
+		// ------------------------------------------------------------ dias: resumo + "Corrigir este dia"
+		// Correção do dia: o editor compartilhado (/assets/hrms_secullum_brasil/js/editor_horarios.js); a pessoa só
+		// inclui ou tira horários e o servidor ordena, rotula e mostra a prévia (termo_ocorrencias.previa)
+		const estado = {}; // item -> { editor, naoReconhece, aberto }
+
+		function situacaoDoDia(item) {
+			const e = estado[item.name];
+			if (e?.naoReconhece) return ["Não reconheço", "nao"];
+			if (e?.editor?.mudou()) return ["Corrigido", "corrigido"];
+			return ["De acordo", ""];
+		}
+
 		function desenharItens() {
 			const caixa = $("itens");
 			caixa.replaceChildren();
 			const editavel = dados.aberto && (opcao === "alteracao" || dados.papel === "colaborador");
 			dados.itens.forEach((item, n) => {
+				if (!estado[item.name]) estado[item.name] = { editor: null, naoReconhece: false, aberto: false };
+				const e = estado[item.name];
 				const c = el("article", { class: "cartao", "aria-label": `Dia ${br(item.data)}` });
-				c.append(el("div", { class: "dia" }, `${br(item.data)} — ${item.ocorrencias}`));
-				c.append(el("div", { class: "suave" }, `Marcações registradas: ${item.marcacoes}`));
-				c.append(el("div", {}, `Correção sugerida: ${item.proposta}`));
+				const topo = el("div", { class: "dia-topo" });
+				topo.append(el("strong", {}, `${br(item.data)} — ${item.ocorrencias}`));
+				if (editavel) {
+					const [texto, classe] = situacaoDoDia(item);
+					topo.append(el("span", { class: `chip ${classe}`, "data-chip": item.name }, texto));
+				}
+				c.append(topo);
+				c.append(el("div", { class: "suave" }, `Registrado: ${item.marcacoes}`));
+				c.append(el("div", {}, `Situação do dia: ${item.proposta}`));
 				if (!dados.aberto && item.resposta) {
 					c.append(el("div", { class: "suave" }, `Resposta: ${item.resposta}${item.horarios_informados ? ` (${item.horarios_informados})` : ""}. ${item.resultado || ""}`));
 				}
 				if (editavel) {
-					const id = `resp-${n}`;
-					const rotulo = el("label", { for: id }, "Resposta deste dia");
-					const sel = el("select", { id, "data-item": item.name });
-					[["De acordo", "De acordo"], ["Alterado", "Corrigir horário"], ["Não reconhece", "Não reconheço"]].forEach(([v, txt]) => sel.append(el("option", { value: v }, txt)));
-					const idh = `hor-${n}`;
-					const rotH = el("label", { for: idh, hidden: "" }, "Horários certos do dia (HH:MM, separados por espaço)");
-					const hor = el("input", { id: idh, "data-horarios": item.name, value: item.horarios_propostos || item.marcacoes.replace("sem batida", "") });
-					rotH.append(hor);
-					sel.addEventListener("change", () => { rotH.hidden = sel.value !== "Alterado"; });
-					c.append(rotulo, sel, rotH);
+					// sem lista de respostas: mexeu nos horários = corrigiu; não mexeu = de acordo; "Não reconheço" à parte
+					const corpo = el("div", { id: `corpo-${n}` });
+					corpo.hidden = !e.aberto;
+					const abrir = el("button", { type: "button", class: "secundario largo", "aria-expanded": String(e.aberto), "aria-controls": `corpo-${n}`, style: "margin-top: 10px" }, e.aberto ? "Fechar a correção" : "Corrigir este dia");
+					const editor = el("div", { "data-editor": item.name });
+					const idn = `nao-${n}`;
+					const marca = el("input", { id: idn, type: "checkbox", "data-item": item.name });
+					marca.checked = e.naoReconhece;
+					const rotuloN = el("label", { for: idn, class: "marcar" });
+					rotuloN.append(marca, "Não reconheço este dia (não trabalhei ou estes não são os meus horários)");
+					editor.hidden = e.naoReconhece;
+					marca.addEventListener("change", () => {
+						e.naoReconhece = marca.checked;
+						editor.hidden = marca.checked;
+						atualizarChip(item);
+					});
+					corpo.append(editor, rotuloN);
+					const criarEditor = () => {
+						if (e.editor) return;
+						const iniciais = EditorHorarios.horasDoTexto(item.horarios_propostos || item.marcacoes);
+						e.editor = EditorHorarios.criar(editor, {
+							chave: item.name,
+							data: item.data,
+							iniciais,
+							calcular: async (horarios) => {
+								const r = await chamar("previa", { item: item.name, horarios });
+								setTimeout(() => atualizarChip(item));
+								return r;
+							},
+						});
+					};
+					abrir.addEventListener("click", () => {
+						e.aberto = !e.aberto;
+						corpo.hidden = !e.aberto;
+						abrir.setAttribute("aria-expanded", String(e.aberto));
+						abrir.textContent = e.aberto ? "Fechar a correção" : "Corrigir este dia";
+						if (e.aberto) criarEditor();
+					});
+					if (item.sem_horario) {
+						// linha só de registro (RH, 09/11/2026): sem horário a corrigir; "Não reconheço" continua
+						abrir.hidden = true;
+						editor.hidden = true;
+						corpo.hidden = false;
+						e.aberto = true;
+					}
+					c.append(abrir, corpo);
+					if (e.aberto && !item.sem_horario) {
+						const anteriores = e.editor ? e.editor.estado.horas : null;
+						e.editor = null;
+						criarEditor();
+						if (anteriores) {
+							e.editor.estado.horas = anteriores;
+							e.editor.redesenhar();
+						}
+					}
 				}
 				caixa.append(c);
 			});
 			caixa.hidden = false;
 		}
 
-		function respostas() {
-			return [...document.querySelectorAll("select[data-item]")].map((s) => ({
-				item: s.dataset.item,
-				resposta: s.value,
-				horarios: document.querySelector(`input[data-horarios="${s.dataset.item}"]`).value,
-			}));
+		function atualizarChip(item) {
+			const chip = document.querySelector(`[data-chip="${item.name}"]`);
+			if (!chip) return;
+			const [texto, classe] = situacaoDoDia(item);
+			chip.textContent = texto;
+			chip.className = `chip ${classe}`;
+			atualizarBarra();
 		}
 
-		function mostrar(d) {
+		function respostas() {
+			return dados.itens
+				.filter((item) => estado[item.name])
+				.map((item) => {
+					const e = estado[item.name];
+					const mudou = Boolean(e.editor?.mudou());
+					const resposta = e.naoReconhece ? "Não reconhece" : mudou ? "Alterado" : "De acordo";
+					return { item: item.name, resposta, horarios: mudou ? e.editor.estado.horas.join(" ") : "" };
+				});
+		}
+
+		// ------------------------------------------------------------ barra fixa: a ação principal do momento
+		function atualizarBarra() {
+			if (!dados || !dados.aberto || dados.papel !== "colaborador") return;
+			const r = respostas();
+			const corrigidos = r.filter((x) => x.resposta === "Alterado").length;
+			const nao = r.filter((x) => x.resposta === "Não reconhece").length;
+			const partes = [`${dados.itens.length} dia(s)`];
+			if (corrigidos) partes.push(`${corrigidos} corrigido(s)`);
+			if (nao) partes.push(`${nao} não reconhecido(s)`);
+			$("barra-resumo").textContent = partes.join(" · ");
+			const botao = $("principal-acao");
+			if (enviando) return;
+			if (!codigoPedido) {
+				botao.textContent = "Receber o código no WhatsApp";
+				botao.disabled = !cpfValido($("cpf").value);
+			} else {
+				botao.textContent = "Assinar o termo";
+				botao.disabled = !cpfValido($("cpf").value) || codigo().length !== 6;
+			}
+		}
+
+		function ocupar(texto) {
+			enviando = true;
+			const botao = $("principal-acao");
+			botao.disabled = true;
+			botao.replaceChildren(el("span", { class: "giro", "aria-hidden": "true" }), texto);
+		}
+		function liberar() {
+			enviando = false;
+			atualizarBarra();
+		}
+
+		async function pedirCodigo() {
+			ocupar("Enviando o código…");
+			try {
+				const r = await chamar("pedir_codigo", {});
+				codigoPedido = true;
+				$("bloco-codigo").hidden = false;
+				status(r.enviado ? `Código enviado para ${r.celular}. Vale por 15 minutos.` : "Não foi possível enviar o código agora. Tente de novo em alguns minutos ou assine em papel com o seu gestor.", r.enviado ? "ok" : "erro");
+				iniciarReenvio();
+				caixasOtp[0].focus();
+			} catch (e) {
+				status(e.message, "erro");
+			} finally {
+				liberar();
+			}
+		}
+
+		async function assinar() {
+			ocupar("Assinando…");
+			status("", "");
+			try {
+				mostrar(await chamar("assinar", { cpf: digitos($("cpf").value), codigo: codigo(), respostas: respostas(), observacoes: $("obs-c").value }), true);
+			} catch (e) {
+				status(e.message, "erro");
+				liberar();
+			}
+		}
+
+		$("principal-acao").addEventListener("click", () => {
+			if (enviando) return;
+			if (!conferirCpf(true)) return $("cpf").focus();
+			return codigoPedido ? assinar() : pedirCodigo();
+		});
+		$("reenviar").addEventListener("click", pedirCodigo);
+
+		// ------------------------------------------------------------ montar a página
+		function mostrar(d, recemAssinado = false) {
 			dados = d;
-			$("cabecalho").className = "";
-			$("cabecalho").textContent = `${d.codigo} · ${d.colaborador}${d.cargo ? ` (${d.cargo})` : ""} · ${d.empresa} · período ${d.periodo}` + (d.aberto && d.prazo ? ` · prazo para assinar: ${br(d.prazo)}` : "");
+			$("carregando").hidden = true;
+			$("resumo").hidden = false;
+			$("r-codigo").textContent = d.codigo;
+			$("r-nome").textContent = `${d.colaborador}${d.cargo ? ` (${d.cargo})` : ""}`;
+			$("r-empresa").textContent = d.empresa;
+			$("r-periodo").textContent = d.periodo;
+			$("r-dias").textContent = `${d.itens.length} dia(s) para conferir`;
+			$("r-prazo").textContent = d.aberto && d.prazo ? br(d.prazo) : d.status;
+			$("r-prazo-rot").textContent = d.aberto && d.prazo ? "Prazo" : "Situação";
+			if (d.clausulas?.length) {
+				$("termo-integral").hidden = false;
+				$("clausulas").replaceChildren(...d.clausulas.map((c) => el("li", {}, c)));
+			}
 			if (d.informativos) {
 				$("informativos").hidden = false;
 				$("informativos").textContent = `Também observado no período: ${d.informativos.split("\n").join("; ")}.`;
 			}
 			desenharItens();
 			$("gestor").hidden = !(d.aberto && d.papel === "gestor");
-			$("colaborador").hidden = !(d.aberto && d.papel === "colaborador");
-			if (!d.aberto) status(`Termo ${d.status}${d.confirmado_em ? ` em ${br(d.confirmado_em)} ${d.confirmado_em.slice(11, 16)}` : ""}${d.via ? ` (${d.via})` : ""}. Obrigado!`, d.status === "Cancelado" ? "suave" : "ok");
+			const colaborador = d.aberto && d.papel === "colaborador";
+			$("colaborador").hidden = !colaborador;
+			$("barra").hidden = !colaborador;
+			atualizarBarra();
+			if (!d.aberto) {
+				const quando = d.confirmado_em ? ` em ${br(d.confirmado_em)} às ${d.confirmado_em.slice(11, 16)}` : "";
+				// tela de sucesso logo depois de confirmar; quem abre o link de novo vê só a situação
+				if (recemAssinado) {
+					const recusa = d.status === "Recusado";
+					$("titulo-sucesso").textContent = recusa ? "Recusa registrada" : "Termo assinado";
+					$("sucesso").querySelector(".icone").textContent = recusa ? "!" : "✓";
+					$("sucesso").hidden = false;
+					$("sucesso-texto").textContent = `${d.codigo} registrado${quando}${d.via ? ` (${d.via})` : ""}.`;
+					$("itens").hidden = true;
+					$("termo-integral").hidden = true;
+					$("informativos").hidden = true;
+					status("", "");
+					$("sucesso").focus();
+				} else {
+					status(`Termo ${d.status}${quando}${d.via ? ` (${d.via})` : ""}. Obrigado!`, d.status === "Cancelado" ? "suave" : "ok");
+				}
+			}
 		}
 
 		async function carregar() {
 			const r = await fetch(`${API}.dados?t=${encodeURIComponent(t)}`);
 			const corpo = await r.json().catch(() => ({}));
 			if (!r.ok) {
-				$("cabecalho").className = "erro";
-				$("cabecalho").textContent = "Link inválido. Fale com o RH.";
+				$("carregando").className = "erro";
+				$("carregando").textContent = "Link inválido. Fale com o RH.";
 				return;
 			}
 			mostrar(corpo.message);
 		}
 
+		// ------------------------------------------------------------ gestor (registro do termo em papel)
 		const EXPLICA = {
 			conforme: "O colaborador assinou concordando com a correção sugerida em todos os dias. A correção entra direto no cartão ponto.",
-			alteracao: "Para cada dia, marque o que o colaborador escreveu no papel: de acordo, horário corrigido ou não reconhece. A correção entra direto no cartão ponto; o que ele não reconhece volta para o RH.",
+			alteracao: "Para cada dia, faça o que o colaborador escreveu no papel: toque em \"Corrigir este dia\" e inclua ou tire os horários, ou marque \"Não reconheço este dia\". Dia sem mudança fica de acordo. A correção entra direto no cartão ponto; o que ele não reconhece volta para o RH.",
 			recusa: "O colaborador se recusou a assinar. Informe as duas testemunhas que assinaram a recusa no papel; as ocorrências voltam para o RH.",
 		};
 
@@ -200,48 +555,26 @@
 			ev.preventDefault();
 			if (enviando) return;
 			enviando = true;
-			$("enviar-gestor").disabled = true;
-			status("Registrando…", "suave");
+			const botao = $("enviar-gestor");
+			const texto = botao.textContent;
+			botao.disabled = true;
+			botao.replaceChildren(el("span", { class: "giro", "aria-hidden": "true" }), "Registrando…");
 			try {
 				const d = await chamar("confirmar", {
 					opcao,
 					nome: $("nome").value,
 					observacoes: $("obs").value,
 					respostas: opcao === "alteracao" ? respostas() : null,
-					testemunhas: opcao === "recusa" ? [{ nome: $("t1").value, cpf: $("t1cpf").value }, { nome: $("t2").value, cpf: $("t2cpf").value }] : null,
+					testemunhas: opcao === "recusa" ? [{ nome: $("t1").value, cpf: digitos($("t1cpf").value) }, { nome: $("t2").value, cpf: digitos($("t2cpf").value) }] : null,
 				});
 				opcao = null;
-				mostrar(d);
+				mostrar(d, true);
 			} catch (e) {
 				status(e.message, "erro");
 			} finally {
 				enviando = false;
-				$("enviar-gestor").disabled = false;
-			}
-		});
-
-		$("pedir").addEventListener("click", async () => {
-			try {
-				const r = await chamar("pedir_codigo", {});
-				status(r.enviado ? `Código enviado para ${r.celular}. Vale por 15 minutos.` : "Não foi possível enviar o código agora. Tente de novo em alguns minutos ou assine em papel com o seu gestor.", r.enviado ? "ok" : "erro");
-				$("codigo").focus();
-			} catch (e) {
-				status(e.message, "erro");
-			}
-		});
-
-		$("assinar").addEventListener("click", async () => {
-			if (enviando) return;
-			enviando = true;
-			$("assinar").disabled = true;
-			status("Assinando…", "suave");
-			try {
-				mostrar(await chamar("assinar", { cpf: $("cpf").value, codigo: $("codigo").value, respostas: respostas(), observacoes: $("obs-c").value }));
-			} catch (e) {
-				status(e.message, "erro");
-			} finally {
-				enviando = false;
-				$("assinar").disabled = false;
+				botao.disabled = false;
+				botao.textContent = texto;
 			}
 		});
 

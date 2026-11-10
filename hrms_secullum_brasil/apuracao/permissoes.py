@@ -136,6 +136,14 @@ def condicao_termo_ocorrencias(user=None):
 	return _condicao("Termo de Ocorrencias", user)
 
 
+def condicao_resposta_whatsapp(user=None):
+	return _condicao("Resposta WhatsApp Ponto", user)
+
+
+def condicao_aceite_whatsapp(user=None):
+	return _condicao("Aceite WhatsApp", user)
+
+
 def tem_permissao(doc, ptype=None, user=None, debug=False):
 	"""Hook has_permission: nega o documento de colaborador fora da visibilidade do usuário."""
 	visiveis = employees_visiveis(user)

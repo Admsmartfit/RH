@@ -38,8 +38,10 @@ def _batidas(employee: str, dia) -> str:
 
 
 def avisos_do_dia(regra, dia) -> list[dict]:
-	"""Quem a regra do ponto do dia alcança no dia: inconsistência aberta do tipo do evento."""
-	tipo = com.EVENTOS_DO_DIA.get(regra.evento)
+	"""Quem a regra do ponto do dia alcança no dia: inconsistência aberta do tipo do evento (ou da regra, no D+1)."""
+	from hrms_secullum_brasil.apuracao.dia_seguinte import tipo_da_regra
+
+	tipo = tipo_da_regra(regra)
 	if not tipo:
 		return []
 	empresas, cargos = _filtros(regra)
@@ -115,21 +117,11 @@ def avisar(regra, emp, dia, valores: dict, alerta: str | None = None) -> list[st
 
 
 def enviar_ponto_do_dia(agora=None) -> int:
-	"""Cron de hora em hora: regras do ponto do dia cuja hora de envio é agora, sobre o dia anterior."""
-	agora = agora or now_datetime()
-	ontem = getdate(agora) - timedelta(days=1)
-	enviados = 0
-	for regra in regras_ativas():
-		if regra.evento not in com.EVENTOS_DO_DIA or cint(regra.hora_envio) != agora.hour:
-			continue
-		for emp in avisos_do_dia(regra, ontem):
-			frappe.db.savepoint("regra_whatsapp")
-			try:
-				enviados += len(avisar(regra, emp, ontem, _valores(emp, ontem)))
-			except Exception:
-				frappe.db.rollback(save_point="regra_whatsapp")
-				frappe.log_error(title=f"Regra de WhatsApp {regra.name}: {emp.name}")
-	return enviados
+	"""Cron de hora em hora: as regras do ponto do dia (D+1) cuja hora de envio é agora, sobre o dia anterior —
+	com os filtros de segurança, uma mensagem por pessoa e a fila de conferência (apuracao/dia_seguinte.py)."""
+	from hrms_secullum_brasil.apuracao.dia_seguinte import processar
+
+	return processar(agora or now_datetime())
 
 
 @frappe.whitelist()

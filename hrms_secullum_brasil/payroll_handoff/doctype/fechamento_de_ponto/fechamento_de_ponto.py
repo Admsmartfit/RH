@@ -69,6 +69,10 @@ class FechamentodePonto(Document):
 
 		bloqueios = pendencias(self.company, self.periodo_inicio, self.periodo_fim)
 		bloqueios += bloqueios_do_fechamento(self)  # conferência com o Secullum (pedido do RH, 30/10/2026)
+		# docs/PRD-sincronizacao-secullum.md: envios com erro/divergência e tarefas no Secullum pendentes
+		from hrms_secullum_brasil.ingestion.sincronizacao import bloqueios_do_fechamento as da_sincronizacao
+
+		bloqueios += da_sincronizacao(self)
 		if bloqueios:
 			frappe.throw(bloqueios, title=_("O período não pode ser fechado"), as_list=True)
 		calcular(self)

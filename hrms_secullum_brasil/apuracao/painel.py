@@ -66,6 +66,8 @@ def eh_rh() -> bool:
 @frappe.whitelist()
 def sessao() -> dict:
 	"""Quem está usando o painel: nome, papéis do painel e se é RH (a tela esconde o que o papel não usa)."""
+	from hrms_secullum_brasil.utils.acesso import e_administrador, pode_abrir_desk
+
 	exigir_acesso()
 	user = frappe.session.user
 	return {
@@ -74,6 +76,9 @@ def sessao() -> dict:
 		"papeis": sorted(PAPEIS_DO_PAINEL & set(frappe.get_roles()))
 		or (["System Manager"] if user == "Administrator" else []),
 		"rh": eh_rh(),
+		# RH, 04/11/2026 (utils/acesso.py): "Abrir no Desk" só para RH e administrador; o planejador só para o admin
+		"pode_abrir_desk": pode_abrir_desk(),
+		"admin": e_administrador(),
 		"idioma": frappe.local.lang,
 	}
 
@@ -223,6 +228,7 @@ def resumo(competencia: str, company=None, branch=None, department=None) -> dict
 		"alertas_inss": _alertas_inss(filtros),
 		"horistas_no_limite": _horistas_no_limite(filtros, f"{inicio.year}-{inicio.month:02d}"),
 		"termos": _termos_aguardando(filtros),
+		"whatsapp": _aceites_whatsapp(filtros),
 		"regime": _regime(),
 		"inconsistencias": _inconsistencias_por_severidade(filtros, inicio, fim),
 		"reapuracao": _fila_reapuracao(filtros, inicio, fim),
@@ -275,6 +281,13 @@ def _regime() -> dict:
 	from hrms_secullum_brasil.configuracao_ponto.regime_jornada import resumo_do_cockpit
 
 	return resumo_do_cockpit()
+
+
+def _aceites_whatsapp(filtros: dict) -> dict:
+	"""docs/PRD-whatsapp-aceite-auditoria.md (CW-07): "Aceitaram o WhatsApp: 40 de 92" (ativos visíveis)."""
+	from hrms_secullum_brasil.apuracao.aceite_whatsapp import contagem
+
+	return contagem([filtros["company"]] if filtros.get("company") else None, filtros.get("visiveis"))
 
 
 def _termos_aguardando(filtros: dict) -> dict | None:
@@ -432,6 +445,16 @@ def _filtros_inconsistencias(filtros: dict, visiveis) -> dict | None:
 		if visiveis is not None and filtros["employee"] not in visiveis:
 			frappe.throw(_("Sem permissão para ver este colaborador."), frappe.PermissionError)
 		saida["employee"] = filtros["employee"]
+	# docs/PRD-whatsapp-dia-seguinte.md: o que foi avisado no D+1 e está no prazo de resposta fica "com o colaborador"
+	# (fora da lista do RH; filtro próprio). Volta sozinho quando o prazo vence ou ele responde.
+	if filtros.get("competencia") and status in ("Aberta", "Todas"):
+		from hrms_secullum_brasil.apuracao.dia_seguinte import com_o_colaborador
+
+		com_ele = com_o_colaborador(*saida["data"][1], visiveis)
+		if cint(filtros.get("com_colaborador")):
+			saida["name"] = ["in", list(com_ele) or [""]]
+		elif com_ele:
+			saida["name"] = ["not in", list(com_ele)]
 	return saida
 
 
@@ -496,15 +519,32 @@ def inconsistencias(filtros=None, inicio=0, quantidade=POR_PAGINA) -> dict:
 				limit_page_length=0,
 			)
 		}
+	from hrms_secullum_brasil.apuracao.competencia import competencia_do_periodo
+	from hrms_secullum_brasil.apuracao.dia_seguinte import com_o_colaborador, selos_da_central
+
+	selos = selos_da_central(itens)
 	for item in itens:
+		item["whatsapp"] = selos.get(item.name)
 		ap = apuracoes.get(item.apuracao)
 		item["tipo_dia"] = ap.tipo_dia if ap else None
 		item["status_apuracao"] = ap.status if ap else None
+		# competência da folha do dia (dia de fechamento da empresa): 30/10 com fechamento no dia 25 = 2026-11
+		item["competencia"] = competencia_do_periodo(item.company, getdate(item.data)) if item.data else None
 		item["data"] = str(item.data) if item.data else None
 	total = sum(contagem.values())
+	com_ele = 0
+	if filtros.get("competencia") and not cint(filtros.get("com_colaborador")) and "data" in condicoes:
+		nomes = com_o_colaborador(*condicoes["data"][1], visiveis)
+		if nomes:  # contados com os mesmos filtros da tela (empresa, filial, tipo...)
+			com_ele = len(
+				frappe.get_list(
+					INCONSISTENCIA, filters={**condicoes, "name": ["in", list(nomes)]}, pluck="name"
+				)
+			)
 	return {
 		"itens": itens,
 		"total": total,
+		"com_colaborador": com_ele,
 		"por_severidade": {s: contagem.get(s, 0) for s in SEVERIDADES},
 		"inicio": inicio,
 		"quantidade": quantidade,
@@ -986,14 +1026,15 @@ def colaboradores(company=None, branch=None, department=None) -> list[dict]:
 	return frappe.get_all(
 		"Employee",
 		filters=filtros,
-		fields=["name", "employee_name", "designation", "company"],
+		fields=["name", "employee_name", "designation", "company", "whatsapp_situacao"],
 		order_by="employee_name asc",
 	)
 
 
 @frappe.whitelist()
 def tratamentos_pendentes(filtros=None) -> list[dict]:
-	"""Tratamentos de Ponto em rascunho (criados por gestores) para a aba "Aguardando aprovação" (só RH)."""
+	"""Tratamentos de Ponto em rascunho (criados por gestores) para a aba "Aguardando aprovação" (só RH), mais os
+	atestados e licenças que o gestor lançou no cartão (`doctype` diz qual é)."""
 	exigir_acesso()
 	if not eh_rh():
 		frappe.throw(_("Só o RH Ponto aprova tratamentos."), frappe.PermissionError)
@@ -1033,9 +1074,36 @@ def tratamentos_pendentes(filtros=None) -> list[dict]:
 	)
 	for t in itens:
 		t["hora"] = _hora(t.data_hora) if t.data_hora else None
+		t["doctype"] = TRATAMENTO
 		for campo in ("data", "data_hora", "data_folga", "creation"):
 			t[campo] = _texto(t[campo])
+	# atestados e licenças lançados pelo gestor no cartão (apuracao/lancamentos.py)
+	from hrms_secullum_brasil.apuracao import lancamentos
+
+	periodo = {}
+	if filtros.get("competencia"):
+		inicio, fim = periodo_da_competencia(filtros["competencia"], filtros.get("company"))
+		periodo = {"inicio": inicio, "fim": fim}
+	visiveis = employees_visiveis()
+	itens += lancamentos.pendentes(
+		periodo,
+		lambda doctype: _filtros(
+			doctype, filtros.get("company"), filtros.get("branch"), filtros.get("department"), visiveis
+		),
+	)
 	return itens
+
+
+@frappe.whitelist()
+def previa_do_dia(employee: str, data: str, celulas, abonar=None) -> dict:
+	"""Prévia dos totais do dia no cartão antes de salvar (só leitura; ver `cartao_ponto.previa`)."""
+	import json
+
+	from hrms_secullum_brasil.apuracao import cartao_ponto
+
+	exigir_acesso()
+	lista = json.loads(celulas) if isinstance(celulas, str) else list(celulas or [])
+	return cartao_ponto.previa(employee, data, lista, abonar)
 
 
 @frappe.whitelist()

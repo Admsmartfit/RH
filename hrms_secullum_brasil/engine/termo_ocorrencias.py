@@ -8,9 +8,10 @@ Horários em minutos do dia de trabalho, como em engine/cartao_edicao.py.
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
+from itertools import pairwise
 
 from hrms_secullum_brasil.engine.cartao_edicao import DESCONSIDERAR, INCLUIR, ORIGINAL, Batida, hhmm
-from hrms_secullum_brasil.engine.sugestoes import INCLUIR_INTERVALO, MANTER, ContextoDia, orientar
+from hrms_secullum_brasil.engine.sugestoes import ContextoDia, intervalo_exigido, orientar
 
 # nome que o colaborador entende (WhatsApp, e-mail e PDF), na ordem em que o dia é regularizado
 NOMES = {
@@ -20,12 +21,16 @@ NOMES = {
 	"falta": "Falta (dia sem batida)",
 	"atraso": "Atraso ou saída antecipada",
 	"he_acima_limite": "Hora extra acima do limite do dia",
-	"interjornada": "Descanso menor que 11 h entre um dia e outro",
+	# sem "interjornada" (RH, 09/11/2026): pode ser da escala ou de ter chegado antes; não vai ao termo
 	"intervalo_superior_2h": "Intervalo maior que 2 h",
+	"intervalo_fora_de_hora": "Intervalo no começo ou no fim do expediente",
 	"aula_nao_registrada": "Aula sem batida",
 	"excesso_jornada_estagio": "Estágio acima da jornada do TCE",
+	"intervalo_nao_marcado_horista": "Excedeu o horário de trabalho de 4 h sem marcar o intervalo",
 }
 TIPOS_DO_TERMO = tuple(NOMES)  # uma linha a confirmar por dia
+# no termo, mas nunca cobrados do colaborador pelo WhatsApp (o RH trata; RH, 09/11/2026)
+SO_NO_TERMO = frozenset({"intervalo_nao_marcado_horista"})
 # da semana ou do mês, sem um dia a corrigir: só como informação no texto (seção 6)
 INFORMATIVOS = {
 	"sete_dias_seguidos": "7 dias seguidos de trabalho",
@@ -34,7 +39,7 @@ INFORMATIVOS = {
 	"domingos_sem_folga": "Domingos seguidos sem folga",
 	"excesso_jornada_horista": "Mais de 4 h sem intervalo além do limite do mês",
 }
-CIENTE = "Ciente — mantém o registro"
+CIENTE = "Sem regularização a fazer no ponto"
 
 DE_ACORDO = "De acordo"
 ALTERADO = "Alterado"
@@ -48,6 +53,13 @@ AVISO_RH_DIAS_UTEIS = 10
 REINCIDENCIA_LIMITE = 3
 REINCIDENCIA_JANELA_DIAS = 90
 
+# textos do termo (RH, 09/11/2026): fato neutro, sem citar lei e sem dizer o efeito na folha
+APROVADA, AGUARDANDO_RH, RECUSADA = "Aprovado", "Aguardando aprovação", "Recusado"
+# tipos em que o "Horário correto" fica aberto (o resto é só registro: a coluna sai hachurada)
+# o intervalo também (RH, 09/11/2026): quem não respondeu pelo link escreve o horário do intervalo no termo
+COM_HORARIO_CORRETO = frozenset({"marcacao_impar", "intrajornada", "falta", "aula_nao_registrada"})
+ESCREVA_O_INTERVALO = "Se fez o intervalo, escreva o horário."
+
 
 @dataclass(frozen=True)
 class Proposta:
@@ -55,13 +67,29 @@ class Proposta:
 	# o dia inteiro depois da correção; None = ciente, sem mudar o ponto
 	horarios: tuple[int, ...] | None = None
 	intervalo: tuple[int, int] | None = None  # o intervalo do termo incluído (entra com o motivo do termo)
+	sem_horario: bool = False  # "Horário correto" hachurado: a linha é só registro
+
+
+@dataclass(frozen=True)
+class CorrecaoColaborador:
+	"""O que o colaborador mandou pelo link do WhatsApp para o dia (Resposta WhatsApp Ponto)."""
+
+	enviada_em: date
+	situacao: str  # Aprovado, Aguardando aprovação, Recusado, Para o RH
+	antes: tuple[str, ...] = ()
+	informados: tuple[str, ...] = ()
+	nao_reconhece: bool = False
+	explicacao: str = ""
+	decidida_em: date | None = None
 
 
 @dataclass(frozen=True)
 class DiaTermo:
 	data: date
-	ocorrencias: tuple[tuple[str, str], ...]  # (nome da Inconsistencia de Ponto, tipo)
+	ocorrencias: tuple[tuple[str, str], ...]  # (nome da Inconsistencia de Ponto, tipo) em aberto
 	contexto: ContextoDia
+	correcao: CorrecaoColaborador | None = None
+	tipos_do_dia: tuple[str, ...] = ()  # o que o dia teve (para o quadro), mesmo já resolvido pela correção
 
 
 @dataclass(frozen=True)
@@ -77,6 +105,189 @@ def entra_no_termo(tipo: str) -> bool:
 	return tipo in NOMES
 
 
+def duracao(minutos: int) -> str:
+	"""60 → "1 h", 30 → "30 min", 150 → "2h30"."""
+	minutos = int(minutos)
+	if minutos < 60:
+		return f"{minutos} min"
+	if minutos % 60 == 0:
+		return f"{minutos // 60} h"
+	return f"{minutos // 60}h{minutos % 60:02d}"
+
+
+def _pares(minutos: Sequence[int]) -> list[tuple[int, int]]:
+	return [(minutos[i], minutos[i + 1]) for i in range(0, len(minutos) - 1, 2)]
+
+
+def _pausas(minutos: Sequence[int]) -> list[tuple[int, int]]:
+	pares = _pares(minutos)
+	return [(a[1], b[0]) for a, b in pairwise(pares) if b[0] > a[1]]
+
+
+def _trabalhado(minutos: Sequence[int]) -> int:
+	return sum(s - e for e, s in _pares(minutos))
+
+
+def _batida_que_falta(minutos: Sequence[int], prevista: int | None) -> str:
+	if prevista is None:
+		return "Não houve registro de uma das batidas (entrada ou saída). Escreva o horário correto."
+	posicao = sorted([*minutos, prevista]).index(prevista)
+	return f"Não houve registro da {'entrada' if posicao % 2 == 0 else 'saída'}. Escreva o horário correto."
+
+
+def _intervalo(minutos: Sequence[int], contexto: ContextoDia) -> str:
+	trabalhado = _trabalhado(minutos)
+	exigido = intervalo_exigido(trabalhado, contexto) or contexto.intervalo_curto
+	pausas = _pausas(minutos)
+	if not pausas:
+		return (
+			f"Jornada de {duracao(trabalhado)} sem o registro do intervalo mínimo de {duracao(exigido)}. "
+			+ ESCREVA_O_INTERVALO
+		)
+	maior = max(fim - inicio for inicio, fim in pausas)
+	return (
+		f"Intervalo registrado de {duracao(maior)}, menor que o mínimo de {duracao(exigido)}. "
+		+ ESCREVA_O_INTERVALO
+	)
+
+
+def _atraso(minutos: Sequence[int], contexto: ContextoDia) -> str:
+	if not minutos or not contexto.previsto:
+		return "Entrada depois ou saída antes do horário previsto."
+	inicio, fim = contexto.previsto[0][0], contexto.previsto[-1][1]
+	partes = []
+	if minutos[0] > inicio:
+		partes.append(
+			f"Entrada às {hhmm(minutos[0])}, {duracao(minutos[0] - inicio)} depois do horário previsto ({hhmm(inicio)})"
+		)
+	if len(minutos) % 2 == 0 and minutos[-1] < fim:
+		partes.append(
+			f"Saída às {hhmm(minutos[-1])}, {duracao(fim - minutos[-1])} antes do horário previsto ({hhmm(fim)})"
+		)
+	if not partes:
+		return "Entrada depois ou saída antes do horário previsto."
+	return "; ".join([partes[0], *(p[0].lower() + p[1:] for p in partes[1:])]) + "."
+
+
+def _hora_extra(minutos: Sequence[int], contexto: ContextoDia) -> str:
+	trabalhado = _trabalhado(minutos)
+	previsto = sum(f - i for i, f in contexto.previsto)
+	return (
+		f"Jornada de {duracao(trabalhado)}, com {duracao(max(trabalhado - previsto, 0))} além do previsto, acima do "
+		f"limite de {duracao(contexto.limite_he_diaria)} extras por dia."
+	)
+
+
+def _intervalo_longo(minutos: Sequence[int]) -> str:
+	pausas = _pausas(minutos)
+	maior = max((fim - inicio for inicio, fim in pausas), default=0)
+	return f"Intervalo de {duracao(maior)}, maior que o máximo de 2 h."
+
+
+def _intervalo_fora(minutos: Sequence[int]) -> str:
+	pausas = _pausas(minutos)
+	if not pausas:
+		return "Intervalo registrado no começo ou no fim do expediente; o descanso deve ser feito no meio da jornada."
+	inicio, fim = min(pausas, key=lambda p: min(p[0] - minutos[0], minutos[-1] - p[1]))
+	onde = "no começo" if inicio - minutos[0] < minutos[-1] - fim else "no fim"
+	return (
+		f"Intervalo registrado {onde} do expediente ({hhmm(inicio)} às {hhmm(fim)}); o descanso deve ser feito no meio "
+		"da jornada."
+	)
+
+
+def _texto_do_tipo(tipo: str, minutos: Sequence[int], contexto: ContextoDia) -> str:
+	if tipo == "falta":
+		return "Não houve registro de ponto neste dia de trabalho previsto."
+	if tipo == "intrajornada":
+		return _intervalo(minutos, contexto)
+	if tipo == "atraso":
+		return _atraso(minutos, contexto)
+	if tipo == "he_acima_limite":
+		return _hora_extra(minutos, contexto)
+	if tipo == "intervalo_superior_2h":
+		return _intervalo_longo(minutos)
+	if tipo == "intervalo_fora_de_hora":
+		return _intervalo_fora(minutos)
+	if tipo == "aula_nao_registrada":
+		return "Aula prevista na grade sem registro de ponto."
+	if tipo == "excesso_jornada_estagio":
+		return f"Jornada de {duracao(_trabalhado(minutos))}, acima do limite diário do termo de estágio."
+	if tipo == "intervalo_nao_marcado_horista":
+		jornada = minutos[-1] - minutos[0] if minutos else 0
+		return f"Jornada de {duracao(jornada)}, acima de 4 h, sem o registro do intervalo."
+	return NOMES.get(tipo, CIENTE) + "."
+
+
+def propor_dia(tipos: Iterable[str], contexto: ContextoDia) -> Proposta:
+	"""A regularização do dia: tira a batida repetida (o ponto muda); o resto é o fato do dia, para ciência. Só a
+	batida faltando, a falta e a aula deixam o "Horário correto" aberto (sem sugerir horário)."""
+	minutos = sorted(b.minuto for b in contexto.batidas)
+	partes = []
+	ordem = sorted(set(tipos), key=lambda t: TIPOS_DO_TERMO.index(t) if t in NOMES else len(NOMES))
+	for tipo in ordem:
+		if tipo == "marcacao_duplicada":
+			sugestoes = orientar(tipo, _com_batidas(contexto, minutos)).sugestoes
+			repetidas = [s.minuto for s in sugestoes if s.acao == DESCONSIDERAR and s.minuto is not None]
+			if repetidas:
+				for m in repetidas:
+					anterior = max((x for x in minutos if x <= m and x != m), default=m)
+					partes.append(
+						f"Batida {hhmm(m)} registrada em duplicidade ({duracao(m - anterior)} depois de "
+						f"{hhmm(anterior)}); a repetida é desconsiderada."
+					)
+					minutos.remove(m)
+				continue
+		if tipo == "marcacao_impar":
+			sugestoes = orientar(tipo, _com_batidas(contexto, minutos)).sugestoes
+			prevista = next((s.minuto for s in sugestoes if s.acao == INCLUIR and s.minuto is not None), None)
+			partes.append(_batida_que_falta(minutos, prevista))
+			continue
+		partes.append(_texto_do_tipo(tipo, minutos, contexto))
+	originais = tuple(sorted(b.minuto for b in contexto.batidas))
+	horarios = tuple(minutos)
+	return Proposta(
+		" ".join(partes) or CIENTE,
+		horarios if horarios != originais else None,
+		None,
+		sem_horario=not (set(ordem) & COM_HORARIO_CORRETO),
+	)
+
+
+def _horas(lista: Sequence[str]) -> str:
+	return ", ".join(lista[:-1]) + f" e {lista[-1]}" if len(lista) > 1 else (lista[0] if lista else "")
+
+
+def texto_da_correcao(c: CorrecaoColaborador) -> str:
+	"""O que o colaborador já fez pelo link: aparece no termo como registro (RH, 09/11/2026)."""
+	quando = c.enviada_em.strftime("%d/%m")
+	incluidos = [h for h in c.informados if h not in c.antes]
+	retirados = [h for h in c.antes if h not in c.informados]
+	if c.nao_reconhece:
+		texto = f"O(a) empregado(a) informou pelo link, em {quando}, que não reconhece os registros do dia"
+	elif incluidos or retirados:
+		partes = []
+		if incluidos:
+			partes.append(
+				f"{'Horários' if len(incluidos) > 1 else 'Horário'} {_horas(incluidos)} informado"
+				f"{'s' if len(incluidos) > 1 else ''}"
+			)
+		if retirados:
+			partes.append(f"{_horas(retirados)} retirado{'s' if len(retirados) > 1 else ''}")
+		texto = " e ".join(partes) + f" pelo(a) empregado(a) pelo link em {quando}"
+	else:
+		explicacao = (c.explicacao or "").strip()
+		texto = f"Explicação enviada pelo(a) empregado(a) pelo link em {quando}" + (
+			f": “{explicacao}”" if explicacao else ""
+		)
+	decidida = f" em {c.decidida_em:%d/%m}" if c.decidida_em else ""
+	if c.situacao == APROVADA:
+		return f"{texto}; aprovado pelo RH{decidida}."
+	if c.situacao == RECUSADA:
+		return f"{texto}; não aprovado pelo RH{decidida}."
+	return f"{texto}; aguardando aprovação do RH."
+
+
 def _com_batidas(contexto: ContextoDia, minutos: Sequence[int]) -> ContextoDia:
 	antigas = {b.minuto: b for b in contexto.batidas}
 	return replace(
@@ -85,70 +296,53 @@ def _com_batidas(contexto: ContextoDia, minutos: Sequence[int]) -> ContextoDia:
 	)
 
 
-def _ciente(tipo: str, contexto: ContextoDia) -> str:
-	"""O "Manter" do cartão dito como ciência (ex.: "Ciente: o atraso é descontado na folha")."""
-	manter = next((s for s in orientar(tipo, contexto).sugestoes if s.acao == MANTER), None)
-	if not manter:
-		return CIENTE
-	texto = manter.rotulo
-	if texto.startswith("Manter a "):
-		return "Ciente da " + texto[len("Manter a ") :]
-	if texto.startswith("Manter"):
-		return "Ciente" + texto[len("Manter") :]
-	return CIENTE
-
-
-def propor_dia(tipos: Iterable[str], contexto: ContextoDia) -> Proposta:
-	"""A regularização do dia, na ordem: tira a batida repetida, põe a que falta (a prevista) e inclui o intervalo do
-	termo no dia sem pausa (DT-10). Falta e atraso não têm horário a propor: ficam como ciência (DO-3)."""
-	minutos = sorted(b.minuto for b in contexto.batidas)
-	partes = []
-	intervalo = None
-	ordem = sorted(set(tipos), key=lambda t: TIPOS_DO_TERMO.index(t) if t in NOMES else len(NOMES))
-	for tipo in ordem:
-		atual = _com_batidas(contexto, minutos)
-		sugestoes = orientar(tipo, atual).sugestoes
-		if tipo == "marcacao_duplicada":
-			repetidas = [s.minuto for s in sugestoes if s.acao == DESCONSIDERAR and s.minuto is not None]
-			if repetidas:
-				for m in repetidas:
-					minutos.remove(m)
-				partes.append("Desconsiderar a batida repetida " + ", ".join(hhmm(m) for m in repetidas))
-				continue
-		elif tipo == "marcacao_impar":
-			prevista = next((s.minuto for s in sugestoes if s.acao == INCLUIR and s.minuto is not None), None)
-			if prevista is not None:
-				minutos = sorted([*minutos, prevista])
-				partes.append(f"Incluir a batida prevista {hhmm(prevista)}")
-				continue
-		elif tipo == "intrajornada":
-			termo = next((s.minutos for s in sugestoes if s.acao == INCLUIR_INTERVALO and s.minutos), None)
-			if termo:
-				minutos = sorted([*minutos, *termo])
-				intervalo = (termo[0], termo[1])
-				partes.append(f"Incluir o intervalo {hhmm(termo[0])} às {hhmm(termo[1])}")
-				continue
-		partes.append(_ciente(tipo, atual))
-	originais = tuple(sorted(b.minuto for b in contexto.batidas))
-	horarios = tuple(minutos)
-	return Proposta("; ".join(partes) or CIENTE, horarios if horarios != originais else None, intervalo)
-
-
 def montar_itens(dias: Iterable[DiaTermo]) -> list[ItemTermo]:
-	"""Uma linha por dia com as ocorrências que cabem no termo; o resto fica de fora (seção 6)."""
+	"""Uma linha por dia com as ocorrências que cabem no termo; o resto fica de fora (seção 6). O dia que o colaborador
+	corrigiu pelo link entra com o registro do que ele fez: aprovado, a correção e o que ainda ficou aberto;
+	aguardando o RH, só o registro (as pendências do dia ficam com o RH, a assinatura não as toca)."""
 	itens = []
 	for dia in sorted(dias, key=lambda d: d.data):
 		do_termo = [(nome, tipo) for nome, tipo in dia.ocorrencias if entra_no_termo(tipo)]
+		marcacoes = tuple(sorted(b.minuto for b in dia.contexto.batidas))
+		c = dia.correcao
+		if c and c.situacao != RECUSADA:
+			abertas = [] if c.situacao != APROVADA else do_termo
+			tipos = tuple(
+				sorted(
+					{t for t in dia.tipos_do_dia if entra_no_termo(t)} | {t for _, t in abertas},
+					key=TIPOS_DO_TERMO.index,
+				)
+			)
+			resto = propor_dia([t for _, t in abertas], dia.contexto) if abertas else None
+			texto = texto_da_correcao(c) + (f" {resto.texto}" if resto else "")
+			itens.append(
+				ItemTermo(
+					data=dia.data,
+					tipos=tipos,
+					inconsistencias=tuple(nome for nome, _ in abertas),
+					marcacoes=marcacoes,
+					proposta=Proposta(
+						texto,
+						resto.horarios if resto else None,
+						None,
+						sem_horario=resto.sem_horario if resto else True,
+					),
+				)
+			)
+			continue
 		if not do_termo:
 			continue
 		tipos = tuple(sorted({t for _, t in do_termo}, key=TIPOS_DO_TERMO.index))
+		proposta = propor_dia(tipos, dia.contexto)
+		if c:  # recusada: o registro do que ele mandou vem antes do fato do dia
+			proposta = replace(proposta, texto=f"{texto_da_correcao(c)} {proposta.texto}")
 		itens.append(
 			ItemTermo(
 				data=dia.data,
 				tipos=tipos,
 				inconsistencias=tuple(nome for nome, _ in do_termo),
-				marcacoes=tuple(sorted(b.minuto for b in dia.contexto.batidas)),
-				proposta=propor_dia(tipos, dia.contexto),
+				marcacoes=marcacoes,
+				proposta=proposta,
 			)
 		)
 	return itens

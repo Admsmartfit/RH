@@ -3,10 +3,10 @@
 Abre só com o link pessoal (token assinado). Os dados vêm de `apuracao.convite_turno`.
 """
 
+from hrms_secullum_brasil.utils.sem_login import preparar
+
 no_cache = 1
 
 
 def get_context(context):
-	context.no_breadcrumbs = True
-	context.title = "Convite para turno"
-	return context
+	return preparar(context, "Convite para turno")

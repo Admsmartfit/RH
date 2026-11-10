@@ -4,6 +4,7 @@ from datetime import date
 
 from hrms_secullum_brasil.engine.apuracao_dia import apurar_dia
 from hrms_secullum_brasil.engine.defaults_legais import FAIXAS_HE_PADRAO, FaixaHE
+from hrms_secullum_brasil.engine.jornada_prevista import Periodo
 from hrms_secullum_brasil.engine.models import EntradaDia, JornadaPrevista, RegraApuracao
 from hrms_secullum_brasil.engine.tests.test_casos_dourados import PADRAO, TERCA, marcas
 
@@ -175,3 +176,34 @@ def test_pendencia_de_atraso_so_acima_do_minimo():
 	assert (r.atraso, r.tipos_inconsistencia()) == (15, [])
 	r = apurar("08:16", "12:00", "13:00", "17:00")
 	assert (r.atraso, r.tipos_inconsistencia()) == (16, ["atraso"])
+
+
+# ------------------------------------------------------------------ conferência com o Secullum (decisões de 02/11/2026)
+
+ASG = JornadaPrevista(
+	(Periodo(5 * 60 + 30, 10 * 60), Periodo(11 * 60, 13 * 60 + 50))
+)  # 05:30-10:00 11:00-13:50
+INSTRUTOR = JornadaPrevista((Periodo(5 * 60, 9 * 60),))  # 05:00-09:00 (carga 4h)
+
+
+def test_intervalo_em_outro_horario_nao_tira_a_tolerancia():
+	# intervalo das 10:31 às 11:30 (previsto 10:00-11:00): 7:24 trabalhadas, dentro da tolerância do dia
+	r = apurar("05:27", "10:31", "11:30", "13:50", jornada=ASG)
+	assert (r.trabalhado, r.normais, r.hora_extra, r.atraso) == (444, 440, 0, 0)
+	# fora da tolerância na entrada: conta tudo (Súmula 366)
+	r = apurar("05:10", "10:31", "11:30", "13:50", jornada=ASG)
+	assert r.hora_extra == 21
+
+
+def test_horista_tem_tolerancia_no_dia_previsto():
+	# até 10 min a menos que a carga: não desconta (vale a carga); a mais: paga o real (horas normais do horista)
+	r = apurar("04:58", "08:53", jornada=INSTRUTOR, horista=True, horista_escalado=True)  # 3:55
+	assert (r.trabalhado, r.normais, r.hora_extra) == (235, 240, 0)
+	r = apurar(
+		"05:12", "09:00", jornada=INSTRUTOR, horista=True, horista_escalado=True
+	)  # 3:48: 12 min a menos
+	assert r.normais == 228
+	r = apurar("04:50", "09:00", jornada=INSTRUTOR, horista=True, horista_escalado=True)  # 4:10
+	assert (r.normais, r.hora_extra) == (250, 0)
+	r = apurar("04:58", "08:53", jornada=INSTRUTOR, horista=True, horista_escalado=True, feriado=True)
+	assert r.normais == 0  # feriado: tudo é extra 100%, sem tolerância

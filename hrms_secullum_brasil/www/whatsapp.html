@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>WhatsApp do ponto</title>
+	<style>
+		:root { --fundo: #f8fafc; --superficie: #ffffff; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --sobre: #ffffff; --perigo: #b91c1c; --ok: #15803d; --zap: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --superficie: #1e293b; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --sobre: #0f172a; --perigo: #fca5a5; --ok: #86efac; --zap: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 30rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.3rem; margin-bottom: 0.25rem; }
+		.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; }
+		label { display: block; font-weight: 500; margin-top: 0.75rem; }
+		input { width: 100%; min-height: 48px; margin-top: 0.25rem; padding: 0.4rem 0.6rem; font: inherit; color: var(--texto); background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.375rem; }
+		button, a.botao { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-top: 0.75rem; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--sobre); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+		button.secundario { background: transparent; color: var(--primario); }
+		a.botao.zap { background: var(--zap); border-color: var(--zap); }
+		button:disabled { opacity: 0.6; cursor: wait; }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+		.celular { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.03em; }
+		ol { padding-left: 1.25rem; }
+		:focus-visible { outline: 3px solid var(--primario); outline-offset: 2px; }
+		[hidden] { display: none !important; }
+	</style>
+</head>
+<body>
+{{ faixa_teste or "" }}
+	<main>
+		<h1>Avisos do seu ponto no WhatsApp</h1>
+		<p class="suave">Leva 1 minuto. Você recebe só das 8h às 20h.</p>
+
+		<form id="passo-identificar" class="cartao" novalidate>
+			<label for="cpf">Seu CPF</label>
+			<input id="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" required />
+			<label for="nascimento">Sua data de nascimento</label>
+			<input id="nascimento" type="date" required />
+			<button type="submit" id="continuar">Continuar</button>
+		</form>
+
+		<section id="passo-celular" class="cartao" hidden aria-live="polite">
+			<p><span id="nome"></span>, este é o seu WhatsApp?</p>
+			<p class="celular" id="celular"></p>
+			<button type="button" id="sim">Sim, é o meu</button>
+			<button type="button" class="secundario" id="nao">Não é o meu</button>
+		</section>
+
+		<section id="passo-aceite" class="cartao" hidden>
+			<p id="texto-aceite"></p>
+			<button type="button" id="aceito">Aceito receber</button>
+		</section>
+
+		<section id="passo-final" class="cartao" hidden>
+			<p><b>Falta só isto (1 minuto):</b> o WhatsApp bloqueia números que só enviam mensagens. Para os avisos do seu ponto chegarem:</p>
+			<ol>
+				<li><b>Salve o contato</b> "<span id="nome-contato"></span>" (botão abaixo).</li>
+				<li><b>Mande a primeira mensagem</b> (o texto já vem escrito, é só tocar em Enviar).</li>
+			</ol>
+			<button type="button" id="salvar">1. Salvar contato</button>
+			<a class="botao zap" id="mensagem" href="#" rel="noopener">2. Enviar a primeira mensagem</a>
+			<p class="suave">Para parar de receber, fale com o seu gerente ou com o RH.</p>
+		</section>
+
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.aceite_whatsapp";
+		const $ = (id) => document.getElementById(id);
+		let token = "";
+		let final = null;
+
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto || "";
+		}
+		function mostrar(id) {
+			for (const p of ["passo-identificar", "passo-celular", "passo-aceite", "passo-final"]) $(p).hidden = p !== id;
+		}
+		async function chamar(metodo, corpo) {
+			const r = await fetch(`${API}.${metodo}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
+				body: JSON.stringify(corpo),
+			});
+			const dados = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				let msg = "Não deu certo. Tente de novo.";
+				try { msg = JSON.parse(JSON.parse(dados._server_messages)[0]).message || msg; } catch (e) { /* mensagem padrão */ }
+				throw new Error(msg.replace(/<[^>]+>/g, ""));
+			}
+			return dados.message;
+		}
+
+		$("passo-identificar").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const cpf = $("cpf").value.replace(/\D/g, "");
+			if (cpf.length !== 11 || !$("nascimento").value) return status("Informe o CPF (11 números) e a data de nascimento.", "erro");
+			$("continuar").disabled = true;
+			status("");
+			try {
+				const d = await chamar("identificar", { cpf, nascimento: $("nascimento").value });
+				token = d.token;
+				$("nome").textContent = d.nome;
+				$("texto-aceite").textContent = d.texto;
+				if (!d.tem_celular) {
+					mostrar("");
+					return status("Não há celular no seu cadastro. Procure o seu gerente para corrigir o celular.", "erro");
+				}
+				$("celular").textContent = d.celular;
+				mostrar("passo-celular");
+			} catch (e) {
+				status(e.message, "erro");
+			} finally {
+				$("continuar").disabled = false;
+			}
+		});
+
+		$("nao").addEventListener("click", () => {
+			mostrar("");
+			status("Procure o seu gerente para corrigir o celular.", "erro");
+		});
+		$("sim").addEventListener("click", () => mostrar("passo-aceite"));
+
+		$("aceito").addEventListener("click", async () => {
+			$("aceito").disabled = true;
+			try {
+				final = await chamar("aceitar", { token });
+				$("nome-contato").textContent = final.nome_contato;
+				$("mensagem").href = final.link || "#";
+				$("salvar").hidden = !final.vcard;
+				$("mensagem").hidden = !final.link;
+				mostrar("passo-final");
+				status("Pronto: o seu aceite foi registrado.", "ok");
+			} catch (e) {
+				status(e.message, "erro");
+			} finally {
+				$("aceito").disabled = false;
+			}
+		});
+
+		$("salvar").addEventListener("click", () => {
+			chamar("tocou", { token, botao: "contato" }).catch(() => {});
+			const blob = new Blob([final.vcard], { type: "text/vcard" });
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(blob);
+			a.download = `${final.nome_contato}.vcf`;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+		});
+		$("mensagem").addEventListener("click", () => {
+			chamar("tocou", { token, botao: "mensagem" }).catch(() => {});
+		});
+	</script>
+</body>
+</html>

@@ -5,10 +5,12 @@ from datetime import date
 import pytest
 
 from hrms_secullum_brasil.integrations.secullum.edicao_cartao import (
+	COLUNAS,
 	EXCLUIR,
 	JUSTIFICATIVA,
 	MANUAL,
 	ROTAS,
+	TROCA,
 	Operacao,
 	colunas_do_registro,
 	com_identificador,
@@ -56,15 +58,46 @@ def test_desconsidera_a_repetida():
 	assert operacoes(DIA, atuais, ["08:00", "12:00", "13:00", "17:00"], "Esqueceu") == [excluir("Entrada3")]
 
 
-def test_batida_no_meio_refaz_a_partir_da_entrada1():
+def troca(de, para):
+	return Operacao(*TROCA, {"Data": "2026-10-01", "ColunaOrigem": de, "ColunaDestino": para})
+
+
+def test_batida_no_meio_move_a_original_sem_apagar():
 	atuais = {"Entrada1": "08:00", "Saida1": "17:00"}
 	assert disposicao(atuais, ["08:00", "12:00", "13:00", "17:00"]) == NORMAL
 	ops = operacoes(DIA, atuais, ["08:00", "12:00", "13:00", "17:00"], "Esqueceu")
+	assert ops == [troca("Saida1", "Saida2"), manual("Saida1", "12:00"), manual("Entrada2", "13:00")]
+	assert ops[0].descricao() == "Mover Saida1 para Saida2"
+	assert all(o.rota != EXCLUIR[1] for o in ops)  # nenhuma batida do relógio desconsiderada
+
+
+def test_saida_do_intervalo_esquecida_abre_espaco_de_tras_para_frente():
+	# T-C1 (04/11/2026): 08:02, 10:45 e 14:02 do relógio; o RH incluiu a volta do intervalo 11:00
+	atuais = {"Entrada1": "08:02", "Saida1": "10:45", "Entrada2": "14:02"}
+	ops = operacoes(DIA, atuais, ["08:02", "10:45", "11:00", "14:02"], "Esqueceu")
+	assert ops == [troca("Entrada2", "Saida2"), manual("Entrada2", "11:00")]
+	# duas batidas novas no meio: as de trás andam primeiro, sempre para coluna vazia
+	atuais = {"Entrada1": "08:00", "Saida1": "17:00", "Entrada2": "18:00", "Saida2": "20:00"}
+	ops = operacoes(DIA, atuais, ["08:00", "12:00", "13:00", "17:00", "18:00", "20:00"], "x")
+	cartao = dict(atuais)
+	for o in ops:
+		c = o.corpo
+		if o.rota == TROCA[1]:
+			assert not cartao.get(c["ColunaDestino"])  # sempre para coluna vazia
+			cartao[c["ColunaDestino"]] = cartao.pop(c["ColunaOrigem"])
+		else:
+			assert o.rota == MANUAL[1] and not cartao.get(c["Coluna"])
+			cartao[c["Coluna"]] = c["Hora"]
+	assert cartao == dict(zip(COLUNAS, ["08:00", "12:00", "13:00", "17:00", "18:00", "20:00"], strict=False))
+
+
+def test_batida_sobre_justificativa_libera_o_par_para_a_troca():
+	atuais = {"Entrada1": "08:00", "Saida1": "12:00", "Entrada2": "DECLARA", "Saida2": "DECLARA"}
+	ops = operacoes(DIA, atuais, ["08:00", "10:00", "10:15", "12:00"], "x")
 	assert ops == [
-		excluir("Saida1"),
-		manual("Saida1", "12:00"),
-		manual("Entrada2", "13:00"),
-		manual("Saida2", "17:00"),
+		manual("Entrada2", "10:15", "x"),
+		troca("Saida1", "Saida2"),
+		manual("Saida1", "10:00", "x"),
 	]
 
 
@@ -108,4 +141,4 @@ def test_motivo_limitado_e_padrao():
 def test_corpo_com_cpf():
 	corpo = com_identificador(manual("Entrada1", "08:00"), "036.511.240-29")
 	assert corpo["Cpf"] == "03651124029" and corpo["Coluna"] == "Entrada1"
-	assert ROTAS == {"CartaoPonto/Manual", "CartaoPonto", "CartaoPonto/Justificativa"}
+	assert ROTAS == {"CartaoPonto/Manual", "CartaoPonto", "CartaoPonto/Justificativa", "CartaoPonto/Troca"}

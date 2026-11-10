@@ -63,17 +63,27 @@ export function montarAlteracoes(dias, edicoes) {
 	return saida;
 }
 
+// Ordem da grade (pedido do RH, 04/11/2026): as batidas ficam sempre em ordem crescente no dia, Entrada 1, Saída 1,
+// Entrada 2... Só conta como do dia seguinte o horário antes da hora de virada do perfil (`hora_virada`, em horas; 0 =
+// o dia é de 00:00 a 23:59). Ex.: 11:00, 12:07, 14:42 + 05:00 → 05:00, 11:00, 12:07, 14:42.
+function chaveDaHora(hora, virada = 0) {
+	const [hh, mm] = hora.split(":").map(Number);
+	const minutos = hh * 60 + mm;
+	return virada && minutos < virada * 60 ? minutos + 1440 : minutos;
+}
+
+// põe as células preenchidas em ordem (as vazias ficam no fim); com algum texto inválido, não mexe
+export function ordenarCelulas(celulas, virada = 0) {
+	const preenchidas = celulas.filter(Boolean);
+	if (!preenchidas.every((h) => horaValida(h))) return [...celulas];
+	const ordenadas = [...preenchidas].sort((a, b) => chaveDaHora(a, virada) - chaveDaHora(b, virada));
+	return celulas.map((_, n) => ordenadas[n] || "");
+}
+
 // inclui horários entre as batidas na ordem do dia: 09:18 e 13:34 + 11:26 e 11:41 → 09:18, 11:26, 11:41, 13:34
-// (a saída original vai para a Saída 2). Horário antes da primeira batida conta como do dia seguinte (virada).
-export function inserirEmOrdem(celulas, horas) {
-	const minutos = (h) => {
-		const [hh, mm] = h.split(":").map(Number);
-		return hh * 60 + mm;
-	};
+// (a saída original vai para a Saída 2). null se não couber.
+export function inserirEmOrdem(celulas, horas, virada = 0) {
 	const preenchidas = celulas.filter(Boolean);
 	if (preenchidas.length + horas.length > celulas.length) return null;
-	const inicio = preenchidas.length ? minutos(preenchidas[0]) : 0;
-	const chave = (h) => (minutos(h) < inicio ? minutos(h) + 1440 : minutos(h));
-	const ordenadas = [...preenchidas, ...horas].sort((a, b) => chave(a) - chave(b));
-	return celulas.map((_, n) => ordenadas[n] || "");
+	return ordenarCelulas([...preenchidas, ...horas, ...Array(celulas.length).fill("")].slice(0, celulas.length), virada);
 }

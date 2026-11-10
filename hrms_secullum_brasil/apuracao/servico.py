@@ -55,6 +55,9 @@ TIPOS_DA_APURACAO = {
 	"aula_nao_registrada",
 	"limite_aulas_excedido",
 	"sete_dias_seguidos",
+	# a reapuração também fecha estas quando o dia deixa de acusar (RH, 09/11/2026: antes ficavam abertas para sempre)
+	"excesso_jornada_nao_autorizada",
+	"intervalo_nao_marcado_horista",
 }
 
 
@@ -155,6 +158,7 @@ def _gravar(ctx: Contexto, resultado: ResultadoDia | None) -> str:
 		"noturno_real",
 		"noturno_ficto",
 		"intrajornada_suprimida",
+		"pausa_paga",
 		"interjornada_suprimida",
 		"aulas_previstas",
 		"aulas_dadas",

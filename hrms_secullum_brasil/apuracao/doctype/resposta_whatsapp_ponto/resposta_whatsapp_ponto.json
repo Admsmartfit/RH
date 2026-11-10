@@ -1,0 +1,195 @@
+{
+ "actions": [],
+ "autoname": "RWP-.YYYY.-.#####",
+ "creation": "2026-11-04 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "notificacao",
+  "situacao",
+  "column_break_1",
+  "confirmado_em",
+  "confirmado_por",
+  "ip",
+  "aparelho",
+  "comprovante",
+  "dias_section",
+  "dias",
+  "observacoes",
+  "aprovacao_section",
+  "aprovado_por",
+  "aprovado_em",
+  "motivo_recusa"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "notificacao",
+   "fieldtype": "Link",
+   "label": "Mensagem (WhatsApp)",
+   "options": "Notificacao WhatsApp",
+   "read_only": 1
+  },
+  {
+   "default": "Aguardando aprovação",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Aguardando aprovação\nAprovada\nRecusada\nParcial",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "confirmado_em",
+   "fieldtype": "Datetime",
+   "label": "Confirmada em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirmado_por",
+   "fieldtype": "Data",
+   "label": "Confirmada por",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ip",
+   "fieldtype": "Data",
+   "label": "IP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aparelho",
+   "fieldtype": "Small Text",
+   "label": "Aparelho",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comprovante",
+   "fieldtype": "Attach",
+   "label": "Comprovante (PDF)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dias_section",
+   "fieldtype": "Section Break",
+   "label": "O que o colaborador informou"
+  },
+  {
+   "fieldname": "dias",
+   "fieldtype": "Table",
+   "label": "Dias",
+   "options": "Resposta WhatsApp Ponto Dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "observacoes",
+   "fieldtype": "Small Text",
+   "label": "Observações do colaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aprovacao_section",
+   "fieldtype": "Section Break",
+   "label": "Aprovação"
+  },
+  {
+   "fieldname": "aprovado_por",
+   "fieldtype": "Link",
+   "label": "Aprovada/recusada por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aprovado_em",
+   "fieldtype": "Datetime",
+   "label": "Em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_recusa",
+   "fieldtype": "Small Text",
+   "label": "Motivo da recusa",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-04 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Resposta WhatsApp Ponto",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "role": "System Manager",
+   "delete": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "role": "RH Ponto",
+   "delete": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "role": "Gestor Ponto"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

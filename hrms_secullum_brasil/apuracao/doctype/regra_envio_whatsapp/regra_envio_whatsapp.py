@@ -12,6 +12,10 @@ class RegraEnvioWhatsApp(Document):
 			frappe.throw(_("Escolha para quem enviar: colaborador, gestor ou os dois."))
 		if self.hora_envio is not None and not 0 <= cint(self.hora_envio) <= 23:
 			frappe.throw(_("A hora do envio vai de 0 a 23."))
+		# docs/PRD-whatsapp-dia-seguinte.md: tipo obrigatório no D+1 e liberação gradual para a produção
+		from hrms_secullum_brasil.apuracao.dia_seguinte import validar_regra
+
+		validar_regra(self)
 		# CE-09: só o RH coloca a regra em produção (depois de conferir os envios de teste)
 		if (
 			self.situacao == "Em produção"

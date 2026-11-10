@@ -73,7 +73,7 @@
 									<label :for="`item-${item.data}`" class="flex-1">
 										<span class="font-medium">{{ dataBR(item.data) }} — {{ item.ocorrencias }}</span>
 										<span class="block text-xs text-texto-suave">Marcações: {{ item.marcacoes }}</span>
-										<span class="block">Correção sugerida: {{ item.proposta }}</span>
+										<span class="block">Situação do dia: {{ item.proposta }}</span>
 									</label>
 								</li>
 							</ul>

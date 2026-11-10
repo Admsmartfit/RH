@@ -58,6 +58,11 @@ class ConfiguracaoSecullum(Document):
 		if erros:
 			frappe.throw(erros, title=_("Configuração Secullum inválida"), as_list=True)
 
+		# docs/PRD-sincronizacao-secullum.md: só vai a Ligado o tipo com os casos de teste obrigatórios aprovados
+		from hrms_secullum_brasil.ingestion.sincronizacao import validar_travas
+
+		validar_travas(self)
+
 
 @frappe.whitelist()
 def testar_conexao() -> list[dict]:

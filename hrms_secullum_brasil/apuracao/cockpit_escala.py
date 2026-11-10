@@ -28,6 +28,7 @@ from hrms_secullum_brasil.configuracao_ponto.cargo import jornada_fragmentada
 from hrms_secullum_brasil.configuracao_ponto.escala import (
 	ESCALA,
 	dia_para_conferencia,
+	escala_do_mes,
 	nome_escala,
 	obter_ou_criar_escala,
 )
@@ -49,6 +50,7 @@ from hrms_secullum_brasil.engine.escala import (
 )
 from hrms_secullum_brasil.engine.escala_equidade import equidade
 from hrms_secullum_brasil.engine.jornada_prevista import Periodo
+from hrms_secullum_brasil.engine.turno_padrao import tipo_do_dia
 
 RASCUNHO = "Rascunho de Escala"
 PUBLICACAO = "Publicacao de Escala"
@@ -133,12 +135,22 @@ def _perfil(employee: str, data: date):
 	return memo(("perfil_cockpit", employee, data), lambda: get_perfil_vigente(employee, data))
 
 
+def _na_escala_do_mes(employee: str, dia: date) -> bool:
+	escala = escala_do_mes(employee, dia.year, dia.month)
+	return bool(escala and any(getdate(x.data) == dia for x in escala.dias))
+
+
 def dias_do_colaborador(employee: str, inicio: date, fim: date) -> list[DiaEscala]:
-	"""Escala vigente (Escala Mensal, senão o perfil); sem perfil no dia = neutro."""
+	"""Escala vigente (Escala Mensal, senão o perfil); sem perfil no dia = neutro. Feriado é dia de escala (pedido do
+	RH, 03/11/2026): fica em aberto (neutro) até alguém ser escalado nele na Escala Mensal — o perfil não vale."""
+	lista = lista_de_feriados(frappe.get_cached_doc("Employee", employee))
 	dias, dia = [], inicio
 	while dia <= fim:
 		perfil = _perfil(employee, dia)
-		dias.append(dia_para_conferencia(employee, dia, perfil) if perfil else DiaEscala(dia, NEUTRO))
+		if not perfil or (eh_feriado(lista, dia) and not _na_escala_do_mes(employee, dia)):
+			dias.append(DiaEscala(dia, NEUTRO))
+		else:
+			dias.append(dia_para_conferencia(employee, dia, perfil))
 		dia += timedelta(days=1)
 	return dias
 
@@ -273,8 +285,20 @@ def _fds_anteriores(employees: list[str], inicio: date) -> dict[str, int]:
 	return contagem
 
 
+def empresas_da_escala(company: str | None) -> list[str]:
+	"""Empresas montadas juntas na tela Escalas (pedido do RH, 04/11/2026: duas empresas no mesmo endereço): as que têm
+	o mesmo `Company.grupo_escala`. Só a montagem da escala usa isto; apuração, folha e turnos seguem por empresa."""
+	if not company:
+		return []
+	grupo = (frappe.get_cached_value("Company", company, "grupo_escala") or "").strip()
+	if not grupo:
+		return [company]
+	juntas = frappe.get_all("Company", filters={"grupo_escala": grupo}, pluck="name", order_by="name asc")
+	return sorted(set(juntas) | {company})
+
+
 def _colaboradores(company: str, designation=None, branch=None, department=None) -> list[dict]:
-	filtros = {"company": company, "status": "Active"}
+	filtros = {"company": ["in", empresas_da_escala(company)], "status": "Active"}
 	for campo, valor in (("designation", designation), ("branch", branch), ("department", department)):
 		if valor:
 			filtros[campo] = valor
@@ -284,7 +308,7 @@ def _colaboradores(company: str, designation=None, branch=None, department=None)
 	return frappe.get_list(
 		"Employee",
 		filters=filtros,
-		fields=["name", "employee_name", "designation", "gender"],
+		fields=["name", "employee_name", "designation", "gender", "company"],
 		order_by="employee_name asc",
 	)
 
@@ -369,6 +393,7 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 					"ciencia": aviso[0] if aviso else None,
 					"sem_leitura": bool(aviso and aviso[0].situacao != "Lida" and turno_proximo),
 					"cargo": pessoa.designation,
+					"empresa": pessoa.company,
 					"tem_escala": bool(escala),
 					"dias": celulas,
 				}
@@ -397,6 +422,7 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 				"dia_semana": DIAS_SEMANA[dia.weekday()],
 				"fim_de_semana": dia.weekday() >= 5,
 				"feriado": eh_feriado(lista, dia),
+				"tipo_dia": tipo_do_dia(dia, {dia} if eh_feriado(lista, dia) else ()),
 			}
 		)
 		dia += timedelta(days=1)
@@ -410,10 +436,15 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 				"nome": t["nome_turno"],
 				"cor": t["cor"],
 				"cargo": t["designation"],
+				"tipo_dia": t.get("tipo_dia") or "",
 				"periodos": [[hhmm(x.inicio), hhmm(x.fim)] for x in t["periodos"]],
 			}
-			for t in turnos.turnos_da_empresa(company, designation)
+			for t in _turnos_da_escala(company, designation)
 		],
+		# escala conjunta: as empresas que aparecem juntas nesta grade
+		"empresas": empresas_da_escala(company),
+		# atalhos "Novo turno" / "Editar ou apagar turnos" (cadastro no Desk, só para quem pode)
+		"pode_cadastrar_turnos": bool(frappe.has_permission(turnos.TURNO, "create")),
 		"pode_editar": bool(set(PAPEIS_ESCRITA) & set(frappe.get_roles()))
 		and frappe.has_permission(ESCALA, "write"),
 		"antecedencia_horas": d.ANTECEDENCIA_ESCALA_MIN // 60,
@@ -639,6 +670,11 @@ def salvar_rascunho(employee: str, alteracoes, justificativa: str | None = None)
 		)
 		doc.flags.ignore_permissions = True
 		doc.save()
+	from hrms_secullum_brasil.apuracao.convite_turno import marcar_escalado
+
+	resultado["convites"] = marcar_escalado(
+		employee, [a["data"] for a in lista if a.get("situacao") == TRABALHO]
+	)
 	resultado["publicacao"] = None
 	if urgentes:
 		urgente = [a for a in lista if str(getdate(a["data"])) in urgentes]
@@ -664,8 +700,21 @@ def descartar_rascunho(employee: str, datas=None) -> int:
 	return len(nomes)
 
 
+def _turnos_da_escala(company: str, designation=None) -> list[dict]:
+	"""Turnos padrão das empresas da escala conjunta (cada um continua cadastrado na sua empresa); o mesmo horário nas
+	duas aparece uma vez só."""
+	saida, vistos = [], set()
+	for empresa in empresas_da_escala(company):
+		for t in turnos.turnos_da_empresa(empresa, designation):
+			chave = (tuple(t["periodos"]), t.get("tipo_dia") or "", t.get("designation") or "")
+			if chave not in vistos:
+				vistos.add(chave)
+				saida.append(t)
+	return sorted(saida, key=lambda t: (t["periodos"][0].inicio if t["periodos"] else 0))
+
+
 def _rascunhos_a_publicar(company: str, employees) -> dict[str, list]:
-	filtros = {"company": company}
+	filtros = {"company": ["in", empresas_da_escala(company)]}
 	escolhidos = json.loads(employees) if isinstance(employees, str) else (employees or None)
 	visiveis = employees_visiveis()
 	permitidos = escolhidos if visiveis is None else [e for e in (escolhidos or visiveis) if e in visiveis]

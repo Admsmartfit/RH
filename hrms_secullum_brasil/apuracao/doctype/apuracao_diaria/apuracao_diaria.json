@@ -31,6 +31,7 @@
   "noturno_real",
   "noturno_ficto",
   "intrajornada_suprimida",
+  "pausa_paga",
   "interjornada_suprimida",
   "he_banco",
   "atraso_banco",
@@ -332,11 +333,17 @@
    "fieldtype": "Small Text",
    "label": "Observações",
    "read_only": 1
+  },
+  {
+   "fieldname": "pausa_paga",
+   "fieldtype": "Int",
+   "label": "Pausa paga (liberalidade)",
+   "read_only": 1
   }
  ],
  "in_create": 1,
  "links": [],
- "modified": "2026-10-27 08:00:00.000000",
+ "modified": "2026-11-04 16:30:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Apuracao Diaria",

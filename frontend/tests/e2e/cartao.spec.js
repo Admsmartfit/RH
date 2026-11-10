@@ -136,16 +136,17 @@ test("manter com ressalva pelo balão tira o alerta do dia", async ({ page }) =>
 });
 
 // TI-08: a cobrança abre com a mensagem padrão já escrita (editável), mesmo sem celular no cadastro
-test("cobrar pelo WhatsApp abre com a mensagem pronta", async ({ page }) => {
+test("cobrar pelo WhatsApp abre com a mensagem do dia seguinte para conferir", async ({ page }) => {
 	const renata = await abrirCartao(page);
 	const cartao = await api(page.request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: renata, competencia: "2026-08" });
 	const dia = cartao.dias.find((d) => d.inconsistencias.some((i) => i.sugestoes.some((s) => s.acao === "cobrar_whatsapp")));
 	test.skip(!dia, "cenário sem inconsistência cobrável");
 	await page.goto(`/ponto/cartao/${renata}?${AGOSTO}&dia=${dia.data}`);
 	const balao = page.getByRole("dialog", { name: /\(.+\) —/ });
-	await balao.getByRole("button", { name: "Cobrar pelo WhatsApp" }).first().click();
-	const dialogo = page.getByRole("dialog", { name: "Cobrar pelo WhatsApp" });
-	await expect(dialogo.getByRole("textbox", { name: "Mensagem" })).toHaveValue(/Notei uma pendência no seu cartão de ponto[\s\S]*Motivo: /);
+	await balao.getByRole("button", { name: "Enviar o WhatsApp do dia seguinte (conferir o texto)" }).first().click();
+	const dialogo = page.getByRole("dialog", { name: "WhatsApp do dia seguinte" });
+	// a mesma mensagem do D+1: o {link} vira o link pessoal de resposta ao enviar
+	await expect(dialogo.getByRole("textbox", { name: "Mensagem" })).toHaveValue(/Olá, [\s\S]*\{link\}/);
 	await dialogo.getByRole("button", { name: "Cancelar" }).click();
 });
 
@@ -164,4 +165,85 @@ test("horário fixo no cartão: semana, histórico e alteração com assinatura"
 	expect(axe.violations).toEqual([]);
 	await dialogo.getByRole("button", { name: "Cancelar" }).click();
 	await expect(dialogo).toHaveCount(0);
+});
+
+// pedido do RH (04/11/2026): horário incluído entra na ordem do dia; as outras batidas se movem
+test("horário digitado na coluna livre vai para o lugar certo (ordem crescente)", async ({ page }) => {
+	const renata = await abrirCartao(page);
+	const dia = "2026-08-19";
+	await desfazerTratamentos(page.request, renata, dia);
+	await page.reload();
+	await expect(page.locator("tbody tr[data-dia]")).toHaveCount(31);
+	const linha = page.locator(`tr[data-dia="${dia}"]`);
+	const valores = () => linha.locator("input[type=text]").evaluateAll((els) => els.map((e) => e.value).filter(Boolean));
+	const antes = await valores();
+	const vazias = await linha.locator("input[type=text]").evaluateAll((els) => els.findIndex((e) => !e.value));
+	const celula = linha.locator("input[type=text]").nth(vazias);
+	await celula.fill("0400");
+	await celula.press("Tab");
+	await expect.poll(valores).toEqual(["04:00", ...antes]);
+	// prévia dos totais antes de salvar (calculada no servidor, sem gravar)
+	await expect(linha.locator('[data-previa="normais"]')).toBeVisible();
+	await expect(linha).toContainText("prévia");
+	await page.getByRole("region", { name: "Alterações não salvas" }).getByRole("button", { name: "Desfazer tudo" }).click();
+});
+
+// pedido do RH (04/11/2026): no balão, o que mexe nas batidas (incluir, desconsiderar, intervalo, abonar...) é só do RH
+test("gestor não vê no balão as ações que mexem nas batidas", async ({ browser, baseURL, request }) => {
+	const ids = await idsPorNome(request);
+	const marcos = ids["Marcos Teste Recepção Noite"];
+	const cartao = await api(request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: marcos, competencia: "2026-08" });
+	const dia = cartao.dias.find((d) => d.inconsistencias.some((i) => i.sugestoes.some((s) => ["incluir", "abonar", "editar"].includes(s.acao))));
+	test.skip(!dia, "cenário sem dia com ação de editar");
+	const contexto = await browser.newContext({ baseURL, storageState: "./tests/e2e/.auth/gestor.json" });
+	const pagina = await contexto.newPage();
+	try {
+		await pagina.goto(`/ponto/cartao/${marcos}?${AGOSTO}&dia=${dia.data}`);
+		const balao = pagina.getByRole("dialog", { name: /\(.+\) —/ });
+		await expect(balao.getByRole("group", { name: /Como resolver/ }).first()).toBeVisible();
+		await expect(balao.getByRole("button", { name: /Inserir a batida|Incluir outro horário|Desconsiderar|Abonar o dia|Corrigir uma batida|Lançar atestado/ })).toHaveCount(0);
+		await expect(balao.getByRole("button", { name: /Manter/ }).first()).toBeVisible();
+	} finally {
+		await contexto.close();
+	}
+});
+
+// pedido do RH (08/11/2026): falta, atestado e férias/licença/afastamento lançados direto no cartão
+test("lançar licença pelo cartão abona o dia e mostra o tipo na coluna Abono", async ({ page }) => {
+	const renata = await abrirCartao(page);
+	const licencas = async () =>
+		api(page.request, "frappe.client.get_list", {
+			doctype: "Leave Application",
+			filters: JSON.stringify({ employee: renata, leave_type: "Casamento", docstatus: ["<", 2] }),
+			fields: JSON.stringify(["name", "docstatus"]),
+		});
+	const limpar = async () => {
+		for (const l of await licencas()) {
+			// cancelada fica (o HRMS liga a Frequência do dia a ela); o rascunho sai
+			if (l.docstatus === 1) await api(page.request, "frappe.client.cancel", { doctype: "Leave Application", name: l.name }, "post");
+			else await api(page.request, "frappe.client.delete", { doctype: "Leave Application", name: l.name }, "post");
+		}
+	};
+	await limpar();
+	const cartao = await api(page.request, "hrms_secullum_brasil.apuracao.painel.cartao", { employee: renata, competencia: "2026-08" });
+	const dia = cartao.dias.find((d) => d.situacao === "Trabalho" && !d.abono && !d.falta_justificada && d.editavel);
+	test.skip(!dia, "sem dia livre no cenário");
+	try {
+		await page.goto(`/ponto/cartao/${renata}?${AGOSTO}&dia=${dia.data}`);
+		await page.keyboard.press("Escape"); // o balão do dia pode abrir junto
+		await page.getByTestId("abrir-lancamento").click();
+		const dialogo = page.getByRole("dialog", { name: /Lançar ausência/ });
+		await dialogo.getByLabel("Férias, licença ou afastamento").check();
+		await dialogo.getByLabel("Início").fill(dia.data);
+		await dialogo.getByLabel("Fim").fill(dia.data);
+		const axe = await new AxeBuilder({ page }).include('[aria-labelledby="titulo-lancamento"]').analyze();
+		expect(axe.violations.filter((v) => ["serious", "critical"].includes(v.impact))).toEqual([]);
+		await dialogo.getByRole("combobox", { name: /^Tipo/ }).selectOption("Casamento");
+		await dialogo.getByLabel("Motivo").fill("Casamento (teste e2e)");
+		await dialogo.getByRole("button", { name: "Lançar" }).click();
+		await expect(page.getByRole("status")).toContainText("gravado");
+		await expect(page.locator(`tr[data-dia="${dia.data}"]`)).toContainText("Casamento");
+	} finally {
+		await limpar();
+	}
 });

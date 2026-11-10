@@ -64,6 +64,8 @@ class RegraApuracao:
 	intervalo_minimo: int = d.INTERVALO_MINIMO_MIN
 	intervalo_maximo: int = d.INTERVALO_MAXIMO_MIN
 	tolerancia_intervalo: int = d.TOLERANCIA_INTERVALO_MIN
+	tolerancia_jornada_intervalo: int = d.TOLERANCIA_JORNADA_INTERVALO_MIN
+	trabalho_minimo_apos_intervalo: int = d.TRABALHO_MINIMO_APOS_INTERVALO_MIN
 	permite_reducao_intrajornada: bool = d.PERMITE_REDUCAO_INTRAJORNADA
 	intervalo_reduzido: int = d.INTERVALO_REDUZIDO_MIN
 	interjornada_minima: int = d.INTERJORNADA_MIN
@@ -92,6 +94,12 @@ class EntradaDia:
 	tolerancia_aviso_intervalo: int = 0
 	estagio: bool = False  # EST-04: estagiário — sem HE, banco, DSR nem adicional pago
 	limite_diario_estagio: int = 0  # EST-04: carga diária do TCE (minutos)
+	# pausa paga por liberalidade (ex.: instrutor, 15 min; parâmetro do cargo na CCT — RH, 04/11/2026): a pausa não é
+	# trabalho (sai das horas), é paga à parte; além da jornada + a pausa + a tolerância = horas não autorizadas
+	pausa_paga_min: int = 0
+	# horários incluídos pelo sistema (WhatsApp, termo, RH): só a pausa com ponta incluída é paga; a batida no relógio
+	# é só trabalho (RH, 04/11/2026)
+	marcacoes_incluidas: frozenset[datetime] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -117,6 +125,7 @@ class ResultadoDia:
 	noturno_real: int = 0
 	noturno_ficto: int = 0
 	intrajornada_suprimida: int = 0
+	pausa_paga: int = 0  # minutos da pausa paga por liberalidade (rubrica própria na folha)
 	interjornada_suprimida: int = 0
 	aulas_previstas: int = 0
 	aulas_dadas: int = 0

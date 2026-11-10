@@ -169,6 +169,16 @@ class TestEnvioCartao(FrappeTestCase):
 		self.assertEqual(envio_cartao.reenviar(jobs[0]), "Enviado")
 		self.assertEqual(len(self.chamadas_do_cartao()), antes + 1)
 
+	def test_nunca_apaga_no_secullum_batida_que_o_programa_nao_tirou(self):
+		# o Secullum tem uma batida que o programa não conhece (ex.: do relógio, ainda não coletada)
+		registro = next(r for r in self.mock.cartao if r["FuncionarioCpf"] == self.cpf)
+		registro["Saida2"] = "16:58"
+		antes = len(self.chamadas_do_cartao())
+		_r, jobs = self.salvar(enviar=1)
+		self.assertEqual(envio_cartao.processar(jobs[0]), "Erro")
+		self.assertIn("16:58", frappe.db.get_value(ENVIO, jobs[0], "resposta"))
+		self.assertEqual(len(self.chamadas_do_cartao()), antes)  # nada foi enviado
+
 	def test_erro_vira_inconsistencia_e_reenviar_resolve(self):
 		_r, jobs = self.salvar(enviar=1)
 		self.mock.falhas.append(
@@ -235,3 +245,28 @@ class TestEnvioCartao(FrappeTestCase):
 		frappe.set_user(self.gestor_email)
 		with self.assertRaises(frappe.PermissionError):
 			envio_cartao.reenviar("ENVC-00001")
+
+	def test_enviar_depois_o_que_foi_salvo_bloqueado(self):
+		"""Pedido do RH (03/11/2026): correção salva com a trava em Bloqueado vai depois, pelo botão do cartão."""
+		self.trava(envio_cartao.BLOQUEADO)
+		self.salvar(enviar=1)
+		with self.assertRaises(frappe.ValidationError):  # ainda bloqueado: explica o que fazer
+			acoes.enviar_cartao_secullum(self.employee, competencia="2026-09")
+		self.trava(envio_cartao.SEMPRE)
+		with patch.object(frappe, "enqueue"):
+			r = acoes.enviar_cartao_secullum(self.employee, competencia="2026-09")
+		self.assertEqual(r["enviados"], [str(DIA)])
+		nome = frappe.db.get_value(
+			TRATAMENTO, {"employee": self.employee, "data": DIA, "docstatus": 1}, "envio_secullum"
+		)
+		self.assertEqual(envio_cartao.processar(nome), "Enviado")
+		with patch.object(frappe, "enqueue"):
+			r = acoes.enviar_cartao_secullum(
+				self.employee, competencia="2026-09", datas=json.dumps([str(DIA)])
+			)
+		self.assertEqual((r["enviados"], r["ja_enviados"]), ([], [str(DIA)]))
+		self.trava(envio_cartao.TESTE)  # em Teste, sem caso aberto, o dia fica de fora
+		frappe.db.set_value(TRATAMENTO, {"employee": self.employee, "data": DIA}, "envio_secullum", None)
+		with patch.object(frappe, "enqueue"):
+			r = acoes.enviar_cartao_secullum(self.employee, competencia="2026-09")
+		self.assertEqual(r["fora_do_teste"], [str(DIA)])

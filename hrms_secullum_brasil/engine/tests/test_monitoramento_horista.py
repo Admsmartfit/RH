@@ -29,7 +29,7 @@ def dia(n, trabalhado, suprimido=15):
 		(252, 15, True),  # 08:00-12:12 sem pausa
 		(241, 15, True),
 		(255, 15, True),  # 4h15: no limite da tolerância
-		(260, 15, False),  # 08:00-12:20: jornada estendida, não conta
+		(260, 15, True),  # 08:00-12:20: 4h15 ou mais seguidas também entram no termo (03/11/2026)
 		(240, 0, False),  # 4h em ponto
 		(250, 0, False),  # pausa registrada (ou já regularizado)
 		(237, 0, False),  # regularizado: 4h12 menos 15 min de pausa
@@ -39,14 +39,14 @@ def test_ocorrencia(trabalhado, suprimido, esperado):
 	assert e_ocorrencia(dia(1, trabalhado, suprimido)) is esperado
 
 
-def test_tolerancia_e_limite_da_cct():
-	assert e_ocorrencia(dia(1, 260), tolerancia=20)
+def test_limite_da_cct():
+	assert e_ocorrencia(dia(1, 292))  # 12:08-17:00 sem pausa
 	assert not e_ocorrencia(dia(1, 252), sem_intervalo_ate=300)
 
 
 def test_ocorrencias_do_mes_em_ordem():
 	dias = [dia(9, 252), dia(2, 245), dia(5, 300), dia(6, 245, 0)]
-	assert ocorrencias(dias) == [date(2026, 10, 2), date(2026, 10, 9)]
+	assert ocorrencias(dias) == [date(2026, 10, 2), date(2026, 10, 5), date(2026, 10, 9)]
 
 
 @pytest.mark.parametrize(

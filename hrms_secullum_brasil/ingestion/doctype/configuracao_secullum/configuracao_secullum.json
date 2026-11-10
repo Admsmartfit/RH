@@ -41,6 +41,21 @@
   "ultima_conferencia",
   "ultima_conferencia_status",
   "ultima_conferencia_resumo",
+  "sincronizacao_section",
+  "envio_suspenso",
+  "envio_folgas",
+  "envio_horista",
+  "envio_licencas",
+  "column_break_sinc",
+  "envio_afastamentos",
+  "envio_justificativas",
+  "envio_estrutura",
+  "folga_em_todos_os_grupos",
+  "empresas_liberadas",
+  "auditoria_section",
+  "ultima_auditoria",
+  "column_break_aud",
+  "ultima_auditoria_resumo",
   "totais_section",
   "mapeamento_totais"
  ],
@@ -72,8 +87,8 @@
    "fieldname": "envio_correcoes",
    "fieldtype": "Select",
    "label": "Envio de correções de ponto ao Secullum",
-   "options": "Bloqueado\nPerguntar ao salvar\nSempre enviar",
-   "description": "Trava das correções feitas no cartão ponto do programa. Bloqueado: nada é enviado ao Secullum. Perguntar ao salvar: o Salvar do cartão pergunta se envia. Sempre enviar: toda correção aprovada vai para o cartão do Secullum. A batida original nunca é apagada (fica desconsiderada)."
+   "options": "Bloqueado\nTeste\nPerguntar ao salvar\nSempre enviar",
+   "description": "Trava das correções feitas no cartão ponto do programa. Bloqueado: nada é enviado ao Secullum. Perguntar ao salvar: o Salvar do cartão pergunta se envia. Sempre enviar: toda correção aprovada vai para o cartão do Secullum. A batida original nunca é apagada (fica desconsiderada). Teste: só para quem tem Caso de Teste Secullum aberto no dia (docs/PRD-sincronizacao-secullum.md)."
   },
   {
    "default": "0",
@@ -263,6 +278,101 @@
    "read_only": 1
   },
   {
+   "fieldname": "sincronizacao_section",
+   "fieldtype": "Section Break",
+   "label": "Sincronização: envio ao Secullum",
+   "collapsible": 1,
+   "description": "docs/PRD-sincronizacao-secullum.md. Cada tipo de envio: Bloqueado → Teste (só quem tem Caso de Teste aberto) → Ligado (todos, nas empresas liberadas). Ligado só depois de aprovar os casos obrigatórios do tipo."
+  },
+  {
+   "fieldname": "envio_suspenso",
+   "fieldtype": "Check",
+   "label": "Suspender todos os envios",
+   "default": "0"
+  },
+  {
+   "fieldname": "envio_folgas",
+   "label": "Folgas da escala",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "envio_horista",
+   "label": "Falta e atestado do horista (AT/FT)",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "envio_licencas",
+   "label": "Licenças do dia",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "column_break_sinc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "envio_afastamentos",
+   "label": "Afastamentos",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "envio_justificativas",
+   "label": "Cadastro de justificativas",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "envio_estrutura",
+   "label": "Estrutura (gestor da unidade)",
+   "options": "Bloqueado\nTeste\nLigado",
+   "default": "Bloqueado",
+   "fieldtype": "Select"
+  },
+  {
+   "fieldname": "folga_em_todos_os_grupos",
+   "fieldtype": "Check",
+   "label": "FOLGA em todos os períodos do dia",
+   "default": "0",
+   "description": "Desligado: a justificativa FOLGA vai só no 1º período do cartão. Ligue se o caso de teste T-F2 mostrar que o Secullum precisa dela em todos."
+  },
+  {
+   "fieldname": "empresas_liberadas",
+   "fieldtype": "Table MultiSelect",
+   "label": "Empresas liberadas (Ligado)",
+   "options": "Empresa Liberada Secullum",
+   "description": "Vazio = todas. Para estender uma empresa por vez (SS-9)."
+  },
+  {
+   "fieldname": "auditoria_section",
+   "fieldtype": "Section Break",
+   "label": "Auditoria dos horários do Secullum",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "ultima_auditoria",
+   "fieldtype": "Datetime",
+   "label": "Última auditoria",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_aud",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ultima_auditoria_resumo",
+   "fieldtype": "Small Text",
+   "label": "Resultado",
+   "read_only": 1
+  },
+  {
    "fieldname": "totais_section",
    "fieldtype": "Section Break",
    "label": "Relatório de divergência (Calcular/SomenteTotais)"
@@ -276,16 +386,16 @@
   },
   {
    "default": "Bloqueado",
-   "description": "CE-16: envio do novo horário (HorarioNumero) das alterações de jornada liberadas, na data de início. Bloqueado: nada é enviado (o horário vale só no programa).",
+   "description": "CE-16: envio do novo horário (HorarioNumero) das alterações de jornada liberadas, na data de início. Bloqueado: nada é enviado (o horário vale só no programa). Teste: só para quem tem Caso de Teste Secullum aberto.",
    "fieldname": "envio_horarios",
    "fieldtype": "Select",
    "label": "Envio de horários ao Secullum",
-   "options": "Bloqueado\nSempre enviar"
+   "options": "Bloqueado\nTeste\nSempre enviar"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-30 14:00:00.000000",
+ "modified": "2026-11-02 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Ingestion",
  "name": "Configuracao Secullum",

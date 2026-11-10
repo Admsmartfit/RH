@@ -220,6 +220,25 @@ def _abertas(employee: str, inicio: date, fim: date, nomes=None) -> list:
 	)
 
 
+def _dias_do_alerta(inconsistencia: str, inicio: date, fim: date, por_dia: dict) -> None:
+	"""Horista além de 4h sem intervalo (pedido do RH, 03/11/2026): cada dia do alerta no período entra no termo com o
+	intervalo no meio do expediente (pausa paga; as horas do dia não mudam), mesmo sem pendência própria no dia (até
+	4h15 a apuração não abre pendência)."""
+	alerta = frappe.db.get_value(INCONSISTENCIA, inconsistencia, "referencia_name")
+	if not alerta or not frappe.db.exists("Alerta Horista", alerta):
+		return
+	for linha in frappe.get_all(
+		"Alerta Horista Dia",
+		filters={"parent": alerta, "parenttype": "Alerta Horista", "data": ["between", [inicio, fim]]},
+		fields=["data", "intervalo_inicio"],
+	):
+		if not linha.intervalo_inicio:
+			continue
+		ocorrencias = por_dia.setdefault(getdate(linha.data), [])
+		if not any(tipo == "intrajornada" for _nome, tipo in ocorrencias):
+			ocorrencias.append((inconsistencia, "intrajornada"))
+
+
 def montar(employee: str, inicio: date, fim: date, nomes=None) -> tuple[list, list, dict]:
 	"""(itens do engine, informativos [(tipo, data)], hora de virada por dia)."""
 	from hrms_secullum_brasil.apuracao.cartao_ponto import _carregar, contexto_do_dia
@@ -233,18 +252,71 @@ def montar(employee: str, inicio: date, fim: date, nomes=None) -> tuple[list, li
 			por_dia.setdefault(dia, []).append((inc.name, inc.tipo))
 		elif inc.tipo in to.INFORMATIVOS:
 			informativos.append((inc.tipo, dia))
+		if inc.tipo == "excesso_jornada_horista":
+			_dias_do_alerta(inc.name, inicio, fim, por_dia)
+	correcoes = {} if nomes else _correcoes_do_colaborador(employee, inicio, fim)
+	tipos_do_dia = _tipos_dos_dias(employee, list(correcoes))
 	viradas, dias = {}, []
-	if por_dia:
-		dados = _carregar(employee, min(por_dia), max(por_dia))
+	todos = sorted(set(por_dia) | set(correcoes))
+	if todos:
+		dados = _carregar(employee, todos[0], todos[-1])
 		with modo_lote():
-			definir_janela(min(por_dia), max(por_dia))
-			for dia, ocorrencias in sorted(por_dia.items()):
+			definir_janela(todos[0], todos[-1])
+			for dia in todos:
 				if periodo_fechado(employee, dia):
 					continue
 				_ctx, virada, _grade, _previsto, contexto = contexto_do_dia(employee, dia, dados)
 				viradas[dia] = virada
-				dias.append(to.DiaTermo(dia, tuple(ocorrencias), contexto))
+				dias.append(
+					to.DiaTermo(
+						dia,
+						tuple(por_dia.get(dia, [])),
+						contexto,
+						correcoes.get(dia),
+						tipos_do_dia.get(dia, ()),
+					)
+				)
 	return to.montar_itens(dias), informativos, viradas
+
+
+def _correcoes_do_colaborador(employee: str, inicio: date, fim: date) -> dict:
+	"""O que o colaborador mandou pelo link do WhatsApp no período (a última resposta de cada dia): entra no termo como
+	registro (RH, 09/11/2026)."""
+	saida = {}
+	for r in frappe.db.sql(
+		"""select d.data, d.situacao, d.horarios_antes, d.horarios_informados, d.nao_reconhece, d.explicacao,
+			p.confirmado_em, p.aprovado_em
+		from `tabResposta WhatsApp Ponto Dia` d join `tabResposta WhatsApp Ponto` p on p.name = d.parent
+		where p.employee = %s and d.data between %s and %s and p.confirmado_em is not null
+		order by p.creation asc""",
+		(employee, inicio, fim),
+		as_dict=True,
+	):
+		saida[getdate(r.data)] = to.CorrecaoColaborador(
+			enviada_em=getdate(r.confirmado_em),
+			situacao=r.situacao or to.AGUARDANDO_RH,
+			antes=tuple((r.horarios_antes or "").split()),
+			informados=tuple((r.horarios_informados or "").split()),
+			nao_reconhece=bool(r.nao_reconhece),
+			explicacao=r.explicacao or "",
+			decidida_em=getdate(r.aprovado_em) if r.aprovado_em else None,
+		)
+	return saida
+
+
+def _tipos_dos_dias(employee: str, dias: list) -> dict:
+	"""Os tipos que o dia teve (abertos ou já resolvidos), para o quadro do termo nos dias corrigidos."""
+	if not dias:
+		return {}
+	saida: dict[date, tuple] = {}
+	for linha in frappe.get_all(
+		INCONSISTENCIA,
+		filters={"employee": employee, "data": ["in", dias], "tipo": ["in", list(to.NOMES)]},
+		fields=["data", "tipo"],
+	):
+		dia = getdate(linha.data)
+		saida[dia] = tuple(sorted({*saida.get(dia, ()), linha.tipo}))
+	return saida
 
 
 def _horarios(minutos) -> str:
@@ -252,15 +324,23 @@ def _horarios(minutos) -> str:
 
 
 def _item_dict(item: to.ItemTermo) -> dict:
+	from hrms_secullum_brasil.apuracao.dia_seguinte import avisos_sem_resposta
+
+	ocorrencias = "; ".join(to.NOMES[t] for t in item.tipos)
+	avisos = avisos_sem_resposta(item.inconsistencias)
+	if avisos:  # docs/PRD-whatsapp-dia-seguinte.md (W-7): avisado no D+1 e não respondeu
+		ocorrencias += _(" (avisado pelo WhatsApp em {0}, sem resposta)").format(min(avisos.values()))
 	return {
 		"data": str(item.data),
-		"ocorrencias": "; ".join(to.NOMES[t] for t in item.tipos),
+		"ocorrencias": ocorrencias,
 		"tipos": ",".join(item.tipos),
 		"marcacoes": to.texto_marcacoes(item.marcacoes),
 		"proposta": item.proposta.texto,
 		"horarios_propostos": _horarios(item.proposta.horarios) if item.proposta.horarios else "",
 		"intervalo_termo": _horarios(item.proposta.intervalo) if item.proposta.intervalo else "",
 		"inconsistencias": ",".join(item.inconsistencias),
+		# "Horário correto" hachurado: a linha é só registro (RH, 09/11/2026)
+		"sem_horario": int(item.proposta.sem_horario),
 	}
 
 
@@ -546,6 +626,14 @@ def _qr_data_uri(url: str) -> str:
 		return ""
 
 
+# as cláusulas do termo (o PDF e a página do celular leem as mesmas; pedido do RH de 04/11/2026)
+CLAUSULAS = (
+	"O empregador identificou, no registro eletrônico de ponto do período acima, as ocorrências do quadro abaixo. As marcações originais são preservadas e não foram alteradas (Portaria MTP nº 671/2021); qualquer correção é feita em registro separado, com o motivo e a identificação de quem a fez.",
+	"O(a) empregado(a) declara que as informações que prestou neste termo correspondem à jornada efetivamente cumprida e que não foi orientado(a) a registrar horários diferentes dos reais.",
+	"As horas serão pagas ou descontadas conforme a jornada efetivamente registrada e regularizada, nos termos do contrato de trabalho, da convenção coletiva aplicável e da CLT. O intervalo para repouso e alimentação (art. 71 da CLT) deve ser usufruído e registrado diariamente.",
+	"Este termo tem caráter de <b>ciência e orientação</b> e <b>não constitui advertência ou penalidade</b>. O(a) empregado(a) pode registrar abaixo suas observações ou discordância; a assinatura indica apenas a ciência do conteúdo, sem prejuízo de questionar qualquer item.",
+)
+
 TEMPLATE_PDF = """
 <div style="font-family: sans-serif; font-size: 10.5pt; line-height: 1.35;">
 <h2 style="text-align:center; font-size: 13pt; margin: 0 0 4px;">TERMO DE CIÊNCIA E REGULARIZAÇÃO DE OCORRÊNCIAS DE PONTO</h2>
@@ -554,29 +642,26 @@ TEMPLATE_PDF = """
 <b>Empregado(a):</b> {{ emp.employee_name }}{% if emp.cpf %}, CPF {{ emp.cpf }}{% endif %}{% if emp.designation %},
 cargo {{ emp.designation }}{% endif %}{% if emp.branch %}, unidade {{ emp.branch }}{% endif %}.<br>
 <b>Período:</b> {{ periodo }}.</p>
-<p>1. O empregador identificou, no registro eletrônico de ponto do período acima, as ocorrências do quadro abaixo. As
-marcações originais são preservadas e não foram alteradas (Portaria MTP nº 671/2021); qualquer correção é feita em
-registro separado, com o motivo e a identificação de quem a fez.</p>
-<p>2. Para cada ocorrência o quadro mostra a <b>regularização proposta</b>. O(a) empregado(a) deve conferir cada linha e
-marcar <b>De acordo</b>, escrever o <b>horário correto</b> ou marcar <b>Não reconheço</b>.</p>
+<p>1. {{ clausulas[0] }}</p>
+<p>2. Para cada ocorrência o quadro mostra a <b>situação do dia</b>. O(a) empregado(a) deve conferir cada linha e
+marcar <b>De acordo</b>, escrever o <b>horário correto</b> (quando o campo não estiver hachurado) ou marcar
+<b>Não reconheço</b>.</p>
 <table style="width:100%; border-collapse: collapse; font-size: 9pt;" border="1" cellpadding="3">
 <thead><tr style="background:#eee;"><th>Dia</th><th>Ocorrência</th><th>Marcações registradas</th>
-<th>Regularização proposta</th><th>De acordo</th><th>Horário correto</th><th>Não reconheço</th></tr></thead>
+<th>Situação do dia</th><th>De acordo</th><th>Horário correto</th><th>Não reconheço</th></tr></thead>
 <tbody>
 {% for i in doc.itens %}<tr><td>{{ frappe.utils.formatdate(i.data, "dd/MM") }}</td><td>{{ i.ocorrencias }}</td>
-<td>{{ i.marcacoes }}</td><td>{{ i.proposta }}</td><td style="text-align:center;">( )</td><td style="width:16%;"></td>
+<td>{{ i.marcacoes }}</td><td>{{ i.proposta }}</td><td style="text-align:center;">( )</td>{% if i.sem_horario %}<td
+style="width:16%; background-color:#e5e5e5; background-image: -webkit-repeating-linear-gradient(45deg, #9a9a9a 0, #9a9a9a 1px,
+transparent 1px, transparent 6px); background-image: repeating-linear-gradient(45deg, #9a9a9a 0, #9a9a9a 1px,
+transparent 1px, transparent 6px);"></td>{% else %}<td style="width:16%;"></td>{% endif %}
 <td style="text-align:center;">( )</td></tr>
 {% endfor %}</tbody></table>
 {% if doc.informativos %}<p style="font-size: 9pt;"><b>Também observado no período (sem dia a regularizar):</b>
 {{ doc.informativos.replace("\\n", "; ") }}.</p>{% endif %}
-<p>3. O(a) empregado(a) declara que as informações que prestou neste termo correspondem à jornada efetivamente cumprida
-e que não foi orientado(a) a registrar horários diferentes dos reais.</p>
-<p>4. As horas serão pagas ou descontadas conforme a jornada efetivamente registrada e regularizada, nos termos do
-contrato de trabalho, da convenção coletiva aplicável e da CLT. O intervalo para repouso e alimentação (art. 71 da
-CLT) deve ser usufruído e registrado diariamente.</p>
-<p>5. Este termo tem caráter de <b>ciência e orientação</b> e <b>não constitui advertência ou penalidade</b>. O(a)
-empregado(a) pode registrar abaixo suas observações ou discordância; a assinatura indica apenas a ciência do conteúdo,
-sem prejuízo de questionar qualquer item.</p>
+<p>3. {{ clausulas[1] }}</p>
+<p>4. {{ clausulas[2] }}</p>
+<p>5. {{ clausulas[3] }}</p>
 <p>Observações do(a) empregado(a): ____________________________________________________________________<br>
 _______________________________________________________________________________________________</p>
 <p>Local e data: ______________________, ____/____/________</p>
@@ -602,7 +687,7 @@ enviado ao gestor por e-mail.</td>
 {% if comprovante.testemunhas %}<p><b>Testemunhas da recusa:</b> {{ comprovante.testemunhas }}</p>{% endif %}
 {% if comprovante.observacoes %}<p><b>Observações do colaborador:</b> {{ comprovante.observacoes }}</p>{% endif %}
 <table style="width:100%; border-collapse: collapse; font-size: 9pt;" border="1" cellpadding="3">
-<tr style="background:#eee;"><th>Dia</th><th>Regularização proposta</th><th>Resposta</th><th>Horários informados</th></tr>
+<tr style="background:#eee;"><th>Dia</th><th>Situação do dia</th><th>Resposta</th><th>Horários informados</th></tr>
 {% for r in comprovante.respostas %}<tr><td>{{ r.dia }}</td><td>{{ r.proposta }}</td><td>{{ r.resposta }}</td>
 <td>{{ r.horarios or "" }}</td></tr>{% endfor %}
 </table>
@@ -628,6 +713,7 @@ def documento_html(doc, previa: bool = False, comprovante: dict | None = None) -
 			"qr": "" if previa else _qr_data_uri(link_gestor(doc.name)),
 			"previa": previa,
 			"comprovante": comprovante,
+			"clausulas": CLAUSULAS,
 		},
 	)
 
@@ -691,7 +777,7 @@ TEMPLATE_EMAIL = """
 <p>No cartão de ponto de <b>{{ doc.employee_name }}</b> ({{ periodo }}) há ocorrências que precisam da ciência e da
 assinatura do(a) colaborador(a). O termo está anexado em PDF.</p>
 <table style="border-collapse: collapse; font-size: 13px;" border="1" cellpadding="4">
-<tr style="background:#eee;"><th>Dia</th><th>Ocorrência</th><th>Marcações</th><th>Correção sugerida pelo sistema</th></tr>
+<tr style="background:#eee;"><th>Dia</th><th>Ocorrência</th><th>Marcações</th><th>Situação do dia</th></tr>
 {% for i in doc.itens %}<tr><td>{{ frappe.utils.formatdate(i.data, "dd/MM") }}</td><td>{{ i.ocorrencias }}</td>
 <td>{{ i.marcacoes }}</td><td>{{ i.proposta }}</td></tr>{% endfor %}
 </table>
@@ -801,6 +887,29 @@ def _enviar_whatsapp(doc, emp) -> str | None:
 		doc.texto_whatsapp,
 		regra=regra.name if regra else None,
 		chave=f"TOP:{doc.name}",
+		termo=doc.name,
+	)
+	return whatsapp.enviar(nome)
+
+
+@frappe.whitelist()
+def reenviar_link(termo: str) -> str:
+	"""O dia já está num termo aberto: reenvia ao colaborador a mensagem com o link do termo (a mesma regra e trava
+	do envio do termo), no lugar de uma cobrança nova (docs/PRD-whatsapp-dia-seguinte.md, W-7)."""
+	frappe.only_for((*PAPEIS_RH, "Gestor Ponto"))
+	doc = frappe.get_doc(DOCTYPE, termo)
+	doc.check_permission("read")
+	_aberto(doc)
+	emp = frappe.get_doc("Employee", doc.employee)
+	if not emp.cell_number:
+		frappe.throw(_("{0} não tem celular no cadastro.").format(emp.employee_name))
+	regra, _modelo = _modelo_whatsapp(emp)
+	nome = whatsapp.criar(
+		doc.employee,
+		"Colaborador",
+		emp.cell_number,
+		doc.texto_whatsapp,
+		regra=regra.name if regra else None,
 		termo=doc.name,
 	)
 	return whatsapp.enviar(nome)
@@ -1052,12 +1161,37 @@ def _itens_publicos(doc) -> list[dict]:
 			"marcacoes": i.marcacoes,
 			"proposta": i.proposta,
 			"horarios_propostos": i.horarios_propostos or "",
+			"sem_horario": int(i.get("sem_horario") or 0),
 			"resposta": i.resposta,
 			"horarios_informados": i.horarios_informados,
 			"resultado": i.resultado,
 		}
 		for i in doc.itens
 	]
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def previa(t: str, item: str, horarios) -> dict:
+	"""Página do termo (pedido do RH, 04/11/2026): com os horários que a pessoa está informando para o dia, as batidas
+	em ordem com o rótulo (Entrada 1, Saída 1...), as horas e as pendências que sobrariam. Só leitura; vale só para um
+	dia do próprio termo (link assinado) e enquanto ele está aberto."""
+	from hrms_secullum_brasil.apuracao.cartao_ponto import previa_sem_checar
+	from hrms_secullum_brasil.engine.cartao_edicao import ler_horario
+
+	doc, _papel = ler_token(t)
+	if doc.status != AGUARDANDO_ASSINATURA:
+		frappe.throw(_("Este termo já foi encerrado."))
+	linha = next((i for i in doc.itens if i.name == item), None)
+	if not linha:
+		frappe.throw(_("Dia inválido."))
+	partes = horarios if isinstance(horarios, list) else str(horarios or "").replace(",", " ").split()
+	try:
+		horas = [hhmm(ler_horario(p)) for p in partes]
+	except ValueError:
+		frappe.throw(_("Horário inválido: use HH:MM."))
+	with _como_sistema():
+		r = previa_sem_checar(doc.employee, linha.data, horas)
+	return {k: r.get(k) for k in ("apurado", "motivo", "batidas", "trabalhado", "normais", "inconsistencias")}
 
 
 @frappe.whitelist(allow_guest=True)
@@ -1081,6 +1215,8 @@ def dados(t: str) -> dict:
 		"via": doc.via,
 		"informativos": doc.informativos,
 		"itens": _itens_publicos(doc),
+		# o texto integral, para ler no celular (sem as marcações HTML)
+		"clausulas": [frappe.utils.strip_html(c) for c in CLAUSULAS],
 		"celular": f"(**) *****-{str(emp.cell_number)[-4:]}"
 		if papel == COLABORADOR and emp.cell_number
 		else None,
@@ -1261,6 +1397,8 @@ def _aplicar_item(doc, linha, resposta: str, horarios: str | None, anexo: str | 
 			referencia_name=doc.name,
 		)
 		return _("Período fechado: fica para o RH.")
+	if cint(linha.get("sem_horario")) and resposta == to.ALTERADO:
+		resposta, horarios = to.DE_ACORDO, None  # linha só de registro: não tem horário a corrigir
 	linha.resposta = resposta
 	linha.horarios_informados = horarios
 	if resposta == to.NAO_RECONHECE:
@@ -1284,6 +1422,11 @@ def _aplicar_item(doc, linha, resposta: str, horarios: str | None, anexo: str | 
 			tratamentos += _salvar_dia(doc.employee, data, final, motivo, anexo)
 	# o que a correção não resolveu (atraso, falta, intervalo curto...) fica como ciência: Mantida, sem verba nova
 	restantes = [n for n in aguardando if frappe.db.get_value(INCONSISTENCIA, n, "status") == AGUARDANDO]
+	# batida faltando sem o horário escrito não tem como ficar "ciente": o dia continua sem a batida, volta ao RH
+	sem_horario = [n for n in restantes if frappe.db.get_value(INCONSISTENCIA, n, "tipo") == "marcacao_impar"]
+	for n in sem_horario:
+		frappe.db.set_value(INCONSISTENCIA, n, "status", ABERTA)
+	restantes = [n for n in restantes if n not in sem_horario]
 	for n in restantes:
 		_manter(n, _("Ciente pelo termo {0}: {1}").format(doc.name, linha.proposta))
 	if restantes:
@@ -1291,6 +1434,8 @@ def _aplicar_item(doc, linha, resposta: str, horarios: str | None, anexo: str | 
 	partes = []
 	if tratamentos:
 		partes.append(_("Corrigido no cartão ({0}).").format(", ".join(tratamentos)))
+	if sem_horario:
+		partes.append(_("Batida faltando sem o horário correto: voltou para o RH."))
 	if restantes:
 		partes.append(_("Ciente: mantida."))
 	return " ".join(partes) or _("Sem mudança.")

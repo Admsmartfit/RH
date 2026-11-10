@@ -30,8 +30,9 @@ test("planejador: roda, compara as propostas, mostra grade, mapa e o que mudar",
 	expect(axe.violations).toEqual([]);
 });
 
-test("tela Escalas leva ao planejador", async ({ page }) => {
+test("o menu leva ao planejador (a tela Escalas não tem mais o atalho)", async ({ page }) => {
 	await page.goto(`/ponto/escalas?${AGOSTO}`);
-	await page.getByTestId("abrir-planejador").click();
+	await expect(page.getByTestId("abrir-planejador")).toHaveCount(0);
+	await page.getByRole("link", { name: "Planejador", exact: true }).click();
 	await expect(page).toHaveURL(/\/ponto\/planejador/);
 });

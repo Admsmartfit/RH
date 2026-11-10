@@ -1,7 +1,7 @@
 """Monitoramento de horistas (docs/PRD-monitoramento-horistas.md, MH-02): dias além de 4h sem intervalo registrado.
 
-Ocorrência (DH-1) = dia com trabalhado acima da jornada sem intervalo (240 min) e no máximo a tolerância além dela,
-com intervalo suprimido. O aviso sai uma vez a cada limite atingido no mês (DH-2): 4, 8, 12... Python puro.
+Ocorrência (DH-1) = dia com trabalhado acima da jornada sem intervalo (240 min) com intervalo suprimido (de qualquer
+duração desde 03/11/2026; a tolerância só tira a pendência do dia na apuração). O aviso sai uma vez a cada limite atingido no mês (DH-2): 4, 8, 12... Python puro.
 """
 
 import re
@@ -11,7 +11,7 @@ from datetime import date
 
 from hrms_secullum_brasil.engine import defaults_legais as d
 
-TOLERANCIA_PADRAO = 15  # minutos além das 4h que contam como "esquecimento" da pausa
+TOLERANCIA_PADRAO = 15  # minutos além das 4h sem pendência no dia (o alerta do mês acompanha)
 LIMITE_PADRAO = 4  # ocorrências no mês que disparam o alerta
 HORA_INICIO_ENVIO, HORA_FIM_ENVIO = 8, 20  # DH-5: mensagem só entre 8h e 20h
 
@@ -44,22 +44,16 @@ class DiaHorista:
 	intervalo_suprimido: int
 
 
-def e_ocorrencia(
-	dia: DiaHorista,
-	tolerancia: int = TOLERANCIA_PADRAO,
-	sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN,
-) -> bool:
-	return (
-		dia.intervalo_suprimido > 0 and sem_intervalo_ate < dia.trabalhado <= sem_intervalo_ate + tolerancia
-	)
+def e_ocorrencia(dia: DiaHorista, sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN) -> bool:
+	"""Passou das 4h com intervalo suprimido. Desde 03/11/2026 (pedido do RH) vale qualquer duração: o dia de 4h15 ou
+	mais seguidas também entra no alerta e no termo de ajuste (antes só até a tolerância, o "esquecimento")."""
+	return dia.intervalo_suprimido > 0 and dia.trabalhado > sem_intervalo_ate
 
 
 def ocorrencias(
-	dias: Iterable[DiaHorista],
-	tolerancia: int = TOLERANCIA_PADRAO,
-	sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN,
+	dias: Iterable[DiaHorista], sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN
 ) -> list[date]:
-	return sorted(dia.data for dia in dias if e_ocorrencia(dia, tolerancia, sem_intervalo_ate))
+	return sorted(dia.data for dia in dias if e_ocorrencia(dia, sem_intervalo_ate))
 
 
 def limite_atingido(quantidade: int, limite: int = LIMITE_PADRAO) -> int:

@@ -200,3 +200,43 @@ test("convidar para um turno escolhendo o dia, o turno e as pessoas", async ({ p
 	await convites.getByRole("button", { name: "Encerrar convite" }).first().click();
 	await expect(convites).toHaveCount(0);
 });
+
+// pedido de 03/11/2026: a lista de quem recebe carrega ao abrir, sem mexer em nada
+test("o convite já abre com a lista de quem recebe", async ({ page }) => {
+	await page.goto(`/ponto/escalas?${DEZEMBRO}`);
+	await page.getByRole("button", { name: "Convidar para um turno (WhatsApp)" }).click();
+	const dialogo = page.getByRole("dialog", { name: "Convidar para um turno (WhatsApp)" });
+	await expect(dialogo.getByRole("group", { name: /Quem recebe/ }).getByRole("checkbox").first()).toBeVisible();
+	await expect(dialogo.getByRole("button", { name: "Marcar todos" })).toBeVisible();
+	await dialogo.getByRole("button", { name: "Cancelar" }).click();
+	await page.getByText("Ferramentas ▾").click(); // as ferramentas ficam num menu recolhível
+	await page.getByRole("button", { name: "Turnos pelo histórico" }).click();
+	await expect(page.getByRole("dialog", { name: "Turnos padrão pelo histórico" })).toBeVisible();
+});
+
+// pedido do RH (04/11/2026): escala conjunta (Company.grupo_escala) mostra a grade com uma etiqueta discreta
+test("escala conjunta: a grade aparece e a etiqueta é pequena", async ({ page }) => {
+	const grupo = (empresa, valor) =>
+		api(page.request, "frappe.client.set_value", { doctype: "Company", name: empresa, fieldname: "grupo_escala", value: valor }, "post");
+	// _Test Company 1 não tem colaboradores; a _Test Company acumula centenas da suíte Frappe e a grade passaria do prazo
+	const outra = "_Test Company 1";
+	await grupo("ES Fitness Ltda", "E2E conjunta");
+	await grupo(outra, "E2E conjunta");
+	try {
+		await page.goto(`/ponto/escalas?${DEZEMBRO}&cargo=Recepcionista`);
+		await expect(page.getByTestId("escala-conjunta")).toHaveText(`+ ${outra}`);
+		await expect(page.getByRole("region", { name: "Grade do mês" }).or(page.getByText("Grade do mês")).first()).toBeVisible();
+		await expect(page.locator("table").first()).toBeVisible();
+	} finally {
+		await grupo("ES Fitness Ltda", "");
+		await grupo(outra, "");
+	}
+});
+
+// pedido do RH (04/11/2026): da paleta, atalhos para criar, editar e apagar os turnos padrão (cadastro no Desk)
+test("paleta leva ao cadastro dos turnos padrão", async ({ page }) => {
+	await page.goto(`/ponto/escalas?${DEZEMBRO}`);
+	const novo = page.getByRole("link", { name: "+ Novo turno" });
+	await expect(novo).toHaveAttribute("href", /\/app\/turno-padrao\/new\?company=ES\+Fitness\+Ltda/);
+	await expect(page.getByRole("link", { name: "Editar ou apagar turnos" })).toHaveAttribute("href", /\/app\/turno-padrao\?company=/);
+});

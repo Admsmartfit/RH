@@ -7,10 +7,12 @@ Integração Externa, págs. 45 a 52; registrado em docs/secullum_api.md):
 - DELETE CartaoPonto {Data, Coluna, Motivo}: tira o valor da coluna (a original fica desconsiderada; a justificativa
   apaga o grupo);
 - POST CartaoPonto/Justificativa {Data, Grupo, Justificativa}: justificativa (nome abreviado) no grupo 1..5 (erro se o
-  grupo tem batida original).
+  grupo tem batida original);
+- POST CartaoPonto/Troca {Data, ColunaOrigem, ColunaDestino}: muda a batida de coluna (a original continua original).
 
 O programa sincroniza o dia inteiro: o cartão do Secullum daquele dia passa a ter as mesmas batidas do programa, na
-ordem, a partir da Entrada1. Recalcular de novo com o cartão atualizado não gera operação (o reenvio é seguro).
+ordem, a partir da Entrada1. A batida que fica no dia só muda de coluna (Troca), nunca é apagada e recriada. Recalcular
+de novo com o cartão atualizado não gera operação (o reenvio é seguro).
 """
 
 import re
@@ -22,7 +24,8 @@ HORA = re.compile(r"^\d{1,2}:\d{2}$")
 MANUAL = ("POST", "CartaoPonto/Manual")
 EXCLUIR = ("DELETE", "CartaoPonto")
 JUSTIFICATIVA = ("POST", "CartaoPonto/Justificativa")
-ROTAS = frozenset(r for _, r in (MANUAL, EXCLUIR, JUSTIFICATIVA))
+TROCA = ("POST", "CartaoPonto/Troca")  # muda a batida de coluna sem perder a origem
+ROTAS = frozenset(r for _, r in (MANUAL, EXCLUIR, JUSTIFICATIVA, TROCA))
 LIMITE_MOTIVO = 150
 
 
@@ -38,6 +41,8 @@ class Operacao:
 			return f"Incluir {c['Hora']} em {c['Coluna']}"
 		if self.rota == JUSTIFICATIVA[1]:
 			return f"Justificativa {c['Justificativa']} no grupo {c['Grupo']}"
+		if self.rota == TROCA[1]:
+			return f"Mover {c['ColunaOrigem']} para {c['ColunaDestino']}"
 		return f"Tirar {c['Coluna']}"
 
 
@@ -103,23 +108,57 @@ def operacoes(
 					Operacao(*JUSTIFICATIVA, {"Data": dia, "Grupo": grupo, "Justificativa": justificativa})
 				)
 			grupos_com_justificativa.add(grupo)
+	# a batida que continua no dia nunca é apagada e recriada (perderia a origem do relógio e ficaria desconsiderada
+	# no Secullum): só muda de coluna pela Troca (RH, 04/11/2026)
+	estado = dict(atuais)
+	destino_de = {}  # coluna atual da batida que fica → coluna desejada
+	for coluna, hora in desejadas.items():
+		de = next((c for c in COLUNAS if estado.get(c) == hora and c not in destino_de), None)
+		if de:
+			destino_de[de] = coluna
 	for coluna in COLUNAS:
 		grupo = int(coluna[-1])
 		atual, desejada = atuais.get(coluna, ""), desejadas.get(coluna, "")
-		if grupo in grupos_com_justificativa or atual == desejada:
+		if grupo in grupos_com_justificativa or coluna in destino_de:
 			continue
+		atual = estado.get(coluna, "")  # o par de uma justificativa pode já ter saído
 		if not _hora(atual) and atual:  # justificativa no Secullum
 			if desejada:
 				ops.append(
 					Operacao(*MANUAL, {"Data": dia, "Coluna": coluna, "Hora": desejada, "Motivo": motivo})
 				)
+				par = f"Saida{grupo}" if coluna.startswith("Entrada") else f"Entrada{grupo}"
+				if estado.get(par) == atual:  # o Secullum apaga a justificativa com o par
+					estado.pop(par)
+				estado[coluna] = desejada
 			elif justificativa_retirada and atual == justificativa_retirada and coluna.startswith("Entrada"):
 				ops.append(Operacao(*EXCLUIR, {"Data": dia, "Coluna": coluna, "Motivo": motivo}))
 			continue
-		if atual:
+		if atual:  # batida que sai do dia (repetida ou trocada de horário)
 			ops.append(Operacao(*EXCLUIR, {"Data": dia, "Coluna": coluna, "Motivo": motivo}))
-		if desejada:
+			estado.pop(coluna, None)
+	ops += _trocas(dia, estado, {de: para for de, para in destino_de.items() if de != para})
+	for coluna in COLUNAS:
+		desejada = desejadas.get(coluna, "")
+		if desejada and estado.get(coluna) != desejada and int(coluna[-1]) not in grupos_com_justificativa:
 			ops.append(Operacao(*MANUAL, {"Data": dia, "Coluna": coluna, "Hora": desejada, "Motivo": motivo}))
+	return ops
+
+
+def _trocas(dia: str, estado: dict[str, str], mover: dict[str, str]) -> list[Operacao]:
+	"""Troca de coluna das batidas que ficam, sempre para uma coluna vazia (a de trás primeiro, como quem abre espaço
+	no meio do dia). Sem como fazer isso, erro: nunca apagar a batida do relógio para reorganizar o dia."""
+	ops = []
+	while mover:
+		livre = next((de for de, para in mover.items() if not estado.get(para)), None)
+		if livre is None:
+			raise ValueError(
+				"Não dá para reorganizar as colunas do dia no Secullum sem apagar uma batida do relógio: ajuste o dia "
+				"direto no Secullum."
+			)
+		para = mover.pop(livre)
+		ops.append(Operacao(*TROCA, {"Data": dia, "ColunaOrigem": livre, "ColunaDestino": para}))
+		estado[para] = estado.pop(livre)
 	return ops
 
 

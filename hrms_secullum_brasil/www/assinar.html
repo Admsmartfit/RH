@@ -23,6 +23,7 @@
 	</style>
 </head>
 <body>
+{{ faixa_teste or "" }}
 	<main>
 		<h1 id="titulo">Documento de horário</h1>
 		<section id="documento" aria-label="Documento" tabindex="0"><p>Carregando…</p></section>
@@ -59,7 +60,7 @@
 		async function post(metodo, dados) {
 			const r = await fetch(`${API}.${metodo}`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
 				body: JSON.stringify(Object.assign({ token }, dados)),
 			});
 			const corpo = await r.json().catch(() => ({}));

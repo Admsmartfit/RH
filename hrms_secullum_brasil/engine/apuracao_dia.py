@@ -1,8 +1,10 @@
 """Apuração de um dia de trabalho (PRD, 5.1 a 5.6 e 5.9). Orquestra os módulos do engine."""
 
+from itertools import pairwise
+
 from hrms_secullum_brasil.engine import defaults_legais as d
 from hrms_secullum_brasil.engine.horas_extras import distribuir_em_faixas, tipo_do_dia
-from hrms_secullum_brasil.engine.intervalos import interjornada_suprimida, intrajornada
+from hrms_secullum_brasil.engine.intervalos import interjornada_suprimida, intrajornada, posicao_do_intervalo
 from hrms_secullum_brasil.engine.models import ALTA, BAIXA, MEDIA, EntradaDia, Inconsistencia, ResultadoDia
 from hrms_secullum_brasil.engine.noturno import minutos_fictos, minutos_noturnos
 from hrms_secullum_brasil.engine.pareamento import (
@@ -74,18 +76,42 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	pares = [(minutos_relativos(e, entrada.data), minutos_relativos(s, entrada.data)) for e, s in pares_dt]
 	# a pausa do termo assinado é remunerada: o intervalo foi dado (pares), mas o tempo é pago como trabalhado
 	resultado.trabalhado = sum(s - e for e, s in pares) + entrada.minutos_pausa_termo
+	teve_pausa = any(b[0] > a[1] for a, b in pairwise(pares))
+	sem_intervalo = None
+	if entrada.pausa_paga_min:
+		# pausa paga por liberalidade: não é trabalho; só a incluída pelo sistema é paga à parte, até o limite do cargo
+		incluidas = {truncar(m) for m in entrada.marcacoes_incluidas}
+		pausas = [
+			(b[0] - a[1], sa[1] in incluidas or eb[0] in incluidas)
+			for (a, b), (sa, eb) in zip(pairwise(pares), pairwise(pares_dt), strict=True)
+			if b[0] > a[1]
+		]
+		maior = max((m for m, do_sistema in pausas if do_sistema), default=0)
+		resultado.pausa_paga = min(maior, entrada.pausa_paga_min) if maior > 0 else 0
+		sem_intervalo = intervalo_nao_marcado(entrada, resultado.trabalhado, pausas)
+		if sem_intervalo:
+			resultado.pausa_paga = 0  # passou de 4h15 sem marcar: o intervalo lançado pelo RH não é pago
 
 	sem_jornada_no_dia = (
 		False  # feriado/folga: todo o tempo é extra, mas o art. 59 conta só o que passa de 8h
 	)
 	if ((entrada.horista and entrada.horista_escalado) or entrada.jornada.neutro) and not setimo_dia:
 		# AJ-14: horista por escala não ganha HE por trabalhar em folga ou fim de semana; só acima de 8h no dia
-		# (44h na semana: DSR Semanal) ou em feriado sem folga compensatória. Sem tolerância: paga o trabalhado.
+		# (44h na semana: DSR Semanal) ou em feriado sem folga compensatória. Paga o trabalhado; com jornada prevista,
+		# até a tolerância diária a menos não é descontado: vale a carga do dia (Art. 58, decisão do RH de 02/11/2026,
+		# como no Secullum). O perfil do horista é uma carga diária: o horário dele é nominal, só o total do dia conta.
 		# O dia neutro do Secullum (rodízio) segue a mesma regra.
 		feriado_pago = entrada.feriado and not entrada.feriado_compensado
 		resultado.tipo_dia = tipo_do_dia(entrada.data, feriado=feriado_pago, folga=False, repouso=False)
 		normais = 0 if feriado_pago else min(resultado.trabalhado, d.JORNADA_DIARIA_MAXIMA_MIN)
-		previsto, atraso, hora_extra = normais, 0, resultado.trabalhado - normais
+		tolerado = bool(
+			not feriado_pago
+			and not entrada.jornada.neutro
+			and 0 < previsto - resultado.trabalhado <= regra.tolerancia_diaria
+		)
+		if tolerado:
+			normais = previsto
+		previsto, atraso, hora_extra = normais, 0, 0 if tolerado else resultado.trabalhado - normais
 		sem_jornada_no_dia = feriado_pago
 	elif (
 		entrada.horista
@@ -148,7 +174,15 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 	):
 		# poucos minutos além das 4h: quem acompanha é o monitoramento do mês (Alerta Horista), sem poluir o dia
 		avisos = [a for a in avisos if a.tipo != "intrajornada"]
+	if sem_intervalo:  # instrutor horista: uma pendência só, para o RH (nada de WhatsApp ao instrutor)
+		avisos = [a for a in avisos if a.tipo != "intrajornada"] + [sem_intervalo]
 	resultado.inconsistencias += avisos
+	excesso = None if entrada.horista else excesso_nao_autorizado(entrada, resultado.trabalhado, teve_pausa)
+	if excesso:
+		resultado.inconsistencias.append(excesso)
+	fora_de_hora = posicao_do_intervalo(pares, regra)
+	if fora_de_hora:
+		resultado.inconsistencias.append(fora_de_hora)
 
 	resultado.interjornada_suprimida = interjornada_suprimida(
 		consideradas[0], entrada.marcacoes_dia_anterior, regra.interjornada_minima
@@ -191,3 +225,53 @@ def _aplicar_estagio(resultado: ResultadoDia, entrada: EntradaDia) -> None:
 				f"Jornada de estágio passou do limite do TCE em {excesso} min (risco de vínculo CLT).",
 			)
 		)
+
+
+INTERVALO_NAO_MARCADO = "intervalo_nao_marcado_horista"
+
+
+def intervalo_nao_marcado(
+	entrada: EntradaDia, trabalhado: int, pausas: list[tuple[int, bool]]
+) -> Inconsistencia | None:
+	"""Instrutor horista (horista com pausa paga no cargo; RH, 09/11/2026): passou de 4h + a pausa (4h15, exato) sem
+	marcar o intervalo no relógio. Conta o tempo do dia com o intervalo que o RH lançou (ele não muda a decisão). O
+	intervalo lançado nesse dia não é pago; o instrutor não recebe WhatsApp: o RH é avisado e o termo do mês registra."""
+	if not (entrada.horista and entrada.pausa_paga_min) or entrada.feriado or entrada.jornada.neutro:
+		return None
+	if any(not do_sistema for _m, do_sistema in pausas):  # marcou o intervalo no relógio
+		return None
+	lancado = sum(m for m, _do_sistema in pausas)
+	limite = entrada.regra.jornada_sem_intervalo_ate + entrada.pausa_paga_min
+	if trabalhado + lancado <= limite:
+		return None
+	total = trabalhado + lancado
+	return Inconsistencia(
+		INTERVALO_NAO_MARCADO,
+		MEDIA,
+		f"Trabalhou {total // 60}h{total % 60:02d} sem marcar o intervalo (passou de {limite // 60}h{limite % 60:02d}). "
+		+ (
+			f"Intervalo de {lancado} min lançado pelo RH, sem remuneração."
+			if lancado
+			else "O RH lança o intervalo; ele não é remunerado."
+		),
+	)
+
+
+def excesso_nao_autorizado(entrada: EntradaDia, trabalhado: int, teve_pausa: bool) -> Inconsistencia | None:
+	"""Cargo com pausa paga (ex.: instrutor de 4h): passou da jornada + a pausa (ainda não feita) + a tolerância do dia
+	= horas não autorizadas (pedido do RH, 04/11/2026). Ex.: 4h18 sem pausa → incluir a pausa resolve (4h03); 4h52
+	sem pausa → 4h37 mesmo com a pausa: 37 min não autorizados, pagos, e a notificação oficial (não automática).
+	Com uma pausa já feita (batida ou incluída), a conta é sobre o trabalhado: jornada + a tolerância."""
+	regra, previsto = entrada.regra, entrada.jornada.minutos
+	if not entrada.pausa_paga_min or not previsto or entrada.feriado or entrada.jornada.neutro:
+		return None
+	excesso = trabalhado - previsto - (0 if teve_pausa else entrada.pausa_paga_min)
+	if excesso <= regra.tolerancia_diaria:
+		return None
+	pausa = "já com a pausa feita" if teve_pausa else f"já contando a pausa de {entrada.pausa_paga_min} min"
+	return Inconsistencia(
+		"excesso_jornada_nao_autorizada",
+		MEDIA,
+		f"{excesso} min além da jornada contratada ({previsto // 60}h{previsto % 60:02d}), {pausa} e a tolerância de "
+		f"{regra.tolerancia_diaria} min: horas não autorizadas. As horas são pagas; notifique o colaborador oficialmente.",
+	)

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<title>Cartaz do WhatsApp</title>
+	<style>
+		body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; padding: 24px 40px; text-align: center; }
+		h1 { font-size: 34px; margin: 10px 0 4px; }
+		h2 { font-size: 22px; margin: 4px 0 18px; font-weight: normal; color: #334155; }
+		.qr img { width: 320px; height: 320px; }
+		.passos { text-align: left; font-size: 19px; margin: 18px auto 0; max-width: 560px; line-height: 1.5; }
+		.passos li { margin-bottom: 6px; }
+		.url { font-size: 15px; color: #334155; margin-top: 10px; word-break: break-all; }
+		.rodape { font-size: 14px; color: #475569; margin-top: 22px; }
+	</style>
+</head>
+<body>
+	<h1>Avisos do seu ponto no WhatsApp</h1>
+	<h2>{{ empresa|e }}</h2>
+	<div class="qr">
+		{% if qr %}<img src="{{ qr }}" alt="QR code" />{% endif %}
+	</div>
+	<div class="url">{{ url }}</div>
+	<ol class="passos">
+		<li>Aponte a câmera do celular para o QR code.</li>
+		<li>Informe o seu CPF e a sua data de nascimento e confira o seu celular.</li>
+		<li>Toque em <b>Aceito receber</b>.</li>
+		<li><b>Salve o contato</b> "{{ nome_contato|e }}" e <b>mande a primeira mensagem</b> (o texto já vem pronto).</li>
+	</ol>
+	<p class="rodape">Você recebe só das 8h às 20h. Para parar, fale com o seu gerente ou com o RH.</p>
+</body>
+</html>

@@ -15,8 +15,8 @@
 				class="-mb-px border-b-2 px-3 py-2 text-sm font-medium"
 				:class="aba === a.id ? 'border-primario text-primario-texto' : 'border-transparent text-texto-suave'"
 				@click="trocarAba(a.id)"
-				@keydown.right.prevent="trocarAba(a.id === 'lista' ? 'aprovacao' : 'lista', true)"
-				@keydown.left.prevent="trocarAba(a.id === 'lista' ? 'aprovacao' : 'lista', true)"
+				@keydown.right.prevent="trocarAba(vizinha(a.id, 1), true)"
+				@keydown.left.prevent="trocarAba(vizinha(a.id, -1), true)"
 			>
 				{{ a.rotulo }}
 			</button>
@@ -28,6 +28,10 @@
 				@alterado="lista.reload()"
 				@aviso="(texto) => (aviso = texto)"
 			/>
+		</div>
+
+		<div v-if="rh && aba === 'whatsapp'" id="painel-whatsapp" role="tabpanel" aria-labelledby="aba-whatsapp">
+			<FilaWhatsapp @alterado="lista.reload()" @aviso="(texto) => (aviso = texto)" />
 		</div>
 
 		<div v-show="aba === 'lista'" id="painel-lista" class="space-y-4" :role="rh ? 'tabpanel' : undefined" :aria-labelledby="rh ? 'aba-lista' : undefined">
@@ -46,7 +50,30 @@
 						<option v-for="t in tipos" :key="t" :value="t">{{ nomeDoTipo(t) }}</option>
 					</select>
 				</label>
+				<!-- WhatsApp do dia seguinte: o que foi avisado e está no prazo fica "com o colaborador" (fora da lista) -->
+				<button
+					type="button"
+					class="acao"
+					data-testid="com-colaborador"
+					:aria-pressed="comColaborador ? 'true' : 'false'"
+					@click="filtrar({ com_colaborador: comColaborador ? '' : '1' })"
+				>
+					{{ comColaborador ? "Voltar às do RH" : `Com o colaborador (${lista.data?.com_colaborador ?? 0})` }}
+				</button>
+				<button
+					type="button"
+					class="acao"
+					data-testid="modo-lote"
+					:aria-pressed="modoLote ? 'true' : 'false'"
+					@click="alternarModoLote"
+				>
+					{{ modoLote ? "Sair do modo várias" : "Tratar várias de uma vez" }}
+				</button>
 			</form>
+			<p v-if="comColaborador" class="rounded-md border border-borda p-2 text-xs text-texto-suave" role="note">
+				Pendências avisadas pelo WhatsApp do dia seguinte e ainda no prazo de resposta. Voltam sozinhas para a lista se o
+				prazo vencer sem resposta; se o colaborador responder, a aprovação fica na aba "WhatsApp do dia seguinte".
+			</p>
 
 			<p class="text-xs text-texto-suave">
 				Atalhos: <kbd>J</kbd>/<kbd>K</kbd> próxima/anterior · <kbd>X</kbd> marcar para lote · <kbd>Enter</kbd> abrir o dia ·
@@ -64,6 +91,9 @@
 				<button type="button" class="acao" @click="abrirAcao('abonar')">Abonar</button>
 				<button type="button" class="acao" @click="abrirAcao('atestado')">Lançar atestado</button>
 				<button type="button" class="acao" @click="abrirAcao('gestor')">Atribuir ao gestor</button>
+				<button type="button" class="acao" data-testid="manter-secullum-lote" @click="manterNoSecullum(false)">
+					Manter (tratar no Secullum)
+				</button>
 				<button type="button" class="acao" @click="desmarcar">Desmarcar</button>
 			</div>
 
@@ -82,7 +112,7 @@
 							<h4 class="mb-1 text-xs font-medium uppercase tracking-wide text-texto-suave">{{ nomeDoTipo(tipo.tipo) }}</h4>
 							<ul class="divide-y divide-borda rounded-md border border-borda">
 								<li v-for="item in tipo.itens" :key="item.name" class="flex items-center">
-									<label class="flex items-center self-stretch pl-3">
+									<label v-if="modoLote" class="flex items-center self-stretch pl-3">
 										<input
 											type="checkbox"
 											class="h-4 w-4"
@@ -104,6 +134,12 @@
 										<span class="min-w-0 flex-1">
 											<span class="block truncate font-medium">{{ item.employee_name }}</span>
 											<span class="block truncate text-xs text-texto-suave">{{ item.descricao }}</span>
+											<span
+												v-if="item.whatsapp"
+												class="mt-0.5 inline-block rounded px-1.5 text-xs"
+												:class="TONS[item.whatsapp.tom] || TONS.neutro"
+												:data-whatsapp="item.name"
+											>{{ item.whatsapp.texto }}</span>
 										</span>
 										<span class="font-mono text-xs">{{ dataBR(item.data) }}</span>
 									</button>
@@ -159,6 +195,15 @@
 								</router-link>
 								<button v-for="a in ACOES" :key="a.id" type="button" class="acao" @click="abrirAcao(a.id, true)">
 									{{ a.rotulo }}
+								</button>
+								<button
+									v-if="selecionada.status === 'Aberta'"
+									type="button"
+									class="acao"
+									data-testid="manter-secullum"
+									@click="manterNoSecullum(true)"
+								>
+									Manter (tratar no Secullum)
 								</button>
 								<button
 									v-if="rh && selecionada.tipo === 'intervalo_superior_2h'"
@@ -241,7 +286,7 @@
 			titulo="Desconsiderar marcação"
 			:marcacoes="marcacoesDoDia"
 			rotulo-confirmar="Desconsiderar"
-			:enviar="(d) => executar('desconsiderar_marcacao', { inconsistencia: selecionada.name, marcacao: d.marcacao, motivo: d.motivo })"
+			:enviar="desconsiderar"
 			@fechar="acaoAberta = null"
 			@concluido="concluir"
 		/>
@@ -272,7 +317,9 @@
 import { computed, inject, nextTick, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { call, createResource } from "frappe-ui";
+import { mensagem } from "@/utils/erros";
 import AprovacaoTratamentos from "@/components/AprovacaoTratamentos.vue";
+import FilaWhatsapp from "@/components/FilaWhatsapp.vue";
 import AuditoriaMarcacao from "@/components/AuditoriaMarcacao.vue";
 import BadgeStatus from "@/components/BadgeStatus.vue";
 import Bloco from "@/components/Bloco.vue";
@@ -297,14 +344,16 @@ const ACOES = [
 const ABAS = [
 	{ id: "lista", rotulo: "Inconsistências" },
 	{ id: "aprovacao", rotulo: "Aguardando aprovação" },
+	{ id: "whatsapp", rotulo: "WhatsApp do dia seguinte" }, // docs/PRD-whatsapp-dia-seguinte.md (W-3)
 ];
+const vizinha = (id, passo) => ABAS[(ABAS.findIndex((a) => a.id === id) + passo + ABAS.length) % ABAS.length].id;
 
 const route = useRoute();
 const router = useRouter();
 const { filtros, parametros } = useFiltros();
 const sessao = inject("sessao", null);
 const rh = computed(() => Boolean(sessao?.data?.rh));
-const aba = computed(() => (rh.value && route.query.aba === "aprovacao" ? "aprovacao" : "lista"));
+const aba = computed(() => (rh.value && ["aprovacao", "whatsapp"].includes(route.query.aba) ? route.query.aba : "lista"));
 
 function trocarAba(id, focar = false) {
 	filtrar({ aba: id === "lista" ? "" : id });
@@ -330,7 +379,25 @@ const filtrosDaLista = computed(() => ({
 	status: filtros.value.status,
 	severidade: route.query.severidade || undefined,
 	tipo: route.query.tipo || undefined,
+	com_colaborador: route.query.com_colaborador || undefined,
 }));
+const comColaborador = computed(() => route.query.com_colaborador === "1");
+// selo do WhatsApp do dia seguinte (o tom vem do servidor: engine/dia_seguinte.selo_whatsapp)
+const TONS = {
+	neutro: "bg-superficie-suave text-texto-suave",
+	atencao: "bg-alerta-suave text-alerta-texto",
+	bom: "bg-conforme-suave text-conforme-texto",
+	ruim: "bg-perigo-suave text-perigo-texto",
+};
+// lote escondido (pedido do RH, 04/11/2026): só para casos coletivos (relógio parado, treinamento da equipe...)
+const ligouLote = ref(false);
+const modoLote = computed(() => ligouLote.value || marcadas.size > 0);
+function alternarModoLote() {
+	if (modoLote.value) {
+		ligouLote.value = false;
+		desmarcar();
+	} else ligouLote.value = true;
+}
 
 const lista = createResource({
 	url: "hrms_secullum_brasil.apuracao.painel.inconsistencias",
@@ -437,6 +504,39 @@ async function abrirAcao(id, soEsta = false) {
 	acaoAberta.value = id;
 }
 
+// pedido do RH (03/11/2026): toda inconsistência pode ficar mantida porque será tratada no Secullum
+async function manterNoSecullum(soEsta) {
+	const nomes = soEsta ? [selecionada.value.name] : [...marcadas];
+	if (!nomes.length) return;
+	try {
+		const n = await call(`${ACOES_API}.manter`, { inconsistencias: nomes, motivo: "Será tratada no Secullum" });
+		aviso.value = `${n} inconsistência(s) mantida(s): será(ão) tratada(s) no Secullum.`;
+		if (!soEsta) marcadas.clear();
+		lista.reload();
+		dia.reload();
+	} catch (e) {
+		aviso.value = mensagem(e);
+	}
+}
+
+// trava da batida do relógio (RH, 04/11/2026): pergunta duas vezes antes de desconsiderar uma batida do relógio
+function desconsiderar(d) {
+	const batida = marcacoesDoDia.value.find((m) => m.name === d.marcacao);
+	let confirmar = 0;
+	if (batida?.do_relogio) {
+		const hora = String(batida.data_hora).slice(11, 16);
+		if (!window.confirm(`A batida ${hora} foi feita pelo colaborador no relógio. Desconsiderar mesmo assim?`)) throw new Error("Cancelado: a batida do relógio continua.");
+		if (!window.confirm(`Segunda confirmação: desconsiderar a batida do relógio ${hora}?`)) throw new Error("Cancelado: a batida do relógio continua.");
+		confirmar = 1;
+	}
+	return executar("desconsiderar_marcacao", {
+		inconsistencia: selecionada.value.name,
+		marcacao: d.marcacao,
+		motivo: d.motivo,
+		confirmar_relogio: confirmar,
+	});
+}
+
 function executar(metodo, parametrosDaAcao) {
 	return call(`${ACOES_API}.${metodo}`, parametrosDaAcao);
 }
@@ -466,12 +566,13 @@ function concluirFragmentada(r) {
 	dia.reload();
 }
 
-// CP-03: o cartão do mês do colaborador, aberto no dia da inconsistência
+// CP-03: o cartão do colaborador aberto no dia da inconsistência, na competência da folha que o servidor calcula pelo
+// dia de fechamento da empresa (30/10 com fechamento no dia 25 abre novembro)
 function linkDoCartao(item) {
 	return {
 		name: "Cartao",
 		params: { employee: item.employee },
-		query: { ...route.query, competencia: String(item.data).slice(0, 7), dia: item.data, aba: undefined },
+		query: { ...route.query, competencia: item.competencia || route.query.competencia, dia: item.data, aba: undefined },
 	};
 }
 

@@ -9,6 +9,7 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
 from hrms_secullum_brasil.apuracao import cockpit_escala as ce
+from hrms_secullum_brasil.apuracao import testes_relogio
 from hrms_secullum_brasil.apuracao.test_apuracao import EMPRESA, hash_curto
 from hrms_secullum_brasil.apuracao.test_inconsistencia_mantida import perfil_comercial
 from hrms_secullum_brasil.configuracao_ponto.escala import nome_escala
@@ -60,11 +61,9 @@ class TestCockpitEscala(FrappeTestCase):
 			)
 
 	def setUp(self):
-		# "agora" fixo antes de novembro: as datas de teste (04 e 07/11/2026) não podem cair na antecedência mínima
-		# de 48h conforme o calendário real avança
-		agora = patch.object(ce, "now_datetime", return_value=datetime(2026, 10, 20, 9, 0))
-		agora.start()
-		self.addCleanup(agora.stop)
+		# "hoje" e "agora" fixos antes de novembro: as datas de teste (04 e 07/11/2026) não podem virar dia passado
+		# (batidas reais no lugar da escala) nem cair na antecedência mínima de 48h com o calendário real andando
+		testes_relogio.congelar(self, datetime(2026, 10, 20, 9, 0))
 		self.bia = self.pessoa()  # nova a cada teste: as escalas gravadas não se misturam
 
 	def alteracao(self, data=SABADO, periodos=None):
@@ -279,3 +278,32 @@ class TestCockpitEscala(FrappeTestCase):
 		r = ce.aplicar_distribuicao(json.dumps(list(por_dia.values())))
 		self.assertEqual(r["com_quebra"], [])
 		self.assertEqual(frappe.db.count("Rascunho de Escala", {"employee": outra}), 1)
+
+	def test_escala_conjunta_junta_as_empresas_do_mesmo_grupo(self):
+		# pedido do RH (04/11/2026): duas empresas no mesmo endereço montam a escala juntas
+		outra = "_Test Company 1"
+		grupo = f"Praia {hash_curto()}"
+		for company in (EMPRESA, outra):
+			frappe.db.set_value("Company", company, "grupo_escala", grupo)
+			self.addCleanup(frappe.db.set_value, "Company", company, "grupo_escala", None)
+		frappe.clear_cache(doctype="Company")
+		with patch.object(frappe, "enqueue"):
+			da_outra = make_employee(
+				f"conj-{hash_curto()}@example.com",
+				company=outra,
+				cpf=gerar_cpf(),
+				designation=self.cargo.name,  # o perfil é de cada empresa: sem perfil, os dias são neutros
+			)
+		self.assertEqual(ce.empresas_da_escala(EMPRESA), sorted([EMPRESA, outra]))
+		r = ce.mes("2026-11", EMPRESA, designation=self.cargo.name)
+		self.assertEqual(r["empresas"], sorted([EMPRESA, outra]))
+		pessoas = {p["employee"]: p["empresa"] for p in r["colaboradores"]}
+		self.assertEqual(pessoas[da_outra], outra)
+		self.assertEqual(pessoas[self.bia], EMPRESA)
+		# o rascunho da pessoa da outra empresa entra na publicação feita pela tela da primeira
+		self.addCleanup(frappe.db.delete, ce.RASCUNHO, {"employee": da_outra})
+		ce.salvar_rascunho(da_outra, self.alteracao(periodos=[["08:00", "12:00"]]))
+		self.assertIn(da_outra, ce._rascunhos_a_publicar(EMPRESA, json.dumps([da_outra])))
+		frappe.db.set_value("Company", outra, "grupo_escala", None)
+		frappe.clear_cache(doctype="Company")
+		self.assertEqual(ce.empresas_da_escala(EMPRESA), [EMPRESA])  # sem grupo comum: sozinha

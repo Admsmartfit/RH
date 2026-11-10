@@ -44,7 +44,8 @@ def batidas(*horas):
 
 
 def acoes(orientacao):
-	return [s.acao for s in orientacao.sugestoes]
+	"""As ações próprias do tipo (sem o "Manter: será tratada no Secullum", que vale para todos)."""
+	return [s.acao for s in orientacao.sugestoes if s.referencia != "secullum"]
 
 
 def test_todo_tipo_do_select_tem_orientacao():
@@ -80,7 +81,11 @@ def test_marcacao_impar_sem_previsto():
 
 def test_duplicada_desconsidera_a_repetida():
 	o = orientar("marcacao_duplicada", ContextoDia(batidas("08:00", "08:02", "12:00"), duplicidade_minutos=5))
-	assert [(s.acao, s.referencia) for s in o.sugestoes] == [(DESCONSIDERAR, "R1"), (COBRAR_WHATSAPP, None)]
+	assert [(s.acao, s.referencia) for s in o.sugestoes] == [
+		(DESCONSIDERAR, "R1"),
+		(COBRAR_WHATSAPP, None),
+		(MANTER, "secullum"),
+	]
 
 
 def test_duplicada_sem_achar_a_repetida():
@@ -187,3 +192,26 @@ def test_horista_recebe_o_intervalo_do_termo_calculado():
 		"intrajornada", ContextoDia(batidas("12:00", "14:50", "15:04", "16:59"), horista=True)
 	)
 	assert INCLUIR_INTERVALO not in acoes(ja_pausou)
+
+
+def test_toda_inconsistencia_pode_ser_mantida_para_tratar_no_secullum():
+	"""Pedido do RH (03/11/2026): sempre a opção de manter, porque será tratada no Secullum (é a última)."""
+	from hrms_secullum_brasil.engine.sugestoes import MANTER_SECULLUM, TIPOS
+
+	for tipo in (*TIPOS, "tipo_desconhecido"):
+		sugestoes = orientar(tipo).sugestoes
+		assert sugestoes[-1] == MANTER_SECULLUM, tipo
+		assert sugestoes.count(MANTER_SECULLUM) == 1, tipo
+	assert MANTER_SECULLUM.acao == MANTER and "Secullum" in MANTER_SECULLUM.rotulo
+
+
+def test_alerta_do_horista_inclui_os_intervalos_de_todos_os_dias():
+	from hrms_secullum_brasil.engine.sugestoes import INCLUIR_INTERVALOS
+
+	assert INCLUIR_INTERVALOS in [s.acao for s in orientar("excesso_jornada_horista").sugestoes]
+
+
+def test_impar_sem_as_batidas_nao_diz_zero():
+	assert (
+		orientar("marcacao_impar").explicacao == "Falta uma batida (esqueceu de bater a entrada ou a saída)."
+	)

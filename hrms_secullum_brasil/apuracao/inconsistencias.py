@@ -106,6 +106,46 @@ def manter(nome: str, motivo: str | None = None) -> str:
 	return doc.name
 
 
+def manter_pelo_tratamento(employee: str, data, tipo: str, motivo: str) -> list[str]:
+	"""Falta justificada lançada no cartão: a falta aberta do dia fica Mantida com o motivo (a permissão já foi
+	checada no tratamento; quem aprova é o RH)."""
+	nomes = frappe.get_all(
+		DOCTYPE, filters={"employee": employee, "tipo": tipo, "data": data, "status": ABERTA}, pluck="name"
+	)
+	for nome in nomes:
+		doc = frappe.get_doc(DOCTYPE, nome)
+		doc.update(
+			{
+				"status": MANTIDA,
+				"motivo_manter": motivo,
+				"mantida_por": frappe.session.user,
+				"mantida_em": now_datetime(),
+			}
+		)
+		silenciar(doc).save(ignore_permissions=True)
+	return nomes
+
+
+def reabrir_mantidas(employee: str, data, tipo: str, motivo: str) -> list[str]:
+	"""O tratamento que manteve foi cancelado: a inconsistência mantida com aquele motivo volta a ficar aberta."""
+	nomes = frappe.get_all(
+		DOCTYPE,
+		filters={
+			"employee": employee,
+			"tipo": tipo,
+			"data": data,
+			"status": MANTIDA,
+			"motivo_manter": motivo,
+		},
+		pluck="name",
+	)
+	for nome in nomes:
+		doc = frappe.get_doc(DOCTYPE, nome)
+		doc.update({"status": ABERTA, "motivo_manter": None, "mantida_por": None, "mantida_em": None})
+		silenciar(doc).save(ignore_permissions=True)
+	return nomes
+
+
 def desfazer_manter(nome: str) -> str:
 	"""Volta a inconsistência mantida para aberta (só RH)."""
 	frappe.only_for(PAPEIS_DESFAZER)

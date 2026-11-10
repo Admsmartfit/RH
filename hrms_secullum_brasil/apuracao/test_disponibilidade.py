@@ -9,7 +9,7 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
 from hrms_secullum_brasil.apuracao import disponibilidade as disp
-from hrms_secullum_brasil.apuracao import whatsapp
+from hrms_secullum_brasil.apuracao import testes_whatsapp, whatsapp
 from hrms_secullum_brasil.apuracao.test_apuracao import EMPRESA, hash_curto
 from hrms_secullum_brasil.engine import comunicacao as com
 from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
@@ -85,7 +85,7 @@ class TestDisponibilidade(FrappeTestCase):
 		mock = MockEvolutionClient()
 		frappe.flags.whatsapp_mock = mock
 		self.addCleanup(setattr, frappe.flags, "whatsapp_mock", None)
-		frappe.db.set_single_value("Configuracao Apuracao", "whatsapp_envio", "Ligado")
+		testes_whatsapp.ligar()
 		for nome in frappe.get_all(
 			"Regra Envio WhatsApp", filters={"evento": com.DISPONIBILIDADE}, pluck="name"
 		):

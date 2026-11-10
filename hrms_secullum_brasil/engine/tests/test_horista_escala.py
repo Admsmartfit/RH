@@ -120,8 +120,16 @@ def _dia_minutos(entrada, saida, **kw):
 
 
 def test_poucos_minutos_alem_de_4h_nao_poluem_o_dia():
-	r = _dia_minutos((14, 56), (19, 3), tolerancia_aviso_intervalo=15)  # 4h07 sem pausa
+	r = _dia_minutos(
+		(14, 47), (19, 0), tolerancia_aviso_intervalo=15
+	)  # 4h13 sem pausa: além dos 10 min do art. 58
 	assert r.intrajornada_suprimida == 15  # a indenização continua
+	assert "intrajornada" not in r.tipos_inconsistencia()  # até 4h15 quem acompanha é o alerta do mês
+
+
+def test_ate_4h10_sem_pausa_nao_e_supressao():
+	r = _dia_minutos((14, 56), (19, 3))  # 4h07: tolerância do art. 58, § 1º
+	assert r.intrajornada_suprimida == 0
 	assert "intrajornada" not in r.tipos_inconsistencia()
 
 
@@ -131,4 +139,4 @@ def test_alem_da_tolerancia_gera_a_inconsistencia_do_dia():
 
 
 def test_sem_monitoramento_sempre_gera():
-	assert "intrajornada" in _dia_minutos((14, 56), (19, 3)).tipos_inconsistencia()
+	assert "intrajornada" in _dia_minutos((14, 47), (19, 0)).tipos_inconsistencia()

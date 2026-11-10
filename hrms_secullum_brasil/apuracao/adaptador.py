@@ -11,7 +11,7 @@ import frappe
 from frappe.utils import cint, flt, get_datetime, getdate
 
 from hrms_secullum_brasil.apuracao.lote import ativo, consultar, documento, janela, memo, valor_single
-from hrms_secullum_brasil.configuracao_ponto.cargo import jornada_fragmentada
+from hrms_secullum_brasil.configuracao_ponto.cargo import jornada_fragmentada, pausa_paga
 from hrms_secullum_brasil.configuracao_ponto.escala import dia_da_escala, horista_escalado, jornada_do_perfil
 from hrms_secullum_brasil.configuracao_ponto.regras import (
 	RegraAmbiguaError,
@@ -45,6 +45,7 @@ DESCONSIDERAR = "Desconsiderar marcacao"
 ABONO = "Abono do dia"
 ABONO_PARCIAL = "Abono parcial"  # TI-06
 COMPENSACAO = "Compensação de feriado"  # AJ-03
+FALTA_JUSTIFICADA = "Falta justificada"  # lançada no cartão: o dia segue com falta (engine/lancamentos.py)
 ESTAGIARIO = "Estagiario"  # EST-04
 MARGEM_DIAS = 9  # pré-carga das batidas além da janela do lote (semana do descanso semanal + virada)
 
@@ -109,6 +110,12 @@ def regra_de_cct(cct) -> RegraApuracao:
 		intervalo_minimo=cint(cct.intervalo_minimo),
 		intervalo_maximo=cint(cct.intervalo_maximo),
 		tolerancia_intervalo=cint(cct.get("tolerancia_intervalo")),
+		tolerancia_jornada_intervalo=(
+			d.TOLERANCIA_JORNADA_INTERVALO_MIN
+			if cct.get("tolerancia_jornada_intervalo") is None
+			else cint(cct.get("tolerancia_jornada_intervalo"))
+		),
+		trabalho_minimo_apos_intervalo=cint(cct.get("trabalho_minimo_apos_intervalo")),
 		permite_reducao_intrajornada=bool(cint(cct.permite_reducao_intrajornada)),
 		intervalo_reduzido=cint(cct.intervalo_reduzido),
 		interjornada_minima=cint(cct.interjornada_minima),
@@ -554,6 +561,10 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	compensado = compensacoes_do_feriado(employee, data)
 	minutos_abonados, parciais = abonos_parciais(employee, data)
 	pausa_termo = pausas_do_termo(employee, data)
+	# pausa paga por liberalidade (cargo na CCT): a pausa não é trabalho, é paga à parte — a do termo não soma às horas
+	pausa_do_cargo = pausa_paga(cct, emp.designation)
+	if pausa_do_cargo:
+		pausa_termo = 0
 	ctx.tratamentos = tratamentos + abonos + compensado + parciais
 	if perfil.tipo == PROFESSOR:
 		aulas, recesso = grade
@@ -589,8 +600,22 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		tolerancia_aviso_intervalo=_tolerancia_aviso_intervalo() if perfil.tipo in HORISTAS else 0,
 		estagio=estagio,
 		limite_diario_estagio=limite_estagio,
+		pausa_paga_min=pausa_do_cargo,
+		marcacoes_incluidas=horarios_incluidos(tratamentos) if pausa_do_cargo else frozenset(),
 	)
 	return ctx
+
+
+def horarios_incluidos(tratamentos: list[str]) -> frozenset:
+	"""Horários que o sistema incluiu no dia (WhatsApp, termo, RH): a pausa paga só vale para eles."""
+	if not tratamentos:
+		return frozenset()
+	return frozenset(
+		frappe.utils.get_datetime(h).replace(second=0, microsecond=0)
+		for h in frappe.get_all(
+			TRATAMENTO, filters={"name": ["in", tratamentos], "tipo": INCLUSAO}, pluck="data_hora"
+		)
+	)
 
 
 def _tolerancia_aviso_intervalo() -> int:

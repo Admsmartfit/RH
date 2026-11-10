@@ -150,6 +150,12 @@ def garantir_lista_no_hrms(company: str, lista) -> None:
 	atribuicao.submit()
 
 
+def garantir_lista_da_empresa(company: str, ano: int) -> None:
+	"""Antes de criar uma Leave Application (licença ou atestado): a empresa tem a lista do ponto e ela está atribuída
+	no HRMS (sem isso o HRMS v16 recusa a licença)."""
+	garantir_lista_no_hrms(company, _lista_da_empresa(company, ano))
+
+
 @frappe.whitelist()
 def atribuir_listas_ao_hrms() -> dict:
 	"""Uma vez, para as empresas que já têm a lista do ponto: registra a lista também para o HRMS."""

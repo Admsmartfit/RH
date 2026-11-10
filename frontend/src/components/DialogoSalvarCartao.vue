@@ -23,6 +23,20 @@
 					</li>
 				</ul>
 
+				<div
+					v-if="apagaRelogio.length"
+					role="alert"
+					class="mt-3 rounded-md border border-perigo bg-perigo-suave p-3 text-sm text-perigo-texto"
+					data-apaga-relogio
+				>
+					<p class="font-semibold">Atenção: batida do relógio vai sair do dia</p>
+					<p class="mt-1">{{ apagaRelogio.join(", ") }} foi feita pelo colaborador no relógio. Ela será desconsiderada no cartão (e no Secullum, se enviar).</p>
+					<label class="mt-2 flex items-start gap-2 font-medium">
+						<input v-model="confirmouRelogio" type="checkbox" class="mt-1" data-confirma-relogio />
+						<span>Confirmo que quero desconsiderar a batida do relógio.</span>
+					</label>
+				</div>
+
 				<fieldset class="mt-4">
 					<legend class="text-sm font-medium">Motivo (fica no histórico de cada correção)</legend>
 					<div class="mt-2 flex flex-wrap gap-2">
@@ -109,8 +123,12 @@ const props = defineProps({
 	envio: { type: String, default: "Bloqueado" },
 	rh: { type: Boolean, default: false },
 	temAbono: { type: Boolean, default: false },
-	enviar: { type: Function, required: true }, // async ({motivo, enviarSecullum}) => resposta
+	enviar: { type: Function, required: true }, // async ({motivo, enviarSecullum, anexo, confirmarRelogio}) => resposta
 });
+
+// trava da batida do relógio (RH, 04/11/2026): a caixa é a 1ª confirmação, a pergunta ao salvar é a 2ª
+const confirmouRelogio = ref(false);
+const apagaRelogio = computed(() => props.previa?.apaga_relogio || []);
 const emit = defineEmits(["fechar", "concluido"]);
 
 const motivo = ref("");
@@ -171,6 +189,7 @@ watch(
 		arquivoTermo.value = null;
 		motivo.value = lembrado();
 		enviarSecullum.value = true;
+		confirmouRelogio.value = false;
 		await nextTick();
 		campoMotivo.value?.focus();
 	}
@@ -185,12 +204,23 @@ async function confirmar() {
 		erro.value = "Informe o motivo.";
 		return;
 	}
+	const relogio = apagaRelogio.value.length > 0;
+	if (relogio && !confirmouRelogio.value) {
+		erro.value = "Marque a confirmação para desconsiderar a batida do relógio (ou volte e desfaça a alteração).";
+		return;
+	}
+	if (relogio && !window.confirm(`Segunda confirmação: desconsiderar a batida do relógio ${apagaRelogio.value.join(", ")}?`)) return;
 	enviando.value = true;
 	erro.value = "";
 	try {
 		if (exigeTermo.value && !arquivoTermo.value) throw new Error("Anexe o termo de ajuste assinado.");
 		const anexo = exigeTermo.value ? await enviarTermo() : undefined;
-		const resposta = await props.enviar({ motivo: motivo.value.trim(), enviarSecullum: enviarSecullum.value, anexo });
+		const resposta = await props.enviar({
+			motivo: motivo.value.trim(),
+			enviarSecullum: enviarSecullum.value,
+			anexo,
+			confirmarRelogio: relogio && confirmouRelogio.value,
+		});
 		try {
 			window.localStorage.setItem(CHAVE_MOTIVO, motivo.value.trim());
 		} catch {

@@ -40,6 +40,23 @@
   "whatsapp_col",
   "mensagem_horista",
   "mensagem_gestor",
+  "whatsapp_teste_section",
+  "whatsapp_numero_teste",
+  "whatsapp_rh_intervalo",
+  "whatsapp_chip_desde",
+  "whatsapp_limite_dia",
+  "whatsapp_ritmo_col",
+  "whatsapp_intervalo_min",
+  "whatsapp_intervalo_max",
+  "whatsapp_aceite_col",
+  "whatsapp_exigir_aceite",
+  "whatsapp_numero_empresa",
+  "whatsapp_nome_contato",
+  "auditoria_section",
+  "auditoria_emails",
+  "auditoria_col",
+  "auditoria_semanal",
+  "auditoria_mensal",
   "termo_section",
   "termo_celular_rh",
   "termo_email_rh",
@@ -50,7 +67,14 @@
   "termo_reincidencia_dias",
   "termo_rotina_semanal",
   "termo_destinatarios_section",
-  "termo_destinatarios"
+  "termo_destinatarios",
+  "d1_section",
+  "d1_minimo_conferidas",
+  "d1_limite_descartes",
+  "d1_horas_estabilizar",
+  "d1_col",
+  "d1_dias_resposta",
+  "d1_validade_link_dias"
  ],
  "fields": [
   {
@@ -189,7 +213,7 @@
    "fieldtype": "Int",
    "label": "Tolerância intrajornada (minutos)",
    "non_negative": 1,
-   "description": "Minutos além das 4h que contam como ocorrência (esqueceu de registrar a pausa). Acima disso é jornada estendida."
+   "description": "Até 4h + estes minutos, o dia não abre pendência de intervalo: quem acompanha é o alerta do mês. Todo dia acima de 4h sem intervalo entra no alerta e no termo de ajuste."
   },
   {
    "default": "4",
@@ -220,8 +244,8 @@
    "fieldname": "whatsapp_envio",
    "fieldtype": "Select",
    "label": "Envio de WhatsApp",
-   "options": "Desligado\nLigado",
-   "description": "Desligado: nada sai; a mensagem fica registrada como não enviada. Faça o primeiro teste com o botão Enviar mensagem de teste."
+   "options": "Desligado\nTeste\nLigado",
+   "description": "Desligado: nada sai (a mensagem fica registrada como não enviada). Teste: toda mensagem vai só para o Número de teste, com o aviso [TESTE], sem efeito no colaborador. Ligado: envio de verdade."
   },
   {
    "fieldname": "evolution_url",
@@ -268,6 +292,106 @@
    "fieldname": "dia_limite_disponibilidade",
    "fieldtype": "Int",
    "label": "Dia limite para informar indisponibilidade"
+  },
+  {
+   "fieldname": "whatsapp_teste_section",
+   "fieldtype": "Section Break",
+   "label": "WhatsApp: modo de teste, ritmo e aceite",
+   "description": "docs/PRD-whatsapp-aceite-auditoria.md. Ritmo: as mensagens saem espaçadas por um intervalo sorteado, até o limite do dia (o chip novo começa com 30 por dia e sobe em 7 dias)."
+  },
+  {
+   "fieldname": "whatsapp_numero_teste",
+   "fieldtype": "Data",
+   "label": "Número de teste",
+   "mandatory_depends_on": "eval:doc.whatsapp_envio=='Teste'",
+   "description": "Em Teste, todas as mensagens vão só para este número, com o cabeçalho [TESTE] para: ..."
+  },
+  {
+   "fieldname": "whatsapp_rh_intervalo",
+   "fieldtype": "Small Text",
+   "label": "WhatsApp do RH: instrutor horista sem intervalo",
+   "description": "Um número por linha, com DDD. Todo dia às 8h30, quem está aqui recebe a lista dos instrutores horistas que passaram de 4h15 sem marcar o intervalo, com o link para lançar o intervalo (não remunerado). Vazio: ninguém recebe."
+  },
+  {
+   "fieldname": "whatsapp_chip_desde",
+   "fieldtype": "Date",
+   "label": "Chip conectado em",
+   "description": "Data em que o chip da empresa foi conectado na Evolution. Nos 7 primeiros dias, o limite por dia começa em 30 e sobe até o limite normal. Vazio: sem aquecimento."
+  },
+  {
+   "default": "150",
+   "fieldname": "whatsapp_limite_dia",
+   "fieldtype": "Int",
+   "label": "Limite de mensagens por dia",
+   "description": "O que passar fica para o dia seguinte, na ordem."
+  },
+  {
+   "fieldname": "whatsapp_ritmo_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "20",
+   "fieldname": "whatsapp_intervalo_min",
+   "fieldtype": "Int",
+   "label": "Intervalo mínimo entre mensagens (segundos)"
+  },
+  {
+   "default": "90",
+   "fieldname": "whatsapp_intervalo_max",
+   "fieldtype": "Int",
+   "label": "Intervalo máximo entre mensagens (segundos)",
+   "description": "0: sem espaçamento (a mensagem sai na hora)."
+  },
+  {
+   "fieldname": "whatsapp_aceite_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "whatsapp_exigir_aceite",
+   "fieldtype": "Check",
+   "label": "Exigir o aceite do colaborador",
+   "description": "Em Ligado, a mensagem ao colaborador sem aceite fica Barrada (sem aceite do WhatsApp). Gestores e RH não precisam do aceite."
+  },
+  {
+   "fieldname": "whatsapp_numero_empresa",
+   "fieldtype": "Data",
+   "label": "WhatsApp da empresa (chip da Evolution)",
+   "description": "Vai no cartão de contato e no link da primeira mensagem da página do QR (/ponto/whatsapp)."
+  },
+  {
+   "default": "Ponto ES Fitness",
+   "fieldname": "whatsapp_nome_contato",
+   "fieldtype": "Data",
+   "label": "Nome do contato da empresa"
+  },
+  {
+   "fieldname": "auditoria_section",
+   "fieldtype": "Section Break",
+   "label": "Relatório de auditoria",
+   "description": "docs/PRD-whatsapp-aceite-auditoria.md: PDF com as correções do ponto, batidas do relógio desconsideradas, respostas, termos, mensagens, envios ao Secullum, escala, inconsistências mantidas, mudanças de regras e aceites. Sob demanda: lista Relatorio de Auditoria."
+  },
+  {
+   "fieldname": "auditoria_emails",
+   "fieldtype": "Small Text",
+   "label": "E-mails do RH que recebem o relatório",
+   "description": "Um por linha. Sai pela conta de e-mail padrão (a mesma do termo)."
+  },
+  {
+   "fieldname": "auditoria_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "auditoria_semanal",
+   "fieldtype": "Check",
+   "label": "Semanal (segunda às 7h, sobre a semana anterior)"
+  },
+  {
+   "default": "1",
+   "fieldname": "auditoria_mensal",
+   "fieldtype": "Check",
+   "label": "Mensal (ao concluir o Fechamento de Ponto)"
   },
   {
    "fieldname": "termo_section",
@@ -338,11 +462,60 @@
    "fieldtype": "Table",
    "label": "Gestores e responsáveis",
    "options": "Destinatario do Termo"
+  },
+  {
+   "fieldname": "d1_section",
+   "fieldtype": "Section Break",
+   "label": "WhatsApp do dia seguinte (D+1)",
+   "description": "docs/PRD-whatsapp-dia-seguinte.md: travas e prazos do aviso no dia seguinte."
+  },
+  {
+   "default": "20",
+   "fieldname": "d1_minimo_conferidas",
+   "fieldtype": "Int",
+   "non_negative": 1,
+   "label": "Mensagens conferidas antes da produção",
+   "description": "Quantas mensagens de uma regra o RH precisa conferir e enviar em teste antes de ela ir a produção. 0 = sem exigência."
+  },
+  {
+   "default": "3",
+   "fieldname": "d1_limite_descartes",
+   "fieldtype": "Int",
+   "non_negative": 1,
+   "label": "Descartes que devolvem a teste (7 dias)",
+   "description": "Em produção, com este número de mensagens descartadas por erro em 7 dias, a regra volta sozinha para teste. 0 = nunca."
+  },
+  {
+   "default": "2",
+   "fieldname": "d1_horas_estabilizar",
+   "fieldtype": "Int",
+   "non_negative": 1,
+   "label": "Esperar a pendência estabilizar (horas)",
+   "description": "Pendência aberta há menos que isto espera a próxima rodada (releitura do Secullum)."
+  },
+  {
+   "fieldname": "d1_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "2",
+   "fieldname": "d1_dias_resposta",
+   "fieldtype": "Int",
+   "non_negative": 1,
+   "label": "Prazo para responder (dias úteis)",
+   "description": "Sem resposta neste prazo, o dia vai para o termo de ocorrências."
+  },
+  {
+   "default": "7",
+   "fieldname": "d1_validade_link_dias",
+   "fieldtype": "Int",
+   "non_negative": 1,
+   "label": "Link de resposta vale (dias)"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-10-30 18:00:00.000000",
+ "modified": "2026-11-09 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",

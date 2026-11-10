@@ -14,7 +14,7 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	await page.goto("/ponto?competencia=2026-08&company=ES%20Fitness%20Ltda");
 	await expect(page.getByTestId("inconsistencias-abertas")).toHaveText("24");
 	const ordem = [];
-	for (let n = 0; n < 17; n++) {
+	for (let n = 0; n < 18; n++) {
 		await page.keyboard.press("Tab");
 		ordem.push(
 			await page.evaluate(() => {
@@ -26,7 +26,10 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 		expect(await contornoVisivel(page), `foco visível em "${ordem.at(-1)}"`).toBe(true);
 	}
 	// o campo de mês tem duas paradas (mês e ano): junta as paradas seguidas do mesmo campo
-	const campos = ordem.filter((rotulo, n) => n === 0 || rotulo !== ordem[n - 1]);
+	// e o atalho do dia de fechamento da folha (só para o RH, logo abaixo da competência) não conta como filtro
+	const campos = ordem.filter(
+		(rotulo, n) => (n === 0 || rotulo !== ordem[n - 1]) && !["definir dia de fechamento", "alterar"].includes(rotulo)
+	);
 	ordem.length = 0;
 	ordem.push(...campos);
 	expect(ordem[0]).toBe("Pular para o conteúdo");

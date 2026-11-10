@@ -28,9 +28,9 @@
 						</select>
 					</label>
 					<label class="flex flex-col text-xs font-medium">
-						Turno
+						Turno<span v-if="tipoDoDia" class="font-normal text-texto-suave"> ({{ tipoDoDia }})</span>
 						<select v-model="turnoEscolhido" class="campo mt-1">
-							<option v-for="t in turnos" :key="t.id" :value="t.id">{{ t.nome }} {{ t.rotulo }}</option>
+							<option v-for="t in turnosDoDia" :key="t.id" :value="t.id">{{ t.nome }} {{ t.rotulo }}</option>
 							<option value="outro">Outro horário…</option>
 						</select>
 					</label>
@@ -38,12 +38,15 @@
 				<div v-if="turnoEscolhido === 'outro'" class="mt-2 flex flex-wrap items-end gap-2">
 					<label class="flex flex-col text-xs">Entrada<input v-model="entrada" type="time" required class="campo mt-1" /></label>
 					<label class="flex flex-col text-xs">Saída<input v-model="saida" type="time" required class="campo mt-1" /></label>
-					<span class="text-xs text-texto-suave">(um período; para pausa, use um turno padrão)</span>
+					<label class="flex flex-col text-xs">Pausa das<input v-model="pausaDe" type="time" class="campo mt-1" /></label>
+					<label class="flex flex-col text-xs">às<input v-model="pausaAte" type="time" class="campo mt-1" /></label>
+					<span class="text-xs text-texto-suave">(pausa opcional)</span>
 				</div>
 
 				<fieldset class="mt-4">
-					<legend class="text-sm font-medium">Quem recebe ({{ marcados.length }})</legend>
+					<legend class="text-sm font-medium">Quem recebe ({{ marcados.length }} de {{ lista.length }})</legend>
 					<p v-if="carregando" class="mt-1 text-sm text-texto-suave">Conferindo quem pode sem quebra da CLT…</p>
+					<p v-else-if="!periodos.length" class="mt-1 text-sm text-texto-suave">Informe o horário do turno.</p>
 					<p v-else-if="!lista.length" class="mt-1 text-sm text-texto-suave">Ninguém do cargo escolhido.</p>
 					<ul v-else class="mt-1 space-y-1 text-sm">
 						<li v-for="c in lista" :key="c.employee" class="flex items-start gap-2">
@@ -55,6 +58,11 @@
 							</label>
 						</li>
 					</ul>
+					<div v-if="!carregando && lista.length" class="mt-2 flex flex-wrap gap-2 text-xs">
+						<button type="button" class="rounded border border-borda px-2 py-0.5" @click="marcados = lista.map((c) => c.employee)">Marcar todos</button>
+						<button type="button" class="rounded border border-borda px-2 py-0.5" @click="marcados = lista.filter((c) => c.sem_conflito).map((c) => c.employee)">Só quem pode sem quebra</button>
+						<button type="button" class="rounded border border-borda px-2 py-0.5" @click="marcados = []">Desmarcar</button>
+					</div>
 				</fieldset>
 
 				<p v-if="erro" role="alert" class="mt-4 rounded-md border border-perigo bg-perigo-suave p-3 text-sm text-perigo-texto">{{ erro }}</p>
@@ -88,8 +96,9 @@ const props = defineProps({
 	company: { type: String, required: true },
 	cargos: { type: Array, default: () => [] },
 	cargoInicial: { type: String, default: "" },
-	turnos: { type: Array, default: () => [] }, // paleta: [{ id, nome, rotulo, periodos, turno }]
+	turnos: { type: Array, default: () => [] }, // paleta: [{ id, nome, rotulo, periodos, turno, tipo_dia }]
 	diaInicial: { type: String, default: "" },
+	dias: { type: Array, default: () => [] }, // dias do mês do servidor: [{ data, tipo_dia }]
 });
 const emit = defineEmits(["fechar", "enviado"]);
 
@@ -101,6 +110,8 @@ const cargo = ref("");
 const turnoEscolhido = ref("");
 const entrada = ref("08:00");
 const saida = ref("12:00");
+const pausaDe = ref("");
+const pausaAte = ref("");
 const lista = ref([]);
 const marcados = ref([]);
 const carregando = ref(false);
@@ -108,8 +119,23 @@ const enviando = ref(false);
 const erro = ref("");
 const campoDia = ref(null);
 
+// tipo do dia (útil, sábado, domingo, feriado) vem do servidor; fora do mês carregado, todos os turnos
+const tipoDoDia = computed(() => props.dias.find((d) => d.data === dia.value)?.tipo_dia || "");
+const turnosDoDia = computed(() => props.turnos.filter((t) => !t.tipo_dia || !tipoDoDia.value || t.tipo_dia === tipoDoDia.value));
+watch(turnosDoDia, (lista) => {
+	if (turnoEscolhido.value !== "outro" && !lista.some((t) => t.id === turnoEscolhido.value)) turnoEscolhido.value = lista[0]?.id || "outro";
+});
+
 const periodos = computed(() => {
-	if (turnoEscolhido.value === "outro") return entrada.value && saida.value ? [[entrada.value, saida.value]] : [];
+	if (turnoEscolhido.value === "outro") {
+		if (!entrada.value || !saida.value) return [];
+		return pausaDe.value && pausaAte.value
+			? [
+					[entrada.value, pausaDe.value],
+					[pausaAte.value, saida.value],
+				]
+			: [[entrada.value, saida.value]];
+	}
 	return props.turnos.find((t) => t.id === turnoEscolhido.value)?.periodos || [];
 });
 const turnoPadrao = computed(() => props.turnos.find((t) => t.id === turnoEscolhido.value)?.turno || undefined);
@@ -120,7 +146,7 @@ watch(
 		if (!aberto) return;
 		dia.value = props.diaInicial && props.diaInicial >= hoje ? props.diaInicial : hoje;
 		cargo.value = props.cargoInicial;
-		turnoEscolhido.value = props.turnos[0]?.id || "outro";
+		turnoEscolhido.value = turnosDoDia.value[0]?.id || "outro";
 		erro.value = "";
 		await nextTick();
 		campoDia.value?.focus();
@@ -132,7 +158,11 @@ let pedido = 0;
 watch(
 	() => [props.aberto, dia.value, cargo.value, JSON.stringify(periodos.value)],
 	async () => {
-		if (!props.aberto || !dia.value || !periodos.value.length) return;
+		if (!props.aberto || !dia.value) return;
+		if (!periodos.value.length) {
+			lista.value = [];
+			return;
+		}
 		const meu = ++pedido;
 		carregando.value = true;
 		try {
@@ -150,7 +180,8 @@ watch(
 		} finally {
 			if (meu === pedido) carregando.value = false;
 		}
-	}
+	},
+	{ immediate: true } // a lista carrega ao abrir, não só quando algo muda
 );
 
 async function enviar() {

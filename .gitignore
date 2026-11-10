@@ -24,3 +24,6 @@ hrms_secullum_brasil/www/ponto.html
 frontend/tests/e2e/.auth/
 frontend/test-results/
 frontend/playwright-report/
+
+# relatórios com dados reais de pessoas (AGENTS.md: nunca versionar)
+privado/

@@ -9,6 +9,7 @@
 				<div class="min-w-0 flex-1">
 					<p class="font-medium">
 						{{ t.employee_name }} — <span class="font-mono">{{ dataBR(t.data) }}</span>
+						<template v-if="t.data_fim && t.data_fim !== t.data"> a <span class="font-mono">{{ dataBR(t.data_fim) }}</span></template>
 					</p>
 					<p class="text-texto-suave">
 						{{ t.tipo }}<template v-if="t.hora"> · <span class="font-mono">{{ t.hora }}</span></template>
@@ -17,7 +18,7 @@
 					</p>
 					<p class="text-xs text-texto-suave">
 						Pedido por {{ t.owner }} ·
-						<a :href="documentoDesk('Tratamento de Ponto', t.name)" class="text-primario-texto underline">{{ t.name }}</a>
+						<a :href="documentoDesk(t.doctype || TRATAMENTO, t.name)" class="text-primario-texto underline">{{ t.name }}</a>
 					</p>
 				</div>
 				<button type="button" class="acao" :disabled="ocupado === t.name" @click="aprovar(t)">
@@ -36,7 +37,7 @@
 			:descricao="recusando ? `O rascunho ${recusando.name} (${recusando.employee_name}, ${dataBR(recusando.data)}) será excluído. Fale com o gestor se precisar de ajuste.` : ''"
 			:com-motivo="false"
 			rotulo-confirmar="Excluir o rascunho"
-			:enviar="() => call('frappe.client.delete', { doctype: 'Tratamento de Ponto', name: recusando.name })"
+			:enviar="() => recusar(recusando)"
 			@fechar="recusando = null"
 			@concluido="recusado"
 		/>
@@ -45,7 +46,8 @@
 
 <script setup>
 // Aba "Aguardando aprovação" (FE-05, só RH Ponto): aprovar = enviar (submit) o tratamento; recusar = excluir o
-// rascunho. Usa as rotas padrão do Frappe, com as permissões que já existem.
+// rascunho. Usa as rotas padrão do Frappe, com as permissões que já existem. Atestado e licença lançados pelo gestor
+// no cartão (`doctype`) passam por acoes.aprovar_lancamento / recusar_lancamento.
 import { ref, watch } from "vue";
 import { call, createResource } from "frappe-ui";
 import Bloco from "@/components/Bloco.vue";
@@ -53,6 +55,9 @@ import DialogoAcao from "@/components/DialogoAcao.vue";
 import { documentoDesk } from "@/utils/desk";
 import { mensagem } from "@/utils/erros";
 import { dataBR } from "@/utils/tempo";
+
+const TRATAMENTO = "Tratamento de Ponto";
+const ACOES = "hrms_secullum_brasil.apuracao.acoes";
 
 const props = defineProps({
 	filtros: { type: Object, required: true },
@@ -78,9 +83,14 @@ async function aprovar(t) {
 	ocupado.value = t.name;
 	erro.value = "";
 	try {
-		const doc = await call("frappe.client.get", { doctype: "Tratamento de Ponto", name: t.name });
-		await call("frappe.client.submit", { doc });
-		emit("aviso", `Tratamento ${t.name} aprovado; dia reapurado.`);
+		if ((t.doctype || TRATAMENTO) === TRATAMENTO) {
+			const doc = await call("frappe.client.get", { doctype: TRATAMENTO, name: t.name });
+			await call("frappe.client.submit", { doc });
+		} else {
+			// atestado ou licença lançado pelo gestor no cartão (apuracao/lancamentos.py)
+			await call(`${ACOES}.aprovar_lancamento`, { doctype: t.doctype, name: t.name });
+		}
+		emit("aviso", `${t.tipo} ${t.name} aprovado; dia(s) reapurado(s).`);
 		emit("alterado");
 		pendentes.reload();
 	} catch (e) {
@@ -88,6 +98,11 @@ async function aprovar(t) {
 	} finally {
 		ocupado.value = null;
 	}
+}
+
+function recusar(t) {
+	if ((t.doctype || TRATAMENTO) === TRATAMENTO) return call("frappe.client.delete", { doctype: TRATAMENTO, name: t.name });
+	return call(`${ACOES}.recusar_lancamento`, { doctype: t.doctype, name: t.name });
 }
 
 function recusado() {

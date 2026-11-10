@@ -27,6 +27,8 @@
 						>
 							{{ acao.rotulo }}
 						</button>
+						<!-- por que está travada (ex.: WhatsApp do dia seguinte já enviado e no prazo): visível, não só no title -->
+						<p v-if="acao.desabilitada && acao.dica" class="-mt-1 text-xs text-texto-suave">{{ acao.dica }}</p>
 					</template>
 				</div>
 			</article>

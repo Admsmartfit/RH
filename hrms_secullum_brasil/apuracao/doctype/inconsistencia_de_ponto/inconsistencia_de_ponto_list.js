@@ -112,10 +112,16 @@ frappe.listview_settings["Inconsistencia de Ponto"] = {
 			const nomes = exigir(listview, true);
 			if (!nomes) return;
 			frappe.call(`${ACOES}.marcacoes_do_dia`, { inconsistencia: nomes[0] }).then((r) => {
-				const opcoes = (r.message || []).map((m) => ({
+				const marcacoes = r.message || [];
+				const opcoes = marcacoes.map((m) => ({
 					value: m.name,
-					label: `${frappe.datetime.str_to_user(m.data_hora)} (${m.tipo_fonte || ""})`,
+					label: `${frappe.datetime.str_to_user(m.data_hora)} (${m.do_relogio ? __("relógio") : m.tipo_fonte || ""})`,
 				}));
+				// trava da batida do relógio (RH, 04/11/2026): duas confirmações antes de desconsiderar
+				const desconsiderar = (v, confirmar) =>
+					frappe
+						.call(`${ACOES}.desconsiderar_marcacao`, { inconsistencia: nomes[0], ...v, confirmar_relogio: confirmar })
+						.then((res) => concluir(listview, res));
 				if (!opcoes.length) {
 					frappe.msgprint(__("Não há marcações ativas neste dia."));
 					return;
@@ -125,10 +131,13 @@ frappe.listview_settings["Inconsistencia de Ponto"] = {
 						{ fieldname: "marcacao", fieldtype: "Select", label: __("Marcação"), options: opcoes, reqd: 1 },
 						{ fieldname: "motivo", fieldtype: "Small Text", label: __("Motivo"), reqd: 1 },
 					],
-					(v) =>
-						frappe
-							.call(`${ACOES}.desconsiderar_marcacao`, { inconsistencia: nomes[0], ...v })
-							.then((res) => concluir(listview, res)),
+					(v) => {
+						const batida = marcacoes.find((m) => m.name === v.marcacao);
+						if (!batida?.do_relogio) return desconsiderar(v, 0);
+						frappe.confirm(__("Esta batida foi feita pelo colaborador no relógio. Desconsiderar mesmo assim?"), () =>
+							frappe.confirm(__("Segunda confirmação: desconsiderar a batida do relógio?"), () => desconsiderar(v, 1))
+						);
+					},
 					__("Desconsiderar marcação"),
 					__("Confirmar")
 				);

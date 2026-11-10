@@ -93,9 +93,11 @@ padrão.
 | Jornada até 4h | Sem intervalo obrigatório | CCT |
 | Jornada de 4h a 6h | **15 min** | CCT |
 | Jornada acima de 6h | **1h a 2h** (CLT art. 71) | CCT |
+| Poucos minutos além de 4h ou 6h | Até **10 min** a mais (4h10 / 6h10) não exige o intervalo: sem supressão, pendência ou alerta (art. 58, § 1º; Súmula 437, IV — decisão de 04/11/2026) | CCT → Tolerância para exigir o intervalo |
 | Redução do intervalo para até 30 min | **Desligada** (ES Fitness não tem cláusula — C-04) | CCT → Permite reduzir o intervalo |
 | Intervalo suprimido | Pago com **+50%**, rubrica **INTRA_IND** (indenizatória) | CCT → Indenização do intervalo |
 | Intervalo maior que 2h | Inconsistência, salvo "Permite intervalo estendido" no perfil | Perfil de Jornada |
+| Intervalo colado ao começo/fim do expediente | Inconsistência Média se houver menos de **60 min** de trabalho depois da volta (ou antes da saída) | CCT → Trabalho mínimo depois do intervalo |
 | Interjornada | **11h** entre jornadas (CLT art. 66), contando os vínculos do mesmo CPF | CCT → Interjornada mínima |
 | Interjornada suprimida | Paga com **+50%**, rubrica **INTER**, **sem** INSS, FGTS, férias e 13º (decisão da empresa) | CCT → Percentual da interjornada; Salary Component INTER |
 | Descanso semanal | Maior descanso seguido da semana ≥ **35h** (24h + 11h) | CCT → Descanso semanal mínimo |
@@ -257,6 +259,8 @@ diferenças:
 | CREF | Número e validade no cadastro; aviso 30 dias antes; vencido = inconsistência (Alta, se a configuração mandar bloquear) | Colaborador → CREF; Configuração Apuração |
 | Jornada fragmentada (instrutor mensalista) | Até 3 períodos por dia; intervalo > 2h exige "Permite intervalo estendido" (CCT ES cl. 23ª permite) | Perfil de Jornada |
 | Horista sem escala nem semana padrão | Mantém a regra antiga: domingo e feriado trabalhados = HE 100% | Fixo |
+| Pausa paga por liberalidade | **15 min** (decisão do RH, 04/11/2026). A pausa **não conta como trabalho** e é paga à parte, a hora normal, na rubrica **PAUSA_PAGA** — só o intervalo **incluído pelo sistema** (WhatsApp, termo ou RH; até 15 min, uma pausa por dia pelo WhatsApp). Pausa batida no relógio = só horas trabalhadas. Incide **INSS e FGTS** (confirmado pelo RH). O tempo acima da pausa é hora normal (HE só acima de 8h/44h) | Cargo (Designation) → Pausa paga por liberalidade |
+| Horas além da jornada sem autorização | Passou da jornada + 15 min da pausa + 10 min de tolerância (ex.: 4h sem pausa → mais de 4h25): abre **"Horas além da jornada sem autorização"**. As horas são pagas; o aviso oficial ao colaborador fica **sempre** na fila do WhatsApp para o RH conferir e enviar | Fixo; texto na Regra Envio WhatsApp |
 
 ## Estagiário (Lei 11.788/2008)
 

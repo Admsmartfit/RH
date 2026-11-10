@@ -17,6 +17,10 @@ CONVITE = "Escala: convite para turno"  # convite para um turno específico (ped
 TERMO = "Termo de ocorrências"
 TERMO_GERENTE = "Termo pendente — gerente"
 TERMO_RH = "Termo pendente — RH"
+# docs/PRD-whatsapp-dia-seguinte.md: uma regra por tipo de inconsistência (o tipo fica na regra); os dois eventos
+# antigos continuam valendo, com o tipo fixo
+D1 = "Ponto do dia (D+1)"
+RESPOSTA_D1 = "Resposta do colaborador (D+1) — gestor"
 EVENTOS_DO_DIA = {BATIDA_ESQUECIDA: "marcacao_impar", FALTA: "falta"}
 EM_TESTE = "Em teste"
 EM_PRODUCAO = "Em produção"
@@ -75,6 +79,18 @@ TEXTOS = {
 	(TERMO_RH, "RH"): (
 		"RH: o Termo de ocorrências {codigo} de {colaborador} ({empresa}), emitido em {emissao}, está há {dias} dias "
 		"úteis sem assinatura. Gestor: {gestor}."
+	),
+	(D1, "Colaborador"): (
+		"Olá, {primeiro_nome}! No dia {data} ({dia_semana}) o seu ponto ficou com: {descricao}\n"
+		"Se precisar corrigir ou explicar, responda pelo link (é só seu): {link}"
+	),
+	(D1, "Gestor"): (
+		"Olá, {primeiro_nome}! {colaborador} ficou com pendência no ponto do dia {data} ({dia_semana}): "
+		"{descricao} Confira no cartão ponto."
+	),
+	(RESPOSTA_D1, "Gestor"): (
+		"Olá, {primeiro_nome}! {colaborador} respondeu sobre o ponto do dia {data}: {resumo}. Confira e aprove no "
+		"painel de ponto (Inconsistências → WhatsApp do dia seguinte)."
 	),
 	(COBRANCA, "Colaborador"): (
 		"Olá, {primeiro_nome}! Notei uma pendência no seu cartão de ponto no dia {data} ({dia_semana}).\n"

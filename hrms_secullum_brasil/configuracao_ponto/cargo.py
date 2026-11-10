@@ -46,6 +46,12 @@ def jornada_fragmentada(cct, designation: str | None) -> bool:
 	return bool(linha and cint(linha.get("jornada_fragmentada")))
 
 
+def pausa_paga(cct, designation: str | None) -> int:
+	"""Pausa paga por liberalidade do cargo (ex.: instrutor, 15 min; RH, 04/11/2026). 0 = não se aplica."""
+	linha = parametro_do_cargo(cct, designation)
+	return cint(linha.get("pausa_paga_min")) if linha else 0
+
+
 def _piso(employee: str, data):
 	"""(linha de parâmetro do cargo, carga semanal do perfil em minutos) ou (None, None)."""
 	designation = frappe.db.get_value("Employee", employee, "designation")

@@ -5,10 +5,10 @@ colaborador pode assinar pelo celular (CPF e código). Abre só com o link do te
 confirma nada. Os dados vêm de `apuracao.termo_ocorrencias`.
 """
 
+from hrms_secullum_brasil.utils.sem_login import preparar
+
 no_cache = 1
 
 
 def get_context(context):
-	context.no_breadcrumbs = True
-	context.title = "Termo de ocorrências"
-	return context
+	return preparar(context, "Termo de ocorrências")

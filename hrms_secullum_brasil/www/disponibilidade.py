@@ -3,10 +3,10 @@
 Abre só com o link pessoal (token assinado, 7 dias). Os dados vêm de `apuracao.disponibilidade.dados`.
 """
 
+from hrms_secullum_brasil.utils.sem_login import preparar
+
 no_cache = 1
 
 
 def get_context(context):
-	context.no_breadcrumbs = True
-	context.title = "Minha disponibilidade"
-	return context
+	return preparar(context, "Minha disponibilidade")

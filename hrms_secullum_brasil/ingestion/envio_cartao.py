@@ -25,6 +25,7 @@ from hrms_secullum_brasil.integrations.secullum.erros import SecullumError
 ENVIO = "Envio Cartao Secullum"
 CONFIG = "Configuracao Secullum"
 BLOQUEADO, PERGUNTAR, SEMPRE = "Bloqueado", "Perguntar ao salvar", "Sempre enviar"
+TESTE = "Teste"  # docs/PRD-sincronizacao-secullum.md: só para quem tem Caso de Teste Secullum aberto no dia
 TIPO = "envio_cartao_secullum"
 METODO = "hrms_secullum_brasil.ingestion.envio_cartao.processar"
 PAPEIS = ("System Manager", "RH Ponto")
@@ -37,16 +38,22 @@ def modo() -> str:
 def deve_enviar(escolha) -> bool:
 	"""Com "Perguntar ao salvar", vale a caixa do Salvar; "Sempre enviar" ignora a caixa; "Bloqueado", nada."""
 	atual = modo()
-	if atual == SEMPRE:
+	if atual in (SEMPRE, TESTE):  # em Teste, `agendar` só aceita quem tem caso aberto
 		return True
 	return atual == PERGUNTAR and bool(cint(escolha))
+
+
+def _em_teste_sem_caso(employee: str, data) -> bool:
+	from hrms_secullum_brasil.ingestion.sincronizacao import caso_aberto
+
+	return modo() == TESTE and not caso_aberto("cartao", employee, data)
 
 
 def agendar(
 	employee: str, data, *, motivo: str = "", justificativa=None, justificativa_retirada=None
 ) -> str | None:
 	"""Envio do dia na fila (um por colaborador e dia enquanto não sai). None se a trava estiver em Bloqueado."""
-	if modo() == BLOQUEADO:
+	if modo() == BLOQUEADO or _em_teste_sem_caso(employee, data):
 		return None
 	data = getdate(data)
 	nome = frappe.db.get_value(
@@ -94,8 +101,13 @@ def processar(nome: str) -> str | None:
 	doc = frappe.get_doc(ENVIO, nome)
 	if doc.situacao == "Enviado":
 		return doc.situacao
-	if modo() == BLOQUEADO:
-		doc.db_set({"situacao": "Bloqueado", "resposta": _("Trava em Bloqueado na Configuração Secullum.")})
+	if modo() == BLOQUEADO or _em_teste_sem_caso(doc.employee, doc.data):
+		doc.db_set(
+			{
+				"situacao": "Bloqueado",
+				"resposta": _("Trava em Bloqueado (ou em Teste sem caso aberto) na Configuração Secullum."),
+			}
+		)
 		return doc.situacao
 	emp = frappe.db.get_value("Employee", doc.employee, ["cpf", "company", "id_secullum"], as_dict=True)
 	data = getdate(doc.data)
@@ -116,15 +128,17 @@ def processar(nome: str) -> str | None:
 			None,
 		)
 		horarios, periodos = horarios_do_programa(doc.employee, data)
+		atuais = colunas_do_registro(registro)
 		ops = operacoes(
 			data,
-			colunas_do_registro(registro),
+			atuais,
 			horarios,
 			doc.motivo,
 			justificativa=doc.justificativa,
 			grupos_abono=periodos,
 			justificativa_retirada=doc.justificativa_retirada,
 		)
+		_sem_apagar_sem_tratamento(doc.employee, data, atuais, ops)
 		for op in ops:
 			client.editar_cartao(op.metodo, op.rota, com_identificador(op, cpf))
 	except (SecullumError, ValueError, NotImplementedError) as exc:
@@ -170,3 +184,26 @@ def reenviar(nome: str | None = None, inconsistencia: str | None = None) -> str:
 		frappe.throw(_("Envio ao Secullum não encontrado."))
 	frappe.db.set_value(ENVIO, nome, "situacao", "Na fila")
 	return processar(nome)
+
+
+def _sem_apagar_sem_tratamento(employee: str, data, atuais: dict, ops: list) -> None:
+	"""Trava da batida do relógio (RH, 04/11/2026): o envio só apaga no Secullum o horário que o programa tirou do
+	dia com tratamento (a batida do relógio, com a confirmação dupla). Qualquer outro apagamento = nada é enviado."""
+	from hrms_secullum_brasil.apuracao.batida_relogio import horas_que_podem_sair
+	from hrms_secullum_brasil.integrations.secullum.edicao_cartao import EXCLUIR, HORA
+
+	apagar = [
+		atuais[op.corpo["Coluna"]]
+		for op in ops
+		if (op.metodo, op.rota) == EXCLUIR and HORA.match(atuais.get(op.corpo["Coluna"], ""))
+	]
+	if not apagar:
+		return
+	sem_tratamento = sorted(set(apagar) - horas_que_podem_sair(employee, data))
+	if sem_tratamento:
+		raise ValueError(
+			_(
+				"O envio apagaria no Secullum a batida {0}, que o programa não tirou do dia com tratamento: nada foi "
+				"enviado. Confira o dia no Secullum (a batida pode ser do relógio)."
+			).format(", ".join(sem_tratamento))
+		)

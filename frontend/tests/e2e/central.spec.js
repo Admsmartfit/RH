@@ -17,7 +17,25 @@ test("lista agrupada por severidade e tipo, com o dia ao lado", async ({ page })
 	await linha(page, "Renata Teste Recepção", "2026-08-19").click();
 	const dia = page.getByRole("region", { name: /Renata Teste Recepção — 19\/08\/2026/ });
 	await expect(dia.locator("figure")).toBeVisible();
-	await expect(dia.getByRole("group", { name: "Ações" }).getByRole("button")).toHaveCount(5);
+	// abonar, atestado, incluir, desconsiderar, gestor e "Manter (tratar no Secullum)" (pedido do RH, 03/11/2026)
+	await expect(dia.getByRole("group", { name: "Ações" }).getByRole("button")).toHaveCount(6);
+});
+
+test("manter para tratar no Secullum tira da lista com o motivo", async ({ page }) => {
+	const ids = await idsPorNome(page.request);
+	const renata = ids["Renata Teste Recepção"];
+	const abertas = await api(page.request, "hrms_secullum_brasil.apuracao.painel.inconsistencias", {
+		filtros: JSON.stringify({ competencia: "2026-09", company: "ES Fitness Ltda", status: "Aberta" }),
+	});
+	const alvo = abertas.itens.find((i) => i.employee === renata);
+	try {
+		await page.goto(`/ponto/inconsistencias?competencia=2026-09&company=ES%20Fitness%20Ltda&tipo=${alvo.tipo}`);
+		await linha(page, "Renata Teste Recepção", String(alvo.data)).first().click();
+		await page.getByTestId("manter-secullum").click();
+		await expect(page.getByText("1 inconsistência(s) mantida(s): será(ão) tratada(s) no Secullum.")).toBeVisible();
+	} finally {
+		await api(page.request, "hrms_secullum_brasil.apuracao.acoes.desfazer_manter", { inconsistencia: alvo.name }, "post").catch(() => {});
+	}
 });
 
 test("RH abona uma falta: tratamento aprovado e a inconsistência sai da lista", async ({ page }) => {
@@ -94,4 +112,23 @@ test("incluir marcação abre com o horário sugerido e exige motivo", async ({ 
 test("a lista do Desk continua funcionando", async ({ page }) => {
 	await page.goto("/app/inconsistencia-de-ponto?company=ES%20Fitness%20Ltda");
 	await expect(page.locator(".list-row-container").first()).toBeVisible({ timeout: 30_000 });
+});
+
+// pedido do RH (04/11/2026): as caixas do lote ficam escondidas (casos coletivos) e o que está com o colaborador
+// no WhatsApp do dia seguinte sai da lista
+test("lote escondido atrás do botão e filtro 'com o colaborador'", async ({ page }) => {
+	await page.goto("/ponto/inconsistencias?competencia=2026-08&company=ES%20Fitness%20Ltda");
+	const lista = page.getByRole("region", { name: "Lista" });
+	await expect(lista.locator("[data-linha]").first()).toBeVisible();
+	await expect(lista.getByRole("checkbox")).toHaveCount(0);
+	await page.getByTestId("modo-lote").click();
+	await expect(lista.getByRole("checkbox").first()).toBeVisible();
+	await page.getByTestId("modo-lote").click();
+	await expect(lista.getByRole("checkbox")).toHaveCount(0);
+	await expect(page.getByTestId("com-colaborador")).toContainText("Com o colaborador (");
+	await page.getByTestId("com-colaborador").click();
+	await expect(page).toHaveURL(/com_colaborador=1/);
+	await expect(page.getByRole("note")).toContainText("prazo de resposta");
+	await page.getByTestId("com-colaborador").click();
+	await expect(page).not.toHaveURL(/com_colaborador=1/);
 });

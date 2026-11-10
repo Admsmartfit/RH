@@ -668,8 +668,14 @@ def acompanhar() -> None:
 	enviar_ao_secullum(hoje)
 
 
-def envio_liberado() -> bool:
-	return frappe.db.get_single_value("Configuracao Secullum", "envio_horarios") == "Sempre enviar"
+def envio_liberado(employee: str | None = None) -> bool:
+	"""Trava "Envio de horários": Sempre enviar; ou Teste, só para quem tem Caso de Teste Secullum aberto."""
+	valor = frappe.db.get_single_value("Configuracao Secullum", "envio_horarios")
+	if valor == "Teste" and employee:
+		from hrms_secullum_brasil.ingestion.sincronizacao import caso_aberto
+
+		return bool(caso_aberto("horario_funcionario", employee))
+	return valor == "Sempre enviar"
 
 
 def enviar_ao_secullum(hoje: date | None = None) -> int:
@@ -687,7 +693,7 @@ def enviar_ao_secullum(hoje: date | None = None) -> int:
 		for linha in doc.linhas:
 			if linha.envio_secullum not in ("Aguardando", "Bloqueado"):
 				continue
-			if not envio_liberado():
+			if not envio_liberado(linha.employee):
 				frappe.db.set_value(LINHA, linha.name, "envio_secullum", "Bloqueado", update_modified=False)
 				continue
 			cpf = frappe.db.get_value("Employee", linha.employee, "cpf")

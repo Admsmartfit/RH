@@ -1,0 +1,175 @@
+{
+ "actions": [],
+ "autoname": "AWP-.YYYY.-.#####",
+ "creation": "2026-11-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "description": "Aceite (ou revogação) do colaborador para receber WhatsApp (docs/PRD-whatsapp-aceite-auditoria.md). Registro imutável: é a prova do consentimento.",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "company",
+  "acao",
+  "numero",
+  "column_break_1",
+  "registrado_em",
+  "registrado_por",
+  "motivo",
+  "aceite_section",
+  "versao_texto",
+  "texto",
+  "column_break_2",
+  "ip",
+  "aparelho",
+  "salvou_contato_em",
+  "primeira_mensagem_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Colaborador",
+   "options": "Employee",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fetch_from": "employee.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "acao",
+   "fieldtype": "Select",
+   "label": "Ação",
+   "options": "Aceite\nRevogação",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "numero",
+   "fieldtype": "Data",
+   "label": "Celular",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registrado_em",
+   "fieldtype": "Datetime",
+   "label": "Registrado em",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "registrado_por",
+   "fieldtype": "Link",
+   "label": "Registrado por",
+   "options": "User",
+   "read_only": 1,
+   "description": "Na revogação: o gerente ou o RH. No aceite: Guest (o próprio colaborador, pela página do QR)."
+  },
+  {
+   "fieldname": "motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aceite_section",
+   "fieldtype": "Section Break",
+   "label": "Comprovante do aceite"
+  },
+  {
+   "fieldname": "versao_texto",
+   "fieldtype": "Data",
+   "label": "Versão do texto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "texto",
+   "fieldtype": "Small Text",
+   "label": "Texto aceito",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ip",
+   "fieldtype": "Data",
+   "label": "IP",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aparelho",
+   "fieldtype": "Small Text",
+   "label": "Aparelho (navegador)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "salvou_contato_em",
+   "fieldtype": "Datetime",
+   "label": "Tocou em Salvar contato",
+   "read_only": 1
+  },
+  {
+   "fieldname": "primeira_mensagem_em",
+   "fieldtype": "Datetime",
+   "label": "Tocou em Enviar a primeira mensagem",
+   "read_only": 1
+  }
+ ],
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-11-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Aceite WhatsApp",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

@@ -153,6 +153,13 @@
 					</template>
 				</CardNumero>
 
+				<CardNumero v-if="r.whatsapp" titulo="Aceitaram o WhatsApp" :icone="MessageCircle">
+					<span data-testid="whatsapp-aceites">{{ r.whatsapp.aceitos }} de {{ r.whatsapp.total }}</span>
+					<template #detalhe>
+						Sem aceite, o colaborador não recebe os avisos. Imprima o cartaz com o QR code (Configuração Apuração).
+					</template>
+				</CardNumero>
+
 				<CardNumero
 					titulo="Inconsistências abertas"
 					:icone="AlertTriangle"
@@ -254,6 +261,7 @@ import {
 	Hourglass,
 	ListRestart,
 	Lock,
+	MessageCircle,
 	RefreshCw,
 	ShieldCheck,
 	Stethoscope,

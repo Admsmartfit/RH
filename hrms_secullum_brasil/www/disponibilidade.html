@@ -24,6 +24,7 @@
 	</style>
 </head>
 <body>
+{{ faixa_teste or "" }}
 	<main>
 		<h1>Minha disponibilidade</h1>
 		<p id="cabecalho" class="suave">Carregando…</p>
@@ -116,7 +117,7 @@
 			}));
 			const r = await fetch(`${API}.enviar`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
 				body: JSON.stringify({ token, itens: JSON.stringify(itens) }),
 			});
 			const corpo = await r.json().catch(() => ({}));

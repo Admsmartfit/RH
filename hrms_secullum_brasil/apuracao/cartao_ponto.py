@@ -18,6 +18,7 @@ from hrms_secullum_brasil.apuracao import painel
 from hrms_secullum_brasil.apuracao.adaptador import (
 	ABONO,
 	DESCONSIDERAR,
+	FALTA_JUSTIFICADA,
 	INCLUSAO,
 	RAW,
 	TRATAMENTO,
@@ -30,6 +31,7 @@ from hrms_secullum_brasil.apuracao.lote import definir_janela, documento, modo_l
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
 from hrms_secullum_brasil.configuracao_ponto.regras import get_perfil_vigente
 from hrms_secullum_brasil.engine import cartao_edicao as ce
+from hrms_secullum_brasil.engine import lancamentos as la
 from hrms_secullum_brasil.engine.sugestoes import ContextoDia, orientar
 
 MAXIMO_DIAS = 62
@@ -125,6 +127,7 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 			"aprovado_por",
 			"aprovado_em",
 			"envio_secullum",
+			"justificativa",
 		],
 		order_by="creation asc",
 		limit_page_length=0,
@@ -187,6 +190,16 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 		order_by="creation asc",
 	):
 		envios[getdate(e.data)] = e  # o último do dia
+	# docs/PRD-whatsapp-dia-seguinte.md: o que o colaborador respondeu e a decisão (recusa não deixa tratamento)
+	respostas = {}
+	for r in frappe.db.sql(
+		"""select d.data, d.situacao, p.name, p.motivo_recusa, p.comprovante, p.aprovado_por
+		from `tabResposta WhatsApp Ponto Dia` d join `tabResposta WhatsApp Ponto` p on p.name = d.parent
+		where p.employee = %s and d.data between %s and %s order by p.creation asc""",
+		(employee, inicio, fim),
+		as_dict=True,
+	):
+		respostas[getdate(r.data)] = r
 	return {
 		"raws": raws,
 		"tratamentos": tratamentos,
@@ -194,7 +207,25 @@ def _carregar(employee: str, inicio: date, fim: date) -> dict:
 		"inconsistencias": inconsistencias,
 		"envios": envios,
 		"cobrancas": cobrancas,
+		"respostas": respostas,
+		"avisos_d1": _avisos_d1(employee, inicio, fim),
 	}
+
+
+def _avisos_d1(employee: str, inicio: date, fim: date) -> dict:
+	"""O último aviso do dia seguinte de cada dia (para travar o "Cobrar" que repetiria o que está no prazo)."""
+	from hrms_secullum_brasil.apuracao.dia_seguinte import _avisos
+
+	saida = {}
+	for a in _avisos(
+		{
+			"employee": employee,
+			"dia": ["between", [inicio, fim]],
+			"situacao": ["not in", ["Barrada", "Descartada"]],
+		}
+	):
+		saida[getdate(a.dia)] = a
+	return saida
 
 
 def batidas_do_dia(data: date, virada: int, dados: dict) -> dict:
@@ -284,8 +315,37 @@ def _abono(employee: str, data: date, grade: dict) -> dict | None:
 			),
 			None,
 		)
-		return {"referencia": nome, "doctype": doctype, "pendente": False, "editavel": False}
+		tipo = (
+			frappe.db.get_value("Leave Application", nome, "leave_type")
+			if doctype == "Leave Application"
+			else None
+		)
+		return {
+			"referencia": nome,
+			"doctype": doctype,
+			"pendente": False,
+			"editavel": False,
+			"texto": la.texto_do_abono(doctype, tipo),
+		}
 	return None
+
+
+def _falta_justificada(grade: dict) -> dict | None:
+	"""Falta lançada no cartão (aprovada ou aguardando o RH): a coluna Abono mostra a justificativa."""
+	t = next((t for t in grade["tratamentos"] if t.tipo == FALTA_JUSTIFICADA), None)
+	if not t:
+		return None
+	sigla = (
+		frappe.db.get_value("Justificativa Secullum", t.justificativa, "nome_abreviado")
+		if t.justificativa
+		else None
+	)
+	return {
+		"referencia": t.name,
+		"justificativa": sigla or t.justificativa,
+		"pendente": t.docstatus == 0,
+		"motivo": t.motivo,
+	}
 
 
 def contexto_do_dia(employee: str, data: date, dados: dict) -> tuple:
@@ -313,6 +373,8 @@ def contexto_do_dia(employee: str, data: date, dados: dict) -> tuple:
 				"intervalo_curto": regra.intervalo_curto,
 				"jornada_sem_intervalo_ate": regra.jornada_sem_intervalo_ate,
 				"jornada_intervalo_curto_ate": regra.jornada_intervalo_curto_ate,
+				"tolerancia_jornada_intervalo": regra.tolerancia_jornada_intervalo,
+				"limite_he_diaria": regra.limite_he_diaria,
 			}
 			if regra
 			else {}
@@ -323,21 +385,93 @@ def contexto_do_dia(employee: str, data: date, dados: dict) -> tuple:
 	return ctx, virada, grade, previsto, contexto
 
 
+def previa(employee: str, data, celulas, abonar=None) -> dict:
+	"""Prévia dos totais do dia com as batidas da grade, antes de salvar (pedido do RH, 04/11/2026): o mesmo cálculo da
+	apuração (`engine.apuracao_dia.apurar_dia`) sobre a entrada do dia com as batidas trocadas. Nada é gravado; o
+	valor oficial continua sendo o da reapuração depois do Salvar (DSR e banco da semana ficam de fora)."""
+	from hrms_secullum_brasil.apuracao.permissoes import employees_visiveis
+
+	visiveis = employees_visiveis()
+	if visiveis is not None and employee not in visiveis:
+		frappe.throw(_("Colaborador fora da sua equipe."), frappe.PermissionError)
+	return previa_sem_checar(employee, data, celulas, abonar)
+
+
+def rotulo_da_batida(posicao: int) -> str:
+	"""0 → Entrada 1, 1 → Saída 1, 2 → Entrada 2..."""
+	return f"{'Entrada' if posicao % 2 == 0 else 'Saída'} {posicao // 2 + 1}"
+
+
+def previa_sem_checar(employee: str, data, celulas, abonar=None) -> dict:
+	"""A prévia sem a checagem de equipe: quem chama já validou o acesso (o cartão, pela equipe; a página do termo,
+	pelo link assinado). Devolve também as batidas em ordem com o rótulo (Entrada 1, Saída 1...)."""
+	from dataclasses import replace
+
+	from hrms_secullum_brasil.engine.apuracao_dia import apurar_dia
+
+	data = getdate(data)
+	ctx = montar_entrada(employee, data)
+	if not ctx or not ctx.entrada:
+		return {
+			"apurado": False,
+			"motivo": (ctx.motivo_nao_apurado if ctx else None) or _("Sem vínculo na data."),
+		}
+	perfil = documento("Perfil de Jornada", ctx.perfil) if ctx.perfil else None
+	virada = cint(perfil.hora_virada_dia) if perfil else 0
+	base = datetime.combine(data, datetime.min.time())
+	marcas = []
+	for hora in celulas or []:
+		if not hora:
+			continue
+		try:
+			hh, mm = (int(x) for x in str(hora).split(":"))
+		except ValueError:
+			frappe.throw(_("Horário inválido: {0}.").format(hora))
+		marcas.append(base + timedelta(hours=hh, minutes=mm, days=1 if virada and hh < virada else 0))
+	trocas = {"marcacoes": tuple(sorted(marcas))}
+	if abonar is not None:
+		trocas["abonado"] = bool(cint(abonar))
+	r = apurar_dia(replace(ctx.entrada, **trocas))
+	return {
+		"apurado": True,
+		"batidas": [
+			{"hora": m.strftime("%H:%M"), "rotulo": rotulo_da_batida(n)}
+			for n, m in enumerate(trocas["marcacoes"])
+		],
+		"trabalhado": r.trabalhado,
+		"normais": r.normais,
+		"hora_extra": r.hora_extra,
+		"falta": r.falta,
+		"atraso": r.atraso,
+		"inconsistencias": [{"tipo": i.tipo, "descricao": i.mensagem} for i in r.inconsistencias],
+	}
+
+
 def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict:
 	ctx, virada, grade, previsto, contexto = contexto_do_dia(employee, data, dados)
 	apuracao = dados["apuracoes"].get(data)
 	cartao = cartao_do_dia(employee, data)
 	inconsistencias = dados["inconsistencias"].get(data, [])
+	cobranca = None
+	if inconsistencias:
+		from hrms_secullum_brasil.apuracao.dia_seguinte import _feriados, estado_da_cobranca
+
+		if "feriados" not in dados:
+			dados["feriados"] = _feriados(employee)
+		cobranca = estado_da_cobranca(dados["avisos_d1"].get(data), dados["feriados"])
 	return {
 		"data": str(data),
 		"dia_semana": DIAS_SEMANA[data.weekday()],
 		"situacao": _situacao(ctx, apuracao),
 		"motivo_nao_apurado": ctx.motivo_nao_apurado if ctx else None,
 		"hora_virada": virada,
+		# feriado: a apuração não prevê jornada (só trabalha quem foi escalado; trabalhado = hora extra de feriado)
+		"feriado": bool(ctx and ctx.entrada and ctx.entrada.feriado),
 		"previsto": [{"entrada": ce.hhmm(i), "saida": ce.hhmm(f)} for i, f in previsto],
 		"batidas": grade["batidas"],
 		"riscadas": grade["riscadas"],
 		"abono": _abono(employee, data, grade) if ctx else None,
+		"falta_justificada": _falta_justificada(grade),
 		"justificativas_secullum": [
 			j.partition(":")[2] for j in (cartao.justificativas or "").split(",") if j
 		]
@@ -355,7 +489,7 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 				"descricao": i.descricao,
 				"status": i.status,
 				"termo": i.termo,
-				**_orientacao(i.tipo, contexto),
+				**_orientacao(i.tipo, contexto, i.termo, cobranca),
 			}
 			for i in inconsistencias
 		],
@@ -363,6 +497,42 @@ def dia_do_cartao(employee: str, data: date, dados: dict, fechado: bool) -> dict
 		"editavel": not fechado and ctx is not None,
 		"envio_secullum": dados["envios"].get(data),
 		"whatsapp": dados["cobrancas"].get(data),
+		"correcao": correcao_do_dia(
+			grade["tratamentos"], dados["respostas"].get(data), dados["envios"].get(data)
+		),
+	}
+
+
+def correcao_do_dia(tratamentos: list, resposta=None, envio=None) -> dict | None:
+	"""Selo do dia corrigido (pedido do RH, 04/11/2026): quem corrigiu (colaborador pelo WhatsApp ou RH/gestor), a
+	aprovação (por quem e quando) ou a recusa, e a situação do envio ao Secullum."""
+	from hrms_secullum_brasil.engine.dia_seguinte import origem_da_correcao
+
+	validos = [t for t in tratamentos if t.docstatus in (0, 1)]
+	secullum = envio.situacao if envio else None
+	if not validos:
+		if resposta and resposta.situacao == "Recusado":
+			return {
+				"situacao": "Recusado",
+				"origem": "colaborador",
+				"motivo_recusa": resposta.motivo_recusa,
+				"por": frappe.utils.get_fullname(resposta.aprovado_por) if resposta.aprovado_por else None,
+				"comprovante": resposta.comprovante,
+				"secullum": None,
+			}
+		return None
+	pendente = any(t.docstatus == 0 for t in validos)
+	ultimo = max(
+		(t for t in validos if t.docstatus == 1), key=lambda t: t.aprovado_em or t.creation, default=None
+	)
+	return {
+		"situacao": "Aguardando aprovação" if pendente else "Aprovado",
+		"origem": origem_da_correcao(t.motivo for t in validos),
+		"por": frappe.utils.get_fullname(ultimo.aprovado_por or ultimo.owner) if ultimo else None,
+		"em": str(ultimo.aprovado_em or ultimo.creation)[:16] if ultimo else None,
+		"motivo_recusa": None,
+		"comprovante": resposta.comprovante if resposta else None,
+		"secullum": secullum,
 	}
 
 
@@ -383,21 +553,45 @@ def _destino_do_dia(employee: str, data: date) -> dict:
 	return destino
 
 
-def _orientacao(tipo: str, contexto: ContextoDia) -> dict:
+def _orientacao(
+	tipo: str, contexto: ContextoDia, termo: str | None = None, cobranca: tuple | None = None
+) -> dict:
+	"""`termo`: o dia já está num termo aberto — no lugar de "Cobrar pelo WhatsApp", "Reenviar o link do termo"
+	(docs/PRD-whatsapp-dia-seguinte.md, W-7)."""
+	from hrms_secullum_brasil.engine.sugestoes import COBRAR_WHATSAPP
+
 	o = orientar(tipo, contexto)
-	return {
-		"explicacao": o.explicacao,
-		"sugestoes": [
+	sugestoes = [
+		{
+			"acao": s.acao,
+			"rotulo": s.rotulo,
+			"hora": ce.hhmm(s.minuto) if s.minuto is not None else None,
+			"horas": [ce.hhmm(m) for m in s.minutos],
+			"referencia": s.referencia,
+		}
+		for s in o.sugestoes
+	]
+	if termo:
+		sugestoes = [
 			{
-				"acao": s.acao,
-				"rotulo": s.rotulo,
-				"hora": ce.hhmm(s.minuto) if s.minuto is not None else None,
-				"horas": [ce.hhmm(m) for m in s.minutos],
-				"referencia": s.referencia,
+				"acao": "reenviar_termo",
+				"rotulo": _("Reenviar o link do termo {0}").format(termo),
+				"hora": None,
+				"horas": [],
+				"referencia": termo,
 			}
-			for s in o.sugestoes
-		],
-	}
+			if s["acao"] == COBRAR_WHATSAPP
+			else s
+			for s in sugestoes
+		]
+	if cobranca:  # o "Cobrar" é a mensagem do dia seguinte; travado se já foi avisado e está no prazo
+		pode, motivo = cobranca
+		for s in sugestoes:
+			if s["acao"] == COBRAR_WHATSAPP:
+				s["rotulo"] = _("Enviar o WhatsApp do dia seguinte (conferir o texto)")
+				s["bloqueada"] = not pode
+				s["motivo"] = motivo
+	return {"explicacao": o.explicacao, "sugestoes": sugestoes}
 
 
 TIPOS_TRATAMENTO = {
@@ -405,6 +599,7 @@ TIPOS_TRATAMENTO = {
 	DESCONSIDERAR: "Batida desconsiderada",
 	ABONO: "Abono do dia",
 	"Compensação de feriado": "Compensação de feriado",
+	FALTA_JUSTIFICADA: "Falta justificada",
 }
 
 
@@ -450,6 +645,7 @@ def _alteracoes(dados: dict, inicio: date, fim: date) -> list[dict]:
 
 
 def cartao(employee: str, inicio: date, fim: date) -> dict:
+	from hrms_secullum_brasil.apuracao import lancamentos
 	from hrms_secullum_brasil.apuracao.jornada_assinatura import horario_do_colaborador
 
 	painel.exigir_colaborador_visivel(employee)
@@ -464,6 +660,9 @@ def cartao(employee: str, inicio: date, fim: date) -> dict:
 	totais["inconsistencias"] = sum(len(d["inconsistencias"]) for d in dias)
 	alteracoes = _alteracoes(dados, inicio, fim)
 	totais["pendentes"] = sum(d["pendentes"] for d in dias)
+	from hrms_secullum_brasil.engine.dia_seguinte import resumo_das_correcoes
+
+	totais["correcoes"] = resumo_das_correcoes(d["correcao"] for d in dias)
 	return {
 		"colaborador": painel._colaborador(employee),
 		"periodo": [str(inicio), str(fim)],
@@ -483,6 +682,8 @@ def cartao(employee: str, inicio: date, fim: date) -> dict:
 			fields=["name", "nome_abreviado", "nome_completo"],
 			order_by="nome_completo asc",
 		),
+		# falta, atestado, férias/licença/afastamento pelo cartão (apuracao/lancamentos.py)
+		"lancamentos": lancamentos.opcoes(),
 	}
 
 
@@ -540,11 +741,12 @@ MOTIVOS = {
 # ------------------------------------------------------------------ gravação (CP-02)
 
 
-def _tratamento(employee: str, data: date, tipo: str, motivo: str, **campos) -> str:
+def _tratamento(employee: str, data: date, tipo: str, motivo: str, submeter: bool = True, **campos) -> str:
+	"""`submeter=False`: fica aguardando aprovação (solicitação do colaborador pelo WhatsApp do dia seguinte)."""
 	doc = frappe.get_doc(
 		{"doctype": TRATAMENTO, "employee": employee, "data": data, "tipo": tipo, "motivo": motivo, **campos}
 	).insert()
-	if frappe.has_permission(TRATAMENTO, "submit", doc):
+	if submeter and frappe.has_permission(TRATAMENTO, "submit", doc):
 		doc.submit()
 	return doc.name
 
@@ -571,6 +773,7 @@ def _aplicar(
 	justificativa: str | None = None,
 	espelhos: dict | None = None,
 	anexo: str | None = None,
+	confirmar_relogio: bool = False,
 ) -> list[str]:
 	criados = []
 	espelhos = espelhos or {}
@@ -586,7 +789,15 @@ def _aplicar(
 		elif acao.tipo == ce.DESCONSIDERAR:
 			if acao.referencia not in desconsiderar_pendente:  # já pedido e aguardando o RH
 				criados.append(
-					_tratamento(employee, data, DESCONSIDERAR, motivo, marcacao=acao.referencia, **extra)
+					_tratamento(
+						employee,
+						data,
+						DESCONSIDERAR,
+						motivo,
+						marcacao=acao.referencia,
+						confirmou_apagar_relogio=int(confirmar_relogio),
+						**extra,
+					)
 				)
 		elif acao.tipo == ce.ABONAR:
 			criados.append(_tratamento(employee, data, ABONO, motivo, justificativa=justificativa, **extra))
@@ -601,6 +812,66 @@ def _aplicar(
 	return criados
 
 
+def batidas_atuais(employee: str, data) -> list[str]:
+	"""As batidas que o cartão mostra no dia (consideradas, com as inclusões aprovadas), em ordem."""
+	data = getdate(data)
+	dados = _carregar(employee, data, data)
+	perfil = get_perfil_vigente(employee, data)
+	virada = cint(perfil.hora_virada_dia) if perfil else 0
+	return [b["hora"] for b in batidas_do_dia(data, virada, dados)["batidas"] if not b.get("pendente")]
+
+
+def solicitar(employee: str, data, horarios: list[str], motivo: str, anexo: str | None = None) -> list[str]:
+	"""Os horários que o colaborador informou para o dia viram tratamentos AGUARDANDO APROVAÇÃO (inclusão e
+	desconsideração), sem reapurar: só valem quando o gestor ou o RH aprovar (docs/PRD-whatsapp-dia-seguinte.md).
+	Quem chama já validou o acesso (link assinado e CPF + código)."""
+	data = getdate(data)
+	if periodo_fechado(employee, data):
+		frappe.throw(_("O ponto de {0} já está fechado.").format(frappe.utils.formatdate(data)))
+	dados = _carregar(employee, data, data)
+	perfil = get_perfil_vigente(employee, data)
+	virada = cint(perfil.hora_virada_dia) if perfil else 0
+	grade = batidas_do_dia(data, virada, dados)
+	edicao = ce.comparar_dia(
+		[
+			ce.Batida(b["minuto"], b["origem"], b["referencia"], b.get("pendente", False))
+			for b in grade["batidas"]
+		],
+		horarios,
+		hora_virada=virada,
+	)
+	if edicao.erros:
+		frappe.throw("; ".join(edicao.erros))
+	base = datetime.combine(data, datetime.min.time())
+	criados = []
+	for acao in edicao.acoes:
+		if acao.tipo == ce.INCLUIR:
+			criados.append(
+				_tratamento(
+					employee,
+					data,
+					INCLUSAO,
+					motivo,
+					submeter=False,
+					data_hora=base + timedelta(minutes=acao.minuto),
+					anexo=anexo,
+				)
+			)
+		elif acao.tipo == ce.DESCONSIDERAR and acao.referencia:
+			criados.append(
+				_tratamento(
+					employee,
+					data,
+					DESCONSIDERAR,
+					motivo,
+					submeter=False,
+					marcacao=acao.referencia,
+					anexo=anexo,
+				)
+			)
+	return criados
+
+
 def salvar(
 	employee: str,
 	alteracoes: list,
@@ -610,9 +881,13 @@ def salvar(
 	fim: date,
 	enviar=None,
 	anexo: str | None = None,
+	confirmar_relogio: bool = False,
 ) -> dict:
 	"""Aplica as alterações da grade: [{data, horarios: ["08:00", ...] | None, abonar: bool | None,
-	justificativa: Justificativa Secullum | None}]. `enviar`: a caixa "Enviar também ao Secullum" (CP-10)."""
+	justificativa: Justificativa Secullum | None}]. `enviar`: a caixa "Enviar também ao Secullum" (CP-10).
+	`confirmar_relogio`: a tela perguntou duas vezes antes de tirar batida do relógio (sem isso o dia dá erro; a
+	prévia lista essas batidas em `apaga_relogio`)."""
+	from hrms_secullum_brasil.apuracao.batida_relogio import do_relogio, rotulos
 	from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 	from hrms_secullum_brasil.ingestion.envio_cartao import BLOQUEADO, agendar, deve_enviar, modo
 
@@ -631,6 +906,8 @@ def salvar(
 	resultado, edicoes = {}, {}
 	enviar = deve_enviar(enviar)
 	aprova = bool(frappe.has_permission(TRATAMENTO, "submit"))
+	apaga_relogio = []
+	sem_envio = []  # trava em Teste sem caso aberto para o dia: a correção vale no programa, mas não vai
 	for alteracao in alteracoes:
 		data = getdate(alteracao["data"])
 		chave = str(data)
@@ -664,6 +941,8 @@ def salvar(
 			"erros": list(edicao.erros),
 			"avisos": list(edicao.avisos),
 		}
+		saem = [a.referencia for a in edicao.acoes if a.tipo == ce.DESCONSIDERAR and a.referencia]
+		apaga_relogio += rotulos(do_relogio(saem))
 		if alteracao.get("abonar") and not alteracao.get("justificativa") and modo() != BLOQUEADO:
 			resultado[chave]["avisos"].append(
 				_("O abono só vai ao Secullum com uma justificativa do Secullum.")
@@ -687,10 +966,13 @@ def salvar(
 				alteracao.get("justificativa"),
 				{b["referencia"]: b["espelho"] for b in grade["batidas"] if b.get("espelho")},
 				anexo,
+				confirmar_relogio,
 			)
 			reapurar_dia(employee, data)
 			if enviar and aprova:  # o do gestor sai quando o RH aprovar (Tratamento de Ponto.on_submit)
 				resultado[chave]["envio"] = agendar(employee, data, motivo=motivo.strip())
+				if not resultado[chave]["envio"]:
+					sem_envio.append(frappe.utils.formatdate(data))
 		except Exception as exc:
 			frappe.db.rollback(save_point=ponto)
 			frappe.clear_last_message()
@@ -706,6 +988,71 @@ def salvar(
 	return {
 		"resumo": ce.resumo({k: e for k, e in edicoes.items() if not resultado[k]["erros"]}),
 		"enviar_secullum": enviar,
+		"apaga_relogio": apaga_relogio,
+		"sem_envio": sem_envio,
 		"dias": resultado,
 		"cartao": None if simular else cartao(employee, inicio, fim),
 	}
+
+
+# ------------------------------------------------------------------ enviar ao Secullum o que já foi salvo
+
+
+def enviar_correcoes(employee: str, inicio: date, fim: date, datas: list | None = None) -> dict:
+	"""Correções aprovadas que ainda não foram ao Secullum (salvas com a trava em Bloqueado, ou sem marcar "enviar"):
+	uma fila por dia (envio_cartao), com a justificativa do abono. Respeita a trava (Teste: só com caso aberto)."""
+	from hrms_secullum_brasil.apuracao.adaptador import ABONO_PARCIAL, COMPENSACAO
+	from hrms_secullum_brasil.ingestion.envio_cartao import BLOQUEADO, ENVIO, agendar, modo
+
+	if modo() == BLOQUEADO:
+		frappe.throw(
+			_(
+				'O envio ao Secullum está em Bloqueado: em Configuração Secullum, mude "Envio de correções" para '
+				"Teste (com um Caso de Teste aberto) ou Sempre enviar."
+			)
+		)
+	filtros = {
+		"employee": employee,
+		"docstatus": 1,
+		"tipo": ["not in", [COMPENSACAO, ABONO_PARCIAL]],
+		"data": ["between", [inicio, fim]],
+	}
+	if datas:
+		filtros["data"] = ["in", [getdate(d) for d in datas]]
+	por_dia = defaultdict(list)
+	for t in frappe.get_all(
+		TRATAMENTO,
+		filters=filtros,
+		fields=["name", "data", "tipo", "motivo", "justificativa", "envio_secullum", "creation"],
+		order_by="creation asc",
+	):
+		por_dia[getdate(t.data)].append(t)
+	saida = {"enviados": [], "ja_enviados": [], "sem_justificativa": [], "fechados": [], "fora_do_teste": []}
+	for data, tratamentos in sorted(por_dia.items()):
+		dia = str(data)
+		if periodo_fechado(employee, data):
+			saida["fechados"].append(dia)
+			continue
+		envios = [t.envio_secullum for t in tratamentos if t.envio_secullum]
+		if envios and all(frappe.db.get_value(ENVIO, e, "situacao") == "Enviado" for e in envios):
+			saida["ja_enviados"].append(dia)
+			continue
+		abono = next((t for t in reversed(tratamentos) if t.tipo == ABONO), None)
+		justificativa = None
+		if abono:
+			justificativa = (
+				frappe.db.get_value("Justificativa Secullum", abono.justificativa, "nome_abreviado")
+				if abono.justificativa
+				else None
+			)
+			if not justificativa:
+				saida["sem_justificativa"].append(dia)
+				continue
+		envio = agendar(employee, data, motivo=tratamentos[-1].motivo or "", justificativa=justificativa)
+		if not envio:
+			saida["fora_do_teste"].append(dia)
+			continue
+		for t in tratamentos:
+			frappe.db.set_value(TRATAMENTO, t.name, {"enviar_secullum": 1, "envio_secullum": envio})
+		saida["enviados"].append(dia)
+	return saida

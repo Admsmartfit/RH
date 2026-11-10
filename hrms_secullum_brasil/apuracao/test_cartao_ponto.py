@@ -96,13 +96,16 @@ class TestCartaoPonto(FrappeTestCase):
 			{"data": str(FALTA), "abonar": True},
 		]
 
-	def salvar(self, employee, alteracoes=None, motivo="Esqueceu de bater o ponto", simular=0):
+	def salvar(
+		self, employee, alteracoes=None, motivo="Esqueceu de bater o ponto", simular=0, confirmar_relogio=1
+	):
 		return acoes.salvar_cartao(
 			employee,
 			json.dumps(alteracoes or self.alteracoes()),
 			motivo,
 			competencia=COMPETENCIA,
 			simular=simular,
+			confirmar_relogio=confirmar_relogio,
 		)
 
 	# ------------------------------------------------------------------ leitura (CP-01)
@@ -165,7 +168,18 @@ class TestCartaoPonto(FrappeTestCase):
 		antes = frappe.db.count(TRATAMENTO, {"employee": employee})
 		r = self.salvar(employee, motivo="", simular=1)
 		self.assertEqual(r["resumo"], "2 inclusões, 1 desconsideração, 1 abono em 3 dias")
+		self.assertEqual(r["apaga_relogio"], [f"17:00 de {MUDAR:%d/%m}"])  # a tela pergunta duas vezes
 		self.assertEqual(frappe.db.count(TRATAMENTO, {"employee": employee}), antes)
+
+	def test_batida_do_relogio_nao_sai_sem_a_confirmacao_dupla(self):
+		employee = self.novo()
+		frappe.set_user(self.rh_email)
+		mudar = [{"data": str(MUDAR), "horarios": ["08:00", "12:00", "13:00", "18:00"]}]
+		r = self.salvar(employee, mudar, confirmar_relogio=0)
+		self.assertIn("relógio", " ".join(r["dias"][str(MUDAR)]["erros"]))
+		self.assertFalse(frappe.db.exists(TRATAMENTO, {"employee": employee, "data": MUDAR, "docstatus": 1}))
+		r = self.salvar(employee, mudar)
+		self.assertFalse(r["dias"][str(MUDAR)]["erros"])
 
 	def test_rh_salva_tres_dias_de_uma_vez_e_desfaz(self):
 		employee = self.novo()
@@ -240,3 +254,39 @@ class TestCartaoPonto(FrappeTestCase):
 		)
 		self.assertEqual(r["dias"][str(IMPAR)]["erros"], ["Horário inválido: 25:00. Use HH:MM."])
 		self.assertEqual(len(r["dias"]["2026-09-04"]["tratamentos"]), 1)
+
+	# ------------------------------------------------------------------ prévia dos totais antes de salvar (04/11/2026)
+
+	def test_previa_completa_o_dia_sem_gravar(self):
+		employee = self.novo()
+		antes = frappe.db.get_value(
+			"Apuracao Diaria", {"employee": employee, "data": IMPAR}, ["normais", "modified"]
+		)
+		r = painel.previa_do_dia(employee, str(IMPAR), json.dumps(["08:00", "12:00", "13:00", "17:00"]))
+		self.assertTrue(r["apurado"])
+		self.assertEqual((r["normais"], r["hora_extra"], r["falta"], r["atraso"]), (480, 0, 0, 0))
+		self.assertNotIn("marcacao_impar", [i["tipo"] for i in r["inconsistencias"]])
+		# nada mudou no banco
+		self.assertEqual(
+			frappe.db.get_value(
+				"Apuracao Diaria", {"employee": employee, "data": IMPAR}, ["normais", "modified"]
+			),
+			antes,
+		)
+		self.assertIn("marcacao_impar", inconsistencias(employee, IMPAR))
+
+	def test_previa_mostra_a_extra_e_o_abono(self):
+		employee = self.novo()
+		extra = painel.previa_do_dia(employee, str(MUDAR), ["08:00", "12:00", "13:00", "18:00"])
+		self.assertEqual(extra["hora_extra"], 60)
+		abonado = painel.previa_do_dia(employee, str(FALTA), [], abonar=1)
+		self.assertEqual(abonado["falta"], 0)
+		self.assertGreater(painel.previa_do_dia(employee, str(FALTA), [])["falta"], 0)
+
+	def test_previa_respeita_a_equipe_e_recusa_horario_invalido(self):
+		with self.assertRaises(frappe.ValidationError):
+			painel.previa_do_dia(self.do_rh, str(IMPAR), ["8h"])
+		frappe.set_user(self.gestor_email)
+		self.addCleanup(frappe.set_user, "Administrator")
+		with self.assertRaises(frappe.PermissionError):
+			painel.previa_do_dia(self.de_fora, str(IMPAR), ["08:00", "12:00"])

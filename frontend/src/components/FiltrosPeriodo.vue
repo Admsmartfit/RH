@@ -1,18 +1,57 @@
 <template>
 	<form class="flex flex-wrap items-end gap-3" aria-label="Filtros do painel" @submit.prevent>
-		<label class="flex flex-col text-xs font-medium text-texto-suave">
-			Competência
-			<input
-				type="month"
-				class="campo mt-1"
-				:value="filtros.competencia"
-				required
-				@change="(e) => e.target.value && definir({ competencia: e.target.value })"
-			/>
-			<span v-if="periodo.data" class="mt-1 font-normal" data-testid="periodo-folha">
+		<div class="flex flex-col text-xs text-texto-suave">
+			<label class="flex flex-col font-medium">
+				Competência
+				<input
+					type="month"
+					class="campo mt-1"
+					:value="filtros.competencia"
+					required
+					@change="(e) => e.target.value && definir({ competencia: e.target.value })"
+				/>
+			</label>
+			<span v-if="periodo.data" class="mt-1" data-testid="periodo-folha">
 				{{ periodo.data.texto }}<template v-if="periodo.data.dia_fechamento"> · fecha dia {{ periodo.data.dia_fechamento }}</template>
+				<button
+					v-if="periodo.data.pode_configurar && filtros.company && !editando"
+					type="button"
+					class="ml-1 text-primario-texto underline"
+					data-testid="alterar-fechamento"
+					@click="abrirEdicao"
+				>
+					{{ periodo.data.dia_fechamento ? "alterar" : "definir dia de fechamento" }}
+				</button>
 			</span>
-		</label>
+			<span
+				v-if="editando"
+				class="mt-1 flex items-center gap-1"
+				role="group"
+				aria-label="Dia de fechamento da folha da empresa"
+			>
+				<label for="dia-fechamento">Fecha no dia</label>
+				<input
+					id="dia-fechamento"
+					v-model.number="novoDia"
+					type="number"
+					min="0"
+					max="31"
+					class="campo w-16 py-0.5"
+					@keydown.enter.prevent="salvarDia"
+					@keydown.esc.prevent="editando = false"
+				/>
+				<button type="button" class="rounded-md border border-borda px-2 py-0.5 text-texto" :disabled="salvando" @click="salvarDia">Salvar</button>
+				<button type="button" class="px-1 text-texto-suave" @click="editando = false">Cancelar</button>
+			</span>
+			<span v-if="editando" class="mt-0.5">Ex.: 25 = de 26 do mês anterior a 25. 0 = mês cheio. Vale para {{ filtros.company }}.</span>
+			<span v-if="erroDia" role="alert" class="mt-0.5 text-perigo-texto">{{ erroDia }}</span>
+			<span
+				v-else-if="periodo.data?.pode_configurar && !filtros.company && !periodo.data?.dia_fechamento"
+				class="mt-0.5"
+			>
+				Escolha a empresa para definir o dia de fechamento da folha.
+			</span>
+		</div>
 		<label class="flex flex-col text-xs font-medium text-texto-suave">
 			Empresa
 			<select class="campo mt-1" :value="filtros.company" @change="(e) => definir({ company: e.target.value })">
@@ -50,11 +89,43 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
-import { createResource } from "frappe-ui";
+import { computed, nextTick, ref, watch } from "vue";
+import { call, createResource } from "frappe-ui";
 import { useFiltros } from "@/composables/useFiltros";
+import { mensagem } from "@/utils/erros";
 
 const { filtros, definir } = useFiltros();
+
+// atalho do RH: dia de fechamento da folha da empresa escolhida (Company.dia_fechamento_folha)
+const editando = ref(false);
+const salvando = ref(false);
+const novoDia = ref(0);
+const erroDia = ref("");
+
+async function abrirEdicao() {
+	novoDia.value = periodo.data?.dia_fechamento || 25;
+	erroDia.value = "";
+	editando.value = true;
+	await nextTick();
+	document.getElementById("dia-fechamento")?.focus();
+}
+
+async function salvarDia() {
+	salvando.value = true;
+	erroDia.value = "";
+	try {
+		await call("hrms_secullum_brasil.apuracao.competencia.definir_dia_fechamento", {
+			company: filtros.value.company,
+			dia: novoDia.value || 0,
+		});
+		editando.value = false;
+		window.location.reload(); // as telas abertas passam a usar o período novo
+	} catch (e) {
+		erroDia.value = mensagem(e);
+	} finally {
+		salvando.value = false;
+	}
+}
 
 const opcoes = createResource({
 	url: "hrms_secullum_brasil.apuracao.painel.opcoes_filtros",

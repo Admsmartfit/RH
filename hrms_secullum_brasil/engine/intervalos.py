@@ -10,10 +10,12 @@ Par = tuple[int, int]
 
 
 def intervalo_exigido(trabalhado: int, regra: RegraApuracao) -> int:
-	"""Até 4h: nenhum; de 4h a 6h: 15 min; acima de 6h: 1h (ou o reduzido permitido pela CCT)."""
-	if trabalhado <= regra.jornada_sem_intervalo_ate:
+	"""Até 4h: nenhum; de 4h a 6h: 15 min; acima de 6h: 1h (ou o reduzido permitido pela CCT). Os limites têm a
+	tolerância do art. 58, § 1º (`tolerancia_jornada_intervalo`, 10 min): 4h06 sem pausa não exige os 15 min."""
+	folga = regra.tolerancia_jornada_intervalo
+	if trabalhado <= regra.jornada_sem_intervalo_ate + folga:
 		return 0
-	if trabalhado <= regra.jornada_intervalo_curto_ate:
+	if trabalhado <= regra.jornada_intervalo_curto_ate + folga:
 		return regra.intervalo_curto
 	return regra.intervalo_reduzido if regra.permite_reducao_intrajornada else regra.intervalo_minimo
 
@@ -49,6 +51,35 @@ def intrajornada(
 			)
 		)
 	return suprimida, avisos
+
+
+def posicao_do_intervalo(pares: list[Par], regra: RegraApuracao) -> Inconsistencia | None:
+	"""Intervalo colado ao fim (ou ao começo) do expediente: o maior intervalo do dia precisa de pelo menos
+	`trabalho_minimo_apos_intervalo` de trabalho depois da volta e antes da saída. Só quando o dia exige intervalo;
+	jornada em dois turnos (intervalo acima do máximo) fica de fora."""
+	minimo = regra.trabalho_minimo_apos_intervalo
+	trabalhado = sum(saida - entrada for entrada, saida in pares)
+	if not minimo or len(pares) < 2 or not intervalo_exigido(trabalhado, regra):
+		return None
+	lacunas = [b[0] - a[1] for a, b in pairwise(pares)]
+	maior = max(lacunas)
+	if maior > regra.intervalo_maximo:
+		return None
+	i = lacunas.index(maior)
+	antes = sum(s - e for e, s in pares[: i + 1])
+	depois = sum(s - e for e, s in pares[i + 1 :])
+	if depois < minimo:
+		onde, trabalho = "no fim do expediente: depois da volta", depois
+	elif antes < minimo:
+		onde, trabalho = "no começo do expediente: antes da saída", antes
+	else:
+		return None
+	return Inconsistencia(
+		"intervalo_fora_de_hora",
+		MEDIA,
+		f"Intervalo {onde}, só {trabalho} min de trabalho (mínimo {minimo}). O descanso precisa ficar no meio da "
+		"jornada, mesmo a pedido do empregado.",
+	)
 
 
 def interjornada_suprimida(

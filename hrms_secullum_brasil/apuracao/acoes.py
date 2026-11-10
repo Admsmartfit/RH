@@ -102,24 +102,39 @@ def incluir_marcacao(inconsistencia: str, data_hora: str, motivo: str, anexo: st
 
 
 @frappe.whitelist()
-def desconsiderar_marcacao(inconsistencia: str, marcacao: str, motivo: str, anexo: str | None = None) -> dict:
-	return _criar_tratamento(_inconsistencia(inconsistencia), DESCONSIDERAR, motivo, anexo, marcacao=marcacao)
+def desconsiderar_marcacao(
+	inconsistencia: str, marcacao: str, motivo: str, anexo: str | None = None, confirmar_relogio=0
+) -> dict:
+	"""`confirmar_relogio=1`: a tela já perguntou duas vezes (a batida do relógio não sai sem isso)."""
+	return _criar_tratamento(
+		_inconsistencia(inconsistencia),
+		DESCONSIDERAR,
+		motivo,
+		anexo,
+		marcacao=marcacao,
+		confirmou_apagar_relogio=int(confirmar_relogio or 0),
+	)
 
 
 @frappe.whitelist()
 def marcacoes_do_dia(inconsistencia: str) -> list[dict]:
 	"""Marcações ativas do colaborador no dia (e madrugada seguinte), para o diálogo de desconsiderar."""
+	from hrms_secullum_brasil.apuracao.batida_relogio import e_do_relogio
+
 	inc = _inconsistencia(inconsistencia)
-	return frappe.get_all(
+	raws = frappe.get_all(
 		RAW,
 		filters={
 			"employee": inc.employee,
 			"status": "Ativa",
 			"data": ["between", [inc.data, frappe.utils.add_days(inc.data, 1)]],
 		},
-		fields=["name", "data_hora", "tipo_fonte"],
+		fields=["name", "data_hora", "tipo_fonte", "tipo_origem"],
 		order_by="data_hora asc",
 	)
+	for r in raws:
+		r["do_relogio"] = e_do_relogio(r)  # a tela pergunta duas vezes antes de desconsiderar
+	return raws
 
 
 @frappe.whitelist()
@@ -150,6 +165,20 @@ def permitir_jornada_fragmentada(inconsistencia: str) -> dict:
 
 
 @frappe.whitelist()
+def enviar_cartao_secullum(employee: str, competencia=None, inicio=None, fim=None, datas=None) -> dict:
+	"""Manda ao Secullum as correções já salvas do período (ou só de `datas`) que ainda não foram (RH Ponto)."""
+	from hrms_secullum_brasil.apuracao import cartao_ponto, painel
+
+	frappe.only_for(("System Manager", "RH Ponto"))
+	painel.exigir_colaborador_visivel(employee)
+	return cartao_ponto.enviar_correcoes(
+		employee,
+		*cartao_ponto.periodo(inicio, fim, competencia, employee),
+		datas=_lista(datas) if datas else None,
+	)
+
+
+@frappe.whitelist()
 def salvar_cartao(
 	employee: str,
 	alteracoes,
@@ -160,6 +189,7 @@ def salvar_cartao(
 	simular=0,
 	enviar_secullum=None,
 	anexo: str | None = None,
+	confirmar_relogio=0,
 ) -> dict:
 	"""CP-02: grava as correções do cartão ponto num pedido só (cada dia num savepoint e reapurado uma vez).
 	`simular=1` só devolve o resumo do que seria feito (o texto do Salvar)."""
@@ -173,4 +203,68 @@ def salvar_cartao(
 		*cartao_ponto.periodo(inicio, fim, competencia, employee),
 		enviar=enviar_secullum,
 		anexo=anexo,
+		confirmar_relogio=bool(int(confirmar_relogio or 0)),
 	)
+
+
+@frappe.whitelist()
+def lancar_ausencia(
+	employee: str,
+	tipo: str,
+	motivo: str,
+	inicio=None,
+	fim=None,
+	datas=None,
+	justificativa: str | None = None,
+	leave_type: str | None = None,
+	relacionado_ao_trabalho=0,
+	enviar_secullum=None,
+) -> dict:
+	"""Cartão ponto (pedido do RH, 08/11/2026): falta com justificativa, atestado ou férias/licença/afastamento.
+	RH lança aprovado; gestor, aguardando o RH (apuracao/lancamentos.py)."""
+	from hrms_secullum_brasil.apuracao import lancamentos
+
+	return lancamentos.lancar(
+		employee,
+		tipo,
+		motivo,
+		inicio=inicio,
+		fim=fim,
+		datas=datas,
+		justificativa=justificativa,
+		leave_type=leave_type,
+		relacionado_ao_trabalho=relacionado_ao_trabalho,
+		enviar=enviar_secullum,
+	)
+
+
+@frappe.whitelist()
+def lancar_intervalo(inconsistencia: str) -> dict:
+	"""Instrutor horista que passou de 4h15 sem marcar (RH, 09/11/2026): 15 min no meio da jornada, não pagos."""
+	from hrms_secullum_brasil.apuracao import intervalo_horista
+
+	return intervalo_horista.lancar(inconsistencia)
+
+
+@frappe.whitelist()
+def aprovar_lancamento(doctype: str, name: str) -> str:
+	"""Aba "Aguardando aprovação": atestado ou licença lançado pelo gestor (só RH Ponto)."""
+	from hrms_secullum_brasil.apuracao import lancamentos
+
+	return lancamentos.aprovar(doctype, name)
+
+
+@frappe.whitelist()
+def recusar_lancamento(doctype: str, name: str) -> str:
+	from hrms_secullum_brasil.apuracao import lancamentos
+
+	return lancamentos.recusar(doctype, name)
+
+
+@frappe.whitelist()
+def parar_whatsapp(employee: str, motivo: str) -> dict:
+	"""docs/PRD-whatsapp-aceite-auditoria.md (CW-06): o colaborador pediu para parar o WhatsApp (gerente ou RH)."""
+	from hrms_secullum_brasil.apuracao import aceite_whatsapp, painel
+
+	painel.exigir_colaborador_visivel(employee)
+	return aceite_whatsapp.revogar(employee, motivo)

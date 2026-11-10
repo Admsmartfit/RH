@@ -49,6 +49,8 @@ DEFAULTS_CCT = {
 	"intervalo_minimo": d.INTERVALO_MINIMO_MIN,
 	"intervalo_maximo": d.INTERVALO_MAXIMO_MIN,
 	"tolerancia_intervalo": d.TOLERANCIA_INTERVALO_MIN,
+	"tolerancia_jornada_intervalo": d.TOLERANCIA_JORNADA_INTERVALO_MIN,
+	"trabalho_minimo_apos_intervalo": d.TRABALHO_MINIMO_APOS_INTERVALO_MIN,
 	"permite_reducao_intrajornada": d.PERMITE_REDUCAO_INTRAJORNADA,
 	"intervalo_reduzido": d.INTERVALO_REDUZIDO_MIN,
 	"percentual_indenizacao_intrajornada": d.PERCENTUAL_INDENIZACAO_INTRAJORNADA,

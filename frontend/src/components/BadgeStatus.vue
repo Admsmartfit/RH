@@ -61,6 +61,11 @@ const MAPA = {
 	Enviado: { texto: "Enviado ao Secullum", tom: "conforme", icone: CheckCircle2 },
 	Erro: { texto: "Erro no envio", tom: "perigo", icone: AlertOctagon },
 	Bloqueado: { texto: "Envio bloqueado", tom: "neutro", icone: Info },
+	// WhatsApp: modo de teste e aceite (docs/PRD-whatsapp-aceite-auditoria.md)
+	"Enviada (teste)": { texto: "Enviada (teste)", tom: "alerta", icone: Info },
+	Pendente: { texto: "Pendente", tom: "alerta", icone: CircleDashed },
+	Aceito: { texto: "Aceito", tom: "conforme", icone: CheckCircle2 },
+	Revogado: { texto: "Revogado", tom: "neutro", icone: CircleDashed },
 };
 
 const estilo = computed(() => {

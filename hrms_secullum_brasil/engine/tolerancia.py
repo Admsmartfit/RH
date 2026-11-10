@@ -37,6 +37,10 @@ def apurar_saldo(
 	  nas marcações) em vez de computar a totalidade.
 	"""
 	valores = desvios(pares, previstos)
+	if regra.compensar_atraso_com_he and len(valores) > 2:
+		# intervalo flexível (decisão do RH, 02/11/2026): fazer o intervalo em outro horário não tira a tolerância;
+		# valem só a entrada e a saída da jornada (e o saldo do dia). O intervalo mínimo é conferido à parte.
+		valores = [valores[0], valores[-1]]
 	saldo = trabalhado - previsto
 	if dentro_da_tolerancia(valores, regra.tolerancia_por_marcacao, regra.tolerancia_diaria) and (
 		abs(saldo) <= regra.tolerancia_diaria

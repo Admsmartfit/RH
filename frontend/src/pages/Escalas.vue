@@ -2,14 +2,21 @@
 	<div class="space-y-4">
 		<header class="flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<h1 class="text-xl font-semibold">Escalas — {{ nomeDaCompetencia(filtros.competencia) }}</h1>
+				<h1 class="text-xl font-semibold">
+					Escalas — {{ nomeDaCompetencia(filtros.competencia) }}
+					<span
+						v-if="filtros.company && conjunta"
+						class="ml-2 align-middle rounded-full border border-borda px-2 py-0.5 text-xs font-normal text-texto-suave"
+						data-testid="escala-conjunta"
+						:title="`Escala conjunta: ${dados.empresas.join(' + ')}`"
+					>+ {{ dados.empresas.filter((e) => e !== filtros.company).join(", ") }}</span>
+				</h1>
 				<p class="text-sm text-texto-suave">
 					Arraste os turnos (ou use o teclado). Mudanças ficam em rascunho até publicar; quem recebe turno novo é
 					avisado ao publicar.
 				</p>
 			</div>
 			<div class="flex flex-wrap items-end gap-3">
-				<router-link :to="{ name: 'Planejador', query: route.query }" class="botao" data-testid="abrir-planejador">Planejador 5x2</router-link>
 				<fieldset class="flex rounded-md border border-borda text-sm" aria-label="Dias mostrados">
 					<label v-for="m in MODOS" :key="m.valor" class="cursor-pointer px-3 py-1.5" :class="modo === m.valor ? 'bg-primario-suave font-medium text-primario-texto' : ''">
 						<input v-model="modo" type="radio" name="modo" :value="m.valor" class="sr-only" />
@@ -45,22 +52,41 @@
 			</div>
 		</header>
 
+		<!-- barra compacta: a ação do dia a dia à vista; o resto no menu "Ferramentas" (fecha com Esc ou ao escolher) -->
 		<section v-if="podeEditar && filtros.company" class="flex flex-wrap items-center gap-2" aria-label="Ferramentas da escala">
-			<span class="text-xs font-semibold text-texto-suave">Ferramentas:</span>
-			<button type="button" class="botao" :disabled="ocupado" @click="copiar('semana')">Copiar semana anterior</button>
-			<button type="button" class="botao" :disabled="ocupado" @click="copiar('mes')">Copiar mês anterior</button>
-			<button type="button" class="botao" :disabled="ocupado" @click="salvarModelo">Salvar como modelo</button>
-			<label class="flex items-center gap-1 text-xs">
-				<span class="sr-only">Modelo a aplicar</span>
-				<select v-model="modeloEscolhido" class="campo py-1 text-xs" aria-label="Modelo a aplicar">
-					<option value="">Aplicar modelo…</option>
-					<option v-for="m in modelos.data || []" :key="m.name" :value="m.name">{{ m.nome_modelo }}</option>
-				</select>
-			</label>
-			<button type="button" class="botao" :disabled="ocupado || !modeloEscolhido" @click="aplicarModelo">Aplicar</button>
-			<button type="button" class="botao" :disabled="ocupado" @click="sugerirDistribuicao">Sugerir distribuição justa</button>
 			<button type="button" class="botao" :disabled="ocupado" @click="convite = { dia: '' }">Convidar para um turno (WhatsApp)</button>
-			<button type="button" class="botao" :disabled="ocupado" @click="pedirDisponibilidade">Pedir disponibilidade do mês (WhatsApp)</button>
+			<details ref="menuFerramentas" class="relative" @keydown.esc="fecharFerramentas">
+				<summary class="botao cursor-pointer list-none select-none">Ferramentas ▾</summary>
+				<div class="absolute left-0 z-30 mt-1 w-72 space-y-3 rounded-md border border-borda bg-superficie p-3 text-sm shadow-lg">
+					<div>
+						<p class="text-xs font-semibold text-texto-suave">Copiar</p>
+						<div class="mt-1 flex flex-col gap-1">
+							<button type="button" class="item-menu" :disabled="ocupado" @click="ferramenta(() => copiar('semana'))">Copiar semana anterior</button>
+							<button type="button" class="item-menu" :disabled="ocupado" @click="ferramenta(() => copiar('mes'))">Copiar mês anterior</button>
+						</div>
+					</div>
+					<div>
+						<p class="text-xs font-semibold text-texto-suave">Modelos</p>
+						<div class="mt-1 flex flex-col gap-1">
+							<button type="button" class="item-menu" :disabled="ocupado" @click="ferramenta(salvarModelo)">Salvar como modelo</button>
+							<div class="flex items-center gap-1">
+								<select v-model="modeloEscolhido" class="campo flex-1 py-1 text-xs" aria-label="Modelo a aplicar">
+									<option value="">Aplicar modelo…</option>
+									<option v-for="m in modelos.data || []" :key="m.name" :value="m.name">{{ m.nome_modelo }}</option>
+								</select>
+								<button type="button" class="botao py-1 text-xs" :disabled="ocupado || !modeloEscolhido" @click="ferramenta(aplicarModelo)">Aplicar</button>
+							</div>
+						</div>
+					</div>
+					<div>
+						<p class="text-xs font-semibold text-texto-suave">Sugestões</p>
+						<div class="mt-1 flex flex-col gap-1">
+							<button type="button" class="item-menu" :disabled="ocupado" @click="ferramenta(sugerirDistribuicao)">Sugerir distribuição justa</button>
+							<button type="button" class="item-menu" :disabled="ocupado" @click="ferramenta(() => (sugerindoTurnos = true))">Turnos pelo histórico</button>
+						</div>
+					</div>
+				</div>
+			</details>
 		</section>
 
 		<section v-if="convites.data?.length" class="rounded-md border border-borda p-3" aria-label="Convites para turno">
@@ -135,31 +161,59 @@
 		</p>
 
 		<Bloco v-else titulo="Grade do mês" :recurso="mes">
-			<section v-if="podeEditar && turnosVisiveis.length" class="mb-3" aria-label="Turnos padrão">
-				<h3 class="text-xs font-semibold text-texto-suave">
-					Turnos padrão — arraste para um dia ou escolha e aperte Enter no dia. Para um horário fora do padrão, clique no dia.
-				</h3>
+			<p v-if="podeEditar && dados?.pode_cadastrar_turnos && !turnosVisiveis.length" class="mb-3 text-xs text-texto-suave">
+				Nenhum turno padrão para este cargo:
+				<a :href="linkNovoTurno" target="_blank" rel="noopener" class="text-primario-texto underline">criar no Desk</a>
+				ou use Ferramentas → Turnos pelo histórico.
+			</p>
+			<details v-if="podeEditar && turnosVisiveis.length" :open="paletaAberta" class="mb-3" aria-label="Turnos padrão" @toggle="(e) => guardarPaleta(e.target.open)">
+				<summary class="cursor-pointer select-none text-xs font-semibold text-texto-suave">
+					Turnos padrão ({{ turnosVisiveis.length }}) — arraste para um dia ou escolha e aperte Enter no dia; para outro horário, clique no dia
+				</summary>
+				<!-- cadastro dos turnos padrão fica no Desk (o painel não tem formulário de cadastro); clique duplo num turno abre ele -->
+				<p v-if="dados?.pode_cadastrar_turnos" class="mt-1 flex flex-wrap gap-x-3 text-xs">
+					<a :href="linkNovoTurno" target="_blank" rel="noopener" class="text-primario-texto underline">+ Novo turno</a>
+					<a :href="linkTurnos" target="_blank" rel="noopener" class="text-primario-texto underline">Editar ou apagar turnos</a>
+					<span class="text-texto-suave">(no Desk; clique duplo num turno abre ele. Depois, atualize esta tela)</span>
+				</p>
+				<div class="mt-2 flex flex-wrap gap-1 text-xs" role="tablist" aria-label="Tipo de dia dos turnos">
+					<button
+						v-for="aba in abasDaPaleta"
+						:key="aba.valor"
+						type="button"
+						role="tab"
+						class="rounded-full border px-2.5 py-0.5"
+						:class="abaPaleta === aba.valor ? 'border-primario bg-primario-suave font-medium text-primario-texto' : 'border-borda'"
+						:aria-selected="abaPaleta === aba.valor"
+						@click="abaPaleta = aba.valor"
+					>
+						{{ aba.rotulo }} ({{ aba.quantos }})
+					</button>
+				</div>
 				<VueDraggable
-					v-model="paleta"
+					v-model="paletaVisivel"
 					:group="{ name: 'turnos', pull: 'clone', put: false }"
 					:sort="false"
 					:clone="clonarDaPaleta"
 					class="mt-1 flex flex-wrap gap-2"
 				>
 					<button
-						v-for="t in paleta"
+						v-for="t in paletaVisivel"
 						:key="t.id"
 						type="button"
-						class="cartao"
+						class="cartao py-1 text-xs"
 						:class="pegado?.cartao.id === t.id ? 'ring-2 ring-primario' : ''"
 						:style="t.cor ? { borderLeftColor: t.cor, borderLeftWidth: '4px' } : {}"
+						:title="t.nome"
+						:aria-label="`${t.nome} ${t.rotulo}`"
 						:aria-pressed="pegado?.cartao.id === t.id"
 						@click="pegar(t, true)"
+						@dblclick="abrirTurno(t)"
 					>
-						<span class="font-semibold">{{ t.nome }}</span> {{ t.rotulo }}
+						{{ t.rotulo }}
 					</button>
 				</VueDraggable>
-			</section>
+			</details>
 
 			<!-- CE-15: no celular, agenda por dia (os mesmos dados e regras do servidor) -->
 			<section v-if="dados && celular" class="space-y-3" aria-label="Agenda por dia">
@@ -215,7 +269,7 @@
 					<tbody>
 						<tr v-for="(p, linha) in pessoas" :key="p.employee" class="border-t border-borda">
 							<th scope="row" class="sticky left-0 z-[5] whitespace-nowrap bg-superficie px-2 py-1 text-left font-medium">
-								{{ p.nome }}<span class="block font-normal text-texto-suave">{{ p.cargo }}</span>
+								{{ p.nome }}<span class="block font-normal text-texto-suave">{{ p.cargo }}<template v-if="conjunta"> · {{ p.empresa }}</template></span>
 								<span v-if="p.ciencia" class="block text-[11px] font-normal" :class="p.ciencia.situacao === 'Lida' ? 'text-primario-texto' : 'text-texto-suave'" data-testid="ciencia">
 									{{ CIENCIA[p.ciencia.situacao] || p.ciencia.situacao }}
 								</span>
@@ -305,8 +359,16 @@
 			:cargo-inicial="cargo"
 			:turnos="turnosVisiveis"
 			:dia-inicial="convite.dia"
+			:dias="dados?.dias || []"
 			@fechar="convite = null"
 			@enviado="conviteEnviado"
+		/>
+		<DialogoTurnosSugeridos
+			v-if="sugerindoTurnos"
+			:company="filtros.company"
+			:cargo="cargo"
+			@fechar="sugerindoTurnos = false"
+			@criados="turnosCriados"
 		/>
 		<DialogoTurno
 			v-if="editor"
@@ -332,10 +394,12 @@ import { VueDraggable } from "vue-draggable-plus";
 import Bloco from "@/components/Bloco.vue";
 import DialogoTexto from "@/components/DialogoTexto.vue";
 import DialogoConvite from "@/components/DialogoConvite.vue";
+import DialogoTurnosSugeridos from "@/components/DialogoTurnosSugeridos.vue";
 import DialogoTurno from "@/components/DialogoTurno.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
 import PainelConsulta from "@/components/planejador/PainelConsulta.vue";
 import { useFiltros } from "@/composables/useFiltros";
+import { documentoDesk, listaDesk } from "@/utils/desk";
 import { mensagem } from "@/utils/erros";
 import { alteracoesDoMovimento, cartao, diasVisiveis, montarGrade, moeda, nomeDaQuebra, rotuloDoTurno } from "@/utils/escalas";
 import { dataBR, hhmm, nomeDaCompetencia } from "@/utils/tempo";
@@ -399,7 +463,11 @@ const mes = createResource({
 	onSuccess: (r) => {
 		for (const chave of Object.keys(grade)) delete grade[chave];
 		Object.assign(grade, montarGrade(r));
-		paleta.value = r.turnos.map((t) => cartao(t.periodos, { id: `p-${t.name}`, turno: t.name, nome: t.nome, cor: t.cor, cargo: t.cargo }));
+		// por tipo de dia: os de qualquer dia, depois útil, sábado, domingo e feriado
+		const ordem = ["", "Dia útil", "Sábado", "Domingo", "Feriado"];
+		paleta.value = [...r.turnos]
+			.sort((a, b) => ordem.indexOf(a.tipo_dia) - ordem.indexOf(b.tipo_dia))
+			.map((t) => cartao(t.periodos, { id: `p-${t.name}`, turno: t.name, nome: t.nome, cor: t.cor, cargo: t.cargo, tipo_dia: t.tipo_dia }));
 	},
 });
 watch(
@@ -441,10 +509,75 @@ const distribuicao = ref(null);
 const dados = computed(() => mes.data);
 const podeEditar = computed(() => Boolean(dados.value?.pode_editar));
 const temRascunho = computed(() => Boolean(dados.value?.rascunhos));
+// escala conjunta (Company.grupo_escala): empresas no mesmo endereço montadas na mesma grade
+const conjunta = computed(() => (dados.value?.empresas || []).length > 1);
 const cargos = computed(() => [...new Set((dados.value?.colaboradores || []).map((p) => p.cargo).filter(Boolean))].sort());
 const pessoas = computed(() => (dados.value?.colaboradores || []).filter((p) => !cargo.value || p.cargo === cargo.value));
 const colunas = computed(() => diasVisiveis(dados.value?.dias || [], modo.value));
 const turnosVisiveis = computed(() => paleta.value.filter((t) => !cargo.value || !t.cargo || t.cargo === cargo.value));
+
+// paleta compacta: só os turnos do cargo, em abas por tipo de dia (o turno sem tipo vale em todas) e recolhível
+// (lembrada neste navegador)
+const ABAS_PALETA = [
+	{ valor: "", rotulo: "Todos" },
+	{ valor: "Dia útil", rotulo: "Dia útil" },
+	{ valor: "Sábado", rotulo: "Sábado" },
+	{ valor: "Domingo", rotulo: "Domingo" },
+	{ valor: "Feriado", rotulo: "Feriado" },
+];
+const abaPaleta = ref("");
+const daAba = (t, aba) => !aba || !t.tipo_dia || t.tipo_dia === aba;
+const abasDaPaleta = computed(() =>
+	ABAS_PALETA.map((a) => ({ ...a, quantos: turnosVisiveis.value.filter((t) => daAba(t, a.valor)).length })).filter(
+		(a) => !a.valor || turnosVisiveis.value.some((t) => t.tipo_dia === a.valor)
+	)
+);
+const paletaVisivel = ref([]);
+watch(
+	() => [turnosVisiveis.value, abaPaleta.value],
+	() => (paletaVisivel.value = turnosVisiveis.value.filter((t) => daAba(t, abaPaleta.value))),
+	{ immediate: true }
+);
+const CHAVE_PALETA = "ponto-escalas-paleta-aberta";
+const paletaAberta = ref(true);
+try {
+	paletaAberta.value = localStorage.getItem(CHAVE_PALETA) !== "0";
+} catch {
+	// sem armazenamento: fica aberta
+}
+function guardarPaleta(aberta) {
+	paletaAberta.value = aberta;
+	try {
+		localStorage.setItem(CHAVE_PALETA, aberta ? "1" : "0");
+	} catch {
+		// sem armazenamento: só nesta visita
+	}
+}
+
+// turnos padrão: cadastro no Desk (cada empresa tem os seus; na escala conjunta, a lista mostra os das duas)
+const linkNovoTurno = computed(() => {
+	const q = new URLSearchParams({ company: filtros.value.company || "" });
+	if (cargo.value) q.set("designation", cargo.value);
+	return `/app/turno-padrao/new?${q.toString()}`;
+});
+const linkTurnos = computed(() =>
+	listaDesk("Turno Padrao", {
+		company: (dados.value?.empresas || []).length > 1 ? ["in", dados.value.empresas] : filtros.value.company,
+		designation: cargo.value || undefined,
+	})
+);
+function abrirTurno(t) {
+	if (t.turno && dados.value?.pode_cadastrar_turnos) window.open(documentoDesk("Turno Padrao", t.turno), "_blank", "noopener");
+}
+
+const menuFerramentas = ref(null);
+function fecharFerramentas() {
+	if (menuFerramentas.value) menuFerramentas.value.open = false;
+}
+function ferramenta(acao) {
+	fecharFerramentas();
+	acao();
+}
 
 const celula = (p, d) => p.dias[d.data];
 const bloqueada = (p, d) => celula(p, d).realizado || celula(p, d).fechado;
@@ -822,7 +955,14 @@ async function escalarConvidado(c, r) {
 	if (balao.value) return; // o assistente abriu: o convite fica aberto até você decidir
 	try {
 		await call(`${CONVITE}.preencher`, { convite: c.name, employee: r.employee });
-		aviso.value = `${r.nome} escalado(a) em ${dataBR(c.data)} (rascunho: publique para valer).`;
+		// a escala só vale no cartão e na apuração depois de publicada: oferece publicar já só a desta pessoa
+		if (window.confirm(`${r.nome} escalado(a) em ${dataBR(c.data)} em rascunho. Publicar agora a escala de ${r.nome}? (o cartão ponto só muda depois de publicar)`)) {
+			await call(`${API}.publicar`, { company: filtros.value.company, employees: JSON.stringify([r.employee]) });
+			aviso.value = `Escala de ${r.nome} publicada: o cartão ponto já mostra o turno de ${dataBR(c.data)}.`;
+			mes.reload();
+		} else {
+			aviso.value = `${r.nome} escalado(a) em ${dataBR(c.data)} em rascunho: clique em Publicar para valer no cartão ponto.`;
+		}
 	} catch (e) {
 		aviso.value = mensagem(e);
 	}
@@ -837,23 +977,14 @@ async function encerrarConvite(c) {
 
 // ------------------------------------------------------------------ indisponibilidade pelo colaborador (CE-14)
 
-function proximaCompetencia() {
-	const [ano, mesAtual] = filtros.value.competencia.split("-").map(Number);
-	return mesAtual === 12 ? `${ano + 1}-01` : `${ano}-${String(mesAtual + 1).padStart(2, "0")}`;
-}
+// o pedido de disponibilidade do mês saiu da tela (03/11/2026): o convite por dia e horário o substitui; as
+// indisponibilidades informadas continuam chegando para aprovar
+const sugerindoTurnos = ref(false);
 
-async function pedirDisponibilidade() {
-	const alvo = proximaCompetencia();
-	if (!window.confirm(`Enviar a cada colaborador o link para informar quando não pode trabalhar em ${nomeDaCompetencia(alvo)}?`)) return;
-	ocupado.value = true;
-	try {
-		const r = await call(`${DISPONIBILIDADE}.pedir`, { company: filtros.value.company, competencia: alvo });
-		aviso.value = `Pedido enviado a ${r.enviados} colaborador(es)${r.sem_regra ? `; ${r.sem_regra} sem regra de WhatsApp do evento "Escala: pedido de disponibilidade"` : ""}.`;
-	} catch (e) {
-		aviso.value = mensagem(e);
-	} finally {
-		ocupado.value = false;
-	}
+function turnosCriados(criados) {
+	sugerindoTurnos.value = false;
+	aviso.value = criados.length ? `${criados.length} turno(s) padrão criado(s).` : "Nenhum turno novo (já estavam cadastrados).";
+	mes.reload();
 }
 
 async function decidir(item, aprovar) {
@@ -955,6 +1086,9 @@ function teclado(e) {
 }
 .botao {
 	@apply rounded-md border border-borda px-3 py-2 text-sm disabled:opacity-50;
+}
+.item-menu {
+	@apply rounded px-2 py-1.5 text-left hover:bg-primario-suave disabled:opacity-50;
 }
 .botao-toque {
 	@apply min-h-[44px] rounded-md border border-primario px-3 text-sm font-medium text-primario-texto;

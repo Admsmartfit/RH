@@ -1,14 +1,16 @@
 """Convite para um turno específico pelo WhatsApp (pedido do RH, 27/10/2026)."""
 
 import json
+from datetime import datetime
 from unittest.mock import patch
 
 import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
+from hrms_secullum_brasil.apuracao import cockpit_escala as ce
 from hrms_secullum_brasil.apuracao import convite_turno as ct
-from hrms_secullum_brasil.apuracao import whatsapp
+from hrms_secullum_brasil.apuracao import testes_relogio, testes_whatsapp, whatsapp
 from hrms_secullum_brasil.apuracao.test_apuracao import EMPRESA, hash_curto
 from hrms_secullum_brasil.apuracao.test_inconsistencia_mantida import perfil_comercial
 from hrms_secullum_brasil.engine import comunicacao as com
@@ -32,12 +34,15 @@ class TestConviteTurno(FrappeTestCase):
 		self.mock = MockEvolutionClient()
 		frappe.flags.whatsapp_mock = self.mock
 		self.addCleanup(setattr, frappe.flags, "whatsapp_mock", None)
-		frappe.db.set_single_value("Configuracao Apuracao", "whatsapp_envio", "Ligado")
+		testes_whatsapp.ligar()
 		relogio = patch.object(
 			whatsapp, "now_datetime", lambda: frappe.utils.get_datetime("2026-10-28 10:00:00")
 		)
 		relogio.start()
 		self.addCleanup(relogio.stop)
+		# "hoje" fixo antes da semana do teste: a segunda (02/11) não pode virar dia passado (realizado) com o
+		# calendário real andando
+		testes_relogio.congelar(self, datetime(2026, 10, 28, 10, 0))
 		for nome in frappe.get_all("Regra Envio WhatsApp", filters={"evento": com.CONVITE}, pluck="name"):
 			frappe.db.set_value("Regra Envio WhatsApp", nome, "ativa", 0)
 		frappe.get_doc(
@@ -93,6 +98,23 @@ class TestConviteTurno(FrappeTestCase):
 		self.assertFalse(ct.dados(token)["aberto"])
 		with self.assertRaises(frappe.ValidationError):
 			ct.responder(token, "Não posso")
+
+	def test_escalar_pelo_cockpit_preenche_o_convite(self):
+		# também quando a escala passa pelo assistente de quebras (rascunho salvo com justificativa)
+		r = ct.convidar(
+			EMPRESA, SABADO, json.dumps(T1), json.dumps([self.livre, self.cansado]), self.cargo.name
+		)
+		# as respostas primeiro: `responder` faz commit, e o rascunho depois dele some no rollback do teste
+		ct.responder(ct.gerar_token(r["convite"], self.cansado), "Não posso")
+		ct.responder(ct.gerar_token(r["convite"], self.livre), "Posso")
+		alteracao = [{"data": SABADO, "situacao": "Trabalho", "periodos": T1}]
+		self.assertEqual(ce.salvar_rascunho(self.cansado, json.dumps(alteracao), "teste")["convites"], [])
+		resultado = ce.salvar_rascunho(self.livre, json.dumps(alteracao), "trocou")
+		self.assertEqual(resultado["convites"], [r["convite"]])
+		self.assertEqual(
+			frappe.db.get_value(ct.CONVITE, r["convite"], ["situacao", "escolhido"]),
+			("Preenchido", self.livre),
+		)
 
 	def test_link_adulterado_e_dia_passado(self):
 		with self.assertRaises(frappe.AuthenticationError):

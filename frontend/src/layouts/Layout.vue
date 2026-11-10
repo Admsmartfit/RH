@@ -22,7 +22,7 @@
 								{{ item.rotulo }}
 							</router-link>
 						</li>
-						<li>
+						<li v-if="sessao.data?.pode_abrir_desk">
 							<a href="/app/ponto" class="rounded-md px-3 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave">
 								Abrir no Desk
 							</a>
@@ -42,22 +42,25 @@
 </template>
 
 <script setup>
-import { provide } from "vue";
-import { useRoute } from "vue-router";
+import { computed, provide, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo.vue";
 
 const route = useRoute();
+const router = useRouter();
 
-const menu = [
+// pedido do RH (04/11/2026): o planejador é só do administrador (o servidor também recusa)
+const MENU = [
 	{ nome: "Cockpit", rotulo: "Cockpit", exato: true },
 	{ nome: "Inconsistencias", rotulo: "Inconsistências" },
 	{ nome: "Cartao", rotulo: "Cartão ponto" },
 	{ nome: "Escalas", rotulo: "Escalas" },
-	{ nome: "Planejador", rotulo: "Planejador" },
+	{ nome: "Planejador", rotulo: "Planejador", soAdmin: true },
 	{ nome: "Termos", rotulo: "Termos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },
 ];
+const menu = computed(() => MENU.filter((item) => !item.soAdmin || sessao.data?.admin));
 
 function irParaConteudo() {
 	const conteudo = document.getElementById("conteudo");
@@ -71,4 +74,13 @@ const sessao = createResource({
 	cache: "ponto-sessao",
 });
 provide("sessao", sessao);
+
+// quem não é administrador e abre o endereço do planejador volta ao cockpit
+watch(
+	() => [route.name, sessao.data],
+	() => {
+		if (route.name === "Planejador" && sessao.data && !sessao.data.admin) router.replace({ name: "Cockpit", query: route.query });
+	},
+	{ immediate: true }
+);
 </script>

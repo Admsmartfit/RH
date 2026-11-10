@@ -57,6 +57,7 @@ class MinutosPeriodo:
 	he_por_percentual: dict[float, int] = field(default_factory=dict)  # só a HE paga (fora do banco)
 	noturno_ficto: int = 0
 	intrajornada: int = 0
+	pausa_paga: int = 0  # pausa paga por liberalidade (instrutor), a hora normal
 	interjornada: int = 0
 	descanso_semanal: int = 0  # AJ-10: diferença até as 35h (Súmula 110), paga junto da INTER
 	falta: int = 0
@@ -158,6 +159,7 @@ def valorar(
 			"Intervalo intrajornada suprimido (indenizatório, Art. 71 §4º)",
 		)
 	)
+	brutos.append(("PAUSA_PAGA", m.pausa_paga, horas(m.pausa_paga), "Pausa paga por liberalidade"))
 	inter = m.interjornada + m.descanso_semanal
 	texto_inter = "Interjornada suprimida paga como extra (OJ 355)"
 	if m.descanso_semanal:

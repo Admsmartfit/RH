@@ -27,6 +27,7 @@ CAMPOS_CCT = (
 	"percentual_noturno",
 	"banco_padrao",
 	"jornada_fragmentada",
+	"pausa_paga_min",
 )
 CAMPOS_VALOR = ("valor_cargo", "valor_desde")
 PAPEIS = ("System Manager", "RH Ponto", "HR Manager", "HR User")
@@ -209,6 +210,7 @@ def preencher_cct_nova(cct) -> None:
 			or flt(cargo.percentual_noturno)
 			or cint(cargo.banco_padrao)
 			or cint(cargo.jornada_fragmentada)
+			or cint(cargo.get("pausa_paga_min"))
 		):
 			continue
 		cct.append("parametros_cargo", {"designation": cargo.name, **{c: cargo.get(c) for c in CAMPOS_CCT}})
@@ -341,6 +343,7 @@ def copiar_das_ccts() -> int:
 			or flt(cargo.percentual_noturno)
 			or cint(cargo.banco_padrao)
 			or cint(cargo.jornada_fragmentada)
+			or cint(cargo.get("pausa_paga_min"))
 		):
 			continue
 		linhas = frappe.get_all(

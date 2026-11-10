@@ -49,6 +49,8 @@
   "intervalo_minimo",
   "intervalo_maximo",
   "tolerancia_intervalo",
+  "tolerancia_jornada_intervalo",
+  "trabalho_minimo_apos_intervalo",
   "permite_reducao_intrajornada",
   "intervalo_reduzido",
   "interjornada_section",
@@ -380,6 +382,22 @@
    "non_negative": 1
   },
   {
+   "default": "10",
+   "fieldname": "tolerancia_jornada_intervalo",
+   "fieldtype": "Int",
+   "label": "Tolerância para exigir o intervalo (min)",
+   "non_negative": 1,
+   "description": "Art. 58, § 1º aplicado ao intervalo: trabalhar até 4h + estes minutos sem pausa não exige os 15 min (e até 6h + estes minutos não exige 1h). Ex.: 10 = 4h06 sem pausa não é supressão. 0 = sem tolerância."
+  },
+  {
+   "default": "60",
+   "description": "Mínimo de trabalho depois da volta do intervalo (e antes da saída para ele). Intervalo colado ao fim ou ao começo do expediente vira a inconsistência \"Intervalo no começo ou no fim\" (a Justiça do Trabalho não aceita, mesmo a pedido do empregado). 0 = não confere.",
+   "fieldname": "trabalho_minimo_apos_intervalo",
+   "fieldtype": "Int",
+   "label": "Trabalho mínimo depois do intervalo (min)",
+   "non_negative": 1
+  },
+  {
    "default": "0",
    "fieldname": "permite_reducao_intrajornada",
    "fieldtype": "Check",
@@ -623,7 +641,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-02 16:00:00.000000",
+ "modified": "2026-11-04 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Regra Sindical CCT",

@@ -14,14 +14,17 @@ from hrms_secullum_brasil.apuracao.adaptador import (
 	ABONO_PARCIAL,
 	COMPENSACAO,
 	DESCONSIDERAR,
+	FALTA_JUSTIFICADA,
 	INCLUSAO,
 	RAW,
 	eh_feriado,
 	lista_de_feriados,
 )
+from hrms_secullum_brasil.apuracao.inconsistencias import manter_pelo_tratamento, reabrir_mantidas
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
 from hrms_secullum_brasil.configuracao_ponto.regras import RegraAmbiguaError, get_regra_vigente
 from hrms_secullum_brasil.engine import defaults_legais as d
+from hrms_secullum_brasil.engine import lancamentos as la
 from hrms_secullum_brasil.engine.feriados import erros_compensacao
 
 
@@ -37,8 +40,17 @@ class TratamentodePonto(Document):
 		else:
 			self.data_hora = None
 			self.marcacao = None
-		if self.tipo != ABONO:
+		if self.tipo not in (ABONO, FALTA_JUSTIFICADA):
 			self.justificativa = None
+		if self.tipo == FALTA_JUSTIFICADA:
+			efeito = (
+				frappe.db.get_value("Justificativa Secullum", self.justificativa, "efeito")
+				if self.justificativa
+				else None
+			)
+			erro = la.erro_da_justificativa(efeito)
+			if erro:
+				frappe.throw(_(erro))
 		if self.tipo != COMPENSACAO:
 			self.data_folga = None
 		if self.tipo == ABONO_PARCIAL:
@@ -48,20 +60,32 @@ class TratamentodePonto(Document):
 			self.minutos_abonados = 0
 		self._validar_duplicidade()
 
+	def before_submit(self):
+		from hrms_secullum_brasil.apuracao.batida_relogio import exigir_confirmacao
+
+		exigir_confirmacao(self)  # a batida do relógio só sai com a confirmação dupla (RH, 04/11/2026)
+
 	def before_cancel(self):
 		self._validar_periodo()
 
 	def on_submit(self):
 		self.db_set({"aprovado_por": frappe.session.user, "aprovado_em": now_datetime()})
 		self._reapurar()
+		if self.tipo == FALTA_JUSTIFICADA:  # a falta do dia segue valendo, mas sai da fila do RH com o motivo
+			manter_pelo_tratamento(self.employee, self.data, "falta", self._motivo_mantida())
 		self._enviar_ao_secullum(justificativa=self._justificativa_secullum())
 
 	def on_cancel(self):
+		if self.tipo == FALTA_JUSTIFICADA:
+			reabrir_mantidas(self.employee, self.data, "falta", self._motivo_mantida())
 		self._reapurar()
 		self._enviar_ao_secullum(justificativa_retirada=self._justificativa_secullum())
 
+	def _motivo_mantida(self) -> str:
+		return la.motivo_mantida(self.justificativa, self.name)
+
 	def _justificativa_secullum(self) -> str | None:
-		if self.tipo != ABONO or not self.justificativa:
+		if self.tipo not in (ABONO, FALTA_JUSTIFICADA) or not self.justificativa:
 			return None
 		return frappe.db.get_value("Justificativa Secullum", self.justificativa, "nome_abreviado")
 

@@ -16,6 +16,7 @@
   "tipo",
   "data_hora",
   "marcacao",
+  "confirmou_apagar_relogio",
   "data_folga",
   "minutos_abonados",
   "justificativa",
@@ -103,7 +104,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tipo",
-   "options": "Inclusao de marcacao\nDesconsiderar marcacao\nAbono do dia\nCompensação de feriado\nAbono parcial",
+   "options": "Inclusao de marcacao\nDesconsiderar marcacao\nAbono do dia\nCompensação de feriado\nAbono parcial\nFalta justificada",
    "reqd": 1
   },
   {
@@ -130,12 +131,13 @@
    "description": "O 'Dia de trabalho' é o feriado trabalhado; nesta data o colaborador folga sem falta."
   },
   {
-   "depends_on": "eval:doc.tipo=='Abono do dia'",
+   "depends_on": "eval:['Abono do dia','Falta justificada'].includes(doc.tipo)",
    "fieldname": "justificativa",
    "fieldtype": "Link",
    "label": "Justificativa do Secullum",
    "options": "Justificativa Secullum",
-   "description": "Para enviar o abono ao cartão do Secullum (opcional)."
+   "description": "Para enviar o abono ao cartão do Secullum (opcional). Na falta justificada é obrigatória e precisa ter o efeito Falta.",
+   "mandatory_depends_on": "eval:doc.tipo=='Falta justificada'"
   },
   {
    "fieldname": "motivo_section",
@@ -210,11 +212,20 @@
    "fieldname": "minutos_abonados",
    "fieldtype": "Int",
    "label": "Minutos abonados"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.tipo=='Desconsiderar marcacao'",
+   "description": "Obrigatório para desconsiderar uma batida feita no relógio (tablet, app): nenhuma batida do relógio sai do dia sem esta confirmação e a segunda pergunta ao aprovar.",
+   "fieldname": "confirmou_apagar_relogio",
+   "fieldtype": "Check",
+   "label": "Confirmo: desconsiderar batida do relógio",
+   "no_copy": 1
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-27 09:00:00.000000",
+ "modified": "2026-11-08 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Tratamento de Ponto",

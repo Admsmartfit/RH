@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Resposta sobre o ponto</title>
+	<style>
+		:root { --fundo: #f8fafc; --superficie: #ffffff; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --sobre: #ffffff; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --superficie: #1e293b; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --sobre: #0f172a; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+		h2 { font-size: 1.05rem; margin: 1.25rem 0 0.5rem; }
+		.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 0.75rem; }
+		.dia { font-weight: 600; }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+		.opcoes { display: grid; gap: 0.5rem; }
+		button { min-height: 48px; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--sobre); font: inherit; font-weight: 600; cursor: pointer; }
+		button.secundario { background: transparent; color: var(--primario); }
+		button.perigo { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		button[aria-pressed="true"] { outline: 3px solid var(--texto); outline-offset: 2px; }
+		button:disabled { opacity: 0.6; cursor: wait; }
+		label { display: block; font-weight: 500; margin-top: 0.75rem; }
+		input, select, textarea { width: 100%; min-height: 44px; margin-top: 0.25rem; padding: 0.4rem 0.6rem; font: inherit; color: var(--texto); background: var(--superficie); border: 1px solid var(--borda); border-radius: 0.375rem; }
+		.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+		@media (max-width: 30rem) { .linha { grid-template-columns: 1fr; } }
+		:focus-visible { outline: 3px solid var(--primario); outline-offset: 2px; }
+		[hidden] { display: none !important; }
+		.batidas { list-style: none; padding: 0; margin: 0.5rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+		.batidas li { display: flex; align-items: center; gap: 0.25rem; border: 1px solid var(--borda); border-radius: 0.375rem; padding: 0.25rem 0.25rem 0.25rem 0.6rem; }
+		.batidas li.nova { border-color: var(--primario); }
+		.batidas .rotulo { color: var(--suave); font-size: 0.85rem; }
+		.batidas button { min-height: 36px; min-width: 36px; padding: 0 0.5rem; }
+		.incluir { display: flex; gap: 0.5rem; align-items: flex-end; }
+		.incluir label { flex: 1; }
+		.previa { margin-top: 0.5rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px dashed var(--borda); }
+	</style>
+</head>
+<body>
+{{ faixa_teste or "" }}
+	<main>
+		<h1>Resposta sobre o seu ponto</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+		<section id="dias" aria-label="Dias" hidden></section>
+
+		<section id="confirmar" hidden aria-labelledby="titulo-confirmar">
+			<h2 id="titulo-confirmar">Confirmar e enviar</h2>
+			<p class="suave">Para enviar, confirme com o seu CPF e o código que chega no seu WhatsApp. Esta confirmação vale como a sua assinatura; o seu gestor confere antes de a correção entrar no cartão.</p>
+			<label>Observações (opcional)<textarea id="obs" rows="2" maxlength="1000"></textarea></label>
+			<label>Seu CPF<input id="cpf" inputmode="numeric" autocomplete="off" /></label>
+			<p><button type="button" class="secundario" id="pedir">Receber o código no WhatsApp</button></p>
+			<label>Código recebido<input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" /></label>
+			<p><button type="button" id="enviar">Enviar a resposta</button></p>
+		</section>
+
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script src="/assets/hrms_secullum_brasil/js/editor_horarios.js"></script>
+	<script>
+		// docs/PRD-whatsapp-dia-seguinte.md (W-5): só mostra e coleta; ordem, prévia e gravação ficam no servidor
+		// (apuracao/dia_seguinte.py). Quem já está logado (ex.: o RH testando) precisa do token CSRF no POST.
+		window.csrf_token = "{{ csrf_token or '' }}";
+		const API = "/api/method/hrms_secullum_brasil.apuracao.dia_seguinte";
+		const t = new URLSearchParams(location.search).get("t") || "";
+		const $ = (id) => document.getElementById(id);
+		const { el, br } = window.EditorHorarios;
+		let dados = null;
+		let enviando = false;
+		const estado = {}; // data -> { editor, naoReconhece, explicacao }
+
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto;
+		}
+
+		function erroDe(corpo) {
+			try {
+				const msgs = JSON.parse(corpo._server_messages || "[]").map((m) => JSON.parse(m).message);
+				if (msgs.length) return msgs.join(" ").replace(/<[^>]+>/g, "");
+			} catch (e) {}
+			return corpo.exception ? String(corpo.exception).split(":").slice(1).join(":").trim() : "Não foi possível concluir.";
+		}
+
+		async function chamar(metodo, corpo) {
+			const r = await fetch(`${API}.${metodo}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": window.csrf_token || "" },
+				body: JSON.stringify({ t, ...corpo }),
+			});
+			const json = await r.json().catch(() => ({}));
+			if (!r.ok) throw new Error(erroDe(json));
+			return json.message;
+		}
+
+		function desenhar() {
+			const caixa = $("dias");
+			caixa.replaceChildren();
+			dados.dias.forEach((dia, n) => {
+				const c = el("article", { class: "cartao", "aria-label": `Dia ${br(dia.data)}` });
+				c.append(el("div", { class: "dia" }, br(dia.data)));
+				if (dia.ocorrencias) c.append(el("div", {}, dia.ocorrencias));
+				if (!dados.aberto) {
+					caixa.append(c);
+					return;
+				}
+				if (!estado[dia.data]) estado[dia.data] = { editor: null, naoReconhece: false, explicacao: "" };
+				const e = estado[dia.data];
+				const editor = el("div", { "data-editor": dia.data });
+				const idn = `nao-${n}`;
+				const marca = el("input", { id: idn, type: "checkbox", style: "width:auto;min-height:auto;margin-right:0.5rem" });
+				marca.checked = e.naoReconhece;
+				const rotuloN = el("label", { for: idn, style: "display:flex;align-items:center;font-weight:400" });
+				rotuloN.append(marca, "Não reconheço este dia (não trabalhei ou estes não são os meus horários)");
+				editor.hidden = e.naoReconhece;
+				marca.addEventListener("change", () => {
+					e.naoReconhece = marca.checked;
+					editor.hidden = marca.checked;
+				});
+				const idx = `exp-${n}`;
+				const rotuloX = el("label", { for: idx }, "Quer explicar? (opcional — ex.: estava em treinamento externo)");
+				const explica = el("textarea", { id: idx, rows: "2", maxlength: "500" });
+				explica.value = e.explicacao;
+				explica.addEventListener("input", () => (e.explicacao = explica.value));
+				rotuloX.append(explica);
+				c.append(editor, rotuloN, rotuloX);
+				e.editor = EditorHorarios.criar(editor, {
+					chave: dia.data,
+					data: dia.data,
+					iniciais: dia.batidas,
+					calcular: (horarios) => chamar("previa_resposta", { data: dia.data, horarios }),
+				});
+				caixa.append(c);
+			});
+			caixa.hidden = false;
+		}
+
+		function mostrar(d) {
+			dados = d;
+			$("cabecalho").className = "";
+			$("cabecalho").textContent = `${d.colaborador} · ${d.empresa}`;
+			desenhar();
+			$("confirmar").hidden = !d.aberto;
+			if (d.resposta) status(`Resposta enviada em ${d.resposta.confirmado_em.split(" ")[0].split("-").reverse().join("/")}: ${d.resposta.situacao.toLowerCase()}. Obrigado!`, "ok");
+			else if (!d.aberto) status("Este link venceu. Fale com o seu gestor.", "suave");
+		}
+
+		function dias() {
+			return dados.dias.map((dia) => {
+				const e = estado[dia.data];
+				return {
+					data: dia.data,
+					horarios: e?.editor ? e.editor.estado.horas : dia.batidas,
+					nao_reconhece: Boolean(e?.naoReconhece),
+					explicacao: e?.explicacao || "",
+				};
+			});
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.dados_resposta?t=${encodeURIComponent(t)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido. Fale com o seu gestor.";
+				return;
+			}
+			mostrar(corpo.message);
+		}
+
+		$("pedir").addEventListener("click", async () => {
+			try {
+				const r = await chamar("pedir_codigo", {});
+				status(r.enviado ? `Código enviado para ${r.celular}. Vale por 15 minutos.` : "Não foi possível enviar o código agora. Tente de novo em alguns minutos ou fale com o seu gestor.", r.enviado ? "ok" : "erro");
+				$("codigo").focus();
+			} catch (e) {
+				status(e.message, "erro");
+			}
+		});
+
+		$("enviar").addEventListener("click", async () => {
+			if (enviando) return;
+			enviando = true;
+			$("enviar").disabled = true;
+			status("Enviando…", "suave");
+			try {
+				mostrar(await chamar("responder", { cpf: $("cpf").value, codigo: $("codigo").value, dias: dias(), observacoes: $("obs").value }));
+			} catch (e) {
+				status(e.message, "erro");
+			} finally {
+				enviando = false;
+				$("enviar").disabled = false;
+			}
+		});
+
+		carregar();
+	</script>
+</body>
+</html>

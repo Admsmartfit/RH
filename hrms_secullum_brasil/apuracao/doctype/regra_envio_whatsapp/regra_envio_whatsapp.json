@@ -10,7 +10,11 @@
   "ativa",
   "situacao",
   "envios_teste",
+  "descartes_erro",
+  "voltou_para_teste_em",
+  "motivo_volta",
   "evento",
+  "tipo_inconsistencia",
   "column_break_1",
   "para_colaborador",
   "para_gestor",
@@ -46,7 +50,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Quando enviar",
-   "options": "Ponto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)\nEscala: turno incluído/alterado/removido\nCobrança de inconsistência\nEscala: pedido de disponibilidade\nJornada: documento para assinar\nEscala: convite para turno\nTermo de ocorrências\nTermo pendente — gerente\nTermo pendente — RH",
+   "options": "Ponto do dia (D+1)\nPonto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)\nEscala: turno incluído/alterado/removido\nCobrança de inconsistência\nEscala: pedido de disponibilidade\nJornada: documento para assinar\nEscala: convite para turno\nTermo de ocorrências\nTermo pendente — gerente\nTermo pendente — RH\nResposta do colaborador (D+1) — gestor",
    "reqd": 1
   },
   {
@@ -129,12 +133,43 @@
    "default": "0",
    "fieldname": "envios_teste",
    "fieldtype": "Int",
-   "label": "Envios de teste",
+   "label": "Conferidas e enviadas em teste",
+   "read_only": 1,
+   "description": "Para ir a produção, a regra do D+1 precisa de um mínimo de mensagens conferidas (Configuração Apuração)."
+  },
+  {
+   "fieldname": "tipo_inconsistencia",
+   "fieldtype": "Select",
+   "label": "Tipo de inconsistência",
+   "options": "\nmarcacao_impar\nmarcacao_duplicada\nfalta\natraso\nhe_acima_limite\nintrajornada\ninterjornada\nintervalo_superior_2h\nintervalo_fora_de_hora\naula_nao_registrada\nsete_dias_seguidos\ndescanso_semanal\nfolgas_semanais\ndomingos_sem_folga\nexcesso_jornada_estagio\nexcesso_jornada_horista\nexcesso_jornada_nao_autorizada",
+   "depends_on": "eval:doc.evento==\"Ponto do dia (D+1)\"",
+   "mandatory_depends_on": "eval:doc.evento==\"Ponto do dia (D+1)\"",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Uma regra por tipo: cada uma com a sua mensagem e a sua trava (docs/PRD-whatsapp-dia-seguinte.md)."
+  },
+  {
+   "default": "0",
+   "fieldname": "descartes_erro",
+   "fieldtype": "Int",
+   "label": "Descartes por erro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "voltou_para_teste_em",
+   "fieldtype": "Datetime",
+   "label": "Voltou para teste em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_volta",
+   "fieldtype": "Small Text",
+   "label": "Por que voltou para teste",
    "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-10-29 10:00:00.000000",
+ "modified": "2026-11-04 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Regra Envio WhatsApp",

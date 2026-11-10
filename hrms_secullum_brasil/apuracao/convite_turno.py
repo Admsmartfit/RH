@@ -112,7 +112,7 @@ def convidar(
 		texto = montar_mensagem(
 			regra.mensagem_colaborador or com.texto_padrao(com.CONVITE, "Colaborador"),
 			primeiro_nome=com.primeiro_nome(emp.first_name or emp.employee_name),
-			empresa=_nome_da_empresa(company),
+			empresa=_nome_da_empresa(emp.company),  # escala conjunta: a empresa de cada pessoa
 			data=com.data_curta(dia),
 			dia_semana=com.dia_da_semana(dia),
 			horario=texto_do_horario(turno),
@@ -171,7 +171,13 @@ def responder(token: str, resposta: str) -> str:
 @frappe.whitelist()
 def abertos(company: str, competencia: str | None = None) -> list[dict]:
 	"""Convites abertos da empresa (do mês, se informado), com as respostas das pessoas visíveis."""
-	filtros = {"company": company, "situacao": "Aberto", "data": [">=", getdate()]}
+	from hrms_secullum_brasil.apuracao.cockpit_escala import empresas_da_escala
+
+	filtros = {
+		"company": ["in", empresas_da_escala(company)],
+		"situacao": "Aberto",
+		"data": [">=", getdate()],
+	}
 	if competencia:
 		ano, mes = (int(x) for x in competencia.split("-")[:2])
 		inicio = getdate(f"{ano}-{mes:02d}-01")
@@ -215,6 +221,18 @@ def preencher(convite: str, employee: str) -> str:
 	doc.check_permission("write")
 	doc.db_set({"situacao": "Preenchido", "escolhido": employee})
 	return doc.situacao
+
+
+def marcar_escalado(employee: str, datas) -> list[str]:
+	"""Quem respondeu "Posso" e foi escalado no dia (rascunho ou publicação, também pelo assistente de quebras):
+	o convite aberto daquele dia fica Preenchido (achado de 03/11/2026: pelo assistente ficava aberto)."""
+	feitos = []
+	for dia in {getdate(x) for x in datas}:
+		for nome in frappe.get_all(CONVITE, filters={"situacao": "Aberto", "data": dia}, pluck="name"):
+			if frappe.db.exists(RESPOSTA, {"parent": nome, "employee": employee, "resposta": POSSO}):
+				frappe.db.set_value(CONVITE, nome, {"situacao": "Preenchido", "escolhido": employee})
+				feitos.append(nome)
+	return feitos
 
 
 @frappe.whitelist()

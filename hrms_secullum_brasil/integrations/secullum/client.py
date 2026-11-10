@@ -392,6 +392,20 @@ class HttpSecullumClient(SecullumClient):
 			raise ValueError(f"Rota de edição do cartão desconhecida: {rota}")
 		self._api(metodo, rota, json_body=corpo)
 
+	# --- envio de cadastros (docs/PRD-sincronizacao-secullum.md); POST = inclui ou altera pela chave
+
+	def salvar_justificativa(self, corpo: dict) -> None:
+		self._api("POST", "Justificativas", json_body=corpo)
+
+	def salvar_afastamento(self, corpo: dict) -> None:
+		self._api("POST", "FuncionariosAfastamentos", json_body=corpo)
+
+	def excluir_afastamento(self, params: dict) -> None:
+		self._api("DELETE", "FuncionariosAfastamentos/Cpf", params=params)
+
+	def salvar_estrutura(self, corpo: dict) -> None:
+		self._api("POST", "Estruturas", json_body=corpo)
+
 	def calcular_totais(self, cpf: str, data_inicio: date, data_fim: date) -> dict:
 		corpo = {
 			"FuncionarioCpf": cpf,

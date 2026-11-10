@@ -9,7 +9,7 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
 from hrms_secullum_brasil.apuracao import cockpit_escala as ce
-from hrms_secullum_brasil.apuracao import whatsapp, whatsapp_escala
+from hrms_secullum_brasil.apuracao import testes_relogio, testes_whatsapp, whatsapp, whatsapp_escala
 from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 from hrms_secullum_brasil.apuracao.test_apuracao import EMPRESA, TERCA, criar_raw, hash_curto
 from hrms_secullum_brasil.apuracao.test_inconsistencia_mantida import perfil_comercial
@@ -32,10 +32,12 @@ class TestWhatsappEscala(FrappeTestCase):
 		self.mock = MockEvolutionClient()
 		frappe.flags.whatsapp_mock = self.mock
 		self.addCleanup(setattr, frappe.flags, "whatsapp_mock", None)
-		frappe.db.set_single_value("Configuracao Apuracao", "whatsapp_envio", "Ligado")
+		testes_whatsapp.ligar()
 		relogio = patch.object(whatsapp, "now_datetime", lambda: NOVE_HORAS)
 		relogio.start()
 		self.addCleanup(relogio.stop)
+		# a publicação do sábado 07/11 não pode cair nas 48h com o calendário real andando
+		testes_relogio.congelar(self, NOVE_HORAS)
 		for nome in frappe.get_all(
 			REGRA, filters={"evento": ["in", [com.ESCALA, com.COBRANCA]]}, pluck="name"
 		):

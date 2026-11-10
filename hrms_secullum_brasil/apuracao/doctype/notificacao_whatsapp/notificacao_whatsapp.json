@@ -11,6 +11,8 @@
   "alerta",
   "regra",
   "chave",
+  "numero_teste",
+  "sair_em",
   "column_break_1",
   "situacao",
   "tentativas",
@@ -25,7 +27,20 @@
   "id_mensagem",
   "column_break_ciencia",
   "entregue_em",
-  "lida_em"
+  "lida_em",
+  "d1_section",
+  "dia",
+  "inconsistencias",
+  "filtro",
+  "sem_resposta",
+  "resposta_colaborador",
+  "d1_col",
+  "descarte_categoria",
+  "descarte_motivo",
+  "descartada_por",
+  "descartada_em",
+  "codigo_hash",
+  "codigo_expira"
  ],
  "fields": [
   {
@@ -82,6 +97,20 @@
    "search_index": 1
   },
   {
+   "fieldname": "numero_teste",
+   "fieldtype": "Data",
+   "label": "Enviada ao número de teste",
+   "read_only": 1,
+   "depends_on": "numero_teste"
+  },
+  {
+   "fieldname": "sair_em",
+   "fieldtype": "Datetime",
+   "label": "Sai em",
+   "read_only": 1,
+   "description": "Ritmo do envio: horário sorteado para a mensagem sair (CW-11)."
+  },
+  {
    "fieldname": "column_break_1",
    "fieldtype": "Column Break"
   },
@@ -92,7 +121,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Situação",
-   "options": "Na fila\nEnviada\nErro\nNão enviada (desligado)\nSem telefone\nAguardando envio manual\nEntregue\nLida",
+   "options": "Na fila\nEnviada\nEnviada (teste)\nErro\nNão enviada (desligado)\nSem telefone\nAguardando envio manual\nEntregue\nLida\nDescartada\nBarrada",
    "read_only": 1
   },
   {
@@ -170,10 +199,90 @@
    "fieldtype": "Datetime",
    "label": "Lida em",
    "read_only": 1
+  },
+  {
+   "fieldname": "d1_section",
+   "fieldtype": "Section Break",
+   "label": "Dia seguinte (D+1)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "dia",
+   "fieldtype": "Date",
+   "label": "Dia do ponto",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "inconsistencias",
+   "fieldtype": "Small Text",
+   "label": "Inconsistências avisadas"
+  },
+  {
+   "fieldname": "filtro",
+   "fieldtype": "Small Text",
+   "label": "Por que não saiu (filtro)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sem_resposta",
+   "fieldtype": "Check",
+   "label": "Sem resposta no prazo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resposta_colaborador",
+   "fieldtype": "Link",
+   "label": "Resposta do colaborador",
+   "options": "Resposta WhatsApp Ponto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "d1_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "descarte_categoria",
+   "fieldtype": "Select",
+   "label": "Descarte",
+   "options": "\nErro de escala\nErro de batida\nOutro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descarte_motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo do descarte",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descartada_por",
+   "fieldtype": "Link",
+   "label": "Descartada por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "descartada_em",
+   "fieldtype": "Datetime",
+   "label": "Descartada em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "label": "Código (hash)",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_expira",
+   "fieldtype": "Datetime",
+   "label": "Código vale até",
+   "hidden": 1,
+   "read_only": 1
   }
  ],
  "links": [],
- "modified": "2026-10-29 10:00:00.000000",
+ "modified": "2026-11-04 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Notificacao WhatsApp",

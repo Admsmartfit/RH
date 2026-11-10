@@ -22,12 +22,36 @@
 
 
 		<template v-else>
-			<router-link
-				:to="{ name: 'Cartao', params: { employee }, query: { ...route.query } }"
-				class="inline-block rounded-md bg-primario-forte px-3 py-1.5 text-sm font-medium text-sobre-primario"
-			>
-				Corrigir no cartão ponto
-			</router-link>
+			<div class="flex flex-wrap items-center gap-3">
+				<router-link
+					:to="{ name: 'Cartao', params: { employee }, query: { ...route.query } }"
+					class="inline-block rounded-md bg-primario-forte px-3 py-1.5 text-sm font-medium text-sobre-primario"
+				>
+					Corrigir no cartão ponto
+				</router-link>
+				<span v-if="escolhido" class="flex items-center gap-2 text-sm text-texto-suave" data-testid="whatsapp-situacao">
+					WhatsApp: <BadgeStatus :valor="escolhido.whatsapp_situacao || 'Pendente'" />
+					<button
+						v-if="escolhido.whatsapp_situacao === 'Aceito'"
+						type="button"
+						class="text-sm font-medium text-perigo-texto underline"
+						@click="pararWhatsapp = true"
+					>
+						Parar o WhatsApp
+					</button>
+				</span>
+			</div>
+			<p v-if="avisoWhatsapp" role="status" class="text-sm text-conforme-texto">{{ avisoWhatsapp }}</p>
+			<DialogoTexto
+				v-if="pararWhatsapp"
+				:aberto="true"
+				titulo="Parar o WhatsApp"
+				:descricao="`${escolhido?.employee_name} pediu para não receber mais os avisos pelo WhatsApp. Para voltar, ele aceita de novo pelo QR code.`"
+				rotulo-confirmar="Parar o WhatsApp"
+				:enviar="({ texto }) => call('hrms_secullum_brasil.apuracao.acoes.parar_whatsapp', { employee, motivo: texto })"
+				@fechar="pararWhatsapp = false"
+				@concluido="concluirParada"
+			/>
 			<Bloco v-if="data" :titulo="`Dia ${dataBR(data)}`" :recurso="dia">
 				<template #acoes>
 					<router-link :to="{ query: semDia }" class="text-sm font-medium text-primario-texto">Fechar o dia</router-link>
@@ -131,10 +155,11 @@
 // do fechamento e o espelho legal do Secullum.
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { createResource } from "frappe-ui";
+import { call, createResource } from "frappe-ui";
 import AuditoriaMarcacao from "@/components/AuditoriaMarcacao.vue";
 import BadgeStatus from "@/components/BadgeStatus.vue";
 import Bloco from "@/components/Bloco.vue";
+import DialogoTexto from "@/components/DialogoTexto.vue";
 import Minutos from "@/components/Minutos.vue";
 import TimelineDay from "@/components/TimelineDay.vue";
 import { useFiltros } from "@/composables/useFiltros";
@@ -182,6 +207,16 @@ const dia = createResource({
 	makeParams: () => ({ employee: employee.value, data: data.value }),
 	auto: Boolean(employee.value && data.value),
 });
+
+// docs/PRD-whatsapp-aceite-auditoria.md (CW-06): o colaborador pede ao gerente para parar o WhatsApp
+const escolhido = computed(() => (lista.data || []).find((c) => c.name === employee.value));
+const pararWhatsapp = ref(false);
+const avisoWhatsapp = ref("");
+function concluirParada() {
+	pararWhatsapp.value = false;
+	avisoWhatsapp.value = "WhatsApp parado: ele não recebe mais os avisos.";
+	lista.reload();
+}
 
 watch([employee, () => filtros.value.competencia], () => employee.value && mes.reload());
 watch([employee, data], () => employee.value && data.value && dia.reload());

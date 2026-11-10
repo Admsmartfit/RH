@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "creation": "2026-11-04 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "editable_grid": 1,
+ "field_order": [
+  "data",
+  "horarios_antes",
+  "horarios_informados",
+  "nao_reconhece",
+  "explicacao",
+  "situacao",
+  "tratamentos"
+ ],
+ "fields": [
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "label": "Dia",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "horarios_antes",
+   "fieldtype": "Data",
+   "label": "Batidas antes",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "horarios_informados",
+   "fieldtype": "Data",
+   "label": "Horários informados",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "nao_reconhece",
+   "fieldtype": "Check",
+   "label": "Não reconhece o dia",
+   "read_only": 1
+  },
+  {
+   "fieldname": "explicacao",
+   "fieldtype": "Small Text",
+   "label": "Explicação",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "default": "Aguardando aprovação",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Aguardando aprovação\nAprovado\nRecusado\nPara o RH",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tratamentos",
+   "fieldtype": "Small Text",
+   "label": "Tratamentos criados",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-04 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Resposta WhatsApp Ponto Dia",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

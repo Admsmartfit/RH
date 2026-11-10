@@ -72,6 +72,12 @@ def test_intervalos_indenizados():
 	assert v["INTER"] == Decimal("45.00")  # 3h pagas como HE 50%
 
 
+def test_pausa_paga_por_liberalidade_a_hora_normal():
+	v = valores(MinutosPeriodo(pausa_paga=15 * 20))
+	assert v["PAUSA_PAGA"] == Decimal("50.00")  # 5h a R$ 10,00, sem acréscimo
+	assert "PAUSA_PAGA" not in valores(MinutosPeriodo(falta=480))
+
+
 def test_aj10_descanso_semanal_suprimido_junto_da_inter():
 	v = valorar(BASE, MinutosPeriodo(interjornada=120, descanso_semanal=180))
 	inter = next(lanc for lanc in v if lanc.codigo == "INTER")

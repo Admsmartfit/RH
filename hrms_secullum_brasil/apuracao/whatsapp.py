@@ -1,19 +1,26 @@
 """WhatsApp pela Evolution API (docs/PRD-monitoramento-horistas.md, MH-04).
 
-Trava em Configuracao Apuracao.whatsapp_envio (Desligado por padrão, DH-6). Cada mensagem é uma Notificacao WhatsApp
-(prova do aviso). Fora das 8h-20h fica na fila (DH-5) e sai na próxima hora útil. Erro de envio não para o job:
+Trava em Configuracao Apuracao.whatsapp_envio (Desligado por padrão, DH-6): Desligado / Teste / Ligado
+(docs/PRD-whatsapp-aceite-auditoria.md). Cada mensagem é uma Notificacao WhatsApp (prova do aviso). Em Teste, tudo
+vai só ao número de teste, com o cabeçalho [TESTE] e os links marcados (a página não grava nada), e não conta como
+aviso. As mensagens saem pela fila, espaçadas por um intervalo sorteado, das 8h às 20h e até o limite do dia (job de
+minuto `enviar_na_hora`). Em Ligado, o colaborador sem aceite não recebe (Barrada). Erro de envio não para o job:
 registra a resposta e abre a pendência operacional `whatsapp_nao_enviado`, com Reenviar.
 """
 
 import hmac
+import random
+import time
 
 import frappe
 from frappe import _
-from frappe.utils import cint, now_datetime
+from frappe.utils import add_to_date, cint, get_datetime, getdate, now_datetime
 
 from hrms_secullum_brasil.apuracao.inconsistencias import registrar_inconsistencia, resolver_inconsistencias
+from hrms_secullum_brasil.engine import aceite_whatsapp as aceite
+from hrms_secullum_brasil.engine import whatsapp_envio as envio
 from hrms_secullum_brasil.engine.comunicacao import aguarda_envio_manual
-from hrms_secullum_brasil.engine.monitoramento_horista import dentro_do_horario, telefone_whatsapp
+from hrms_secullum_brasil.engine.monitoramento_horista import telefone_whatsapp
 from hrms_secullum_brasil.integrations.evolution.client import (
 	ConfigEvolution,
 	EvolutionClient,
@@ -27,8 +34,18 @@ TIPO = "whatsapp_nao_enviado"
 PAPEIS = ("System Manager", "RH Ponto")
 
 
+def modo() -> str:
+	"""CW-08: Desligado / Teste / Ligado."""
+	return frappe.db.get_single_value(CONFIG, "whatsapp_envio") or envio.DESLIGADO
+
+
 def ligado() -> bool:
-	return frappe.db.get_single_value(CONFIG, "whatsapp_envio") == "Ligado"
+	return modo() == envio.LIGADO
+
+
+def ativo() -> bool:
+	"""Teste ou Ligado: a fila anda (em Teste, tudo vai ao número de teste)."""
+	return modo() in (envio.TESTE, envio.LIGADO)
 
 
 def cliente():
@@ -72,23 +89,59 @@ def criar(
 	return doc.name
 
 
+def _config() -> frappe._dict:
+	campos = (
+		"whatsapp_numero_teste",
+		"whatsapp_intervalo_min",
+		"whatsapp_intervalo_max",
+		"whatsapp_limite_dia",
+		"whatsapp_chip_desde",
+		"whatsapp_exigir_aceite",
+	)
+	return frappe._dict({c: frappe.db.get_single_value(CONFIG, c) for c in campos})
+
+
+def _aceitou(employee: str | None) -> bool:
+	return bool(employee) and frappe.db.get_value("Employee", employee, "whatsapp_situacao") == aceite.ACEITO
+
+
 def enviar(
 	nome: str, *, ignorar_trava: bool = False, ignorar_horario: bool = False, manual: bool = False
 ) -> str:
+	"""Travas, nesta ordem: regra em teste (fora do modo Teste), interruptor, aceite do colaborador (Ligado), celular
+	e o ritmo (intervalo sorteado, 8h-20h e limite do dia). `ignorar_horario` = sai agora (código de confirmação,
+	envio manual, reenviar); `ignorar_trava` = botão "Enviar teste" (vai ao número informado)."""
 	doc = frappe.get_doc(NOTIFICACAO, nome)
-	if doc.situacao in ("Enviada", "Entregue", "Lida"):
+	if doc.situacao in ("Enviada", "Entregue", "Lida", envio.ENVIADA_TESTE):
 		return doc.situacao
-	# CE-09: regra em teste não envia sozinha; o RH confere e clica em Enviar (envio manual)
-	if not manual and doc.regra and aguarda_envio_manual(frappe.db.get_value(REGRA, doc.regra, "situacao")):
+	atual = modo()
+	teste = atual == envio.TESTE and not ignorar_trava
+	cfg = _config()
+	# CE-09: regra em teste não envia sozinha; o RH confere e clica em Enviar (envio manual). No modo Teste ela sai
+	# (só para o número de teste): o modo existe para ver cada tipo de mensagem.
+	if (
+		not manual
+		and not teste
+		and doc.regra
+		and aguarda_envio_manual(frappe.db.get_value(REGRA, doc.regra, "situacao"))
+	):
 		doc.db_set("situacao", "Aguardando envio manual")
 		return doc.situacao
-	if not ignorar_trava and not ligado():
+	if not ignorar_trava and atual == envio.DESLIGADO:
 		doc.db_set(
 			{
 				"situacao": "Não enviada (desligado)",
 				"resposta": _("Envio de WhatsApp desligado na Configuração Apuração."),
 			}
 		)
+		return doc.situacao
+	# CW-05: em Ligado, só o colaborador que aceitou recebe (escolha dele, não erro: não abre pendência)
+	if (
+		not ignorar_trava
+		and envio.precisa_de_aceite(atual, doc.destinatario, cint(cfg.whatsapp_exigir_aceite))
+		and not _aceitou(doc.employee)
+	):
+		doc.db_set({"situacao": "Barrada", "filtro": envio.MOTIVO_SEM_ACEITE})
 		return doc.situacao
 	numero = telefone_whatsapp(doc.numero)
 	if not numero:
@@ -100,29 +153,65 @@ def enviar(
 		)
 		_pendencia(doc, _("sem celular válido no cadastro"))
 		return doc.situacao
-	if not ignorar_horario and not dentro_do_horario(now_datetime().hour):
-		doc.db_set("situacao", "Na fila")
-		return doc.situacao
+	if not ignorar_horario:
+		agora = now_datetime()
+		sair_em = _proximo_horario(cfg, agora)
+		doc.db_set({"situacao": "Na fila", "sair_em": sair_em})
+		# sem espaçamento (intervalo máximo 0): sai na hora, se estiver no horário e couber no limite do dia
+		if sair_em > agora or not _cabe_no_limite(cfg):
+			return doc.situacao
+	return _mandar(doc, numero, teste, cfg)
+
+
+def _mandar(doc, numero: str, teste: bool, cfg) -> str:
+	destino, texto = numero, doc.texto
+	if teste:
+		from hrms_secullum_brasil.utils.sem_login import assinar_teste
+
+		destino = telefone_whatsapp(cfg.whatsapp_numero_teste)
+		if not destino:
+			doc.db_set(
+				{
+					"situacao": "Erro",
+					"resposta": _("Modo de teste sem um Número de teste válido na Configuração Apuração."),
+				}
+			)
+			return doc.situacao
+		texto = envio.texto_de_teste(
+			envio.marcar_links_de_teste(texto, assinar_teste),
+			envio.cabecalho_teste(_nome_no_cabecalho(doc), doc.destinatario, numero),
+		)
 	try:
-		resposta = cliente().enviar_texto(numero, doc.texto)
+		resposta = cliente().enviar_texto(destino, texto)
 	except EvolutionError as exc:
 		doc.update({"situacao": "Erro", "resposta": str(exc)[:1000]})
-		_pendencia(doc, str(exc))
+		if not teste:
+			_pendencia(doc, str(exc))
 	else:
 		doc.update(
 			{
-				"situacao": "Enviada",
+				"situacao": envio.ENVIADA_TESTE if teste else "Enviada",
 				"numero": numero,
+				"numero_teste": destino if teste else None,
 				"enviada_em": now_datetime(),
 				"resposta": str(resposta)[:1000],
-				"id_mensagem": id_da_mensagem(resposta),
+				# a de teste não recebe o retorno de entregue/lida: não conta como aviso (CW-09)
+				"id_mensagem": None if teste else id_da_mensagem(resposta),
 			}
 		)
-		if doc.employee and doc.destinatario != "Teste":
+		if doc.employee and doc.destinatario != "Teste" and not teste:
 			resolver_inconsistencias(doc.employee, TIPO)
 	doc.tentativas = cint(doc.tentativas) + 1
 	doc.save(ignore_permissions=True)
 	return doc.situacao
+
+
+def _nome_no_cabecalho(doc) -> str:
+	if doc.destinatario == "Colaborador":
+		return doc.employee_name or doc.employee or "-"
+	if doc.destinatario == "Gestor" and doc.employee_name:
+		return _("gestor de {0}").format(doc.employee_name)
+	return doc.destinatario or "-"
 
 
 def _pendencia(doc, motivo: str) -> None:
@@ -139,15 +228,98 @@ def _pendencia(doc, motivo: str) -> None:
 	)
 
 
-def enviar_pendentes() -> int:
-	"""Cron de hora em hora: o que ficou na fila (fora do horário) sai entre 8h e 20h."""
-	if not ligado() or not dentro_do_horario(now_datetime().hour):
+# ------------------------------------------------------------------ ritmo do envio (CW-11 a CW-13)
+
+
+def _proximo_horario(cfg, agora):
+	# sem espaçamento (intervalo máximo 0) a fila não conta: a mensagem sai agora (ou às 8h)
+	ultima = (
+		frappe.get_all(
+			NOTIFICACAO,
+			filters={"situacao": "Na fila", "sair_em": ["is", "set"]},
+			pluck="sair_em",
+			order_by="sair_em desc",
+			limit=1,
+		)
+		if cint(cfg.whatsapp_intervalo_max) > 0
+		else []
+	)
+	return envio.proximo_horario(
+		get_datetime(ultima[0]) if ultima else None,
+		agora,
+		cint(cfg.whatsapp_intervalo_min),
+		cint(cfg.whatsapp_intervalo_max),
+		random.random(),
+	)
+
+
+def enviadas_hoje() -> int:
+	return frappe.db.count(
+		NOTIFICACAO,
+		{"situacao": ["in", envio.ENVIADAS_NO_DIA], "enviada_em": [">=", getdate(now_datetime())]},
+	)
+
+
+def limite_de_hoje(cfg=None) -> int:
+	cfg = cfg or _config()
+	return envio.limite_do_dia(
+		getdate(now_datetime()),
+		_data_do_chip(cfg.whatsapp_chip_desde),
+		cint(cfg.whatsapp_limite_dia),
+	)
+
+
+def _data_do_chip(valor):
+	"""Data vazia volta do banco como 0001-01-01: sem data = sem aquecimento."""
+	data = getdate(valor) if valor else None
+	return data if data and data.year > 2000 else None
+
+
+def _cabe_no_limite(cfg) -> bool:
+	return enviadas_hoje() < limite_de_hoje(cfg)
+
+
+def enviar_na_hora() -> int:
+	"""Cron de minuto (CW-11): manda as mensagens da fila cujo horário chegou, uma por vez e esperando o intervalo
+	sorteado entre elas, até o limite do dia (CW-12/CW-13). O que passar fica para o dia seguinte, na ordem."""
+	if not ativo() or not envio.dentro_do_horario(now_datetime()):
 		return 0
+	cfg = _config()
+	vagas = limite_de_hoje(cfg) - enviadas_hoje()
+	if vagas <= 0:
+		return 0
+	fila = frappe.get_all(
+		NOTIFICACAO,
+		filters={"situacao": "Na fila"},
+		or_filters=[["sair_em", "is", "not set"], ["sair_em", "<=", add_to_date(now_datetime(), seconds=55)]],
+		fields=["name", "sair_em"],
+		order_by="sair_em asc, creation asc",
+		limit=vagas,
+	)
+	for linha in fila:
+		espera = (get_datetime(linha.sair_em) - now_datetime()).total_seconds() if linha.sair_em else 0
+		if espera > 0:
+			time.sleep(espera)
+		enviar(linha.name, ignorar_horario=True)
+		frappe.db.commit()
+	return len(fila)
+
+
+def enviar_pendentes() -> int:
+	"""Cron de hora em hora: o que está na fila sem horário de saída (de antes do ritmo) ganha um, em ordem."""
+	if not ativo():
+		return 0
+	cfg = _config()
 	nomes = frappe.get_all(
-		NOTIFICACAO, filters={"situacao": "Na fila"}, pluck="name", order_by="creation asc"
+		NOTIFICACAO,
+		filters={"situacao": "Na fila", "sair_em": ["is", "not set"]},
+		pluck="name",
+		order_by="creation asc",
 	)
 	for nome in nomes:
-		enviar(nome)
+		frappe.db.set_value(
+			NOTIFICACAO, nome, "sair_em", _proximo_horario(cfg, now_datetime()), update_modified=False
+		)
 	return len(nomes)
 
 

@@ -29,5 +29,17 @@ frappe.ui.form.on("Configuracao Apuracao", {
 				__("Enviar")
 			)
 		);
+		// docs/PRD-whatsapp-aceite-auditoria.md (CW-01): cartaz com o QR code da página do aceite, para imprimir
+		frm.add_custom_button(__("Cartaz do WhatsApp"), () =>
+			frappe.prompt(
+				{ fieldname: "company", fieldtype: "Link", options: "Company", label: __("Empresa (unidade)") },
+				({ company }) =>
+					window.open(
+						`/api/method/hrms_secullum_brasil.apuracao.aceite_whatsapp.cartaz?company=${encodeURIComponent(company || "")}`
+					),
+				__("Cartaz do WhatsApp"),
+				__("Gerar PDF")
+			)
+		);
 	},
 });

@@ -1855,3 +1855,690 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Escala real de set/out do rodízio (Vaniere, Diego, Caroline, Arthur Muzzi): proposta montada pelas batidas (folga = até
   2 dias sem batida por semana, preferindo os dias habituais de folga; a partir da admissão); aplicação aguardando a
   conferência do RH. Carlos ficou de fora (trabalha seg-sex).
+
+## Escala real aplicada, feriado de Vitória, conferência com o Secullum e PRD do PDF (02/11/2026)
+
+- Escala de set/out do rodízio sábado a quarta gravada pelo cockpit (`gravar`, com justificativa; repouso = domingo
+  se folga, senão a 1ª folga; a 2ª folga como "Folga compensada"): faltas dos quatro de 48 para 3.
+- Feriado Regional "Aniversário de Vitória" (ES/Vitória, 08/09) e listas 2026/2027 das empresas de Vitória; 08/09
+  reapurado (faltas zeradas). Não há outros feriados estaduais/municipais cadastrados (a confirmar com o RH).
+- Conferência das folhas do Secullum (26/09-25/10, instrutores VV e ASG Praia): relatório com dados reais em
+  `privado/` (fora do git, novo no `.gitignore`). Pendências de decisão: banco de horas desde 01/11 × Secullum já em
+  outubro; tolerância quando o intervalo é feito em outro horário (provável ajuste no `engine/tolerancia.py`);
+  tolerância também para horista (Art. 58); horário de sábado de uma ASG desatualizado no Secullum.
+- `docs/PRD-relatorios-pdf.md`: Cartão Ponto e Extrato do Período com o layout do Secullum (sem a marca do Secullum —
+  RP-D5), modelos de colunas, três pontos de geração, etapas RP-1 a RP-6.
+
+## Decisões da conferência com o Secullum aplicadas (02/11/2026)
+
+- P1: banco de horas dos 13 Auxiliares de Serviços Gerais vale desde 26/09/2026 (igual ao Secullum); recepcionistas
+  continuam desde 01/11 (a confirmar).
+- P2 (`engine/tolerancia.py`): com compensação (intervalo flexível), a tolerância compara só a entrada e a saída da
+  jornada e o saldo do dia — o horário do intervalo não tira a tolerância.
+- P3 (`engine/apuracao_dia.py`, AJ-14): horista com jornada prevista — até `tolerancia_diaria` a menos que a carga
+  vale a carga (sem desconto); a mais, paga o real (horas normais). Pelo total do dia (perfil Horista = carga).
+- Operação reapurada (01/09 a 01/11) e bench reiniciado. Conferência 26/09-25/10: Alvaro e Pablo idênticos ao
+  Secullum; Heytor −8 e Nathalia −5 (sábado/domingo neutros no perfil); Flavio +1:33 (o Secullum descarta o tempo
+  antes das 19:00). Isaias: banco −2:15 (Secullum −2:21); Maria de Lourdes +3:52 (Secullum +3:06; sábado — P4).
+- PRD do PDF v2: idêntico às referências, identidade (logo, linha de emissão, rodapé) editável pelo RH (RP-D6),
+  Nº FOLHA = matrícula do Secullum, colaborador não emite.
+
+## Parecer de conformidade trabalhista (02/11/2026)
+
+- `docs/parecer-trabalhista-2026-11.md`: alto risco — A1 três perfis de 45h/semana sem HE (CF art. 7º, XIII; o
+  programa não calcula HE semanal do mensalista), A2 instrutores horistas sem jornada contratual (jornada móvel e
+  variável; tempo parcial × intermitente), A3 Escola Canadense sem a CCT dos professores, A4 obrigações do programa de
+  tratamento (AEJ, INPI — Portaria 671), A5 feriados municipais/estaduais faltando; médio — M1 INTER sem encargos,
+  M2 licenças do art. 473/maternidade/paternidade/amamentação, M3 prêmio × atestado, M4 domingos em serviços,
+  M5 saldo do banco a 50% na rescisão, M6 valores "Exemplo" na CCT, M7 reflexo do DSR majorado (OJ 394).
+- `docs/plano-conformidade-2026-11.md`: problemas × soluções; arquitetura recomendada = Secullum como sistema oficial
+  (registro, tratamento, espelho, AEJ) alimentado pelo programa (envio de correções já existe, trava desligada) e
+  o programa como gestão/pré-folha; ajustes de regra no Secullum e no programa; decisões pendentes.
+- Suíte Frappe completa depois das mudanças do motor (tolerância do intervalo, atraso, horista, intervalo flexível, virada, prorrogação, competência, horário no cartão): 470 testes OK (1 pulado).
+
+## Envio de tudo ao Secullum — análise da API (02/11/2026)
+
+- Swagger público lido (rotas completas em `docs/secullum_api.md`). Dá para enviar: funcionário e horário vigente,
+  correções do cartão, justificativas (inclusive **criar** justificativas, com `calcularComoFolga`), afastamentos,
+  estruturas, documentos para assinatura. **Não dá:** criar/alterar horários (onde ficam tolerância, carga, faixas de
+  extra, noturno, DSR e banco), feriados, escalas.
+- `docs/integracao-secullum-envio.md`: escala → horário de carga no Secullum + folgas por justificativa "FOLGA" dia a
+  dia; ginástica → um horário por padrão semanal (ficha para o RH criar uma vez) ou o horário "HORISTA GINASTICA";
+  auditoria noturna da configuração dos horários (GET) contra a CCT; testes necessários no banco real.
+- `docs/PRD-sincronizacao-secullum.md`: fila única de envio ao Secullum com travas por tipo (Bloqueado → Teste →
+  Ligado), Tarefa Secullum (passo a passo que bloqueia até o RH confirmar e o programa verificar pelo GET), Caso de
+  Teste Secullum (teste caso a caso com funcionário real, sem banco de homologação), folgas da escala por
+  justificativa "FOLGA", licenças legais, afastamentos, horários de carga (ginástica 3h/2h: falta e atestado pela
+  carga do dia — SS-D4), auditoria noturna dos horários; etapas SS-0 a SS-9.
+- PRD de sincronização v2: ginástica (e musculação) por **justificativas por quantidade** (AT/FT com `valorDia`, passos de 30 min) em vez de um horário por padrão; fim de semana pela escala; teste com qualquer funcionário (caso aberto) + matriz de cobertura; banco do Secullum: se ligado, continua.
+- PRD de sincronização: SS-D8 (passos de 30 min; fora do passo, atestado para cima e falta para baixo) — sem perguntas em aberto; pronto para a etapa SS-0.
+- SS-0 (02/11/2026): leitura somente leitura dos 64 horários do banco 73365 (`GET Horarios`); 40 em uso (90
+  colaboradores com número de horário). Relatório em `privado/horarios_secullum_2026-11-02.md` (fora do git):
+  art. 58 desligado e tolerância 0/0 com limite de 10 min/dia na maioria (extras de 6–10 min não pagas), horistas
+  sem 2ª faixa acima de 8h, escola com folga trabalhada a 0%, horário 63 com 45h, interjornada desligada no 11.
+  Grupos de faixas do Secullum: 0 Úteis, 1 Sábado, 2 Domingo, 3 Feriado, 4 Folga. Banco não fica no horário.
+- Prints da tela do Secullum (menu, horários, justificativas, motivos) recebidos. Justificativas lidas pela API: 23, todas sem opções (ATESTAD sem Ajuste: atestado sem horas em coluna); TREINAM com valorDia 02:00 (confirma o campo). PRD: reutilizar as existentes (L-GALA, FALECIM, L-MATER, L-PATER…), caso T-J3 (atualizar opções pelo POST). Telas Escalas Mensais e Importação de Dados a investigar.
+
+## Sincronização programa → Secullum — implementação (02/11/2026, PRD-sincronizacao-secullum)
+
+- **SS-1 Base:** DocTypes `Envio Secullum` (fila única), `Tarefa Secullum`, `Caso de Teste Secullum`, `Empresa
+  Liberada Secullum`; travas por tipo na Configuração Secullum (Bloqueado/Teste/Ligado; cartão e horários ganharam
+  "Teste"); "Suspender todos os envios"; Ligado só com os casos obrigatórios aprovados; matriz de testes. Puro:
+  `integrations/secullum/sincronizacao.py` (catálogo de 23 casos, AT/FT com arredondamento SS-D8, operações, conferência).
+- **SS-2 Auditoria:** `integrations/secullum/auditoria_horarios.py` (achados com passo a passo e campos para conferir:
+  art. 58, tolerância do dia, limites, "qualquer minuto", interjornada, faixas, 8h do horista, noturno, DSR, 44h);
+  `ingestion/auditoria_secullum.py` (job 03:00, "Auditar agora", "Marquei como feita" relê e confirma, "Dispensar").
+- **SS-3 Justificativas e licenças:** 11 Leave Types legais (fixture, com limite de dias); justificativas da regra e
+  AT/FT (32) pelo `POST Justificativas`, reaproveitando as existentes (L-GALA, FALECIM, L-PATER, ATESTAD, FOLGA…).
+- **SS-4 Horista:** job 06:20 (ontem e anteontem): falta → FT<carga>, atestado → AT<carga>; retira a FT se a batida
+  chegar. A carga vem da apuração (escala/perfil).
+- **SS-5 Folgas:** Escala Mensal on_update → FOLGA nos dias futuros de repouso/folga compensada; desfaz quando vira
+  trabalho; dia com batida cancela. Opção "FOLGA em todos os períodos do dia" (decidida pelo caso T-F2).
+- **SS-6 Afastamentos:** Leave Application aprovada → dia a dia (até 3 dias) ou afastamento (mais longa, férias,
+  maternidade); cancelada → desfaz.
+- **SS-7 Cartão/horários:** modo Teste nas travas existentes (`envio_cartao`, `jornada_assinatura.envio_liberado`).
+- **SS-8 Estrutura:** `POST Estruturas` com gestores (funcionários) e ativos da empresa. **Documentos para assinatura
+  no app do Secullum: não implementado** (opcional; depende do tipo de arquivo e do fluxo de assinatura no Secullum).
+- **SS-9:** "Empresas liberadas" para ligar uma empresa por vez.
+- Fechamento de Ponto bloqueia com envio Erro/Divergente no período ou Tarefa Secullum pendente que muda valor.
+- Testes: `ingestion/test_sincronizacao_secullum.py` (13), `integrations/secullum/tests/test_sincronizacao.py` (24);
+  envio do cartão, assinatura, fechamento, conferência, coleta, cartão, cockpit, escala e recesso OK; pytest 1263
+  (engine+integrações 97%).
+
+## Dia de fechamento mais fácil de achar (03/11/2026)
+
+- Empresa: campos do ponto agrupados na seção "Ponto e folha (programa)", com o dia de fechamento em primeiro.
+- Painel: com a empresa escolhida, o RH define/altera o dia ao lado do período (`competencia.definir_dia_fechamento`,
+  só RH; a tela recarrega no período novo). Teste em `apuracao/test_competencia.py`; lint, build e e2e OK.
+
+## "Manter: será tratada no Secullum" em toda inconsistência (03/11/2026, pedido do RH)
+
+- `engine/sugestoes.py`: `MANTER_SECULLUM` (ação `manter`, referência `secullum`) sempre como última sugestão de
+  todo tipo; o termo de ocorrências ignora essa opção no texto de ciência.
+- Cartão ponto: a opção mantém direto com o motivo "Será tratada no Secullum" (sem pedir texto). Central: botão
+  "Manter (tratar no Secullum)" na inconsistência e em lote.
+- Testes: engine 1044 (98%), cartão/painel/termo OK, e2e da central 7/7 (novo caso) e do cartão OK.
+
+## Enviar ao Secullum correções já salvas (03/11/2026)
+
+- `cartao_ponto.enviar_correcoes` / `acoes.enviar_cartao_secullum` (RH): correções aprovadas do período (ou dos dias)
+  que ainda não foram ao Secullum entram na fila do cartão (com a justificativa do abono); respeita a trava (Bloqueado
+  explica o que fazer; Teste só com caso aberto), pula o já enviado e o período fechado, avisa abono sem justificativa.
+- Cartão: botões "Enviar ao Secullum o que ainda não foi" (Alterações do período) e "Enviar este dia ao Secullum"
+  (balão). Teste novo em `ingestion/test_envio_cartao.py`; lint, build e e2e do cartão OK.
+
+## Intervalo no começo ou no fim do expediente (03/11/2026, pedido do RH)
+
+- `engine/intervalos.py:posicao_do_intervalo`: com intervalo exigido no dia, o maior intervalo (até o máximo; dois
+  turnos ficam de fora) precisa de `trabalho_minimo_apos_intervalo` (CCT, padrão 60 — "1 ou 2 horas" do RH) de
+  trabalho depois da volta e antes da saída. Tipo novo `intervalo_fora_de_hora` (Média): Select, sugestões (explica o
+  termo escrito de alteração do intervalo), central, termo de ocorrências, WhatsApp de cobrança.
+- Testes: engine 1050 (98%).
+- Operação (03/11): reapurado 01/09–02/11 (5.670 dias em 43 s): 35 pendências `intervalo_fora_de_hora`.
+
+## Escalas: feriado em aberto, convite por dia e turnos por tipo de dia (03/11/2026, pedido do RH)
+
+- **Feriado é dia de escala:** `cockpit_escala.dias_do_colaborador` e `escala.linhas_do_perfil` deixam o feriado neutro
+  (em aberto) até alguém ser escalado; o perfil não vale no feriado. Apuração sem mudança (feriado já tem previsto 0;
+  trabalhado = feriado trabalhado). Operação: 27 linhas de 20/11 copiadas do perfil (sem turno nem justificativa)
+  voltaram para Neutro.
+- **Convite para turno:** a lista de quem recebe não carregava ao abrir (o `watch` não era imediato) — corrigido;
+  turnos filtrados pelo tipo do dia; "Outro horário" com pausa; marcar todos / só sem quebra / desmarcar. O botão
+  "Pedir disponibilidade do mês" saiu da tela (backend mantido).
+- **Turnos por tipo de dia:** `Turno Padrao.tipo_dia` (Dia útil, Sábado, Domingo, Feriado; vazio = todos) e
+  `dias_semana`. Regra pura `engine/turno_padrao.py` (`tipo_do_dia`, `turno_do_dia`, `sugerir_turnos`,
+  `periodos_das_marcacoes`); Frappe `configuracao_ponto/turnos.py` (`sugeridos`, `criar_sugeridos`), tela
+  "Turnos pelo histórico" (`DialogoTurnosSugeridos.vue`). Operação: 145 turnos criados por empresa × cargo × tipo de
+  dia (90 dias de batidas); os 12 genéricos T1/T2 sem cargo foram desativados (`ativo` = 0, reversível).
+- Testes: engine 1282 (98%); `apuracao/test_feriado_escala.py` (2), turnos, escala, dia neutro, cockpit, convite e
+  planejador OK; `test_convite_turno` deixou de depender da data de hoje; lint, build e e2e 71/71 (foco ajustado ao
+  atalho do dia de fechamento).
+
+## Horista: intervalos do termo no cartão, alerta e termo com 4h15+ (03/11/2026, pedido do RH)
+
+- O botão "Incluir os intervalos no cartão" do alerta do horista era só "editar" (punha o foco na batida). Agora é a
+  ação `incluir_intervalos`: `monitoramento_horistas.intervalos_do_alerta` devolve o intervalo de cada dia (meio do
+  expediente, `sugestoes.intervalo_do_termo`, só dia sem pausa) e o cartão põe nas células (a saída original vai para
+  a Saída 2). Salvo com o motivo do termo, a pausa é paga (`adaptador.pausas_do_termo`): as horas do dia não mudam
+  (ex.: 12:08-17:00 = 4:52 → 12:08, 14:34, 14:49, 17:00 = 4:52). Texto da tela corrigido (não vai mais ao banco).
+- Alerta do horista (DH-1): todo dia acima de 4h com intervalo suprimido conta, inclusive 4h15 ou mais seguidas (antes
+  só até a tolerância). A tolerância continua só tirando a pendência do dia na apuração. `Alerta Horista Dia` ganhou
+  batidas e o intervalo proposto; o Termo de Ajuste de Intervalo sai com os horários preenchidos e a cláusula da
+  pausa paga (decisão de 28/10) no lugar de "não é remunerado".
+- Termo de ocorrências: os dias do alerta no período entram com "Incluir o intervalo X às Y" mesmo sem pendência
+  própria no dia (`termo_ocorrencias._dias_do_alerta`).
+- Operação: alerta de out/2026 da EIDINARA recalculado (12 dias, com 31/10) e termo TOP-2026-00005 emitido (12 dias,
+  prazo 06/11). WhatsApp não saiu: trava geral `whatsapp_envio` Desligado e o link usa ponto.localhost (sem endereço
+  público).
+- Testes: engine 1283 (98%); monitoramento (15), termo (13), cartão, painel OK; lint, build, e2e cartão/central 17/17.
+
+## Escalas mais enxuta e pendência do horista no dia certo (03/11/2026, pedido do RH)
+
+- Tela Escalas: sem o botão "Planejador 5x2" (o planejador continua no menu). Ferramentas num menu recolhível
+  ("Ferramentas ▾": Copiar, Modelos, Sugestões); à vista só "Convidar para um turno". Paleta de turnos recolhível
+  (lembrada no navegador), com abas por tipo de dia e chips compactos (só o horário; o nome no rótulo acessível).
+  Corrigido: a paleta mostrava os turnos de todos os cargos (o filtro do cargo não era usado no template).
+- "Horista além de 4 h sem intervalo": a pendência do mês ficava no último dia do mês (31/10, às vezes um dia neutro
+  sem trabalho); agora fica no último dia em que aconteceu (a que está no termo ou mantida não muda de dia).
+  Operação: 23 pendências de out/2026 recalculadas sem WhatsApp (a de EIDINARA, no termo, ficou em 31/10).
+- Testes: engine 1283; monitoramento 15 OK; lint, build e e2e 70/70.
+
+## Páginas sem login recusavam a resposta em navegador logado (03/11/2026)
+
+- Convite de turno: "Não foi possível responder" ao abrir o link num navegador com sessão do Frappe (o RH testando):
+  o POST ia sem `X-Frappe-CSRF-Token` e o Frappe recusava (CSRFTokenError). No celular do colaborador (visitante)
+  funcionava. `utils/sem_login.preparar` põe o token da sessão no contexto de www/convite, assinar, disponibilidade e
+  termo, e as páginas mandam o cabeçalho. Conferido com sessão logada e como visitante; e2e 70/70.
+
+## Convite aprovado não chegava ao cartão (03/11/2026)
+
+- Escalar quem respondeu "Posso" grava **rascunho** (o cartão e a apuração só leem a escala publicada). Pelo
+  assistente de quebras (turno no lugar do fixo, com justificativa) o convite ainda ficava aberto.
+- `convite_turno.marcar_escalado` (chamado em `cockpit_escala.salvar_rascunho`): o convite aberto do dia fica
+  Preenchido quando quem disse "Posso" é escalado, por qualquer caminho. Tela: depois de escalar, pergunta se publica já
+  só a escala daquela pessoa.
+- Operação: CONV-00002 preenchido e a escala do Alvaro publicada (PUB-ESC-00001): 11/11 = 05:00-09:00. Rascunhos de
+  outras pessoas seguem aguardando publicação.
+- Testes: convite 4 (novo caso), cockpit 16 (duas rodadas seguidas, sem sobra no banco); lint, build, e2e escalas 8/8.
+
+## Manual de teste do envio ao Secullum (03/11/2026)
+
+- `docs/manual-teste-envio-secullum.md`: passo a passo para o RH (receita de todo caso, os 23 casos em ordem com o
+  que conferir no Secullum, o passo obrigatório "Preparar justificativas" com um caso de justificativa aberto, como
+  ligar por empresa, links e problemas comuns). Estado da operação: integração ativa, travas em Teste, nenhum caso.
+
+## Tolerância de 10 min para exigir o intervalo (04/11/2026, decisão do RH)
+
+- Pergunta do RH: 5 a 10 min a mais no dia não deveriam ser inconsistência. Atraso e HE já tinham a tolerância do art.
+  58, § 1º; o que acusava era o intervalo (4h06 sem pausa = 15 min suprimidos + alerta do horista). Decisão: aplicar
+  a tolerância do art. 58 também à exigência do intervalo (Súmula 437, IV: "habitualmente"); risco registrado: parte
+  dos tribunais trata o intervalo como norma de saúde, sem tolerância.
+- `defaults_legais.TOLERANCIA_JORNADA_INTERVALO_MIN = 10`; CCT `tolerancia_jornada_intervalo` (padrão 10, 0 = sem);
+  `engine/intervalos.intervalo_exigido` e `sugestoes.intervalo_exigido` somam a tolerância aos limites de 4h e 6h.
+- Operação (backup 20261104_062314): reapurado 01/09–03/11 (2 min): dias com supressão no período aberto 356 → 60;
+  alertas de horista no limite 23 → 1. Termo TOP-2026-00005 (EIDINARA) cancelado com motivo e reemitido como
+  TOP-2026-00006 (só 31/10, 4h52; WhatsApp aguardando envio manual, trava geral desligada).
+- Testes: engine 1288 (novos casos 4h10/4h11, CCT 0); monitoramento 16 (novo: até 4h10 não conta), termo, cartão,
+  apuração, CCT, painel e dia neutro OK.
+
+## Batida incluída sempre na ordem do dia (04/11/2026, pedido do RH)
+
+- "Inserir a batida prevista 05:00" punha a hora na primeira coluna vazia (Saída 2); e a inclusão ordenada tratava
+  horário antes da primeira batida como do dia seguinte. Agora `utils/cartao.js` (`ordenarCelulas`,
+  `inserirEmOrdem`) mantém as batidas em ordem crescente: só passa para o dia seguinte o horário antes da hora de
+  virada do perfil (`hora_virada`). Vale para inserir batida, jornada prevista, intervalo do termo (um dia e todos os
+  dias do alerta) e para o horário digitado à mão (as outras batidas se movem).
+- Testes: função (Node, 6 casos: 05:00 antes de 11:00, intervalo no meio, virada às 12h, digitação fora do lugar,
+  texto inválido, sem espaço) e e2e novo do cartão; lint e build OK.
+
+## Prévia dos totais no cartão e feriado na coluna Previsto (04/11/2026, pedido do RH)
+
+- Prévia: dia alterado e não salvo mostra normais/extra/falta/atraso em itálico e "prévia · N pendência(s)".
+  `painel.previa_do_dia` → `cartao_ponto.previa`: a entrada do dia (`montar_entrada`) com as batidas da grade (e o
+  abono marcado) passa por `engine.apuracao_dia.apurar_dia`; nada é gravado; respeita a equipe (employees_visiveis).
+  O oficial continua sendo a reapuração do Salvar (DSR e banco da semana ficam fora da prévia).
+- Feriado: a coluna Previsto mostra "Feriado" (o dia não tem jornada prevista; o trabalhado é HE de feriado). Dúvida
+  do RH: 02/11 (Finados) do Artur, 8h14 trabalhadas = 8h14 de extra, normais 0 — correto.
+- Testes: cartão 13 (3 novos: prévia sem gravar, extra/abono, equipe e horário inválido); e2e do cartão com a prévia;
+  acessibilidade OK; lint e build OK.
+
+## "Abrir no cartão ponto" na competência da folha (04/11/2026)
+
+- A central abria o cartão no mês da data (30/10 → outubro). Agora `painel.inconsistencias` manda a `competencia` de
+  cada item (`competencia.competencia_do_periodo`, pelo dia de fechamento da empresa: 30/10 com fechamento no dia 25 =
+  2026-11) e o link usa esse valor. Teste em `apuracao/test_competencia.py`; painel 18, e2e central/cartão/teclado 22.
+
+## Página do termo mais simples: incluir horário com ordem e prévia (04/11/2026, pedido do RH)
+
+- `www/termo.html`: no lugar da caixa "Horários certos do dia", cada dia mostra as batidas em ordem com o rótulo
+  (Entrada 1, Saída 1...), "Incluir um horário" (campo de hora + Incluir), × para tirar, "Desfazer as mudanças deste
+  dia" e um quadro com as horas normais e as pendências que sobram. Editar muda a resposta para "Corrigir horário";
+  voltar ao original, "De acordo". Corrigido: o campo de texto aparecia com "De acordo" (`label {display:block}`
+  anulava o `hidden`; agora `[hidden] {display:none !important}`).
+- Servidor: `termo_ocorrencias.previa` (público, POST, link assinado, só termo aberto e item do próprio termo) →
+  `cartao_ponto.previa_sem_checar` (o mesmo cálculo da prévia do cartão; devolve as batidas ordenadas e rotuladas).
+- Testes: termo 14 (novo: ordem, rótulos, pendência que sobra, horário inválido, item de outro termo, termo
+  cancelado), cartão 13; e2e da página com o servidor simulado (incluir, ordem, prévia, resposta, axe) — termo 5/5.
+- Depois (mesmo dia): sem a lista "De acordo / Corrigir horário / Não reconheço" (redundante, pedido do RH). A
+  resposta sai do que a pessoa fez (mexeu = Alterado; não mexeu = De acordo); "Não reconheço este dia" é uma caixa à
+  parte que esconde a correção. Texto do "Assinado com alteração" do gestor ajustado. e2e do termo 6/6 (novo: o que
+  vai na assinatura e o "Não reconheço").
+
+## WhatsApp do dia seguinte — W-1 a W-7 (04/11/2026, docs/PRD-whatsapp-dia-seguinte.md)
+
+- **W-1** Evento "Ponto do dia (D+1)" com `tipo_inconsistencia` na Regra Envio WhatsApp (uma regra por tipo; os
+  tipos são os do "Cobrar", `sugestoes.COBRAVEIS`); textos padrão por tipo em `engine/dia_seguinte.py`; o link de
+  resposta entra sozinho no texto que não tem {link}. Patch `regras_dia_seguinte`: as 2 regras antigas viraram D+1
+  com o tipo fixo (situação, texto e filtros mantidos) e os padrões da Configuração Apuração ficam gravados.
+- **W-2** Filtros de segurança puros (`engine/dia_seguinte.bloqueio`): tipo fora, desligado, período fechado, dia em
+  termo, já respondido, já cobrado, ausência justificada (abono/licença), falta/atraso sem jornada (neutro, feriado,
+  folga), falta de perfil de escala (Escala, Horista, Intermitente, Fragmentada) sem Escala do Mês publicada,
+  pendência aberta há menos de N horas. Barrada = Notificacao "Barrada" com o motivo. Uma mensagem por pessoa e dia.
+- **W-3** Fila "WhatsApp do dia seguinte" (aba da central; `dia_seguinte.fila/enviar/enviar_todas/descartar`):
+  editar e enviar, descartar com motivo (erro de escala, erro de batida, outro), barradas e respostas.
+- **W-4** Liberação gradual: produção só com `d1_minimo_conferidas` (20) envios conferidos; em produção, 3 descartes
+  por erro em 7 dias devolvem a regra a teste (`voltou_para_teste_em`, comentário na regra).
+- **W-5** Página `/ponto/resposta` (link HMAC, vale 7 dias, um uso): editor de horários compartilhado com o termo
+  (`public/js/editor_horarios.js`), explicação, "não reconheço" e confirmação por CPF + código de 6 dígitos (a
+  assinatura do colaborador). Comprovante PDF anexado à `Resposta WhatsApp Ponto` (IP, aparelho, hora, o que
+  confirmou).
+- **W-6** Horários mudados → `cartao_ponto.solicitar`: tratamentos AGUARDANDO aprovação (motivo "Informado pelo
+  colaborador no WhatsApp em ..." e o comprovante); `aprovar_resposta` (gestor da equipe ou RH) aprova (submit +
+  reapuração) ou recusa (com motivo). Aviso ao gestor pela regra "Resposta do colaborador (D+1) — gestor".
+- **W-7** `escalonar` (07:30): sem resposta em 2 dias úteis marca a notificação; o termo diz "(avisado pelo
+  WhatsApp em dd/mm, sem resposta)". No cartão, dia em termo aberto troca "Cobrar" por "Reenviar o link do termo"
+  (`termo_ocorrencias.reenviar_link`).
+- Operação (backup 20261104_095532): migrado; as 2 regras seguem Em teste (falta desligada); envio geral de
+  WhatsApp Desligado. Simulação de 03/11 (sem gravar): 3 pessoas iriam para a fila; 1 falta barrada (perfil de
+  escala sem escala publicada).
+- Testes: engine 1315 (99%; `test_dia_seguinte` 24); Frappe `apuracao/test_dia_seguinte.py` 11 (fila, várias
+  pendências, filtros, recente, liberação e volta, descarte, resposta com CPF+código→solicitação→aprovação, não
+  reconhece/recusa, link adulterado, escalonamento, reenviar o termo), regras de WhatsApp 5, termo 14, cartão 13,
+  monitoramento 16, WhatsApp da escala 6; e2e 26 (2 novos: fila e página de resposta; termo com o editor
+  compartilhado); lint e build OK.
+
+## Página do termo mobile-first (04/11/2026, pedido do RH)
+
+- `www/termo.html` refeita para o celular: coluna única (16–18px nas bordas), toque mínimo de 48px (botões, ×,
+  caixa "Não reconheço" 24px numa linha de 48px), inputs de 16px (sem zoom no iOS), card de resumo (termo, nome,
+  empresa, período, dias para conferir, prazo), termo integral num bloco recolhível com rolagem interna, cada dia com
+  a situação (De acordo / Corrigido / Não reconheço) e "Corrigir este dia" (o editor só abre quando precisa), CPF com
+  máscara e conferência dos dígitos em tempo real, código de 6 caixas com foco automático, colar e preenchimento
+  automático do celular, reenvio com contador de 60 s, ação principal fixa no rodapé (Receber o código → Assinar o
+  termo) que trava com indicador durante o envio, e tela de sucesso (ou "Recusa registrada").
+- Não há assinatura desenhada: a assinatura continua sendo CPF + código (Portaria 671 aceita; não exige desenho).
+  "Horas totais/saldo" não entram no resumo: o termo não traz esse número (seriam inventados).
+- `termo_ocorrencias.CLAUSULAS`: as cláusulas do termo numa lista só — o PDF e a página leem a mesma (`dados`
+  devolve `clausulas`).
+- Testes: termo 14 (Frappe); e2e do termo, D+1 e acessibilidade 16/16 (novo: resumo, termo integral, corrigir o dia,
+  CPF inválido/válido com máscara, código preenchido de uma vez, botão travado no envio, sucesso). Achado no teste:
+  `maxlength=1` cortava o código preenchido pelo celular — removido.
+
+## Central e cartão acompanham o WhatsApp do dia seguinte (04/11/2026, pedido do RH)
+
+- Central: as caixas do lote ficam escondidas atrás de "Tratar várias de uma vez" (casos coletivos; o atalho X liga
+  sozinho). Cada linha mostra o selo do aviso (`engine/dia_seguinte.selo_whatsapp`: "WhatsApp 04/11 · lido ·
+  aguardando resposta até 06/11", "Respondeu — aprovar", "barrado: motivo", "sem resposta (vai para o termo)").
+  O que foi avisado e está no prazo sem resposta sai da lista ("Com o colaborador (N)", filtro `com_colaborador`;
+  `dia_seguinte.com_o_colaborador`); volta sozinho quando o prazo vence ou ele responde; aprovado, some (reapurado).
+- Cartão: cada dia corrigido mostra a origem e a aprovação ("Corrigido pelo colaborador (WhatsApp) · aprovado por X
+  em 05/11", "aguardando aprovação", "Correção recusada: motivo") e o envio ao Secullum (`cartao_ponto.
+  correcao_do_dia`); no topo, o resumo do período (`resumo_das_correcoes`: corrigidos por origem, aguardando,
+  recusados, erro no Secullum).
+- Testes: engine (selos, com o colaborador, origem e resumo); Frappe D+1 12 (novo: central separa, volta ao
+  responder, some ao aprovar; cartão com a correção e o resumo), painel 18, cartão 13; e2e 76 (novo: lote escondido
+  e filtro); lint e build OK.
+
+## Balão do cartão: cobrar = WhatsApp do dia seguinte; edição só do RH (04/11/2026, pedido do RH)
+
+- "Cobrar pelo WhatsApp" virou "Enviar o WhatsApp do dia seguinte (conferir o texto)": a mesma mensagem do D+1 (todas
+  as pendências do dia numa só, com o link de resposta) aparece para conferir e editar antes de enviar
+  (`dia_seguinte.previa_cobranca` / `cobrar`; respeita o envio geral de WhatsApp). Só libera se o dia não foi avisado,
+  ou foi e ficou sem resposta além do prazo (`engine/dia_seguinte.pode_cobrar`); senão a ação fica travada com o
+  motivo visível ("enviado em 04/11: aguardando resposta até 06/11", "na fila de conferência", "já respondeu").
+- No balão, inserir/incluir/desconsiderar batida, intervalo, jornada prevista, abonar, abono parcial e atestado
+  aparecem só para o RH e o Administrador; o gestor fica com termo, manter, folga e o WhatsApp.
+- Testes: engine (pode_cobrar); Frappe D+1 13 (novo: prévia com {link}, envio com o link, trava no prazo, libera depois
+  do prazo, sugestão travada no cartão), cartão 13, WhatsApp da escala 6; e2e cartão/central 20 (novo: gestor não vê
+  as ações de edição); lint e build OK.
+
+## Escala conjunta de empresas no mesmo endereço (04/11/2026, pedido do RH)
+
+- Empresa ganhou o campo "Grupo de escala (escala junto com)" (`Company.grupo_escala`, fixture). Empresas com o mesmo
+  grupo são montadas juntas só na tela Escalas: `cockpit_escala.empresas_da_escala` alimenta a grade
+  (`_colaboradores`), a paleta (`_turnos_da_escala`: turnos das duas, cada um cadastrado e editado na sua empresa;
+  horário igual aparece uma vez), a publicação, copiar/modelo/distribuição, substitutos, convites (`abertos`,
+  `candidatos`; a mensagem leva a empresa de cada pessoa) e as indisponibilidades. A grade mostra a empresa de cada
+  pessoa e o aviso "Escala conjunta". Apuração, folha, CCT, perfis e turnos continuam por empresa.
+- Operação (backup 20261104_120743): FUNCIONAL DA PRAIA FITNESS LTDA e PRAIA FITNESS LTDA no grupo "Praia":
+  INSTRUTOR mostra 3 + 4 instrutores e 14 turnos padrão das duas.
+- Testes: cockpit 17 (novo: grupo junta as duas, empresa de cada pessoa, rascunho da outra entra na publicação, sem
+  grupo fica sozinha), convite 4; e2e escalas e planejador 10; lint e build OK.
+- Correção (mesmo dia): com a escala conjunta a grade sumia — o aviso entrou entre o `v-if` "escolha a empresa" e o
+  `v-else` da grade. O aviso virou uma etiqueta pequena ao lado do título ("+ PRAIA FITNESS LTDA", com as empresas no
+  title). e2e novo: escala conjunta mostra a grade e a etiqueta (escalas 9/9).
+
+## Atalhos para o cadastro dos turnos padrão (04/11/2026)
+
+- Na paleta da tela Escalas: "+ Novo turno" (Desk, com empresa e cargo) e "Editar ou apagar turnos" (lista do Desk
+  filtrada pela empresa — as duas na escala conjunta — e pelo cargo); clique duplo num turno abre o cadastro dele. Só
+  aparece para quem pode criar Turno Padrão (`mes.pode_cadastrar_turnos`). O cadastro continua no Desk (regra do
+  painel). e2e escalas 10/10, cockpit 17.
+
+## Pausa paga do instrutor e horas além da jornada sem autorização (04/11/2026, decisões do RH)
+
+- **Decisões do RH:** o instrutor tem uma pausa de **15 min por liberalidade**. A pausa **não é trabalho** e é paga à
+  parte, só **quando foi feita** (batida ou incluída no cartão). Mais de 25 min além da jornada sem a pausa viram uma
+  **mensagem oficial na fila**, que nunca sai sozinha.
+- **Parâmetro do cargo** `pausa_paga_min`: Designation e linha do cargo na CCT (`cargo.pausa_paga`, propagado por
+  `cargo_padrao`). Com a pausa do cargo, o adaptador não soma a pausa do termo às horas.
+- **Engine:**
+  - `ResultadoDia.pausa_paga` = a maior pausa do dia, até o limite;
+  - `excesso_nao_autorizado` abre `excesso_jornada_nao_autorizada` (Média) quando trabalhado − jornada − (pausa não
+    feita) passa da tolerância do dia;
+  - feriado e neutro ficam de fora.
+  - **Revisão do RH (04/11/2026):** só a pausa **incluída pelo sistema** (WhatsApp, termo, RH) é paga; a batida no
+    relógio é só trabalho (`EntradaDia.marcacoes_incluidas`, de `adaptador.horarios_incluidos`). Com uma pausa feita
+    (batida ou incluída), o excesso conta sobre o trabalhado (jornada + 10 min). Pelo WhatsApp, o cargo com pausa paga
+    inclui uma pausa por dia (`d1.pausas_incluidas`, trava em `dia_seguinte.responder`). Na operação, os 113 dias
+    com pausa batida deixaram de ter pausa paga; seguem 9 pendências de excesso.
+  - Exemplos de 4h sem pausa:
+
+    | Dia | Resultado |
+    |---|---|
+    | até 4h25 | nada |
+    | 4h52 | a pendência |
+    | com a pausa | só o que passar de 4h + 10 min |
+- **Folha:** a rubrica **PAUSA_PAGA** ("Pausa Paga por Liberalidade") é paga a hora normal (`valoracao`) e somada no
+  `fechamento`. Fica em `Apuracao Diaria.pausa_paga`. Incide INSS e FGTS (confirmado pelo RH).
+- **WhatsApp:** `dia_seguinte.SEMPRE_CONFERIR` manda a mensagem oficial à parte (`_notificacao_oficial`, sempre
+  "Aguardando envio manual"). A regra desse tipo não pode ir Em produção. Na sugestão, "Manter" quer dizer que as
+  horas são pagas.
+- **Secullum (API pública):**
+  - a justificativa tem valor fixo, e o cartão só recebe "Justificativa no Grupo"; não há rota para minutos livres;
+  - solução: a justificativa fixa **PAUSA15** (0:15, Ajuste), lançada no primeiro grupo **vazio** do dia, sem cobrir
+    a batida (`s.cabe_no_dia`, `grupo_livre`, `op_justificativa_grupo`). A fila confere o grupo antes de enviar e
+    relê o grupo certo depois;
+  - casos opcionais **T-P1** (cadastro) e **T-P2** (dia trabalhado). O desfazer retira só aquele grupo. Etapa H no
+    manual de teste.
+- **Testes:** pytest 1105 (engine) + 25 (sincronizacao); Frappe `test_pausa_paga` (3) e o aviso oficial no
+  `test_dia_seguinte` (15).
+- **Pendências:**
+  - pôr 15 min no cargo dos instrutores na operação e reapurar;
+  - rodar T-P1/T-P2 com o Secullum, se for usar o envio;
+  - confirmado pelo RH (04/11/2026): a PAUSA_PAGA incide INSS e FGTS, e o tempo acima da pausa do horista é hora
+    normal (a HE só vale acima de 8h/44h, AJ-14; "hora extra" era a regra antiga).
+
+
+## Envio do cartão: a batida do relógio nunca é apagada para abrir espaço (04/11/2026, teste T-C1)
+
+- No T-C1, o RH incluiu a volta do intervalo (11:00) entre 10:45 e 14:02. O envio refazia as colunas a partir da
+  Entrada1: o 14:02 original ficou desconsiderado e virou um 14:02 manual ("Integração"), sem a origem do relógio.
+- Agora `edicao_cartao.operacoes` usa `CartaoPonto/Troca` para mudar de coluna a batida que fica no dia: sempre para
+  uma coluna vazia, da última para a primeira. Só apaga o horário que sai do dia. Sem como reorganizar, dá erro
+  (`ValueError` → envio em Erro + pendência) e nunca apaga a batida do relógio. Uma batida sobre uma justificativa
+  libera o par dela (o Secullum apaga o par).
+- Mock com a Troca; `ROTAS` com a Troca; T-C1 e o manual de teste explicam o que conferir (ícone do relógio nas
+  batidas que andaram).
+- Testes: pytest 1328; Frappe: envio do cartão 8, cartão ponto 13, sincronização 14.
+- **Pendência:** o dia do teste (01/11, AMANDA) ficou no Secullum com o 14:02 original desconsiderado e um 14:02
+  manual. A API não tem rota para voltar a considerar uma batida: ajustar direto no Secullum. Confirmar no próximo
+  T-C1 que a Troca mantém a origem.
+
+## Trava da batida do relógio: confirmação dupla para tirar do dia (04/11/2026, pedido do RH)
+
+- **Regra:** nenhuma batida feita pelo colaborador num aparelho sai do dia sem confirmação dupla de quem corrige.
+  - Conta como aparelho: relógio, tablet, app ou Central do Funcionário (`tipo_fonte` Original; não conta o que foi
+    lançado à mão).
+  - Regra em `apuracao/batida_relogio.py`.
+- **Auditoria** dos caminhos que tiram uma batida:
+  - **Tratamento de Ponto "Desconsiderar marcação"**: o `before_submit` exige `confirmou_apagar_relogio`, que é um
+    campo novo. No Desk, a caixa é a 1ª confirmação e a pergunta ao aprovar é a 2ª.
+  - **Cartão ponto**: a prévia devolve `apaga_relogio`. O diálogo de salvar mostra o alerta, pede a caixa e a
+    segunda pergunta, e manda `confirmar_relogio`.
+  - **Central (painel e Desk)**: `marcacoes_do_dia` marca `do_relogio`; são duas perguntas antes de
+    `desconsiderar_marcacao(confirmar_relogio=1)`.
+  - **Resposta do WhatsApp**: `_resposta_dict.apaga_relogio`; a Fila pergunta duas vezes e
+    `aprovar_resposta(confirmar_relogio=1)`.
+  - **Termo assinado pelo colaborador**: não confirma. O dia dá erro e volta para o RH, pelo fluxo que já existia.
+  - **Envio do cartão ao Secullum**: `_sem_apagar_sem_tratamento` só apaga um horário que o programa tirou com
+    tratamento (`horas_que_podem_sair`). Senão nada vai e o envio fica em Erro + pendência.
+  - **Filas de justificativa** (folga, licença, horista, desfazer de casos): `s.sem_apagar_batida` pula o DELETE
+    numa coluna com horário. Se não sobra nada, o envio fica Cancelado.
+- **Testes:**
+  - pytest 1329;
+  - Frappe: apuração 16, cartão 14, D+1 16, termo 14, envio do cartão 9, sincronização 14, mantida 7, horário 2;
+  - `yarn lint` e `yarn build` OK.
+- **Operação:** migrada, com backup antes.
+
+## Envio da estrutura (gestor da unidade) desativado (04/11/2026, decisão do RH)
+
+- Os gestores não acessam o Secullum: `s.DESATIVADOS[ESTRUTURA]` faz `liberado` recusar, `validar_travas` não deixa a
+  trava sair de Bloqueado, `envios.estrutura` recusa (nem o caso T-E1 envia) e `processar` bloqueia o que estiver na
+  fila. A leitura das estruturas na importação (chefes) continua. Para religar: tirar de `DESATIVADOS`.
+- Operação: a trava estava em Teste; posta em Bloqueado. Etapa G do manual de teste marcada como desativada.
+
+## Entrada no programa: /ponto para todos, Desk só RH e administrador, planejador só admin (04/11/2026, pedido do RH)
+
+- `utils/acesso.py`:
+  - **página inicial** = /ponto para quem usa o painel (hook `get_website_user_home_page`);
+  - o endereço raiz `/` faz 302 para /ponto (`website_redirects`);
+  - o painel abre na competência corrente (`competenciaAtual`, como já era);
+  - o **workspace padrão** do usuário vencia a página inicial: o patch `entrada_no_painel` tira esse workspace dos
+    usuários do painel, e o `aplicar_brasil` não grava mais o workspace para eles.
+- **Desk:** só RH Ponto e System Manager (e o Administrator). O hook `before_request` (`barrar_desk`) manda ao
+  /ponto o usuário do painel que não é RH nem administrador (hoje, o Gestor Ponto) quando ele abre /app ou /desk.
+  - Quem não usa o painel continua no Desk; senão haveria vaivém, porque o /ponto o mandaria de volta.
+  - O link "Abrir no Desk" do painel só aparece com `sessao.pode_abrir_desk`.
+- **Planejador:**
+  - só System Manager (`planejador.PAPEIS`); o menu e a rota escondem o planejador de quem não é `sessao.admin`;
+  - `consulta_escalas` volta vazio para os outros usuários, então o atalho na tela Escalas some.
+- **Operação:**
+  - backup e migrate feitos;
+  - conferido que `/` dá 302 para /ponto;
+  - `ralandeiro@gmail.com` (gestor) passa a entrar no /ponto sem o Desk.
+- **Testes:** acesso 4, planejador 5, painel 18; lint e build OK.
+
+## WhatsApp com aceite e modo de teste; relatório de auditoria (05/11/2026, docs/PRD-whatsapp-aceite-auditoria.md)
+
+- **Decisões do RH:**
+  - gestores sem aceite;
+  - CPF + data de nascimento na página do QR;
+  - relatório só para o RH, **semanal + mensal**;
+  - parte C (desempenho) fora.
+- **Etapa 1, modo de teste:**
+  - `whatsapp_envio` passa a ter Desligado / Teste / Ligado, com `whatsapp_numero_teste`;
+  - em Teste: cabeçalho `[TESTE] para: ...`, situação "Enviada (teste)", sem `id_mensagem`. Não conta como aviso;
+  - links marcados com `&teste=` (`utils/sem_login.assinar_teste`) e faixa nas 5 páginas sem login;
+  - o hook `recusar_post_de_teste` recusa o POST, e a resposta do D+1 de teste é recusada;
+  - regra pura em `engine/whatsapp_envio.py`.
+- **Etapa 2, ritmo:**
+  - `enviar` agenda `sair_em` (intervalo sorteado 20-90 s, 8h-20h); o job de minuto `enviar_na_hora` manda até o
+    limite do dia (150), com aquecimento do chip (30 → 150 em 7 dias);
+  - `ignorar_horario` (código de confirmação, manual, reenviar, "Enviar teste") sai já. Intervalo máximo 0 = sem
+    espaçamento;
+  - índice `(situacao, sair_em)`.
+- **Etapa 3, aceite:**
+  - página `/ponto/whatsapp` (`apuracao/aceite_whatsapp.py`, regra pura em `engine/aceite_whatsapp.py`): CPF +
+    nascimento → celular mascarado → "Aceito receber" → .vcf e link wa.me com a primeira mensagem;
+  - erros: 5 por CPF e 20 por IP, com bloqueio de 30 min;
+  - token de 15 min; DocType `Aceite WhatsApp`, imutável;
+  - campos do Employee em fixture e patch para Pendente;
+  - celular trocado volta a Pendente; "Parar o WhatsApp" na tela Colaborador (`acoes.parar_whatsapp`);
+  - cartão "Aceitaram o WhatsApp" no Cockpit; botão "Cartaz do WhatsApp" (PDF com QR).
+- **Etapa 4, sem aceite não envia:** em Ligado, o Colaborador sem aceite fica Barrado ("sem aceite do WhatsApp"),
+  sem pendência. A fila mostra a contagem por empresa. Interruptor "Exigir o aceite do colaborador".
+- **Etapa 5:** `docs/manual-teste-whatsapp.md` e seções no `manual_rh.md`.
+- **Etapas 6 e 7, auditoria:**
+  - regra pura em `engine/auditoria.py`: descrições, ordem, resumo, índice; sem CID (atestado aparece só como
+    "Atestado");
+  - coleta em `reports/auditoria.py` (uma consulta por seção); DocType `Relatorio de Auditoria` com o PDF privado;
+  - semanal na segunda às 7h e mensal no `on_submit` do Fechamento (em fila, anexado ao fechamento);
+  - e-mail para `auditoria_emails`. Sem lista ou sem conta: registro + aviso ao RH.
+- **Testes:**
+  - pytest 1359 (cobertura do engine + integrações 97%);
+  - Frappe: envio 10, aceite 7, auditoria 5, D+1 16, horista 16, regras 5;
+  - testes antigos que enviam WhatsApp usam `testes_whatsapp.ligar()`;
+  - `yarn lint` e `yarn build` OK.
+- **Testes da escala que quebraram com a data real** (`test_cockpit_escala` 1, `test_convite_turno` 1,
+  `test_whatsapp_escala` 4), corrigidos:
+  - **Causa:** os testes usam datas fixas (quarta 04/11 e sábado 07/11/2026), mas o código lê o relógio real. No
+    dia passado, o cockpit mostra as batidas reais no lugar da escala (CE-04); o convite e a publicação aplicam a
+    regra das 48h. Em 05/11 a quarta virou passado e o sábado ficou a menos de 48h.
+  - **Correção:** só nos testes. O ajudante `apuracao/testes_relogio.congelar(caso, agora)` fixa `getdate()`,
+    `today()` e `now_datetime()` no cockpit, no convite e no WhatsApp da escala. A regra não mudou.
+  - **e2e:** 78 de 79 passaram. O da escala conjunta passava do prazo de 15 s: a `_Test Company` acumulou 756
+    colaboradores das rodadas da suíte Frappe e a grade levava 26 s. O teste passou a juntar a `_Test Company 1`
+    (sem colaboradores); a regra não mudou.
+- **Operação:**
+  - backup e migrate feitos;
+  - 92 ativos em Pendente;
+  - padrões preenchidos pelo patch `whatsapp_padroes` (o migrate não grava o default de Single);
+  - conferido: faixa só com marcador válido, POST de teste recusado, página do QR no ar;
+  - envio continua **Desligado**.
+- **Pendências do RH:** domínio público, chip da empresa, Evolution, e-mails do relatório e os aceites (manual).
+
+## Falta, atestado, férias, licença e afastamento direto no cartão (08/11/2026, pedido do RH)
+
+- **Decisões do RH:**
+  - falta = **falta com justificativa** do Secullum (efeito "Falta");
+  - atestado cria o **Atestado Médico** do período;
+  - férias e licenças **sem controle de saldo**, indo ao Secullum pela fila;
+  - **RH e gestor** lançam; o do gestor aguarda a aprovação do RH.
+- **Tela:**
+  - botão **Lançar ausência** no cartão, e **Lançar ausência nos dias** na barra dos dias marcados;
+  - diálogo `DialogoLancamento.vue`: Falta / Atestado médico / Férias, licença ou afastamento, com período ou dias
+    marcados e motivo;
+  - a coluna Abono mostra "Falta (sigla)", o tipo da licença (ex.: "Férias") e liga ao documento no Desk (RH);
+  - a aba "Aguardando aprovação" mostra também atestados e licenças do gestor (aprovar/recusar).
+- **Servidor:**
+  - regra pura em `engine/lancamentos.py`: em que dia cabe a falta, tipos de licença, período e texto do abono;
+  - Frappe em `apuracao/lancamentos.py`; endpoints `acoes.lancar_ausencia`, `aprovar_lancamento` e
+    `recusar_lancamento`;
+  - **falta:** novo tipo **Falta justificada** no Tratamento de Ponto. Exige justificativa com efeito Falta e só entra
+    em dia de trabalho passado, sem batida e sem abono. O dia **continua com falta** (desconto e DSR); a
+    inconsistência de falta fica Mantida com o motivo (cancelar o tratamento a reabre). Vai ao Secullum pela fila do
+    cartão, como o abono;
+  - **atestado:** cria o Atestado Médico (alerta de 15 dias do INSS). CID, anexo e médico ficam para o RH Saúde no
+    Desk (LGPD);
+  - **licença:** cria a Leave Application. A licença não remunerada (`is_lwp`) e o atestado não entram por ela.
+- **Correções encontradas no caminho:**
+  - **Leave Application aprovada não reapurava os dias:** novo hook `lancamentos.reapurar_licenca` no submit/cancel
+    (vale também para a lançada no Desk; a do atestado continua pelo próprio atestado);
+  - **o HR Settings da operação exige o aprovador da licença:** sem ele, todo Atestado Médico submetido lá falharia
+    ao criar a licença. Agora o aprovador é o do cadastro ou departamento e, sem ele, quem lança
+    (`lancamentos.aprovador_da_licenca`, usado também pelo atestado);
+  - **HRMS v16 exige a lista de feriados atribuída:** antes de criar licença ou atestado,
+    `feriados.garantir_lista_da_empresa`;
+  - **tipos sem saldo negativo** (Férias, Licença médica, Licença ocasional, Folga compensatória) recusariam por
+    saldo: o patch `licencas_sem_saldo` liga o "Permitir saldo negativo" nos tipos remunerados e cria "Férias" se
+    faltar.
+- **Testes:**
+  - pytest `test_lancamentos` (7);
+  - Frappe `test_lancamentos` (8: falta e cancelamento, justificativa errada, gestor, atestado com aprovador
+    obrigatório, aprovação do RH, férias, recusa, equipe);
+  - atestados, cartão e painel OK;
+  - e2e do cartão 13/13 (inclui lançar licença, com axe no diálogo); `yarn lint` e `yarn build` OK.
+- **Pendências:**
+  - **licença não remunerada:** a apuração abona todo dia de Leave Application, inclusive a não remunerada
+    (`is_lwp`), que não deveria virar dia pago. Ela ficou fora do cartão; falta decidir como a apuração a trata;
+  - migrar o site de operação (patch e novo tipo do Tratamento).
+
+## Texto do WhatsApp do dia seguinte (08/11/2026, pedido do RH)
+
+- Modelos novos em `engine/dia_seguinte.py` (`TEXTO_COLABORADOR`, `TEXTO_VARIOS`, `FECHO`): "Olá, Fulano!" /
+  "Identificamos duas pendências no seu registro de ponto de 26/10 (segunda-feira):" / uma linha "•" por pendência /
+  "Para justificar o ocorrido ou solicitar a correção, acesse o seu link exclusivo: {link}". Marcador novo
+  `{quantidade}` (por extenso: uma, duas, três...).
+- O texto do RH veio em português de Portugal ("Identificámos", "registo", "aceda"); foi adaptado ao pt-BR do
+  programa ("Identificamos", "registro", "acesse").
+- **Nunca "pausa paga" nem orientação interna:** a mensagem usava a explicação do balão do cartão, escrita para o RH
+  ("mesmo contando a pausa paga...", "envie a notificação oficial pelo WhatsApp"). Agora cada pendência tem a sua
+  descrição para o colaborador (`DESCRICOES_COLABORADOR`); o balão continua com a explicação do RH. Teste que barra
+  "pausa paga", "notificação oficial", "fila", "conferir", "termo" e "cartão" em todo texto ao colaborador.
+- Mensagens já geradas não mudam (3 "Aguardando envio manual" na operação têm o texto antigo e podem ter sido
+  editadas pelo RH); as novas e a prévia do "Cobrar pelo WhatsApp" já saem no modelo novo.
+- Testes: pytest do D+1 29; Frappe `test_dia_seguinte` 16 e `test_regras_whatsapp` 5; **suíte Frappe completa 547 OK**
+  (1 pulado), com os lançamentos pelo cartão.
+
+## Pausa paga no Secullum: caso de teste T-P3 (09/11/2026, pedido do RH)
+
+- **T-P2 deu errado:** a PAUSA15 no 2º par vazio não gerou Ajuste (os totais do Secullum mostraram Ajuste 0:00). A
+  justificativa só abona o horário previsto do par, e o 2º par do instrutor não tem horário.
+- **A API não grava a coluna Ajuste:** revisados o Swagger (45 rotas) e o manual da Integração Externa (21/09/2026).
+  O cartão só aceita Manual, Troca, TrocaDia, DELETE e Justificativa por par.
+- **T-P3, fluxo completo:**
+  - regra pura em `integrations/secullum/sincronizacao.py` (`horario_da_pausa`, `ops_pausa_paga`,
+    `ops_desfazer_pausa`);
+  - Troca Saída1→Saída2 (a batida continua original), intervalo de 15 min no meio como batida manual, PAUSA15 no 3º
+    par;
+  - depois do envio, o caso relê o cartão e os **totais calculados** (`Calcular/SomenteTotais`) e mostra o Ajuste;
+  - o desfazer tira só o intervalo e a PAUSA15. A fila só apaga a hora marcada em `apagar_hora` (a batida do relógio
+    continua protegida por `sem_apagar_batida`).
+- **Testes:** pytest 1374 (cobertura 97%); Frappe `test_sincronizacao_secullum` 14 OK. Operação com backup e
+  migrada; prévia conferida no dia 26/10 do Enzo (16:55-21:27 → intervalo 19:03-19:18).
+- **Próximo:** se o T-P3 der Ajuste 00:15, ligar o envio automático da pausa paga aprovada e a conferência antes do
+  fechamento. Se der 00:00, lista mensal para digitar o Ajuste à mão no Secullum, com conferência pela leitura.
+
+## Instrutor horista que passou de 4h15 sem intervalo: WhatsApp só ao RH, intervalo não pago e termo (09/11/2026)
+
+- **Decisões do RH:**
+  - só o instrutor horista; limite **exato de 4h15**;
+  - acima disso, o intervalo **não é pago**; até 4h15, a pausa incluída continua paga;
+  - **um WhatsApp por dia ao RH**, com todos;
+  - o intervalo lançado pelo RH **vale na hora** e o termo do mês confirma.
+- **Motor:**
+  - `apuracao_dia.intervalo_nao_marcado` abre `intervalo_nao_marcado_horista` (Média) quando trabalhado + intervalo
+    lançado passa de 4h + pausa do cargo e não há intervalo batido no relógio;
+  - nesse dia `pausa_paga` = 0, sem `intrajornada` nem `excesso_jornada_nao_autorizada` (que deixou de valer para
+    todo horista; o instrutor mensalista segue a regra de 04/11);
+  - o intervalo lançado não muda a decisão, então a pendência continua até o termo;
+  - regra pura do RH em `engine/intervalo_horista.py` (intervalo no meio, texto do WhatsApp).
+- **Termo:** o tipo entra em `NOMES` e em `SO_NO_TERMO` (fora dos `COBRAVEIS`). A linha diz "Ciente: excedi o
+  horário de trabalho de 4 h e deveria ter marcado o intervalo" + "o intervalo de 15 min foi lançado pelo RH, sem
+  remuneração" quando lançado. É só ciência: o ponto não muda na assinatura.
+- **RH:**
+  - campo `whatsapp_rh_intervalo` (Configuração Apuração);
+  - cron 8h30 `intervalo_horista.avisar_rh`: um WhatsApp por número e dia, só quando há dia novo, com os anteriores
+    contados;
+  - no cartão, a sugestão "Lançar o intervalo de 15 min (não remunerado)" chama `acoes.lancar_intervalo`, que inclui
+    as duas batidas pelo `cartao_ponto.salvar` com o motivo próprio.
+- **Testes:**
+  - pytest 1382 (cobertura 97%): `test_pausa_paga` reescrito (horista × mensalista), `test_intervalo_horista` e o
+    termo;
+  - Frappe `test_intervalo_horista` 3;
+  - lint e build OK.
+- **Pendências:**
+  - o alerta mensal do monitoramento de horistas ainda manda WhatsApp ao instrutor quando passa do limite de dias
+    sem intervalo: falta o RH dizer se desliga para o instrutor horista;
+  - preencher na operação o número do RH (`whatsapp_rh_intervalo`).
+- **Operação:**
+  - backup feito e migrada;
+  - 35 instrutores horistas reapurados (1575 dias, últimos 45 dias, período aberto);
+  - **6 pendências novas**, entre elas o Enzo em 26/10 (4h32);
+  - nenhuma mensagem antiga ao instrutor na fila.
+- **Bug corrigido no caminho:** `servico.TIPOS_DA_APURACAO` não tinha `excesso_jornada_nao_autorizada`, então a
+  reapuração nunca fechava essa pendência. Fecharam as 10 que ficaram dos instrutores horistas. O tipo novo também
+  entrou na lista.
+
+## Textos do termo de ocorrências e a correção do colaborador pelo link (09/11/2026, decisões do RH)
+
+- **Decisões do RH:**
+  - os textos sugeridos foram aprovados: fato neutro, **sem citar lei** e **sem dizer o efeito** na folha;
+  - o "Horário correto" fica aberto só onde o colaborador pode informar um horário (batida faltando, falta, aula);
+    nas outras linhas sai **hachurado**;
+  - **sem sugestão de horário**;
+  - "Não reconheço" continua em todas as linhas;
+  - o que o colaborador corrigiu pelo link **aparece no termo**;
+  - **interjornada fora do termo** (pode ser da escala ou de ter chegado antes);
+  - no instrutor horista, sem a frase sobre o intervalo lançado pelo RH.
+- **Engine** (`engine/termo_ocorrencias.py`):
+  - `propor_dia` reescrito, um texto por tipo calculado das batidas e do previsto (`duracao`: "1 h", "30 min",
+    "2h30");
+  - `Proposta.sem_horario`; `COM_HORARIO_CORRETO`;
+  - `CorrecaoColaborador` + `texto_da_correcao`: aprovado, aguardando, não aprovado, não reconhece, explicação;
+  - `montar_itens` põe no termo o dia corrigido mesmo já resolvido. Aguardando o RH, o item fica sem
+    inconsistências (a assinatura não mexe; a aprovação continua com o RH); recusado, o registro vem antes do fato;
+  - `ContextoDia.limite_he_diaria` (o limite de HE da CCT do dia);
+  - o termo não inclui mais o intervalo do horista (só registra).
+- **Frappe:**
+  - `montar` lê as respostas confirmadas do período (`_correcoes_do_colaborador`) e os tipos do dia;
+  - campo `sem_horario` no Item do Termo;
+  - PDF com a célula hachurada (conferido renderizando a prévia) e "Situação do dia" no lugar de "Regularização
+    proposta";
+  - página `/ponto/termo`: linha hachurada sem "Corrigir este dia", só "Não reconheço";
+  - linha só de registro ignora horário enviado;
+  - **batida faltando assinada "De acordo" sem horário volta ao RH (Aberta)**, em vez de virar Mantida e deixar o dia
+    sem a batida.
+- **Testes:**
+  - pytest 1380 (97%);
+  - Frappe: termo 14, monitoramento 16, dia seguinte 16 (com o termo antes e depois da aprovação);
+  - e2e termo + cartão 19/19; lint e build OK.
+- **Operação:** backup e migrate. Os termos já emitidos (ex.: TOP-2026-00008) continuam com o texto antigo; para o
+  novo, cancele e emita de novo.
+- **Cláusulas fixas do PDF** (1: Portaria 671; 4: CLT e "as horas serão pagas ou descontadas"): o RH decidiu
+  mantê-las como estão (09/11/2026). A regra "sem lei e sem efeito" vale só para as linhas do quadro.
+- **Revisão do RH (09/11/2026, TOP-2026-00009):** o **intervalo** também deixa o "Horário correto" aberto. Quem não
+  respondeu pelo link escreve no termo o horário do intervalo: "… Se fez o intervalo, escreva o horário." Assinado com
+  o horário, entra pelo `cartao_ponto.salvar` (motivo do termo). Testes: engine 1154; Frappe termo 14 e
+  monitoramento 16.

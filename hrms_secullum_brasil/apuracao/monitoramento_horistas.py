@@ -84,13 +84,14 @@ def verificar_colaborador(employee: str, hoje, cfg=None) -> str | None:
 	apuracoes = frappe.get_all(
 		"Apuracao Diaria",
 		filters={"employee": employee, "data": ["between", [inicio, hoje]]},
-		fields=["data", "trabalhado", "intrajornada_suprimida"],
+		fields=["data", "trabalhado", "intrajornada_suprimida", "marcacoes"],
 	)
 	dias = [
 		mh.DiaHorista(getdate(a.data), cint(a.trabalhado), cint(a.intrajornada_suprimida)) for a in apuracoes
 	]
 	trabalhado = {dia.data: dia.trabalhado for dia in dias}
-	datas = mh.ocorrencias(dias, cfg.tolerancia, _sem_intervalo_ate(employee, hoje))
+	marcacoes = {getdate(a.data): a.marcacoes for a in apuracoes}
+	datas = mh.ocorrencias(dias, _sem_intervalo_ate(employee, hoje))
 	nome = f"ALH-{employee}-{competencia}"
 	if not datas and not frappe.db.exists(ALERTA, nome):
 		return None
@@ -100,7 +101,9 @@ def verificar_colaborador(employee: str, hoje, cfg=None) -> str | None:
 		else frappe.get_doc({"doctype": ALERTA, "employee": employee, "competencia": competencia})
 	)
 	quantidade, limite = len(datas), cfg.limite
-	alerta.set("dias", [{"data": data, "trabalhado": trabalhado[data]} for data in datas])
+	alerta.set(
+		"dias", [_linha_do_dia(employee, data, trabalhado[data], marcacoes.get(data)) for data in datas]
+	)
 	alerta.ocorrencias = quantidade
 	avisar = mh.precisa_avisar(quantidade, limite, cint(alerta.ultimo_limite_avisado))
 	if avisar:
@@ -113,22 +116,110 @@ def verificar_colaborador(employee: str, hoje, cfg=None) -> str | None:
 	alerta.save() if not alerta.is_new() else alerta.insert()
 	if mh.pendencia_aberta(quantidade, limite) and not ciente:
 		alerta.db_set("situacao", "No limite")
-		alerta.db_set("inconsistencia", _abrir_inconsistencia(alerta, datas, fim))
+		alerta.db_set("inconsistencia", _abrir_inconsistencia(alerta, datas, inicio, fim))
 	else:
-		resolver_inconsistencias(employee, TIPO, fim)
+		_resolver_do_mes(employee, inicio, fim)
 		alerta.db_set("situacao", "Ciente" if ciente else "Abaixo do limite")
 	if avisar and not ciente:
 		notificar(alerta, datas, cfg)
 	return alerta.name
 
 
-def _abrir_inconsistencia(alerta, datas: list[date], fim: date) -> str:
+def _contexto_intervalo(employee: str, data: date):
+	"""Parâmetros do intervalo (art. 71) da CCT do dia, para propor o intervalo do termo."""
+	from hrms_secullum_brasil.engine.sugestoes import ContextoDia
+
+	try:
+		cct = get_regra_vigente(employee, data)
+	except RegraAmbiguaError:
+		cct = None
+	valor = lambda campo, padrao: cint(cct.get(campo)) if cct and cint(cct.get(campo)) else padrao  # noqa: E731
+	return ContextoDia(
+		horista=True,
+		intervalo_minimo=valor("intervalo_minimo", d.INTERVALO_MINIMO_MIN),
+		intervalo_curto=valor("intervalo_curto", d.INTERVALO_CURTO_MIN),
+		jornada_sem_intervalo_ate=valor("jornada_sem_intervalo_ate", d.JORNADA_SEM_INTERVALO_ATE_MIN),
+		jornada_intervalo_curto_ate=valor("jornada_intervalo_curto_ate", d.JORNADA_INTERVALO_CURTO_ATE_MIN),
+		tolerancia_jornada_intervalo=d.TOLERANCIA_JORNADA_INTERVALO_MIN
+		if not cct or cct.get("tolerancia_jornada_intervalo") is None
+		else cint(cct.get("tolerancia_jornada_intervalo")),
+	)
+
+
+def intervalo_proposto(employee: str, data: date, marcacoes: str | None) -> tuple[int, int] | None:
+	"""Intervalo do termo no meio do expediente (o mesmo do cartão, `sugestoes.intervalo_do_termo`): só no dia sem
+	nenhuma pausa registrada."""
+	from hrms_secullum_brasil.engine.sugestoes import intervalo_do_termo
+	from hrms_secullum_brasil.engine.turno_padrao import periodos_das_marcacoes
+
+	periodos = periodos_das_marcacoes(marcacoes, data)
+	minutos = [m for p in periodos for m in (p.inicio, p.fim)]
+	return intervalo_do_termo(minutos, _contexto_intervalo(employee, data))
+
+
+def _hhmm(minutos: int) -> str:
+	return f"{minutos // 60 % 24:02d}:{minutos % 60:02d}"
+
+
+def _linha_do_dia(employee: str, data: date, trabalhado: int, marcacoes: str | None) -> dict:
+	intervalo = intervalo_proposto(employee, data, marcacoes)
+	return {
+		"data": data,
+		"trabalhado": trabalhado,
+		"marcacoes": ", ".join(x.split()[-1] for x in (marcacoes or "").split(", ") if x.strip()),
+		"intervalo_inicio": _hhmm(intervalo[0]) if intervalo else None,
+		"intervalo_fim": _hhmm(intervalo[1]) if intervalo else None,
+	}
+
+
+@frappe.whitelist()
+def intervalos_do_alerta(inconsistencia: str) -> list[dict]:
+	"""Para o cartão: o intervalo proposto em cada dia do alerta (o RH confere, anexa o termo e salva)."""
+	frappe.only_for((*PAPEIS, "Gestor Ponto"))
+	alerta = frappe.db.get_value("Inconsistencia de Ponto", inconsistencia, "referencia_name")
+	if not alerta or not frappe.db.exists(ALERTA, alerta):
+		frappe.throw(_("Alerta de horista não encontrado."))
+	doc = frappe.get_doc(ALERTA, alerta)
+	doc.check_permission("read")
+	return [
+		{"data": str(linha.data), "horas": [linha.intervalo_inicio, linha.intervalo_fim]}
+		for linha in doc.dias
+		if linha.intervalo_inicio and linha.intervalo_fim
+	]
+
+
+def _do_mes(employee: str, inicio: date, fim: date, situacoes: tuple) -> list:
+	return frappe.get_all(
+		"Inconsistencia de Ponto",
+		filters={
+			"employee": employee,
+			"tipo": TIPO,
+			"data": ["between", [inicio, fim]],
+			"status": ["in", list(situacoes)],
+		},
+		fields=["name", "data", "status"],
+		order_by="data desc",
+	)
+
+
+def _resolver_do_mes(employee: str, inicio: date, fim: date, exceto: date | None = None) -> None:
+	for inc in _do_mes(employee, inicio, fim, ("Aberta", "Aguardando termo")):
+		if getdate(inc.data) != exceto:
+			resolver_inconsistencias(employee, TIPO, getdate(inc.data))
+
+
+def _abrir_inconsistencia(alerta, datas: list[date], inicio: date, fim: date) -> str:
+	"""A pendência do mês fica no último dia em que aconteceu (antes ficava no fim do mês, num dia que podia nem ter
+	trabalho — pedido do RH, 03/11/2026). A que já está no termo ou mantida não muda de dia."""
+	presa = _do_mes(alerta.employee, inicio, fim, ("Aguardando termo", "Mantida"))
+	dia = getdate(presa[0].data) if presa else max(datas)
+	_resolver_do_mes(alerta.employee, inicio, fim, exceto=dia)
 	descricao = _(
 		"{0} passou de 4h sem registrar intervalo em {1} dia(s) neste mês ({2}). Colher o termo de ajuste e "
 		"regularizar no cartão ponto, ou marcar Ciente para pagar a indenização."
 	).format(alerta.employee_name or alerta.employee, len(datas), mh.dias_curtos(datas))
 	return registrar_inconsistencia(
-		alerta.employee, TIPO, descricao, "Alta", fim, referencia_doctype=ALERTA, referencia_name=alerta.name
+		alerta.employee, TIPO, descricao, "Alta", dia, referencia_doctype=ALERTA, referencia_name=alerta.name
 	)
 
 
@@ -228,6 +319,6 @@ def ciente(alerta: str | None = None, inconsistencia: str | None = None) -> str:
 			"ciente_em": now_datetime(),
 		}
 	)
-	_inicio, fim, _competencia = _mes(getdate(f"{doc.competencia}-01"))
-	resolver_inconsistencias(doc.employee, TIPO, fim)
+	inicio, fim, _competencia = _mes(getdate(f"{doc.competencia}-01"))
+	_resolver_do_mes(doc.employee, inicio, fim)
 	return doc.name

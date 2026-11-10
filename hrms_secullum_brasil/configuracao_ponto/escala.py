@@ -125,9 +125,12 @@ def horarios_do_dia(employee: str, data: date) -> dict | None:
 
 
 def linhas_do_perfil(employee: str, ano: int, mes: int) -> list[dict]:
-	"""Dias do mês pelo Perfil de Jornada vigente em cada dia, com o repouso padrão marcado."""
+	"""Dias do mês pelo Perfil de Jornada vigente em cada dia, com o repouso padrão marcado. Feriado nasce neutro (em
+	aberto): é dia de escala, só trabalha quem for escalado nele (pedido do RH, 03/11/2026)."""
+	from hrms_secullum_brasil.apuracao.adaptador import eh_feriado, lista_de_feriados
 	from hrms_secullum_brasil.configuracao_ponto.regras import get_perfil_vigente
 
+	lista = lista_de_feriados(frappe.get_cached_doc("Employee", employee))
 	inicio = date(ano, mes, 1)
 	fim = (inicio.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
 	linhas = []
@@ -139,7 +142,7 @@ def linhas_do_perfil(employee: str, ano: int, mes: int) -> list[dict]:
 			jornada = jornada_do_perfil(perfil, dia)
 			if repouso_do_perfil(perfil, dia, neutros=True):
 				linha["situacao"] = REPOUSO
-			elif jornada.neutro:
+			elif jornada.neutro or eh_feriado(lista, dia):
 				linha["situacao"] = NEUTRO
 			elif not jornada.folga:
 				origem = linha_do_perfil(perfil, dia)

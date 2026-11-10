@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<title>Relatório de auditoria do ponto</title>
+	<style>
+		body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; color: #0f172a; margin: 0; }
+		h1 { font-size: 18px; margin: 0 0 2px; }
+		h2 { font-size: 14px; margin: 18px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #1d4ed8; page-break-after: avoid; }
+		h3 { font-size: 12px; margin: 12px 0 4px; page-break-after: avoid; }
+		h3.destaque { color: #b91c1c; }
+		.suave { color: #475569; }
+		table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+		th, td { border: 1px solid #cbd5e1; padding: 3px 5px; vertical-align: top; text-align: left; }
+		th { background: #f1f5f9; }
+		tr { page-break-inside: avoid; }
+		.destaque td { background: #fef2f2; }
+		.resumo td.n { text-align: right; width: 60px; font-weight: bold; }
+		.quebra { page-break-before: always; }
+		a { color: #1d4ed8; text-decoration: none; }
+		.col-nome { width: 22%; } .col-dia { width: 9%; } .col-link { width: 9%; }
+	</style>
+</head>
+<body>
+	<h1>Relatório de auditoria do ponto</h1>
+	<p class="suave">
+		{{ r.tipo }} · {{ empresa|e }} · de {{ dia_br(r.inicio) }} a {{ dia_br(r.fim) }} · gerado em {{ gerado_em }}.
+		Não traz dados de saúde (CID, atestado): o motivo de um atestado aparece só como "Atestado".
+	</p>
+
+	<h2>Resumo em números</h2>
+	<table class="resumo">
+		{% for chave, titulo in secoes.items() %}
+		<tr{% if chave == "relogio" and r.resumo[chave] %} class="destaque"{% endif %}><td>{{ titulo }}</td><td class="n">{{ r.resumo[chave] }}</td></tr>
+		{% endfor %}
+		<tr><th>Total de registros</th><th class="n">{{ r.total }}</th></tr>
+	</table>
+
+	{% if r.indice %}
+	<h2>Índice por colaborador</h2>
+	<table>
+		<tr><th>Empresa</th><th>Colaborador</th><th>Registros</th></tr>
+		{% for i in r.indice %}
+		<tr><td>{{ i.empresa|e }}</td><td>{{ i.employee_name|e }}</td><td>{{ i.linhas }}</td></tr>
+		{% endfor %}
+	</table>
+	{% endif %}
+
+	{% for e in r.empresas %}
+	<h2 class="quebra">{{ e.empresa|e }}</h2>
+	{% for s in e.secoes %}
+	<h3{% if s.destaque %} class="destaque"{% endif %}>{{ s.titulo }} ({{ s.linhas|length }})</h3>
+	<table>
+		<tr><th class="col-nome">Colaborador</th><th class="col-dia">Dia</th><th>O que aconteceu</th><th class="col-link">Registro</th></tr>
+		{% for l in s.linhas %}
+		<tr{% if s.destaque %} class="destaque"{% endif %}>
+			<td>{{ (l.employee_name or "-")|e }}</td>
+			<td>{{ dia_br(l.dia) if l.dia else "-" }}</td>
+			<td>{{ l.descricao|e }}</td>
+			<td>{% if l.name %}<a href="{{ url }}{{ rota(l.doctype, l.name) }}">{{ l.name|e }}</a>{% endif %}</td>
+		</tr>
+		{% endfor %}
+	</table>
+	{% endfor %}
+	{% endfor %}
+</body>
+</html>

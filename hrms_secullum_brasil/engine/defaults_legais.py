@@ -87,6 +87,14 @@ INTERVALO_MAXIMO_MIN = 120
 # Redução ínfima do intervalo (até 5 min no total, variação de marcação) não gera a indenização do Art. 71, §4º
 # (entendimento do TST em recursos repetitivos; decisão do RH de 02/11/2026). 0 = exige o intervalo exato.
 TOLERANCIA_INTERVALO_MIN = 5
+# Art. 58, § 1º (até 10 min no dia não contam) aplicado à exigência do intervalo (art. 71): até 4h10 sem pausa não
+# exige os 15 min e até 6h10 não exige 1h (decisão do RH de 04/11/2026; Súmula 437, IV: jornada ultrapassada
+# "habitualmente"). 0 = sem tolerância.
+TOLERANCIA_JORNADA_INTERVALO_MIN = 10
+# Intervalo colado ao começo ou ao fim do expediente não cumpre a finalidade de descanso (CLT art. 71; a Justiça do
+# Trabalho o invalida mesmo a pedido do empregado): exige este mínimo de trabalho antes da saída e depois da volta.
+# Decisão do RH de 03/11/2026 ("pelo menos 1 ou 2 horas"): 60 min por padrão; 0 = não confere.
+TRABALHO_MINIMO_APOS_INTERVALO_MIN = 60
 PERMITE_REDUCAO_INTRAJORNADA = False
 INTERVALO_REDUZIDO_MIN = 30  # piso legal da redução por CCT — Art. 611-A, III
 PERCENTUAL_INDENIZACAO_INTRAJORNADA = 50  # Art. 71, §4º

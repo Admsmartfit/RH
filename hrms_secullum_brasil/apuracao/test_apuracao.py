@@ -189,7 +189,7 @@ class TestApuracao(FrappeTestCase):
 		reapurar_dia(self.employee, TERCA)
 		self.assertIn("marcacao_impar", inconsistencias(self.employee, TERCA))
 
-		frappe.get_doc(
+		tratamento = frappe.get_doc(
 			{
 				"doctype": "Tratamento de Ponto",
 				"employee": self.employee,
@@ -198,7 +198,12 @@ class TestApuracao(FrappeTestCase):
 				"marcacao": extra.name,
 				"motivo": "Batida acidental.",
 			}
-		).insert().submit()
+		).insert()
+		with self.assertRaises(frappe.ValidationError):  # batida do relógio: sem a confirmação dupla, não sai
+			tratamento.submit()
+		tratamento.reload()
+		tratamento.confirmou_apagar_relogio = 1
+		tratamento.submit()
 
 		self.assertEqual(self.apuracao().normais, 480)
 		self.assertEqual(frappe.db.get_value(RAW, extra.name, "status"), "Ativa")

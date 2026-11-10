@@ -7,7 +7,7 @@ import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
-from hrms_secullum_brasil.apuracao import regras_whatsapp, whatsapp
+from hrms_secullum_brasil.apuracao import regras_whatsapp, testes_whatsapp, whatsapp
 from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 from hrms_secullum_brasil.apuracao.test_apuracao import DIAS_UTEIS, criar_raw, hash_curto
 from hrms_secullum_brasil.engine import comunicacao as com
@@ -50,7 +50,10 @@ class TestRegrasWhatsApp(FrappeTestCase):
 		self.mock = MockEvolutionClient()
 		frappe.flags.whatsapp_mock = self.mock
 		self.addCleanup(setattr, frappe.flags, "whatsapp_mock", None)
-		frappe.db.set_single_value("Configuracao Apuracao", "whatsapp_envio", "Ligado")
+		testes_whatsapp.ligar()
+		# docs/PRD-whatsapp-dia-seguinte.md: sem espera pela releitura e sem mínimo de conferidas nestes testes
+		frappe.db.set_single_value("Configuracao Apuracao", "d1_horas_estabilizar", 0)
+		frappe.db.set_single_value("Configuracao Apuracao", "d1_minimo_conferidas", 0)
 		relogio = patch.object(whatsapp, "now_datetime", lambda: NOVE_HORAS)
 		relogio.start()
 		self.addCleanup(relogio.stop)

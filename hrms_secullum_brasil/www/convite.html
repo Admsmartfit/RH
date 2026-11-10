@@ -20,6 +20,7 @@
 	</style>
 </head>
 <body>
+{{ faixa_teste or "" }}
 	<main>
 		<h1>Convite para turno</h1>
 		<p id="cabecalho" class="suave">Carregando…</p>
@@ -60,7 +61,7 @@
 		async function responder(resposta) {
 			const r = await fetch(`${API}.responder`, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
 				body: JSON.stringify({ token, resposta }),
 			});
 			if (!r.ok) return status("Não foi possível responder: o convite pode ter sido encerrado.", "erro");

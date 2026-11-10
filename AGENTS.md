@@ -52,6 +52,10 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Regras com vigência:** usar `configuracao_ponto/regras.py` (`validar_sem_sobreposicao`, `get_regra_vigente`, `get_perfil_vigente`). Nunca resolver vigência com SQL ad hoc.
 - **Classe do controller:** nome do DocType sem espaços, preservando maiúsculas/minúsculas (`Perfil de Jornada` → `PerfildeJornada`).
 - **API Secullum:** referência em `docs/secullum_api.md`. Toda chamada passa por `SecullumClient`; nunca use `requests` direto fora dos clientes de `integrations/` (`secullum/client.py`, `feriados/client.py`). Testes Frappe usam o modo mock (`Configuracao Secullum.modo_mock`).
+- **Trava da batida do relógio** (`apuracao/batida_relogio.py`): desconsiderar batida feita pelo colaborador num
+  aparelho exige `Tratamento de Ponto.confirmou_apagar_relogio` (a tela pergunta duas vezes); todo caminho novo que
+  tire batida passa `confirmar_relogio`. Envio ao Secullum nunca apaga horário sem tratamento do programa
+  (`envio_cartao._sem_apagar_sem_tratamento`, `s.sem_apagar_batida`).
 - **Marcação original (`Secullum Checkin Raw`) é imutável:** nunca use `doc.save()`/`delete_doc` nela. Só `ingestion/coleta_batidas.py` muda os campos de controle (status, substituição, espelho) via `frappe.db.set_value`. Correções do RH vão para Tratamento de Ponto (Etapa 5).
 - **Competência da folha:** o período de uma competência vem sempre de `apuracao/competencia.py` (`periodo`,
   `resolver`; regra pura em `engine/competencia.py`), pelo `Company.dia_fechamento_folha` (25 = de 26 a 25; a
@@ -96,13 +100,41 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Cartão do Secullum** (`Cartao Secullum Dia`, rota GET Batidas): folga, neutro e justificativas lançadas no Secullum valem na apuração via `engine/cartao.py` em `adaptador.montar_entrada`; é lido junto com as batidas (carga e coleta).
 - Nada de dados reais de pessoas no repositório: amostras só anonimizadas (`integrations/secullum/anonimizar.py`, `fixtures/reais/`); credenciais só no campo Password da Configuracao Secullum.
 
+## Sincronização programa → Secullum — docs/PRD-sincronizacao-secullum.md
+
+- O Secullum é o sistema oficial (batida, cartão, espelho, totais). O programa envia o que a API aceita **só pela
+  fila** `Envio Secullum` (`ingestion/sincronizacao.py:agendar`); o que enviar fica puro em
+  `integrations/secullum/sincronizacao.py` (operações, catálogo de casos, justificativas AT/FT). Quando enviar:
+  `ingestion/envios_secullum.py` (folgas da escala, horista, licenças/afastamentos, justificativas, estrutura).
+- Toda trava por tipo: Bloqueado → Teste (só quem tem `Caso de Teste Secullum` aberto) → Ligado (empresas liberadas);
+  Ligado só com os casos obrigatórios aprovados (`validar_travas`). "Suspender todos os envios" vence tudo.
+- Nunca cobrir batida original: justificativa em dia com batida é cancelada. Depois de enviar, relê o Secullum
+  (Confirmado/Divergente). Falha vira Erro + pendência; nunca desfaz o programa.
+- O que a API não altera (horários, feriados, opções de cálculo, banco) vira `Tarefa Secullum` com passo a passo,
+  bloqueia o fechamento e é conferida pelo `GET` (`ingestion/auditoria_secullum.py`, regra pura em
+  `integrations/secullum/auditoria_horarios.py`). Nunca chame rotas de escrita do Secullum fora desses módulos e do
+  `envio_cartao`/`jornada_assinatura`.
+
 ## Painel de ponto (/ponto) — docs/PRD-frontend.md
 
 - O painel `/ponto` (`frontend/`, Vue 3 + frappe-ui) é só leitura e atalho para ações que já existem (`apuracao/acoes.py`, submit/delete padrão do Frappe). Regra de negócio nunca fica no `frontend/`; números, segmentos da linha do tempo e posições vêm do servidor (`engine/painel.py`).
 - Endpoints do painel ficam em `apuracao/painel.py`, sempre via `frappe.get_list` e filtrados por `employees_visiveis`, sem campos de `permlevel` 1 (nunca CID); PIS/CPF mascarados para quem não é RH Ponto (D-5).
 - Cadastros e regras continuam no Desk; não criar formulário de cadastro no `frontend/`.
+- **Entrada** (`utils/acesso.py`): todo usuário do painel entra no /ponto (e o `/` redireciona); só RH Ponto e
+  System Manager abrem o Desk (`barrar_desk`); o planejador é só do System Manager. Tela nova só para admin usa
+  `sessao.admin`; link para o Desk só com `sessao.pode_abrir_desk`.
 - Novo tipo de inconsistência ou status de apuração entra também no `BadgeStatus` (`frontend/src/components/BadgeStatus.vue`) e nos nomes/grupos da central (`frontend/src/utils/inconsistencias.js`).
 - Antes de concluir mudança no `frontend/`: `yarn lint` e `yarn build` (e, no ambiente `docker/` com o `bench start` ligado, `yarn test:e2e`), além do que este arquivo já pede.
+
+## WhatsApp do dia seguinte — docs/PRD-whatsapp-dia-seguinte.md
+
+- Regra pura em `engine/dia_seguinte.py` (filtros de segurança `bloqueio`, textos por tipo, liberação gradual,
+  prazo de resposta); Frappe em `apuracao/dia_seguinte.py` (rodada `processar`, fila, descarte, página
+  `/ponto/resposta`, aprovação, escalonamento). Nunca envie o D+1 por fora dele: toda mensagem passa pelos filtros
+  e, com a regra em teste, pela fila do RH; mensagem barrada fica registrada com o motivo.
+- A resposta do colaborador (CPF + código) é a assinatura dele, mas **não vale sozinha**: horários viram
+  tratamentos aguardando aprovação (`cartao_ponto.solicitar`); só `aprovar_resposta` (gestor da equipe ou RH) os
+  aprova. O editor de horários das páginas sem login é `public/js/editor_horarios.js` (termo e resposta).
 
 ## Cartão ponto editável — docs/PRD-cartao-ponto.md
 
@@ -115,8 +147,25 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Envio ao Secullum** só pela fila de `ingestion/envio_cartao.py` (`Envio Cartao Secullum`) e só com a trava
   `Configuracao Secullum.envio_correcoes` permitindo; nunca chame `CartaoPonto/*` fora dela. O mapeamento
   (colunas Entrada1..Saida5) é puro, em `integrations/secullum/edicao_cartao.py`. Falha no envio nunca desfaz a
-  correção do programa (vira a inconsistência `envio_cartao_secullum`). Tratamento do gestor só é enviado no submit.
+  correção do programa (vira a inconsistência `envio_cartao_secullum`). A batida que fica no dia nunca é apagada e
+  recriada no Secullum (perderia a origem): muda de coluna por `CartaoPonto/Troca`. Tratamento do gestor só é enviado no submit.
 - A inclusão do programa e a batida que volta do Secullum no mesmo minuto contam uma vez (`adaptador.marcacoes`).
+- **Ausências pelo cartão** (falta justificada, atestado, férias/licença/afastamento): regra pura em
+  `engine/lancamentos.py`, gravação só por `apuracao/lancamentos.py` (`acoes.lancar_ausencia`). Falta justificada
+  não abona (o dia segue com falta) e exige justificativa de efeito Falta. Leave Application criada pelo programa
+  passa por `aprovador_da_licenca` e `feriados.garantir_lista_da_empresa`; aprovada/cancelada reapura pelo hook
+  `reapurar_licenca`. Licença não remunerada (`is_lwp`) não entra pelo cartão.
+- **Pausa paga por liberalidade** (instrutor, 15 min) é parâmetro do cargo (`cargo.pausa_paga`): só a pausa
+  **incluída pelo sistema** (tratamento: WhatsApp, termo, RH; `EntradaDia.marcacoes_incluidas`) é paga, na rubrica
+  PAUSA_PAGA, e não é trabalho; a batida no relógio é só trabalho. Pelo WhatsApp, uma pausa por dia
+  (`d1.pausas_incluidas`); passar disso + tolerância abre `excesso_jornada_nao_autorizada`, cujo aviso é
+  `dia_seguinte.SEMPRE_CONFERIR` (sempre fila manual). No Secullum só como PAUSA15 num grupo livre (`s.cabe_no_dia`).
+- **Instrutor horista** (horista + pausa paga no cargo, RH 09/11/2026): passou de 4h15 (exato) sem intervalo no
+  relógio → só `intervalo_nao_marcado_horista` (`apuracao_dia.intervalo_nao_marcado`), sem `intrajornada` nem
+  `excesso_jornada_nao_autorizada`, e o intervalo lançado nesse dia **não é pago**. O tipo está em
+  `termo_ocorrencias.SO_NO_TERMO`: entra no termo, nunca em `COBRAVEIS` (o instrutor não recebe WhatsApp). O RH
+  recebe a lista diária e lança pelo `acoes.lancar_intervalo` (`apuracao/intervalo_horista.py`, regra pura em
+  `engine/intervalo_horista.py`).
 - **Jornada fragmentada** (intervalo > 2h permitido) é parâmetro do cargo na CCT (`cargo.jornada_fragmentada`); o
   adaptador combina perfil OU cargo. Lançamento manual da folha só na tabela do Fechamento de Ponto
   (`fechamento.ajustes_manuais`, valor por `engine/valoracao.valor_manual`, somado à rubrica do ponto).
@@ -141,6 +190,41 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   `whatsapp_nao_enviado`); cliente puro em `integrations/evolution/client.py` (Evolution v2: `number`/`text`).
   Testes usam `frappe.flags.whatsapp_mock`.
 
+## WhatsApp com aceite, modo de teste e auditoria — docs/PRD-whatsapp-aceite-auditoria.md
+
+- **Interruptor** `Configuracao Apuracao.whatsapp_envio` = Desligado / Teste / Ligado. Toda mensagem passa por
+  `apuracao/whatsapp.py:enviar`, com as travas nesta ordem: regra em teste (não em Teste), interruptor, aceite,
+  celular, ritmo. Regra pura em `engine/whatsapp_envio.py`.
+- **Modo de teste:**
+  - vai só ao `whatsapp_numero_teste`, com o cabeçalho `[TESTE]`;
+  - situação "Enviada (teste)", sem `id_mensagem`: **nunca conta como aviso**. Filtros de "enviado" usam só
+    Enviada/Entregue/Lida;
+  - os links ganham `&teste=` (`utils/sem_login.assinar_teste`) e a página mostra a faixa `{{ faixa_teste }}`. O
+    hook `recusar_post_de_teste` recusa o POST (menos as prévias de `SO_LEITURA`).
+  - Página sem login nova: põe `{{ faixa_teste or "" }}` depois do `<body>`.
+- **Ritmo:**
+  - `enviar` sem `ignorar_horario` só agenda (`sair_em`, intervalo sorteado);
+  - o job de minuto `enviar_na_hora` manda até o limite do dia, com aquecimento do chip;
+  - `ignorar_horario=True` = sai já. É só para código de confirmação, envio manual, reenviar e "Enviar teste".
+- **Testes Frappe** que enviam WhatsApp chamam `apuracao/testes_whatsapp.ligar()` (sem ritmo e sem exigir aceite).
+- **Teste com data fixa** que passa pelo cockpit, pelo convite ou pela publicação da escala congela o relógio com
+  `apuracao/testes_relogio.congelar(self, agora)`. Sem isso, ele quebra quando o calendário real passa da data.
+- **Aceite:**
+  - em Ligado, só o destinatário **Colaborador** precisa de `Employee.whatsapp_situacao` = Aceito (decisão do RH:
+    gestores não). Sem aceite a mensagem fica Barrada (`filtro` "sem aceite do WhatsApp"), sem pendência;
+  - o aceite só nasce na página `/ponto/whatsapp` (`apuracao/aceite_whatsapp.py`, regra pura em
+    `engine/aceite_whatsapp.py`). O registro `Aceite WhatsApp` é imutável;
+  - revogar só por `aceite_whatsapp.revogar` (gestor que vê o colaborador ou RH);
+  - celular trocado volta o aceite a Pendente (validate do Employee). O programa **não lê** mensagens recebidas.
+- **Relatório de auditoria:**
+  - regra pura em `engine/auditoria.py` (descrições, ordem, resumo, **nunca CID**: o atestado aparece só como
+    "Atestado"); coleta em `reports/auditoria.py`, uma consulta por seção no período;
+  - registro `Relatorio de Auditoria` (PDF privado);
+  - semanal na segunda às 7h e mensal no `on_submit` do Fechamento de Ponto, em fila. Falha nunca impede o
+    fechamento;
+  - e-mail só à lista `auditoria_emails`. Fonte nova de alteração do ponto → nova `linha_*` no engine e a consulta no
+    `coletar`.
+
 ## Convenções de código
 
 - **Traduções:** o HRMS v16 não traz pt-BR e o ERPNext traz pouco; texto em inglês visível nas cinco áreas é traduzido em `translations/pt-BR.csv` (origem, tradução, contexto), preservando os marcadores `{0}`; `engine/tests/test_traducoes.py` valida o arquivo.
@@ -156,6 +240,9 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Validação da escala** só no engine: `engine/escala_validacao.py` (quebras, soluções A/B, `ajustar_repouso`),
   `engine/escala_custo.py` (custo previsto; nunca gera verba — DE-3), `engine/escala_equidade.py`,
   `engine/turno_padrao.py`. O Frappe fica em `apuracao/cockpit_escala.py` (mês, validar, rascunho, publicar).
+- **Feriado é dia de escala:** fica neutro (em aberto) no cockpit e na Escala do Mês gerada até alguém ser escalado; o
+  perfil não vale no feriado. Turno Padrão tem `tipo_dia` (útil/sábado/domingo/feriado; vazio = todos) e os sugeridos
+  vêm das batidas (`engine/turno_padrao.sugerir_turnos`, `configuracao_ponto/turnos.sugeridos`).
 - **Rascunho → Publicar:** o cockpit grava `Rascunho de Escala`; só `cockpit_escala.publicar` (ou a mudança urgente
   < 48h) escreve na Escala Mensal, registra a `Publicacao de Escala` e chama `whatsapp_escala.avisar_publicacao`.
   A apuração nunca lê rascunho. Turno no dia de repouso move o repouso (`ajustar_repouso`).
@@ -171,7 +258,8 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   `apuracao/jornada_assinatura.py` (o horário só entra no `historico_perfil_jornada` quando todos assinaram e o
   perfil SEC-n igual existe; envio ao Secullum só pela trava `Configuracao Secullum.envio_horarios`, na data de
   início, mandando o cadastro lido com só o `HorarioNumero` trocado). Páginas sem login (`www/disponibilidade`,
-  `www/assinar`) abrem só com token HMAC e mostram só os dados do próprio colaborador.
+  `www/assinar`) abrem só com token HMAC e mostram só os dados do próprio colaborador. O contexto delas vem de `utils/sem_login.preparar` e todo
+  POST manda `X-Frappe-CSRF-Token` (navegador logado recusa sem ele).
 
 ## Termo de ocorrências — docs/PRD-termo-ocorrencias.md
 
@@ -190,6 +278,12 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - Toda confirmação gera o **comprovante** (PDF do termo + página do registro: quem, quando, IP, aparelho, respostas),
   que é o anexo dos tratamentos; mudança de status grava `Version` (`_versao`). O lote roda em fila
   (`emitir_lote` → `progresso_lote`); o relatório "Termos de Ocorrencias" usa `engine.termo_ocorrencias.estatisticas`.
+- **Textos do termo** (RH, 09/11/2026): fato neutro do dia, **sem citar lei e sem dizer o efeito na folha**
+  (`propor_dia`, há teste). Não sugere horário. O "Horário correto" só fica aberto nos tipos de
+  `COM_HORARIO_CORRETO` (batida faltando, intervalo, falta, aula); o resto sai hachurado (`Proposta.sem_horario`, campo `sem_horario` do item). A interjornada
+  não entra no termo. O que o colaborador mandou pelo link (Resposta WhatsApp Ponto) entra como registro
+  (`texto_da_correcao`); aguardando o RH, o item fica sem inconsistências (a assinatura não mexe no dia). Batida
+  faltando assinada "De acordo" sem horário volta ao RH (Aberta), nunca Mantida.
 
 ## Jornada legal com vigência e planejador 5x2 — docs/PRD-planejador-5x2.md
 

@@ -104,8 +104,11 @@ def aplicar_brasil() -> None:
 	usuarios = frappe.get_all(
 		"User", filters={"user_type": "System User", "enabled": 1}, fields=["name", "language"]
 	)
+	from hrms_secullum_brasil.utils.acesso import usa_o_painel
+
 	for usuario in usuarios:
-		valores = {"default_workspace": "Ponto"}
+		# quem usa o painel entra no /ponto (utils/acesso.py): o workspace padrão venceria a página inicial
+		valores = {} if usa_o_painel(usuario.name) else {"default_workspace": "Ponto"}
 		if usuario.language in (None, "", "en"):
 			valores["language"] = IDIOMA
 		frappe.db.set_value("User", usuario.name, valores)

@@ -41,7 +41,7 @@ Respostas de erro vêm no corpo; HTTP 401 = banco não autorizado.
 | `FonteDados` | GET | marcações originais: `dataInicio`, `dataFim`, `horaInicio`, `horaFim`, `funcionarioPis`, `funcionarioCpf`, `equipamentoId`, `origem` |
 | `FonteDados/APartirDoId` | GET | `?FonteDadosId=` (coleta incremental a partir de um id) |
 | `FuncionariosAfastamentos` | GET, POST, DELETE | `funcionarioPis` ou `/Cpf?funcionarioCpf=`, `dataInicio`, `dataFim` |
-| `Justificativas`, `MotivosDemissao`, `PerguntasAdicionais` | GET, DELETE | `?descricao=` |
+| `Justificativas`, `MotivosDemissao`, `PerguntasAdicionais` | GET, POST, DELETE | `?descricao=` (POST cria; ver "Rotas completas") |
 | `Pendencias` | GET, POST | — |
 | `Equipamentos` | GET | — |
 
@@ -98,12 +98,15 @@ Usado só pelo envio das correções do cartão (docs/PRD-cartao-ponto.md, CP-10
 | `CartaoPonto/Manual` | POST | `Data`, `Coluna`, `Hora` (HH:mm), `Motivo` (150) | erro se a coluna tem batida **original**; justificativa na coluna é apagada com o par; pré-assinalada é trocada; manual é editada |
 | `CartaoPonto` | DELETE | `Data`, `Coluna`, `Motivo` | original: exige motivo (fica desconsiderada); justificativa: apaga o grupo; célula vazia: nada |
 | `CartaoPonto/Justificativa` | POST | `Data`, `Grupo` (1..5), `Justificativa` (nome abreviado, 7) | erro se o grupo tem batida original; manual/pré-assinalada é sobrescrita |
-| `CartaoPonto/Troca` | POST | `Data`, `ColunaOrigem`, `ColunaDestino` | não usada |
+| `CartaoPonto/Troca` | POST | `Data`, `ColunaOrigem`, `ColunaDestino` | muda a batida de coluna mantendo a origem; usada para abrir espaço a uma batida incluída no meio do dia (desde 04/11/2026) |
 | `CartaoPonto/TrocaDia` | POST | `DataOrigem`, `DataDestino`, `Coluna` | não usada |
 
 - O programa lê o cartão do dia (`GET Batidas?funcionarioCpf=`) e calcula as operações para o Secullum ficar com as
   mesmas batidas do programa (`integrations/secullum/edicao_cartao.py`): mantém o que já está no lugar e só refaz a
-  partir da `Entrada1` se a ordem não fechar. Mudar um horário = `DELETE` + `Manual` na coluna.
+  partir da `Entrada1` se a ordem não fechar. Mudar um horário = `DELETE` + `Manual` na coluna. A batida que **fica**
+  no dia nunca é apagada e recriada (ficaria desconsiderada e a nova sairia como Integração): muda de coluna pela
+  `Troca`, sempre para uma coluna vazia, da última para a primeira; sem como fazer isso, o envio dá erro e o dia é
+  ajustado no Secullum (T-C1, 04/11/2026).
 - A batida manual volta na coleta (`FonteDados`, `Tipo` 1, `Origem` 8 IntegracaoExterna) e conta uma vez só (a
   inclusão do programa no mesmo minuto é a mesma batida).
 - Abono: justificativa do Secullum nos grupos 1..n (n = períodos previstos do dia). **A confirmar no primeiro envio
@@ -179,3 +182,27 @@ Só leitura (GET): com a origem dos cadastros "Secullum", o programa não envia 
   **`Horas Ad.`** (não em `Ex50%`); atraso e saída antecipada em `Atras.` e `Adian.`; horas abonadas em `Ajuste`,
   `Abono2..4`; `Folga` = horas de folga lançada; `Falta dias`, `BSaldo`... O mapeamento padrão
   (`integrations/secullum/totais.py`) já considera esses nomes.
+
+## Rotas completas (Swagger público, lido em 02/11/2026)
+
+Fonte: `https://pontowebintegracaoexterna.secullum.com.br/swagger/v1/swagger.json`. Possibilidades de envio em
+`docs/integracao-secullum-envio.md`.
+
+| Recurso | Métodos | Observação |
+|---|---|---|
+| `Funcionarios`, `Funcionarios/Cpf`, `Funcionarios/Fotos` | GET, POST, DELETE | POST = upsert pelo CPF (inclui `horarioNumero`, `descricaoEstrutura`, `codigoHolerite`) |
+| `Empresas`, `Departamentos`, `Funcoes` | GET, POST, DELETE | |
+| **`Horarios`** | **GET, DELETE** | **não cria nem altera horário** (opções, dias, extras e descanso só na tela do Secullum) |
+| **`Justificativas`** | GET, **POST**, DELETE | POST cria: `nomeAbreviado`, `nomeCompleto`, `ajuste`, `abono2..4`, `lancarComoHorasFalta`, `descontarHorasBancoDeHoras`, `descontarDsr`, `naoCalcularDsr`, **`calcularComoFolga`**, `calcularHorasAtrasoComoFalta`, `usarJustificativaParaContagemDeFerias`, `desativar`… |
+| `MotivosDemissao`, `PerguntasAdicionais`, `Atividades` | GET, POST, DELETE | |
+| `AtividadesLancamentos` | GET, POST, DELETE | lançamento de atividade por período |
+| `FuncionariosAfastamentos` (+ `/Cpf`) | GET, POST, DELETE | POST: `cpf`, `inicio`, `fim`, `motivo`, `justificativaNome` |
+| `Estruturas` (+ `/Funcionarios`, `/Responsaveis`) | GET, POST, DELETE | responsáveis e funcionários vinculados |
+| `Batidas` | GET | cartão do dia |
+| `FonteDados`, `FonteDados/APartirDoId` | GET | marcações originais |
+| `CartaoPonto` (DELETE), `CartaoPonto/Manual`, `/Justificativa`, `/Troca`, `/TrocaDia` | POST/DELETE | edição do cartão |
+| `Calcular`, `Calcular/SomenteTotais` | POST | 100 por hora por banco |
+| `InclusaoPonto/Incluir`, `/Configuracoes`, `/Pendencias` | GET, POST | marcação pelo app (geolocalização, foto) |
+| `GestaoArquivos` (+ `Tipos`, `Download`, `Lixeira`, `Assinaturas/Aprovar|Rejeitar|Detalhes|Comprovante`) | GET, POST, DELETE | documentos do funcionário e assinatura eletrônica |
+| `Equipamentos` | GET | |
+| — | — | **não há** rota de feriados, escalas, banco de horas nem relatórios (PDF) |

@@ -204,7 +204,9 @@ def enviar(token: str, itens) -> int:
 
 @frappe.whitelist()
 def pendentes(company: str) -> list[dict]:
-	filtros = {"company": company, "situacao": "Pendente"}
+	from hrms_secullum_brasil.apuracao.cockpit_escala import empresas_da_escala
+
+	filtros = {"company": ["in", empresas_da_escala(company)], "situacao": "Pendente"}
 	visiveis = employees_visiveis()
 	if visiveis is not None:
 		filtros["employee"] = ["in", visiveis or [""]]

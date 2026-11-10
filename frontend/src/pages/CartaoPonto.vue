@@ -39,6 +39,17 @@
 				>
 					Termo de ocorrências
 				</button>
+				<button
+					v-if="cartao.data && podeEditar"
+					type="button"
+					class="botao text-sm"
+					data-testid="abrir-lancamento"
+					:disabled="Boolean(quantosAlterados)"
+					:title="quantosAlterados ? 'Salve ou desfaça as alterações da grade antes' : 'Falta, atestado, férias, licença ou afastamento'"
+					@click="abrirLancamento()"
+				>
+					Lançar ausência
+				</button>
 				<router-link
 					:to="{ name: 'Colaborador', params: { employee }, query: { competencia: filtros.competencia } }"
 					class="text-sm text-primario-texto"
@@ -67,6 +78,15 @@
 						</dd>
 					</div>
 				</dl>
+				<!-- correções do período (pedido do RH, 04/11/2026): quem corrigiu, o que falta aprovar e o Secullum -->
+				<p
+					v-if="resumoCorrecoes"
+					class="mt-3 rounded-md border border-borda px-3 py-2 text-sm"
+					data-testid="resumo-correcoes"
+					aria-label="Correções do período"
+				>
+					<span class="font-semibold">Correções:</span> {{ resumoCorrecoes }}
+				</p>
 				<section
 					v-if="cartao.data.banco"
 					class="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1 rounded-md border border-borda px-3 py-2 text-sm"
@@ -106,6 +126,9 @@
 						</option>
 					</select>
 					<button type="button" class="botao bg-superficie" @click="abonarSelecionados">Abonar os dias</button>
+					<button type="button" class="botao bg-superficie" :disabled="Boolean(quantosAlterados)" @click="abrirLancamento()">
+						Lançar ausência nos dias
+					</button>
 					<button type="button" class="botao bg-superficie" @click="selecionados.clear()">Limpar seleção</button>
 					<span class="text-xs text-texto-suave">Shift + clique seleciona um intervalo.</span>
 				</div>
@@ -175,7 +198,9 @@
 										</button>
 									</th>
 									<td class="whitespace-nowrap px-2 py-1 text-xs text-texto-suave">
-										<template v-if="d.previsto.length">{{ d.previsto.map((p) => `${p.entrada}-${p.saida}`).join(" ") }}</template>
+										<!-- feriado: a apuração não prevê jornada (o trabalhado é hora extra de feriado) -->
+										<span v-if="d.feriado" class="font-medium text-alerta-texto" title="Feriado: as horas trabalhadas são pagas como hora extra de feriado">Feriado</span>
+										<template v-else-if="d.previsto.length">{{ d.previsto.map((p) => `${p.entrada}-${p.saida}`).join(" ") }}</template>
 										<template v-else>{{ d.situacao }}</template>
 									</td>
 									<td v-for="(_, coluna) in rotulosColunas" :key="coluna" class="px-0.5 py-1">
@@ -200,7 +225,13 @@
 									</td>
 									<td class="whitespace-nowrap px-2 py-1 text-xs">
 										<template v-if="abonoDoDia(d)">
-											<span :class="abonoDoDia(d).pendente ? 'text-alerta-texto' : ''">{{ abonoDoDia(d).texto }}</span>
+											<a
+												v-if="abonoDoDia(d).doctype && cartao.data.rh"
+												:href="documentoDesk(abonoDoDia(d).doctype, abonoDoDia(d).referencia)"
+												class="underline"
+												:title="`Abrir ${abonoDoDia(d).referencia} no Desk (cancelar ou completar)`"
+											>{{ abonoDoDia(d).texto }}</a>
+											<span v-else :class="abonoDoDia(d).falta ? 'text-perigo-texto' : abonoDoDia(d).pendente ? 'text-alerta-texto' : ''" :data-falta="abonoDoDia(d).falta ? d.data : undefined">{{ abonoDoDia(d).texto }}</span>
 										</template>
 										<template v-else-if="d.justificativas_secullum.length">
 											<span title="Lançado no Secullum">{{ d.justificativas_secullum.join(", ") }}</span>
@@ -225,14 +256,27 @@
 											</option>
 										</select>
 									</td>
-									<td class="px-2 py-1 text-right"><Minutos v-if="d.totais" :minutos="d.totais.normais" /></td>
-									<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.hora_extra" :minutos="d.totais.hora_extra" /></td>
-									<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.falta" :minutos="d.totais.falta" /></td>
-									<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.atraso" :minutos="d.totais.atraso" /></td>
+									<!-- dia alterado e não salvo: prévia calculada no servidor (sem gravar), em itálico -->
+									<template v-if="edicoes[d.data] && previas[d.data]?.apurado">
+										<td v-for="campo in ['normais', 'hora_extra', 'falta', 'atraso']" :key="campo" class="px-2 py-1 text-right italic text-primario-texto" :title="'Prévia: vale depois de salvar'" :data-previa="campo">
+											<Minutos v-if="campo === 'normais' || previas[d.data][campo]" :minutos="previas[d.data][campo]" />
+										</td>
+									</template>
+									<template v-else>
+										<td class="px-2 py-1 text-right"><Minutos v-if="d.totais" :minutos="d.totais.normais" /></td>
+										<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.hora_extra" :minutos="d.totais.hora_extra" /></td>
+										<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.falta" :minutos="d.totais.falta" /></td>
+										<td class="px-2 py-1 text-right"><Minutos v-if="d.totais?.atraso" :minutos="d.totais.atraso" /></td>
+									</template>
 									<td class="whitespace-nowrap px-2 py-1">
-										<span v-if="edicoes[d.data]" class="text-xs font-medium text-primario-texto">Alterado</span>
+										<span v-if="edicoes[d.data]" class="text-xs font-medium text-primario-texto">
+											Alterado<template v-if="previas[d.data]?.apurado"> · prévia{{ previas[d.data].inconsistencias.length ? ` · ${previas[d.data].inconsistencias.length} pendência(s)` : " · sem pendência" }}</template>
+										</span>
 										<BadgeStatus v-else-if="d.totais" :valor="d.totais.status" />
 										<span v-if="d.pendentes" class="ml-1 text-xs text-alerta-texto">{{ d.pendentes }} aguardando RH</span>
+										<span v-if="d.correcao" class="block text-xs" :class="TOM_CORRECAO[d.correcao.situacao] || 'text-texto-suave'" :data-correcao="d.data" :title="textoDaCorrecao(d.correcao)">
+											{{ textoDaCorrecao(d.correcao) }}
+										</span>
 										<span v-if="erros[d.data]" class="block text-xs text-perigo-texto" role="alert">{{ erros[d.data] }}</span>
 									</td>
 								</tr>
@@ -268,6 +312,14 @@
 								</li>
 							</ul>
 						</section>
+						<p
+							v-if="cartao.data?.rh && diaAberto && cartao.data.alteracoes.some((a) => a.data === diaAberto.data)"
+							class="mt-3"
+						>
+							<button type="button" class="botao text-sm" data-testid="enviar-secullum-dia" :disabled="enviandoSecullum" @click="enviarAoSecullum([diaAberto.data])">
+								Enviar este dia ao Secullum
+							</button>
+						</p>
 						<section v-if="diaAberto?.envio_secullum" class="mt-3 text-sm" aria-label="Envio ao Secullum">
 							<h3 class="text-xs font-semibold text-texto-suave">Envio ao Secullum</h3>
 							<p class="mt-1 flex flex-wrap items-center gap-2">
@@ -329,6 +381,20 @@
 							</tbody>
 						</table>
 					</div>
+					<p v-if="cartao.data.rh && cartao.data.alteracoes.length" class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+						<button
+							type="button"
+							class="botao"
+							data-testid="enviar-secullum-periodo"
+							:disabled="enviandoSecullum"
+							@click="enviarAoSecullum()"
+						>
+							{{ enviandoSecullum ? "Enviando…" : "Enviar ao Secullum o que ainda não foi" }}
+						</button>
+						<span class="text-xs text-texto-suave">
+							Correções aprovadas do período que ainda não estão no cartão do Secullum (envio: {{ cartao.data.envio_secullum }}).
+						</span>
+					</p>
 				</details>
 			</template>
 		</Bloco>
@@ -364,6 +430,19 @@
 			@fechar="salvando = false"
 			@concluido="concluirSalvar"
 		/>
+		<DialogoLancamento
+			v-if="cartao.data"
+			:aberto="lancamentoAberto"
+			:employee="employee"
+			:nome="cartao.data.colaborador.employee_name"
+			:opcoes="cartao.data.lancamentos || {}"
+			:datas="[...selecionados]"
+			:dia="diaFoco || cartao.data.periodo[0]"
+			:rh="Boolean(cartao.data.rh)"
+			:envio="cartao.data.envio_secullum || 'Bloqueado'"
+			@fechar="lancamentoAberto = false"
+			@concluido="concluirLancamento"
+		/>
 		<DialogoTermo
 			v-if="termoAberto && cartao.data"
 			:employee="employee"
@@ -385,6 +464,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { call, createResource } from "frappe-ui";
 import BadgeStatus from "@/components/BadgeStatus.vue";
 import Bloco from "@/components/Bloco.vue";
+import DialogoLancamento from "@/components/DialogoLancamento.vue";
 import DialogoSalvarCartao from "@/components/DialogoSalvarCartao.vue";
 import DialogoTermo from "@/components/DialogoTermo.vue";
 import HorarioColaborador from "@/components/HorarioColaborador.vue";
@@ -393,7 +473,7 @@ import DialogoTexto from "@/components/DialogoTexto.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
 import { useAtalhos } from "@/composables/useAtalhos";
 import { useFiltros } from "@/composables/useFiltros";
-import { celulasOriginais, horaValida, inserirEmOrdem, montarAlteracoes, normalizarHora, quantasColunas, batidasMudaram } from "@/utils/cartao";
+import { celulasOriginais, horaValida, inserirEmOrdem, montarAlteracoes, normalizarHora, ordenarCelulas, quantasColunas, batidasMudaram } from "@/utils/cartao";
 import { documentoDesk } from "@/utils/desk";
 import { mensagem } from "@/utils/erros";
 import { nomeDoTipo } from "@/utils/inconsistencias";
@@ -401,12 +481,13 @@ import { dataBR, nomeDaCompetencia } from "@/utils/tempo";
 
 const ACOES = "hrms_secullum_brasil.apuracao.acoes";
 const MOTIVO_TERMO = "Intervalo não registrado — termo assinado";
+const MOTIVO_SECULLUM = "Será tratada no Secullum";
 // ações do balão (docs/PRD-tratamento-inconsistencias.md, TI-04): quem pode usar cada uma
-const EDITAM_A_GRADE = new Set(["incluir", "desconsiderar", "abonar", "editar", "incluir_intervalo", "jornada_completa"]);
-const SO_RH = new Set(["jornada_fragmentada", "reenviar", "ciente", "reenviar_whatsapp"]);
+const EDITAM_A_GRADE = new Set(["incluir", "desconsiderar", "abonar", "editar", "incluir_intervalo", "incluir_intervalos", "jornada_completa"]);
+const SO_RH = new Set(["jornada_fragmentada", "reenviar", "ciente", "reenviar_whatsapp", "lancar_intervalo"]);
 // imprimir o termo vale para RH e gestor (o gestor colhe a assinatura); manter, abono parcial, atestado e folga também
-const TODOS = new Set(["termo", "manter", "abono_parcial", "atestado", "folga_compensatoria", "cobrar_whatsapp"]);
-const WHATSAPP = "hrms_secullum_brasil.apuracao.whatsapp_escala";
+const TODOS = new Set(["termo", "manter", "abono_parcial", "atestado", "folga_compensatoria", "cobrar_whatsapp", "reenviar_termo"]);
+const DIA_SEGUINTE = "hrms_secullum_brasil.apuracao.dia_seguinte";
 // TI-08: situação da cobrança mostrada sob a data
 const MARCA_WHATSAPP = {
 	Enviada: "WhatsApp enviado",
@@ -435,6 +516,58 @@ const employee = computed(() => route.params.employee || "");
 const diaFoco = computed(() => route.query.dia || "");
 const edicoes = reactive({});
 const erros = reactive({});
+
+// selo da correção do dia (os dados vêm do servidor: cartao_ponto.correcao_do_dia)
+const TOM_CORRECAO = { Aprovado: "text-conforme-texto", "Aguardando aprovação": "text-alerta-texto", Recusado: "text-perigo-texto" };
+const SECULLUM = { Enviado: "no Secullum: enviado", "Na fila": "no Secullum: na fila", Erro: "no Secullum: ERRO", Bloqueado: "no Secullum: bloqueado" };
+function textoDaCorrecao(c) {
+	const quem = c.origem === "colaborador" ? "pelo colaborador (WhatsApp)" : "pelo RH/gestor";
+	const partes = [];
+	if (c.situacao === "Aprovado") partes.push(`Corrigido ${quem} · aprovado${c.por ? ` por ${c.por}` : ""}${c.em ? ` em ${dataBR(c.em.slice(0, 10)).slice(0, 5)}` : ""}`);
+	else if (c.situacao === "Aguardando aprovação") partes.push(`Corrigido ${quem} · aguardando aprovação`);
+	else partes.push(`Correção recusada${c.motivo_recusa ? `: ${c.motivo_recusa}` : ""}`);
+	if (c.secullum) partes.push(SECULLUM[c.secullum] || `no Secullum: ${c.secullum.toLowerCase()}`);
+	return partes.join(" · ");
+}
+
+// prévia dos totais do dia alterado (pedido do RH, 04/11/2026): o servidor calcula com as batidas da grade sem gravar
+// (painel.previa_do_dia); some quando o dia é salvo ou desfeito
+const previas = reactive({});
+const pedidosPrevia = {};
+let relogioPrevia = null;
+watch(
+	edicoes,
+	() => {
+		clearTimeout(relogioPrevia);
+		relogioPrevia = setTimeout(atualizarPrevias, 400);
+	},
+	{ deep: true }
+);
+async function atualizarPrevias() {
+	for (const data of Object.keys(previas)) {
+		if (!edicoes[data]) {
+			delete previas[data];
+			delete pedidosPrevia[data];
+		}
+	}
+	for (const [data, e] of Object.entries(edicoes)) {
+		if (!e.celulas.every((h) => horaValida(h))) continue;
+		const chave = JSON.stringify([e.celulas, e.abonar]);
+		if (pedidosPrevia[data] === chave) continue;
+		pedidosPrevia[data] = chave;
+		try {
+			const r = await call("hrms_secullum_brasil.apuracao.painel.previa_do_dia", {
+				employee: employee.value,
+				data,
+				celulas: JSON.stringify(e.celulas.filter(Boolean)),
+				abonar: e.abonar === undefined ? undefined : e.abonar ? 1 : 0,
+			});
+			if (pedidosPrevia[data] === chave && edicoes[data]) previas[data] = r;
+		} catch {
+			delete pedidosPrevia[data];
+		}
+	}
+}
 const aviso = ref("");
 const salvando = ref(false);
 const previa = ref(null);
@@ -443,6 +576,7 @@ const selecionados = reactive(new Set());
 const ancora = ref(null);
 const dialogo = ref(null);
 const termoAberto = ref(false); // docs/PRD-termo-ocorrencias.md (TO-05)
+const lancamentoAberto = ref(false); // falta, atestado, férias/licença/afastamento (pedido do RH, 08/11/2026)
 const justificativaDoLote = ref("");
 let ultimaSelecionada = -1;
 
@@ -472,6 +606,17 @@ const rotulosColunas = computed(() =>
 	Array.from({ length: colunas.value }, (_, n) => `${n % 2 ? "Saída" : "Entrada"} ${Math.floor(n / 2) + 1}`)
 );
 const totais = TOTAIS;
+const resumoCorrecoes = computed(() => {
+	const c = cartao.data?.totais?.correcoes;
+	if (!c) return "";
+	const partes = [];
+	const feitos = c.colaborador + c.rh;
+	if (feitos) partes.push(`${feitos} dia(s) corrigido(s) (${c.colaborador} pelo colaborador, ${c.rh} pelo RH/gestor)`);
+	if (c.aguardando) partes.push(`${c.aguardando} aguardando aprovação`);
+	if (c.recusados) partes.push(`${c.recusados} recusado(s)`);
+	partes.push(c.erro_secullum ? `${c.erro_secullum} com erro no Secullum` : "nenhum erro no Secullum");
+	return feitos || c.aguardando || c.recusados || c.erro_secullum ? partes.join(" · ") : "";
+});
 const podeEditar = computed(() => Boolean(cartao.data?.pode_editar));
 const quantosAlterados = computed(() => Object.keys(edicoes).length);
 const temAbonoNasEdicoes = computed(() => Object.values(edicoes).some((e) => e.abonar !== undefined));
@@ -543,8 +688,19 @@ function limparSeIgual(d) {
 function mudarCelula(d, coluna, valor) {
 	const e = edicaoDe(d);
 	e.celulas[coluna] = normalizarHora(valor);
+	// o horário digitado vai para o lugar certo: as outras batidas se movem para manter a ordem crescente
+	e.celulas.splice(0, e.celulas.length, ...ordenarCelulas(e.celulas, d.hora_virada));
 	delete erros[d.data];
 	limparSeIgual(d);
+}
+
+// inclui horários na grade do dia sempre em ordem; devolve a coluna do primeiro incluído (ou -1 se não couber)
+function incluirNaGrade(d, horas) {
+	const e = edicaoDe(d);
+	const novas = inserirEmOrdem(e.celulas, horas, d.hora_virada);
+	if (!novas) return -1;
+	e.celulas.splice(0, e.celulas.length, ...novas);
+	return Math.max(0, novas.indexOf(horas[0]));
 }
 
 function desfazerCelula(d, coluna, evento) {
@@ -605,13 +761,17 @@ function abonoDoDia(d) {
 	const e = edicoes[d.data];
 	if (e?.abonar === true) return { texto: "Abonar (não salvo)", pendente: true };
 	if (e?.abonar === false) return { texto: "Tirar o abono (não salvo)", pendente: true };
+	if (d.falta_justificada) {
+		const f = d.falta_justificada;
+		return { texto: `Falta${f.justificativa ? ` (${f.justificativa})` : ""}${f.pendente ? " aguardando RH" : ""}`, pendente: f.pendente, falta: true };
+	}
 	if (!d.abono) return null;
-	if (d.abono.doctype !== "Tratamento de Ponto") return { texto: d.abono.doctype === "Atestado Medico" ? "Atestado" : d.abono.doctype === "Leave Application" ? "Licença" : "Afastamento" };
+	if (d.abono.doctype !== "Tratamento de Ponto") return { texto: d.abono.texto || "Afastamento", doctype: d.abono.doctype, referencia: d.abono.referencia };
 	return { texto: d.abono.pendente ? "Abono aguardando RH" : "Abonado", pendente: d.abono.pendente };
 }
 
 function podeAbonar(d) {
-	return !d.abono || d.abono.doctype === "Tratamento de Ponto";
+	return !d.falta_justificada && (!d.abono || d.abono.doctype === "Tratamento de Ponto");
 }
 
 function textoBotaoAbono(d) {
@@ -626,6 +786,23 @@ function alternarAbono(d, justificativa) {
 	else e.abonar = !d.abono;
 	if (justificativa) e.justificativa = justificativa;
 	limparSeIgual(d);
+}
+
+// ------------------------------------------------------------------ lançar ausência (apuracao/lancamentos.py)
+
+function abrirLancamento() {
+	if (quantosAlterados.value) return;
+	lancamentoAberto.value = true;
+}
+
+function concluirLancamento(r) {
+	lancamentoAberto.value = false;
+	selecionados.clear();
+	const feito = r.criados.length
+		? `${r.tipo}: ${r.criados.length} lançamento(s) ${r.aprovado ? "gravado(s)" : "aguardando o RH"}.`
+		: `${r.tipo}: nada lançado.`;
+	aviso.value = [feito, ...(r.avisos || [])].join(" ");
+	cartao.reload();
 }
 
 // ------------------------------------------------------------------ lote (CP-05)
@@ -660,7 +837,13 @@ function abonarSelecionados() {
 
 // ------------------------------------------------------------------ balão do dia (CP-04, TI-01 a TI-04)
 
-const usavel = (s) => LINKS.has(s.acao) || EDITAM_A_GRADE.has(s.acao) || TODOS.has(s.acao) || (SO_RH.has(s.acao) && cartao.data?.rh);
+// pedido do RH (04/11/2026): o que mexe nas batidas (incluir, desconsiderar, intervalo, jornada, abonos e atestado)
+// aparece só para o RH e o Administrador; o gestor fica com termo, manter, folga e o WhatsApp
+const SO_RH_NO_BALAO = new Set([...EDITAM_A_GRADE, "abono_parcial", "atestado"]);
+const usavel = (s) =>
+	SO_RH_NO_BALAO.has(s.acao)
+		? Boolean(cartao.data?.rh)
+		: LINKS.has(s.acao) || TODOS.has(s.acao) || (SO_RH.has(s.acao) && cartao.data?.rh);
 
 function hrefDaAcao(s, i, d) {
 	if (s.acao === "desk") return documentoDesk("Inconsistencia de Ponto", i.name);
@@ -684,8 +867,8 @@ const itensDoDia = computed(() => {
 		acoes: i.sugestoes.filter(usavel).map((s) => ({
 			...s,
 			href: hrefDaAcao(s, i, d),
-			desabilitada: s.acao === "secullum" || (!d.editavel && (EDITAM_A_GRADE.has(s.acao) || s.acao === "abono_parcial")),
-			dica: s.acao === "secullum" ? "Corrija no Secullum: vem na próxima coleta." : "",
+			desabilitada: s.acao === "secullum" || Boolean(s.bloqueada) || (!d.editavel && (EDITAM_A_GRADE.has(s.acao) || s.acao === "abono_parcial")),
+			dica: s.acao === "secullum" ? "Corrija no Secullum: vem na próxima coleta." : s.bloqueada ? s.motivo || "" : "",
 		})),
 	}));
 });
@@ -700,11 +883,49 @@ function concluirDialogo(mensagemFinal) {
 	cartao.reload();
 }
 
+// correções já salvas que ainda não foram ao Secullum (salvas com a trava em Bloqueado ou sem marcar "enviar")
+const enviandoSecullum = ref(false);
+
+async function enviarAoSecullum(datas = null) {
+	enviandoSecullum.value = true;
+	try {
+		const r = await call(`${ACOES}.enviar_cartao_secullum`, {
+			employee: employee.value,
+			competencia: filtros.value.competencia,
+			datas: datas ? JSON.stringify(datas) : null,
+		});
+		const partes = [];
+		if (r.enviados.length) partes.push(`${r.enviados.length} dia(s) na fila de envio ao Secullum`);
+		if (r.ja_enviados.length) partes.push(`${r.ja_enviados.length} já estava(m) no Secullum`);
+		if (r.sem_justificativa.length)
+			partes.push(`${r.sem_justificativa.length} abono(s) sem justificativa do Secullum (escolha a justificativa e salve de novo): ${r.sem_justificativa.map(dataBR).join(", ")}`);
+		if (r.fora_do_teste.length) partes.push(`${r.fora_do_teste.length} dia(s) fora do teste (trava em Teste: abra um Caso de Teste para o dia)`);
+		if (r.fechados.length) partes.push(`${r.fechados.length} dia(s) de período fechado não enviado(s)`);
+		aviso.value = partes.length ? `${partes.join(". ")}.` : "Nada a enviar.";
+		cartao.reload();
+	} catch (e) {
+		aviso.value = mensagem(e);
+	} finally {
+		enviandoSecullum.value = false;
+	}
+}
+
 async function aplicarSugestao(s, item) {
 	const d = diaAberto.value;
 	if (!d) return;
 	const inconsistencia = d.inconsistencias.find((i) => i.name === item.chave) || item;
 	const linha = cartao.data.dias.indexOf(d);
+	if (s.acao === "manter" && s.referencia === "secullum") {
+		// pedido do RH (03/11/2026): será tratada no Secullum (sistema oficial): mantém direto, com esse motivo
+		try {
+			await call(`${ACOES}.manter`, { inconsistencias: [inconsistencia.name], motivo: MOTIVO_SECULLUM });
+			fecharDia();
+			concluirDialogo("Mantida: será tratada no Secullum.");
+		} catch (e) {
+			aviso.value = mensagem(e);
+		}
+		return;
+	}
 	if (s.acao === "manter") {
 		// TI-03: nada a corrigir no ponto; não cria verba (o que a apuração calcula fica valendo)
 		const alta = inconsistencia.severidade === "Alta";
@@ -739,27 +960,28 @@ async function aplicarSugestao(s, item) {
 		});
 	}
 	if (s.acao === "cobrar_whatsapp") {
+		// a mesma mensagem do dia seguinte, com o link de resposta (docs/PRD-whatsapp-dia-seguinte.md); o servidor diz
+		// se pode (dia ainda não avisado, ou avisado e sem resposta além do prazo) e monta o texto
 		let pronto;
 		try {
-			pronto = await call(`${WHATSAPP}.texto_cobranca`, { inconsistencia: inconsistencia.name });
+			pronto = await call(`${DIA_SEGUINTE}.previa_cobranca`, { inconsistencia: inconsistencia.name });
 		} catch (e) {
 			return (aviso.value = mensagem(e));
 		}
+		if (!pronto.pode) return (aviso.value = pronto.motivo);
 		return abrirDialogo({
-			titulo: "Cobrar pelo WhatsApp",
+			titulo: "WhatsApp do dia seguinte",
 			descricao: !pronto.tem_celular
-				? "Sem celular no cadastro: corrija o cadastro para enviar (o texto pode ser copiado)."
-				: pronto.em_teste
-					? "A regra de cobrança está em teste: a mensagem fica aguardando o RH conferir e enviar."
-					: "Mensagem padrão pronta: edite à vontade antes de enviar. Ela fica registrada no dia.",
+				? "Sem celular no cadastro: corrija o cadastro para enviar."
+				: `Confira o texto antes de enviar${pronto.pendencias > 1 ? ` (${pronto.pendencias} pendências do dia numa mensagem só)` : ""}. {link} vira o link pessoal de resposta: o colaborador corrige ou explica, confirma com CPF e código, e você aprova.`,
 			rotuloTexto: "Mensagem",
 			textoInicial: pronto.texto,
-			link: cartao.data.rh ? { texto: "Editar a mensagem padrão (regra de envio)", href: pronto.editar_modelo } : null,
 			linhas: 7,
 			rotuloConfirmar: "Enviar mensagem",
 			enviar: async ({ texto }) => {
-				const r = await call(`${WHATSAPP}.cobrar_inconsistencia`, { inconsistencia: inconsistencia.name, texto });
-				return `WhatsApp: ${r.situacao}.`;
+				const r = await call(`${DIA_SEGUINTE}.cobrar`, { inconsistencia: inconsistencia.name, texto });
+				cartao.reload();
+				return `WhatsApp: ${String(r.situacao).toLowerCase()}.`;
 			},
 		});
 	}
@@ -778,10 +1000,11 @@ async function aplicarSugestao(s, item) {
 		const e = edicaoDe(d);
 		const livre = e.celulas.findIndex((c) => !c);
 		if (livre < 0) return (aviso.value = "Não há coluna livre no dia.");
-		if (s.hora) e.celulas[livre] = s.hora;
+		// a batida entra na ordem do dia: as outras se movem (ex.: 05:00 vira a Entrada 1)
+		const coluna = s.hora ? incluirNaGrade(d, [s.hora]) : livre;
 		await nextTick();
-		mover(linha, livre);
-		aviso.value = s.hora ? `${s.hora} incluída na grade: confira e salve.` : "Digite o horário na coluna livre.";
+		mover(linha, coluna);
+		aviso.value = s.hora ? `${s.hora} incluída na ordem do dia: confira e salve.` : "Digite o horário na coluna livre.";
 	} else if (s.acao === "desconsiderar") {
 		const e = edicaoDe(d);
 		const n = e.celulas.findIndex((c) => c === s.hora);
@@ -798,30 +1021,54 @@ async function aplicarSugestao(s, item) {
 		if (!window.confirm("Permitir intervalo maior que 2 h para todo o cargo (jornada fragmentada)? Só use se a CCT ou acordo escrito permitir.")) return;
 		const r = await executar(`${ACOES}.permitir_jornada_fragmentada`, { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = `Cargo ${r.cargo}: jornada fragmentada ligada; ${r.dias} dia(s) reapurado(s).`;
+	} else if (s.acao === "lancar_intervalo") {
+		// instrutor horista que passou de 4h15 sem marcar (RH, 09/11/2026): 15 min no meio da jornada, não pagos
+		if (!window.confirm("Lançar o intervalo de 15 min no meio da jornada? Ele desconta das horas do dia e não é pago; o termo do mês registra o dia.")) return;
+		const r = await executar(`${ACOES}.lancar_intervalo`, { inconsistencia: inconsistencia.name });
+		if (r) aviso.value = `Intervalo ${r.intervalo.join(" às ")} lançado (não remunerado).`;
 	} else if (s.acao === "reenviar") {
 		const r = await executar("hrms_secullum_brasil.ingestion.envio_cartao.reenviar", { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = r === "Enviado" ? "Correção enviada ao Secullum." : `Envio: ${r}.`;
 	} else if (s.acao === "jornada_completa") {
 		// docs/PRD-tratamento-inconsistencias.md (DT-9): horários previstos calculados no servidor; confirmar e salvar
-		const e = edicaoDe(d);
-		const livres = e.celulas.map((c, n) => (c ? -1 : n)).filter((n) => n >= 0);
-		if (livres.length < s.horas.length) return (aviso.value = "Não há colunas livres para a jornada prevista.");
-		s.horas.forEach((hora, n) => (e.celulas[livres[n]] = hora));
+		const coluna = incluirNaGrade(d, s.horas);
+		if (coluna < 0) return (aviso.value = "Não há colunas livres para a jornada prevista.");
 		await nextTick();
-		mover(linha, livres[0]);
+		mover(linha, coluna);
 		aviso.value = `Jornada prevista (${s.horas.join(", ")}) incluída na grade: confira, informe o motivo e salve.`;
 	} else if (s.acao === "incluir_intervalo") {
 		// MH-06: o intervalo vem do termo assinado; o servidor sugere o meio do expediente (DT-10). Entra na ordem:
 		// a saída original passa para a Saída 2 e a pausa fica no meio (Saída 1 / Entrada 2)
-		const e = edicaoDe(d);
-		const novas = inserirEmOrdem(e.celulas, s.horas || []);
-		if (!novas) return (aviso.value = "Não há duas colunas livres no dia.");
-		e.celulas.splice(0, e.celulas.length, ...novas);
+		const coluna = incluirNaGrade(d, s.horas || []);
+		if (coluna < 0) return (aviso.value = "Não há duas colunas livres no dia.");
 		await nextTick();
-		mover(linha, Math.max(0, novas.indexOf((s.horas || [])[0])));
+		mover(linha, coluna);
 		aviso.value = s.horas?.length
-			? `Intervalo ${s.horas.join(" às ")} incluído no meio do expediente: confira com o termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado. A pausa sai das horas pagas e vira crédito no banco de horas.`
+			? `Intervalo ${s.horas.join(" às ")} incluído no meio do expediente: confira com o termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado. A pausa do termo é paga: as horas do dia não mudam.`
 			: `Digite o início e o fim do intervalo do termo e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado.`;
+	} else if (s.acao === "incluir_intervalos") {
+		// alerta do horista: o servidor propõe o intervalo de cada dia (meio do expediente, dia sem pausa); a saída
+		// original vai para a Saída 2 e a pausa entra no meio. Só os dias deste cartão; nada é salvo sem o RH
+		let r;
+		try {
+			r = await call("hrms_secullum_brasil.apuracao.monitoramento_horistas.intervalos_do_alerta", { inconsistencia: inconsistencia.name });
+		} catch (e) {
+			return (aviso.value = mensagem(e));
+		}
+		const incluidos = [];
+		for (const item of r) {
+			const dia = cartao.data.dias.find((x) => x.data === item.data);
+			if (!dia) continue;
+			const e = edicaoDe(dia);
+			if (e.celulas.includes(item.horas[0])) continue; // já incluído
+			const novas = inserirEmOrdem(e.celulas, item.horas, dia.hora_virada);
+			if (!novas) continue;
+			e.celulas.splice(0, e.celulas.length, ...novas);
+			incluidos.push(`${dataBR(item.data).slice(0, 5)} ${item.horas.join("–")}`);
+		}
+		aviso.value = incluidos.length
+			? `Intervalos incluídos (${incluidos.join("; ")}): confira com o termo assinado e salve com o motivo "${MOTIVO_TERMO}" e o termo anexado. A pausa do termo é paga: as horas de cada dia não mudam.`
+			: "Nenhum dia deste período tem intervalo a incluir (dias com pausa registrada ficam de fora).";
 	} else if (s.acao === "termo") {
 		const alerta = inconsistencia.referencia_doctype === "Alerta Horista" ? inconsistencia.referencia_name : null;
 		if (!alerta) return (aviso.value = "O termo sai do alerta do mês (inconsistência Horista além de 4 h sem intervalo).");
@@ -832,6 +1079,10 @@ async function aplicarSugestao(s, item) {
 		if (!window.confirm("Sem termo assinado: o intervalo que faltou é pago como indenização. Confirmar?")) return;
 		const r = await executar("hrms_secullum_brasil.apuracao.monitoramento_horistas.ciente", { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = "Ciente registrado: a indenização do intervalo será paga.";
+	} else if (s.acao === "reenviar_termo") {
+		// o dia já está num termo aberto: reenvia o link dele no lugar de uma cobrança nova (W-7)
+		const r = await executar("hrms_secullum_brasil.apuracao.termo_ocorrencias.reenviar_link", { termo: s.referencia });
+		if (r) aviso.value = `Link do termo ${s.referencia}: ${String(r).toLowerCase()}.`;
 	} else if (s.acao === "reenviar_whatsapp") {
 		const r = await executar("hrms_secullum_brasil.apuracao.whatsapp.reenviar", { inconsistencia: inconsistencia.name });
 		if (r) aviso.value = `WhatsApp: ${r}.`;
@@ -881,8 +1132,14 @@ async function abrirSalvar() {
 	}
 }
 
-function salvar({ motivo, enviarSecullum, anexo }) {
-	return call(`${ACOES}.salvar_cartao`, { ...pedido(), motivo, enviar_secullum: enviarSecullum ? 1 : 0, anexo });
+function salvar({ motivo, enviarSecullum, anexo, confirmarRelogio }) {
+	return call(`${ACOES}.salvar_cartao`, {
+		...pedido(),
+		motivo,
+		enviar_secullum: enviarSecullum ? 1 : 0,
+		anexo,
+		confirmar_relogio: confirmarRelogio ? 1 : 0,
+	});
 }
 
 function concluirSalvar(resposta) {
@@ -893,9 +1150,13 @@ function concluirSalvar(resposta) {
 		else delete edicoes[data];
 	}
 	cartao.setData(resposta.cartao);
+	const semEnvio = resposta.sem_envio?.length
+		? ` Não foi ao Secullum (${resposta.sem_envio.join(", ")}): a trava do envio do cartão está em Teste e não há caso de teste aberto para este colaborador e dia.`
+		: "";
+	const comEnvio = resposta.enviar_secullum && !resposta.sem_envio?.length ? ", com envio ao Secullum" : "";
 	aviso.value = comErro.length
-		? `${resposta.resumo}. ${comErro.length} dia(s) com erro continuam marcados.`
-		: `${resposta.resumo}: salvo${resposta.cartao.rh ? " e aprovado" : "; aguardando o RH"}${resposta.enviar_secullum ? ", com envio ao Secullum" : ""}.`;
+		? `${resposta.resumo}. ${comErro.length} dia(s) com erro continuam marcados.${semEnvio}`
+		: `${resposta.resumo}: salvo${resposta.cartao.rh ? " e aprovado" : "; aguardando o RH"}${comEnvio}.${semEnvio}`;
 }
 
 useAtalhos({

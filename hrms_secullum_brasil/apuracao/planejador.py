@@ -36,7 +36,8 @@ from hrms_secullum_brasil.engine.planejador.modelos import (
 )
 
 DOCTYPE = "Simulacao de Escala"
-PAPEIS = ("System Manager", "RH Ponto", "Gestor Ponto")
+# RH, 04/11/2026: o planejador é só do administrador (System Manager); RH e gestores não o veem
+PAPEIS = ("System Manager",)
 CARGO_PADRAO = "INSTRUTOR"  # instrutor de musculação (DP-15)
 
 
@@ -45,6 +46,12 @@ CARGO_PADRAO = "INSTRUTOR"  # instrutor de musculação (DP-15)
 
 def _checar():
 	frappe.only_for(PAPEIS)
+
+
+def _e_admin() -> bool:
+	from hrms_secullum_brasil.utils.acesso import e_administrador
+
+	return e_administrador()
 
 
 def _empresas_visiveis() -> list[str] | None:
@@ -765,8 +772,10 @@ def exportar(nome: str, codigo: str):
 
 @frappe.whitelist()
 def consulta_escalas(company: str, inicio: str, fim: str) -> list[dict]:
-	"""Painel de consulta da tela Escalas (PE-10): as mudanças das propostas escolhidas que caem no período."""
-	_checar()
+	"""Painel de consulta da tela Escalas (PE-10): as mudanças das propostas escolhidas que caem no período. Quem
+	não é administrador não usa o planejador: nada a consultar."""
+	if not _e_admin():
+		return []
 	_checar_empresa(company)
 	ini, fim_d = getdate(inicio), getdate(fim)
 	saida = []

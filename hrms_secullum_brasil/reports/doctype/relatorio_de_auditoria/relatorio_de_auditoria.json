@@ -1,0 +1,175 @@
+{
+ "actions": [],
+ "autoname": "AUD-.YYYY.-.#####",
+ "creation": "2026-11-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "description": "Relatório de auditoria em PDF (docs/PRD-whatsapp-aceite-auditoria.md): correções do ponto, batidas do relógio desconsideradas, respostas, termos, mensagens, envios ao Secullum, escala, inconsistências mantidas, mudanças de regras e aceites. Para gerar sob demanda: Novo, escolha o período (e a empresa) e salve.",
+ "field_order": [
+  "tipo",
+  "company",
+  "inicio",
+  "fim",
+  "column_break_1",
+  "situacao",
+  "gerado_em",
+  "pdf",
+  "fechamento",
+  "resumo_section",
+  "resumo",
+  "erro",
+  "email_section",
+  "destinatarios",
+  "situacao_email",
+  "enviado_em"
+ ],
+ "fields": [
+  {
+   "default": "Sob demanda",
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "label": "Tipo",
+   "options": "Sob demanda\nSemanal\nMensal",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "set_only_once": 1,
+   "description": "Vazio: todas as empresas."
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Date",
+   "label": "De",
+   "reqd": 1,
+   "in_list_view": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "fim",
+   "fieldtype": "Date",
+   "label": "Até",
+   "reqd": 1,
+   "in_list_view": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Na fila",
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Na fila\nPronto\nSem movimento\nErro",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "gerado_em",
+   "fieldtype": "Datetime",
+   "label": "Gerado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf",
+   "fieldtype": "Attach",
+   "label": "PDF",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fechamento",
+   "fieldtype": "Link",
+   "label": "Fechamento de Ponto",
+   "options": "Fechamento de Ponto",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resumo_section",
+   "fieldtype": "Section Break",
+   "label": "Resumo"
+  },
+  {
+   "fieldname": "resumo",
+   "fieldtype": "Small Text",
+   "label": "Resumo em números",
+   "read_only": 1
+  },
+  {
+   "fieldname": "erro",
+   "fieldtype": "Small Text",
+   "label": "Erro",
+   "read_only": 1,
+   "depends_on": "erro"
+  },
+  {
+   "fieldname": "email_section",
+   "fieldtype": "Section Break",
+   "label": "E-mail"
+  },
+  {
+   "fieldname": "destinatarios",
+   "fieldtype": "Small Text",
+   "label": "Destinatários",
+   "read_only": 1
+  },
+  {
+   "fieldname": "situacao_email",
+   "fieldtype": "Select",
+   "label": "Situação do e-mail",
+   "options": "\nNão enviado\nEnviado\nSem destinatário\nSem conta de e-mail\nErro",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enviado_em",
+   "fieldtype": "Datetime",
+   "label": "Enviado em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Reports",
+ "name": "Relatorio de Auditoria",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

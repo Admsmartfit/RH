@@ -1,0 +1,196 @@
+{
+ "actions": [],
+ "creation": "2026-11-02 18:00:00.000000",
+ "description": "Teste caso a caso de um envio ao Secullum com um funcionário real (não há banco de homologação): prévia, envio, conferência na tela, resultado com print e desfazer.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "caso",
+  "tipo",
+  "situacao",
+  "descricao",
+  "column_break_1",
+  "employee",
+  "employee_name",
+  "data",
+  "carga_minutos",
+  "section_envio",
+  "previa",
+  "o_que_conferir",
+  "envio",
+  "envio_desfazer",
+  "leitura",
+  "section_resultado",
+  "resultado",
+  "evidencia",
+  "observacao",
+  "avaliado_por",
+  "avaliado_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "caso",
+   "fieldtype": "Select",
+   "label": "Caso",
+   "options": "T-J1\nT-J2\nT-J3\nT-Q1\nT-F1\nT-F2\nT-F3\nT-F4\nT-F5\nT-L1\nT-A1\nT-A2\nT-Q2\nT-Q3\nT-Q4\nT-Q5\nT-Q6\nT-M1\nT-H1\nT-H2\nT-C1\nT-C2\nT-E1\nT-P1\nT-P2\nT-P3",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Data",
+   "label": "Tipo de envio",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Aberto\nEnviado\nAprovado\nReprovado\nDesfeito",
+   "default": "Aberto",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "label": "O que testa",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Colaborador (qualquer um)",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "label": "Dia do teste"
+  },
+  {
+   "fieldname": "carga_minutos",
+   "fieldtype": "Int",
+   "label": "Carga do dia (min, horista)",
+   "description": "Para os casos de horista (T-Q2, T-Q3, T-Q5, T-Q6): ex.: 180 = 3h. Vazio = as horas previstas do dia já apurado (dia futuro ou folga: preencha)."
+  },
+  {
+   "fieldname": "section_envio",
+   "fieldtype": "Section Break",
+   "label": "Envio"
+  },
+  {
+   "fieldname": "previa",
+   "fieldtype": "Code",
+   "label": "O que será enviado",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "o_que_conferir",
+   "fieldtype": "Text",
+   "label": "O que conferir no Secullum (passo a passo)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "envio",
+   "fieldtype": "Link",
+   "label": "Envio",
+   "options": "Envio Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "envio_desfazer",
+   "fieldtype": "Link",
+   "label": "Envio do desfazer",
+   "options": "Envio Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "leitura",
+   "fieldtype": "Code",
+   "label": "O que o programa leu de volta",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_resultado",
+   "fieldtype": "Section Break",
+   "label": "Resultado"
+  },
+  {
+   "fieldname": "resultado",
+   "fieldtype": "Select",
+   "label": "Na tela do Secullum",
+   "options": "\nFicou certo\nFicou errado"
+  },
+  {
+   "fieldname": "evidencia",
+   "fieldtype": "Attach Image",
+   "label": "Print da tela"
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  },
+  {
+   "fieldname": "avaliado_por",
+   "fieldtype": "Link",
+   "label": "Avaliado por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "avaliado_em",
+   "fieldtype": "Datetime",
+   "label": "Avaliado em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-09 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Caso de Teste Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "CTSEC-.#####",
+ "title_field": "descricao"
+}

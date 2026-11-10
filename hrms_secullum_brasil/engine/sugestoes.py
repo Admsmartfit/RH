@@ -25,6 +25,9 @@ SECULLUM = "secullum"  # o dado vem do Secullum: corrigir lá
 REENVIAR = "reenviar"  # manda de novo ao Secullum a correção que falhou (CP-10)
 # docs/PRD-monitoramento-horistas.md
 INCLUIR_INTERVALO = "incluir_intervalo"  # duas células livres para o intervalo do termo assinado (MH-06)
+INCLUIR_INTERVALOS = (
+	"incluir_intervalos"  # o intervalo do termo em cada dia do alerta do horista (03/11/2026)
+)
 TERMO = "termo"  # imprime o Termo de Ajuste de Intervalo (MH-05)
 CIENTE = "ciente"  # RH ciente: não há termo, paga a indenização (DH-3)
 REENVIAR_WHATSAPP = "reenviar_whatsapp"
@@ -34,6 +37,8 @@ ATESTADO = "atestado"  # modal do atestado (anexo e CID em permlevel 1, DT-5)
 ABONO_PARCIAL = "abono_parcial"  # abona só os minutos do atraso (DT-6, TI-06)
 FOLGA_COMPENSATORIA = "folga_compensatoria"  # escolher o dia da folga (DT-8)
 COBRAR_WHATSAPP = "cobrar_whatsapp"  # cobrar o colaborador pelo WhatsApp (TI-08)
+# instrutor horista que passou de 4h15 sem marcar (RH, 09/11/2026): o RH lança o intervalo, que não é pago
+LANCAR_INTERVALO = "lancar_intervalo"
 
 Par = tuple[int, int]
 
@@ -57,9 +62,11 @@ class ContextoDia:
 	intervalo_curto: int = d.INTERVALO_CURTO_MIN
 	jornada_sem_intervalo_ate: int = d.JORNADA_SEM_INTERVALO_ATE_MIN
 	jornada_intervalo_curto_ate: int = d.JORNADA_INTERVALO_CURTO_ATE_MIN
+	tolerancia_jornada_intervalo: int = d.TOLERANCIA_JORNADA_INTERVALO_MIN
 	banco_he: bool = False  # as horas extras do dia vão para o banco (participa na data)
 	banco_atraso: bool = False  # o atraso do dia é debitado do banco (participa e a CCT debita atrasos)
 	falta_horista_desconta_dsr: bool = d.FALTA_HORISTA_DESCONTA_DSR
+	limite_he_diaria: int = d.LIMITE_HE_DIARIA_MIN  # o texto do termo diz o limite da CCT do dia
 
 
 @dataclass(frozen=True)
@@ -76,6 +83,25 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 	"interjornada": (
 		"Descansou menos de 11 h entre o fim de um dia e o começo do seguinte (CLT, art. 66).",
 		(CORRIGIR_BATIDA, Sugestao(MANTER, "Manter: as horas que faltaram são pagas como extra")),
+	),
+	"excesso_jornada_nao_autorizada": (
+		"Trabalhou além da jornada contratada sem autorização, mesmo contando a pausa paga e a tolerância do dia. As "
+		"horas são pagas; envie a notificação oficial pelo WhatsApp (ela fica na fila para você conferir e nunca sai "
+		"sozinha).",
+		(
+			CORRIGIR_BATIDA,
+			Sugestao(MANTER, "Manter: as horas são pagas (a notificação é à parte)"),
+		),
+	),
+	"intervalo_fora_de_hora": (
+		"O intervalo ficou colado ao fim (ou ao começo) do expediente. Mesmo que o empregado peça, a Justiça do "
+		"Trabalho não aceita: o descanso precisa ficar no meio da jornada, com pelo menos 1 a 2 horas de trabalho "
+		"depois da volta. Se a pausa mais tarde for um pedido dele, faça um termo escrito de alteração do horário do "
+		"intervalo (com o motivo) e mantenha a batida real da saída e da volta.",
+		(
+			CORRIGIR_BATIDA,
+			Sugestao(MANTER, "Manter: oriente o colaborador e o gestor sobre o horário do intervalo"),
+		),
 	),
 	"intervalo_superior_2h": (
 		"O intervalo do dia passou de 2 h. Só vale com acordo escrito ou CCT (CLT, art. 71). Para quem trabalha em "
@@ -181,8 +207,20 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 		"termo assinado e inclua o intervalo de cada dia no cartão; sem termo, o intervalo é pago como indenização.",
 		(
 			Sugestao(TERMO, "Imprimir o termo de ajuste"),
-			Sugestao(EDITAR, "Incluir os intervalos no cartão"),
+			Sugestao(
+				INCLUIR_INTERVALOS,
+				"Incluir os intervalos no cartão (no meio do expediente; as horas do dia não mudam)",
+			),
 			Sugestao(CIENTE, "Ciente: pagar a indenização"),
+		),
+	),
+	"intervalo_nao_marcado_horista": (
+		"O instrutor horista passou de 4h15 sem marcar o intervalo. Lance o intervalo de 15 min no meio da jornada: "
+		"ele desconta das horas e não é pago. O instrutor não recebe WhatsApp; no fim do mês o termo registra que ele "
+		"excedeu o horário de trabalho de 4 h e deveria ter marcado o intervalo.",
+		(
+			Sugestao(LANCAR_INTERVALO, "Lançar o intervalo de 15 min (não remunerado)"),
+			CORRIGIR_BATIDA,
 		),
 	),
 	"whatsapp_nao_enviado": (
@@ -239,6 +277,10 @@ FIXOS: dict[str, tuple[str, tuple[Sugestao, ...]]] = {
 }
 
 COBRAR = Sugestao(COBRAR_WHATSAPP, "Cobrar pelo WhatsApp")
+# pedido do RH (03/11/2026): toda inconsistência pode ficar mantida porque será tratada no Secullum (sistema oficial);
+# a tela grava o motivo direto, sem perguntar
+TRATAR_NO_SECULLUM = "secullum"
+MANTER_SECULLUM = Sugestao(MANTER, "Manter: será tratada no Secullum", referencia=TRATAR_NO_SECULLUM)
 FOLGA = Sugestao(FOLGA_COMPENSATORIA, "Dar folga compensatória (Escala do mês)")
 
 DO_DIA = ("marcacao_impar", "marcacao_duplicada", "falta", "intrajornada", "atraso", "he_acima_limite")
@@ -257,6 +299,7 @@ COBRAVEIS = frozenset(
 		"intrajornada",
 		"interjornada",
 		"intervalo_superior_2h",
+		"intervalo_fora_de_hora",
 		"aula_nao_registrada",
 		"sete_dias_seguidos",
 		"descanso_semanal",
@@ -264,6 +307,7 @@ COBRAVEIS = frozenset(
 		"domingos_sem_folga",
 		"excesso_jornada_estagio",
 		"excesso_jornada_horista",
+		"excesso_jornada_nao_autorizada",
 	}
 )
 
@@ -271,9 +315,11 @@ COBRAVEIS = frozenset(
 def orientar(tipo: str, contexto: ContextoDia | None = None) -> Orientacao:
 	"""Explicação e sugestões para a inconsistência. Tipo desconhecido: sem correção automática."""
 	o = _orientar(tipo, contexto or ContextoDia())
-	if tipo in COBRAVEIS and COBRAR not in o.sugestoes:
-		return Orientacao(o.explicacao, (*o.sugestoes, COBRAR))
-	return o
+	sugestoes = list(o.sugestoes)
+	if tipo in COBRAVEIS and COBRAR not in sugestoes:
+		sugestoes.append(COBRAR)
+	sugestoes.append(MANTER_SECULLUM)  # sempre, em todo tipo
+	return Orientacao(o.explicacao, tuple(sugestoes))
 
 
 def _orientar(tipo: str, contexto: ContextoDia) -> Orientacao:
@@ -318,10 +364,10 @@ def _marcacao_impar(contexto: ContextoDia) -> Orientacao:
 				ultima.referencia,
 			)
 		)
+	# sem as batidas (ex.: texto da cobrança pelo WhatsApp) não conta: "o dia tem 0 batidas" confundia
+	quantas = f": o dia tem {len(minutos)} batida{'s' if len(minutos) != 1 else ''}" if minutos else ""
 	return Orientacao(
-		f"Falta uma batida: o dia tem {len(minutos)} batida{'s' if len(minutos) != 1 else ''} "
-		"(esqueceu de bater a entrada ou a saída).",
-		tuple(sugestoes),
+		f"Falta uma batida{quantas} (esqueceu de bater a entrada ou a saída).", tuple(sugestoes)
 	)
 
 
@@ -420,9 +466,9 @@ def jornada_completa(previsto: Sequence[Par]) -> tuple[int, ...]:
 
 def intervalo_exigido(trabalhado: int, contexto: ContextoDia) -> int:
 	"""Intervalo do art. 71 para a jornada trabalhada (o mínimo da CCT acima de 6h)."""
-	if trabalhado > contexto.jornada_intervalo_curto_ate:
+	if trabalhado > contexto.jornada_intervalo_curto_ate + contexto.tolerancia_jornada_intervalo:
 		return contexto.intervalo_minimo
-	if trabalhado > contexto.jornada_sem_intervalo_ate:
+	if trabalhado > contexto.jornada_sem_intervalo_ate + contexto.tolerancia_jornada_intervalo:
 		return contexto.intervalo_curto
 	return 0
 

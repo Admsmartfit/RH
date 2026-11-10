@@ -52,6 +52,7 @@ CAMPOS_APURACAO = (
 	"noturno_real",
 	"noturno_ficto",
 	"intrajornada_suprimida",
+	"pausa_paga",
 	"interjornada_suprimida",
 	"aulas_nao_dadas",
 	"janela_minutos",
@@ -375,6 +376,7 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		he_por_percentual=dict(he_pagas),
 		noturno_ficto=sum(cint(a.noturno_ficto) for a in docs),
 		intrajornada=sum(cint(a.intrajornada_suprimida) for a in docs),
+		pausa_paga=sum(cint(a.get("pausa_paga")) for a in docs),
 		interjornada=sum(cint(a.interjornada_suprimida) for a in docs),
 		descanso_semanal=sum(cint(s.descanso_suprimido_minutos) for s in dsr),  # AJ-10
 		falta=sum(cint(a.falta) for a in docs),

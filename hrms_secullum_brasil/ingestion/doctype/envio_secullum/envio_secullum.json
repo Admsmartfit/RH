@@ -1,0 +1,208 @@
+{
+ "actions": [],
+ "creation": "2026-11-02 18:00:00.000000",
+ "description": "Fila única de envio ao Secullum (docs/PRD-sincronizacao-secullum.md): folgas da escala, licenças, falta/atestado do horista, afastamentos, justificativas e estrutura. Cada tipo tem a sua trava (Bloqueado → Teste → Ligado).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tipo",
+  "situacao",
+  "descricao",
+  "employee",
+  "employee_name",
+  "company",
+  "column_break_1",
+  "data",
+  "data_fim",
+  "desfazer",
+  "chave",
+  "caso_teste",
+  "origem_doctype",
+  "origem_name",
+  "section_ops",
+  "operacoes",
+  "antes",
+  "resposta",
+  "tentativas",
+  "enviado_em",
+  "usuario"
+ ],
+ "fields": [
+  {
+   "fieldname": "tipo",
+   "fieldtype": "Select",
+   "label": "Tipo",
+   "options": "cartao\nfolga_escala\njustificativa_dia\nhorista\nafastamento\njustificativa_cadastro\nestrutura\nhorario_funcionario",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Na fila\nEnviado\nConfirmado\nDivergente\nErro\nCancelado\nBloqueado",
+   "default": "Na fila",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Data",
+   "label": "O que é",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Colaborador",
+   "options": "Employee",
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "label": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "data_fim",
+   "fieldtype": "Date",
+   "label": "Até",
+   "read_only": 1
+  },
+  {
+   "fieldname": "desfazer",
+   "fieldtype": "Check",
+   "label": "É desfazer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "chave",
+   "fieldtype": "Data",
+   "label": "Chave",
+   "read_only": 1,
+   "search_index": 1,
+   "description": "Tipo + colaborador + dia (+ nome): um envio pendente por chave; o último prevalece."
+  },
+  {
+   "fieldname": "caso_teste",
+   "fieldtype": "Link",
+   "label": "Caso de teste",
+   "options": "Caso de Teste Secullum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_doctype",
+   "fieldtype": "Link",
+   "label": "Origem (tipo)",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Origem",
+   "options": "origem_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_ops",
+   "fieldtype": "Section Break",
+   "label": "Envio"
+  },
+  {
+   "fieldname": "operacoes",
+   "fieldtype": "Code",
+   "label": "Operações",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "antes",
+   "fieldtype": "Code",
+   "label": "Como estava no Secullum",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resposta",
+   "fieldtype": "Small Text",
+   "label": "Resposta / conferência",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tentativas",
+   "fieldtype": "Int",
+   "label": "Tentativas",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enviado_em",
+   "fieldtype": "Datetime",
+   "label": "Enviado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "usuario",
+   "fieldtype": "Link",
+   "label": "Pedido por",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-02 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Ingestion",
+ "name": "Envio Secullum",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "export": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "ENVS-.#####",
+ "title_field": "descricao",
+ "in_create": 1
+}

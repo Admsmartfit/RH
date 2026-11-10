@@ -77,7 +77,32 @@ def periodo_do_painel(competencia: str, company: str | None = None) -> dict:
 
 	exigir_acesso()
 	r = resolver(competencia, company or None)
-	return {**r, "inicio": str(r["inicio"]), "fim": str(r["fim"])}
+	return {
+		**r,
+		"inicio": str(r["inicio"]),
+		"fim": str(r["fim"]),
+		"pode_configurar": bool(set(frappe.get_roles()) & set(PAPEIS_CONFIGURAR)),
+	}
+
+
+PAPEIS_CONFIGURAR = ("System Manager", "RH Ponto")
+
+
+@frappe.whitelist()
+def definir_dia_fechamento(company: str, dia) -> dict:
+	"""Atalho do painel: o RH define o dia de fechamento da folha da empresa (0 ou vazio = mês cheio)."""
+	frappe.only_for(PAPEIS_CONFIGURAR)
+	dia = cint(dia)
+	if dia < 0 or dia > 31:
+		frappe.throw(_("Dia de fechamento da folha: use de 1 a 31, ou 0 para o mês cheio."))
+	if not frappe.db.exists("Company", company):
+		frappe.throw(_("Empresa não encontrada."))
+	frappe.db.set_value("Company", company, CAMPO, dia)
+	frappe.clear_document_cache("Company", company)
+	frappe.get_doc("Company", company).add_comment(
+		"Comment", _("Dia de fechamento da folha definido em {0} pelo painel.").format(dia or _("mês cheio"))
+	)
+	return {"dia_fechamento": dia or None}
 
 
 @frappe.whitelist()

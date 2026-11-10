@@ -9,3 +9,8 @@ hrms_secullum_brasil.patches.faixa_folga_compensada
 hrms_secullum_brasil.patches.feriado_pagar_em_dobro
 hrms_secullum_brasil.patches.regimes_ec141
 hrms_secullum_brasil.patches.indices_auditoria
+hrms_secullum_brasil.patches.regras_dia_seguinte
+hrms_secullum_brasil.patches.entrada_no_painel
+hrms_secullum_brasil.patches.whatsapp_situacao_pendente
+hrms_secullum_brasil.patches.whatsapp_padroes
+hrms_secullum_brasil.patches.licencas_sem_saldo

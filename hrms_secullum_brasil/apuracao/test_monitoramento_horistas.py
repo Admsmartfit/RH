@@ -8,7 +8,7 @@ import frappe
 from erpnext.setup.doctype.employee.test_employee import make_employee
 from frappe.tests.utils import FrappeTestCase
 
-from hrms_secullum_brasil.apuracao import acoes, painel, whatsapp
+from hrms_secullum_brasil.apuracao import acoes, painel, testes_whatsapp, whatsapp
 from hrms_secullum_brasil.apuracao import monitoramento_horistas as mh
 from hrms_secullum_brasil.apuracao.cartao_ponto import MOTIVO_TERMO
 from hrms_secullum_brasil.apuracao.servico import reapurar_dia
@@ -20,6 +20,7 @@ EMPRESA = "_Test Company"
 HOJE = date(2026, 10, 30)
 DIAS = (date(2026, 10, 1), date(2026, 10, 2), date(2026, 10, 5), date(2026, 10, 6))
 FIM_DO_MES = date(2026, 10, 31)
+ULTIMO = DIAS[-1]  # a pendência do mês fica no último dia em que aconteceu
 CONFIG = "Configuracao Apuracao"
 
 
@@ -59,6 +60,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 			}
 		)
 		cfg.save()
+		testes_whatsapp.ligar()
 		relogio = patch.object(whatsapp, "now_datetime", dez_da_manha)
 		relogio.start()
 		self.addCleanup(relogio.stop)
@@ -103,7 +105,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		self.assertEqual([str(d.data) for d in alerta.dias], [str(d) for d in DIAS])
 		# o dia com poucos minutos além das 4h não gera a inconsistência diária (o alerta do mês cuida)
 		self.assertNotIn("intrajornada", inconsistencias(employee, DIAS[0]))
-		self.assertIn("excesso_jornada_horista", inconsistencias(employee, FIM_DO_MES))
+		self.assertIn("excesso_jornada_horista", inconsistencias(employee, ULTIMO))
 		self.assertEqual(
 			frappe.db.get_value("Inconsistencia de Ponto", alerta.inconsistencia, "severidade"), "Alta"
 		)
@@ -119,14 +121,39 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		employee = self.horista(DIAS[:3])
 		mh.verificar(HOJE)
 		self.assertEqual(self.alerta(employee).situacao, "Abaixo do limite")
-		self.assertNotIn("excesso_jornada_horista", inconsistencias(employee, FIM_DO_MES))
+		self.assertNotIn("excesso_jornada_horista", inconsistencias(employee, ULTIMO))
 		self.assertEqual(self.notificacoes(employee), [])
 
-	def test_jornada_estendida_nao_conta(self):
-		employee = self.horista(saida_minuto=20)  # 4h20: fora da tolerância
+	def test_jornada_estendida_tambem_entra_com_o_intervalo_proposto(self):
+		# 4h20 sem pausa: além da pendência do dia, entra no alerta e no termo (pedido do RH, 03/11/2026)
+		employee = self.horista(saida_minuto=20)
 		mh.verificar(HOJE)
-		self.assertFalse(frappe.db.exists("Alerta Horista", f"ALH-{employee}-2026-10"))
+		alerta = self.alerta(employee)
+		self.assertEqual(alerta.ocorrencias, 4)
 		self.assertIn("intrajornada", inconsistencias(employee, DIAS[0]))  # este aparece no dia
+		linha = alerta.dias[0]
+		# 08:00-12:20: 15 min no meio do expediente (10:10 às 10:25); as batidas reais ficam
+		self.assertEqual(
+			(linha.marcacoes, linha.intervalo_inicio, linha.intervalo_fim), ("08:00, 12:20", "10:10", "10:25")
+		)
+		self.assertEqual(
+			mh.intervalos_do_alerta(alerta.inconsistencia)[0],
+			{"data": str(DIAS[0]), "horas": ["10:10", "10:25"]},
+		)
+
+	def test_termo_de_ocorrencias_inclui_os_dias_do_alerta(self):
+		from hrms_secullum_brasil.apuracao import termo_ocorrencias as termo
+
+		employee = self.horista()  # 08:00-12:12: sem pendência no dia, só no alerta
+		mh.verificar(HOJE)
+		itens, _informativos, _viradas = termo.montar(employee, DIAS[0], FIM_DO_MES)
+		self.assertEqual([i.data for i in itens], list(DIAS))
+		# RH, 09/11/2026: o termo só registra o fato (não inclui mais o intervalo)
+		self.assertEqual(
+			itens[0].proposta.texto,
+			"Jornada de 4h12 sem o registro do intervalo mínimo de 15 min. Se fez o intervalo, escreva o horário.",
+		)
+		self.assertFalse(itens[0].proposta.sem_horario)  # ele escreve o horário do intervalo no termo
 
 	# ------------------------------------------------------------------ WhatsApp
 
@@ -136,9 +163,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		mh.verificar(HOJE)
 		self.assertEqual([n.situacao for n in self.notificacoes(employee)], ["Não enviada (desligado)"])
 		self.assertEqual(self.mock.enviadas, [])
-		self.assertIn(
-			"excesso_jornada_horista", inconsistencias(employee, FIM_DO_MES)
-		)  # o RH vê do mesmo jeito
+		self.assertIn("excesso_jornada_horista", inconsistencias(employee, ULTIMO))  # o RH vê do mesmo jeito
 
 	def test_erro_abre_pendencia_e_reenviar_resolve(self):
 		self.mock.falhas.append(EvolutionError("HTTP 500: fora do ar"))
@@ -158,7 +183,12 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 			employee = self.horista()
 			mh.verificar(HOJE)
 			self.assertEqual([n.situacao for n in self.notificacoes(employee)], ["Na fila"])
-		self.assertEqual(whatsapp.enviar_pendentes(), 1)
+		# sai às 8h do dia seguinte, pelo job de minuto (docs/PRD-whatsapp-aceite-auditoria.md, CW-11)
+		with (
+			patch.object(whatsapp, "now_datetime", lambda: datetime(2026, 10, 31, 8, 0, 30)),
+			patch.object(frappe.db, "commit"),
+		):
+			self.assertGreaterEqual(whatsapp.enviar_na_hora(), 1)
 		self.assertEqual([n.situacao for n in self.notificacoes(employee)], ["Enviada"])
 
 	def test_gestor_tambem_recebe(self):
@@ -222,7 +252,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		self.assertEqual((apuracao.trabalhado, apuracao.intrajornada_suprimida), (252, 0))
 		alerta = self.alerta(employee)
 		self.assertEqual((alerta.ocorrencias, alerta.situacao), (3, "Abaixo do limite"))
-		self.assertNotIn("excesso_jornada_horista", inconsistencias(employee, FIM_DO_MES))
+		self.assertNotIn("excesso_jornada_horista", inconsistencias(employee, ULTIMO))
 
 	def test_ciente_resolve_ate_o_proximo_limite(self):
 		employee = self.horista()
@@ -235,7 +265,7 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		# mais 4 dias: 8 ocorrências, novo limite → reabre e avisa de novo
 		for dia in (date(2026, 10, 7), date(2026, 10, 8), date(2026, 10, 9), date(2026, 10, 12)):
 			criar_raw(employee, dia, 8)
-			criar_raw(employee, dia, 12, 10)
+			criar_raw(employee, dia, 12, 12)  # 4h12: além da tolerância de 10 min do art. 58
 			reapurar_dia(employee, dia)
 		mh.verificar(HOJE)
 		alerta = self.alerta(employee)
@@ -243,6 +273,11 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 			(alerta.ocorrencias, alerta.situacao, alerta.ultimo_limite_avisado), (8, "No limite", 8)
 		)
 		self.assertEqual(len(self.mock.enviadas), 2)
+
+	def test_ate_4h10_sem_pausa_nao_conta(self):
+		employee = self.horista(saida_minuto=10)  # 08:00-12:10: tolerância do art. 58 (decisão de 04/11/2026)
+		mh.verificar(HOJE)
+		self.assertFalse(frappe.db.exists("Alerta Horista", f"ALH-{employee}-2026-10"))
 
 	def test_termo_e_cockpit(self):
 		employee = self.horista()
