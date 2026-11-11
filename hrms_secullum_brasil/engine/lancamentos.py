@@ -95,13 +95,9 @@ def erro_da_justificativa(efeito: str | None) -> str | None:
 
 
 def tipos_de_licenca(tipos: list[dict]) -> list[str]:
-	"""Tipos oferecidos no cartão: sem o atestado (tem lançamento próprio) e sem licença não remunerada (`is_lwp`):
-	a apuração abona todo dia de licença, e a não remunerada não pode virar dia pago."""
-	return sorted(
-		t["name"]
-		for t in tipos
-		if t["name"] != ATESTADO_MEDICO and not t.get("is_lwp") and not t.get("disabled")
-	)
+	"""Tipos oferecidos no cartão: sem o atestado (tem lançamento próprio). A licença não remunerada (`is_lwp`) entra:
+	a apuração não a paga nem a conta como falta (RH, 10/11/2026)."""
+	return sorted(t["name"] for t in tipos if t["name"] != ATESTADO_MEDICO and not t.get("disabled"))
 
 
 def texto_do_abono(doctype: str | None, tipo_licenca: str | None = None) -> str:

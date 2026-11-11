@@ -22,6 +22,23 @@ TERMO_RH = "Termo pendente — RH"
 D1 = "Ponto do dia (D+1)"
 RESPOSTA_D1 = "Resposta do colaborador (D+1) — gestor"
 EVENTOS_DO_DIA = {BATIDA_ESQUECIDA: "marcacao_impar", FALTA: "falta"}
+# docs/PRD-substituicoes.md (cobertura de faltas e Banco de Talentos)
+COBERTURA_INTERNO = "Cobertura: oferta (interno)"
+COBERTURA_PRESTADOR = "Cobertura: oferta (prestador)"
+COBERTURA_CONFIRMADA = "Cobertura: confirmada"
+COBERTURA_PREENCHIDA = "Cobertura: vaga preenchida — gestor"
+COBERTURA_NAO_PREENCHIDA = "Cobertura: vaga não preenchida — gestor"
+COBERTURA_SEM_BATIDA = "Cobertura: falta sem batida — gestor"
+TALENTOS_CADASTRO = "Banco de Talentos: cadastro"
+EVENTOS_COBERTURA = (
+	COBERTURA_INTERNO,
+	COBERTURA_PRESTADOR,
+	COBERTURA_CONFIRMADA,
+	COBERTURA_PREENCHIDA,
+	COBERTURA_NAO_PREENCHIDA,
+	COBERTURA_SEM_BATIDA,
+	TALENTOS_CADASTRO,
+)
 EM_TESTE = "Em teste"
 EM_PRODUCAO = "Em produção"
 
@@ -92,6 +109,31 @@ TEXTOS = {
 		"Olá, {primeiro_nome}! {colaborador} respondeu sobre o ponto do dia {data}: {resumo}. Confira e aprove no "
 		"painel de ponto (Inconsistências → WhatsApp do dia seguinte)."
 	),
+	# cobertura de faltas: só os campos do turno e o link pessoal; nunca instrução interna nem dado de outra pessoa
+	(COBERTURA_INTERNO, "Colaborador"): (
+		"Oi, {primeiro_nome}! Surgiu um turno na {empresa}: {dia_semana} {data}, das {horario}. Se puder, toque no "
+		"link e confirme. O primeiro que confirmar fica com o turno: {link}"
+	),
+	(COBERTURA_PRESTADOR, "Colaborador"): (
+		"🚨 Cobertura avulsa — {empresa}. Olá, {primeiro_nome}! {dia_semana} {data}, das {horario} ({duracao}). "
+		"Valor: R$ {valor} (pagamento via NFS-e do seu CNPJ). O primeiro que confirmar pelo link fica com o "
+		"horário: {link}"
+	),
+	(COBERTURA_CONFIRMADA, "Colaborador"): (
+		"Confirmado, {primeiro_nome}! O turno de {dia_semana} {data}, das {horario}, na {empresa}, é seu. Obrigado!"
+	),
+	(COBERTURA_PREENCHIDA, "Gestor"): (
+		"Olá, {primeiro_nome}! A vaga de {dia_semana} {data}, das {horario}, foi preenchida por {quem}."
+	),
+	(COBERTURA_NAO_PREENCHIDA, "Gestor"): (
+		"Olá, {primeiro_nome}! Ninguém aceitou a vaga de {dia_semana} {data}, das {horario}. O horário continua "
+		"descoberto: confira a tela Escalas."
+	),
+	(COBERTURA_SEM_BATIDA, "Gestor"): (
+		"Olá, {primeiro_nome}! {colaborador} não bateu o ponto para o turno das {horario} de hoje. Se for falta, "
+		"abra a vaga de cobertura na tela Escalas: {link}"
+	),
+	(TALENTOS_CADASTRO, "Colaborador"): ("Olá, {primeiro_nome}! Banco de Talentos — {empresa}: {situacao}"),
 	(COBRANCA, "Colaborador"): (
 		"Olá, {primeiro_nome}! Notei uma pendência no seu cartão de ponto no dia {data} ({dia_semana}).\n"
 		"Motivo: {descricao}\nPor favor, procure o seu gerente para justificar o mais breve possível. Obrigado!"

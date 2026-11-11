@@ -1,0 +1,175 @@
+{
+ "actions": [],
+ "autoname": "PLE-.YYYY.-.#####",
+ "creation": "2026-11-10 12:00:00.000000",
+ "description": "Simulação da escala 5x2 dos instrutores, montada à mão no Planejador (docs/PRD-planejador-instrutores.md). Só simulação: nunca grava escala nem contrato.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "titulo",
+  "company",
+  "empresas",
+  "col1",
+  "ano",
+  "mes",
+  "situacao",
+  "origem",
+  "resumo_section",
+  "instrutores",
+  "horas_descobertas",
+  "col2",
+  "horas_varios",
+  "bloqueantes",
+  "custo_total",
+  "dados_section",
+  "equipe",
+  "grade",
+  "parametros"
+ ],
+ "fields": [
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Unidade (empresa)",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "empresas",
+   "fieldtype": "Small Text",
+   "label": "Empresas da grade",
+   "read_only": 1,
+   "description": "Escala conjunta: as empresas do mesmo grupo de escala (ex.: Praia do Canto)."
+  },
+  {
+   "fieldname": "col1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ano",
+   "fieldtype": "Int",
+   "label": "Ano",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "mes",
+   "fieldtype": "Int",
+   "label": "Mês",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Rascunho\nPronta",
+   "default": "Rascunho",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "origem",
+   "fieldtype": "Link",
+   "label": "Duplicada de",
+   "options": "Planejamento de Escala",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resumo_section",
+   "fieldtype": "Section Break",
+   "label": "Resumo"
+  },
+  {
+   "fieldname": "instrutores",
+   "fieldtype": "Int",
+   "label": "Instrutores",
+   "read_only": 1
+  },
+  {
+   "fieldname": "horas_descobertas",
+   "fieldtype": "Int",
+   "label": "Horas descobertas no mês",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "horas_varios",
+   "fieldtype": "Int",
+   "label": "Horas com 2 ou mais instrutores",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bloqueantes",
+   "fieldtype": "Int",
+   "label": "Pendências bloqueantes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custo_total",
+   "fieldtype": "Currency",
+   "label": "Custo previsto do mês",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dados_section",
+   "fieldtype": "Section Break",
+   "label": "Dados da simulação",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "equipe",
+   "fieldtype": "Long Text",
+   "label": "Equipe (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Long Text",
+   "label": "Grade (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parametros",
+   "fieldtype": "Long Text",
+   "label": "Parâmetros (JSON)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-10 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Planejamento de Escala",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}

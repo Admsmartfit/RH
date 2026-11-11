@@ -85,11 +85,14 @@ def _valores(emp, dia) -> dict:
 	}
 
 
-def avisar(regra, emp, dia, valores: dict, alerta: str | None = None) -> list[str]:
-	"""Cria (sem repetir) e envia as mensagens da regra para o colaborador e/ou o gestor."""
+def avisar(
+	regra, emp, dia, valores: dict, alerta: str | None = None, sem_colaborador: bool = False
+) -> list[str]:
+	"""Cria (sem repetir) e envia as mensagens da regra para o colaborador e/ou o gestor. `sem_colaborador`: só os
+	gestores (ex.: o instrutor horista não recebe o aviso do mês)."""
 	nomes = []
 	destinos = []
-	if cint(regra.para_colaborador):
+	if cint(regra.para_colaborador) and not sem_colaborador:
 		destinos.append(("Colaborador", emp.cell_number, valores, "Colaborador"))
 	for gestor in contatos_de_aviso(emp) if cint(regra.para_gestor) else []:
 		# vários gestores na unidade: uma mensagem (e uma chave) para cada um

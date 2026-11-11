@@ -25,6 +25,7 @@
   "normais",
   "atraso",
   "falta",
+  "nao_remunerado",
   "column_break_min",
   "hora_extra",
   "excesso_estagio",
@@ -197,6 +198,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "nao_remunerado",
+   "fieldtype": "Int",
+   "label": "Licença não remunerada (min)",
+   "read_only": 1,
+   "description": "Dia de licença não remunerada: não é pago, mas não é falta nem tira o DSR."
+  },
+  {
    "fieldname": "column_break_min",
    "fieldtype": "Column Break"
   },
@@ -343,7 +351,7 @@
  ],
  "in_create": 1,
  "links": [],
- "modified": "2026-11-04 16:30:00.000000",
+ "modified": "2026-11-10 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Apuracao Diaria",

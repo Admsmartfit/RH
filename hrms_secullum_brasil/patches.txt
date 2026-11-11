@@ -14,3 +14,5 @@ hrms_secullum_brasil.patches.entrada_no_painel
 hrms_secullum_brasil.patches.whatsapp_situacao_pendente
 hrms_secullum_brasil.patches.whatsapp_padroes
 hrms_secullum_brasil.patches.licencas_sem_saldo
+hrms_secullum_brasil.patches.modelo_smart
+hrms_secullum_brasil.patches.cobertura_padroes

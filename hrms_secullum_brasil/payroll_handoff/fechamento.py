@@ -47,6 +47,7 @@ CAMPOS_APURACAO = (
 	"atraso",
 	"atraso_banco",
 	"falta",
+	"nao_remunerado",
 	"hora_extra",
 	"he_banco",
 	"noturno_real",
@@ -380,6 +381,7 @@ def consolidar(employee: str, inicio: date, fim: date) -> tuple[BaseValoracao, M
 		interjornada=sum(cint(a.interjornada_suprimida) for a in docs),
 		descanso_semanal=sum(cint(s.descanso_suprimido_minutos) for s in dsr),  # AJ-10
 		falta=sum(cint(a.falta) for a in docs),
+		nao_remunerado=sum(cint(a.get("nao_remunerado")) for a in docs),
 		atraso=sum(cint(a.atraso) - cint(a.atraso_banco) for a in docs),
 		dsr_perdido=sum(cint(s.dsr_perdido_minutos) for s in dsr),
 		dsr_horista=sum(cint(s.dsr_horista_minutos) for s in dsr),

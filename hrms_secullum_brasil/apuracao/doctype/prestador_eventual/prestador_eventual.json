@@ -1,0 +1,309 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nome",
+  "company",
+  "cpf",
+  "celular",
+  "email",
+  "column_break_situacao",
+  "situacao",
+  "motivo",
+  "aprovado_por",
+  "aprovado_em",
+  "cref_section",
+  "cref_numero",
+  "cref_validade",
+  "cref_foto",
+  "comprovante_endereco",
+  "empresa_section",
+  "cnpj",
+  "razao_social",
+  "column_break_banco",
+  "banco",
+  "agencia",
+  "conta",
+  "pix",
+  "termo_section",
+  "termo_versao",
+  "aceite",
+  "column_break_limite",
+  "liberado_no_mes",
+  "motivo_liberacao",
+  "controle_section",
+  "codigo_hash",
+  "codigo_expira",
+  "cref_avisado_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Unidade",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cpf",
+   "fieldtype": "Data",
+   "label": "CPF",
+   "reqd": 1
+  },
+  {
+   "fieldname": "celular",
+   "fieldtype": "Data",
+   "label": "Celular (WhatsApp)",
+   "reqd": 1,
+   "options": "Phone"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "E-mail",
+   "options": "Email"
+  },
+  {
+   "fieldname": "column_break_situacao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Aguardando código\nAguardando aprovação\nAprovado\nRecusado\nSuspenso",
+   "default": "Aguardando código",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo (recusa ou suspensão)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aprovado_por",
+   "fieldtype": "Link",
+   "label": "Aprovado por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aprovado_em",
+   "fieldtype": "Datetime",
+   "label": "Aprovado em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cref_section",
+   "fieldtype": "Section Break",
+   "label": "CREF"
+  },
+  {
+   "fieldname": "cref_numero",
+   "fieldtype": "Data",
+   "label": "Número do CREF",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cref_validade",
+   "fieldtype": "Date",
+   "label": "Validade do CREF",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cref_foto",
+   "fieldtype": "Attach",
+   "label": "Foto do CREF",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "comprovante_endereco",
+   "fieldtype": "Attach",
+   "label": "Comprovante de endereço",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "empresa_section",
+   "fieldtype": "Section Break",
+   "label": "Empresa do prestador (NFS-e e pagamento)"
+  },
+  {
+   "fieldname": "cnpj",
+   "fieldtype": "Data",
+   "label": "CNPJ",
+   "reqd": 1
+  },
+  {
+   "fieldname": "razao_social",
+   "fieldtype": "Data",
+   "label": "Razão social",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_banco",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "banco",
+   "fieldtype": "Data",
+   "label": "Banco",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "agencia",
+   "fieldtype": "Data",
+   "label": "Agência",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "conta",
+   "fieldtype": "Data",
+   "label": "Conta",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "pix",
+   "fieldtype": "Data",
+   "label": "Chave PIX do CNPJ",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "termo_section",
+   "fieldtype": "Section Break",
+   "label": "Termo e limite"
+  },
+  {
+   "fieldname": "termo_versao",
+   "fieldtype": "Int",
+   "label": "Versão do termo aceita",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aceite",
+   "fieldtype": "Link",
+   "label": "Aceite do termo",
+   "options": "Aceite de Credenciamento",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_limite",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "liberado_no_mes",
+   "fieldtype": "Data",
+   "label": "Liberado acima do limite no mês (AAAA-MM)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_liberacao",
+   "fieldtype": "Small Text",
+   "label": "Motivo da liberação",
+   "read_only": 1
+  },
+  {
+   "fieldname": "controle_section",
+   "fieldtype": "Section Break",
+   "label": "Controle",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "codigo_hash",
+   "fieldtype": "Data",
+   "label": "Código (hash)",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "codigo_expira",
+   "fieldtype": "Datetime",
+   "label": "Código vale até",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "cref_avisado_em",
+   "fieldtype": "Date",
+   "label": "Aviso de CREF vencendo em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Prestador Eventual",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "permlevel": 2,
+   "write": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "permlevel": 2,
+   "write": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "permlevel": 2
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "PE-.#####",
+ "track_changes": 1,
+ "title_field": "nome",
+ "show_title_field_in_link": 1
+}

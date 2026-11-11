@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "creation": "2026-11-10 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "vaga",
+  "inicio",
+  "fim",
+  "folgas_semana_1",
+  "folgas_semana_2",
+  "folgas_semana_3",
+  "folgas_semana_4"
+ ],
+ "fields": [
+  {
+   "fieldname": "vaga",
+   "fieldtype": "Data",
+   "label": "Vaga",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Ex.: Prof. 1"
+  },
+  {
+   "fieldname": "inicio",
+   "fieldtype": "Time",
+   "label": "Entrada",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "fim",
+   "fieldtype": "Time",
+   "label": "Saída",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "folgas_semana_1",
+   "fieldtype": "Data",
+   "label": "Folgas semana 1",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Ex.: sáb, dom"
+  },
+  {
+   "fieldname": "folgas_semana_2",
+   "fieldtype": "Data",
+   "label": "Folgas semana 2",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Ex.: sáb, dom"
+  },
+  {
+   "fieldname": "folgas_semana_3",
+   "fieldtype": "Data",
+   "label": "Folgas semana 3",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Ex.: sáb, dom"
+  },
+  {
+   "fieldname": "folgas_semana_4",
+   "fieldtype": "Data",
+   "label": "Folgas semana 4",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Ex.: sáb, dom"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-10 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Vaga do Modelo de Escala",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

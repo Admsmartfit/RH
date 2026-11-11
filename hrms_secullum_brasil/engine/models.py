@@ -79,6 +79,9 @@ class EntradaDia:
 	regra: RegraApuracao = field(default_factory=RegraApuracao)
 	feriado: bool = False
 	abonado: bool = False  # atestado/abono aprovado para o dia inteiro
+	# licença não remunerada aprovada (Leave Type `is_lwp`; RH, 10/11/2026): dia sem batida não é falta nem tira o DSR,
+	# mas não é pago (vai para `nao_remunerado` e a folha desconta só o dia)
+	licenca_nao_remunerada: bool = False
 	# docs/PRD-tratamento-inconsistencias.md (TI-06): abono parcial — minutos de atraso que contam como trabalhados
 	minutos_abonados: int = 0
 	# pausa incluída pelo termo assinado (horista): pausa remunerada, conta como trabalhado (RH, 28/10/2026)
@@ -120,6 +123,9 @@ class ResultadoDia:
 	normais: int = 0
 	atraso: int = 0  # atrasos + saídas antecipadas após a tolerância
 	falta: int = 0
+	nao_remunerado: int = (
+		0  # licença não remunerada: minutos previstos não pagos (sem falta e sem perder o DSR)
+	)
 	hora_extra: int = 0
 	he_faixas: list[MinutosFaixa] = field(default_factory=list)
 	noturno_real: int = 0

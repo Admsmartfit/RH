@@ -1,0 +1,86 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "versao",
+  "titulo",
+  "vigente",
+  "texto"
+ ],
+ "fields": [
+  {
+   "fieldname": "versao",
+   "fieldtype": "Int",
+   "label": "Versão",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Título",
+   "reqd": 1,
+   "default": "Termo de Credenciamento de Prestador Eventual",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "vigente",
+   "fieldtype": "Check",
+   "label": "Vigente",
+   "default": "0",
+   "in_list_view": 1,
+   "description": "Só a versão vigente vale para novos cadastros; mudar a versão pede novo aceite aos prestadores."
+  },
+  {
+   "fieldname": "texto",
+   "fieldtype": "Text Editor",
+   "label": "Texto do termo",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Termo de Credenciamento",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "print": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "TC-.###",
+ "track_changes": 1
+}

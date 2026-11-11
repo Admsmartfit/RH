@@ -64,14 +64,15 @@ test("grade do mês com paleta, turno pelo teclado em rascunho e descartar", asy
 	const grade = page.getByRole("table", { name: "Escala do mês por colaborador" });
 	await expect(grade).toBeVisible();
 	// só fim de semana e feriados por padrão; "Mês completo" mostra os 31 dias
-	await expect(grade.locator("thead th")).not.toHaveCount(33);
+	await expect(grade.locator("thead tr").first().locator("th")).not.toHaveCount(33);
 	await page.getByText("Mês completo").click();
-	await expect(grade.locator("thead th")).toHaveCount(33);
+	await expect(grade.locator("thead tr").first().locator("th")).toHaveCount(33);
 	await page.getByText("Fim de semana e feriados").click();
 
 	const primeira = grade.locator("tbody tr").first();
 	const nome = (await primeira.locator("th").innerText()).split("\n")[0];
 	await page.getByRole("button", { name: /T1 e2e/ }).click();
+	await page.getByRole("button", { name: "Escolher para pôr no dia" }).click();
 	const celula = page.locator(`[data-celula$="|${SABADO}"]`).first().locator(".foco-celula");
 	await celula.focus();
 	await celula.press("Enter");
@@ -103,6 +104,7 @@ test("assistente: 6h corridas pedem pausa e a solução A grava o turno corrigid
 	await page.goto(`/ponto/escalas?${DEZEMBRO}`);
 	await expect(page.getByRole("table", { name: "Escala do mês por colaborador" })).toBeVisible();
 	await page.getByRole("button", { name: /Corrido e2e/ }).click();
+	await page.getByRole("button", { name: "Escolher para pôr no dia" }).click();
 	const celula = page.locator(`[data-celula$="|${SABADO}"]`).first();
 	await celula.locator(".foco-celula").focus();
 	await celula.locator(".foco-celula").press("Enter");
@@ -233,10 +235,54 @@ test("escala conjunta: a grade aparece e a etiqueta é pequena", async ({ page }
 	}
 });
 
-// pedido do RH (04/11/2026): da paleta, atalhos para criar, editar e apagar os turnos padrão (cadastro no Desk)
-test("paleta leva ao cadastro dos turnos padrão", async ({ page }) => {
+// pedido do RH (11/11/2026): só o administrador abre o Desk; o turno padrão é criado, alterado e excluído no balão
+test("turno padrão: criar, alterar e excluir no balão da tela Escalas", async ({ page }) => {
+	// restos de rodadas anteriores que falharam no meio
+	const restos = await api(page.request, "frappe.client.get_list", { doctype: "Turno Padrao", filters: JSON.stringify({ nome_turno: ["like", "Balao e2e%"] }), fields: JSON.stringify(["name"]) });
+	for (const t of restos) {
+		await api(page.request, "hrms_secullum_brasil.configuracao_ponto.turnos.excluir_turno", { nome: t.name }, "post");
+	}
 	await page.goto(`/ponto/escalas?${DEZEMBRO}`);
-	const novo = page.getByRole("link", { name: "+ Novo turno" });
-	await expect(novo).toHaveAttribute("href", /\/app\/turno-padrao\/new\?company=ES\+Fitness\+Ltda/);
-	await expect(page.getByRole("link", { name: "Editar ou apagar turnos" })).toHaveAttribute("href", /\/app\/turno-padrao\?company=/);
+	const nome = `Balao e2e ${Date.now()}`;
+	await page.getByRole("button", { name: "+ Novo turno" }).click();
+	const balao = page.getByTestId("balao-turno");
+	await balao.getByLabel("Nome").fill(nome);
+	await balao.getByLabel("Entrada").fill("08:00");
+	await balao.getByLabel("Saída").fill("13:00");
+	await balao.getByLabel("Pausa").selectOption("15");
+	await balao.getByLabel("Tipo de dia").selectOption("Sábado");
+	await balao.getByRole("button", { name: "Salvar" }).click();
+	await expect(page.getByRole("status")).toContainText(`Turno ${nome} criado.`);
+	const chip = page.getByRole("button", { name: new RegExp(nome) });
+	await expect(chip).toContainText("08:00–13:00", { timeout: 20_000 }); // a grade do mês é relida
+
+	await chip.click();
+	await expect(balao.getByLabel("Nome")).toHaveValue(nome);
+	await balao.getByLabel("Saída").fill("12:30");
+	await balao.getByRole("button", { name: "Salvar" }).click();
+	await expect(page.getByRole("status")).toContainText(`Turno ${nome} alterado.`);
+	await expect(chip).toContainText("08:00–12:30", { timeout: 20_000 });
+
+	await chip.click();
+	page.once("dialog", (d) => d.accept());
+	await balao.getByRole("button", { name: "Excluir" }).click();
+	await expect(page.getByRole("status")).toContainText(/Turno excluído|saiu da lista/);
+	await expect(page.getByRole("button", { name: new RegExp(nome) })).toHaveCount(0, { timeout: 20_000 });
+	await expect(page.getByRole("link", { name: "Editar ou apagar turnos" })).toHaveCount(0); // nada de ir ao Desk
+});
+
+
+test("horas sem ninguém: um sinal por dia e o detalhe no balão", async ({ page }) => {
+	await page.goto(`/ponto/escalas?${DEZEMBRO}`);
+	const linha = page.getByTestId("linha-cobertura");
+	await expect(linha).toBeVisible({ timeout: 20000 });
+	const sinal = linha.locator("button.cobertura").first();
+	await sinal.click();
+	const balao = page.getByTestId("balao-cobertura");
+	await expect(balao).toBeVisible();
+	await expect(balao).toContainText("Academia aberta");
+	await page.keyboard.press("Escape");
+	await expect(balao).toBeHidden();
+	const resultado = await new AxeBuilder({ page }).include("[data-testid=linha-cobertura]").analyze();
+	expect(resultado.violations).toEqual([]);
 });

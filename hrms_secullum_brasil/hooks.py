@@ -27,6 +27,7 @@ _RUBRICAS_FOLHA = [
 	"BH_PAG",
 	"PREMIO",
 	"FALTA",
+	"LICENCA_NR",  # licença não remunerada (RH, 10/11/2026)
 	"ATRASO",
 	"DSR_DESC",
 	"VA_DESC",
@@ -147,6 +148,9 @@ website_route_rules = [
 	{"from_route": "/ponto/resposta", "to_route": "resposta"},  # docs/PRD-whatsapp-dia-seguinte.md (W-5)
 	# docs/PRD-whatsapp-aceite-auditoria.md (CW-01): aceite do WhatsApp pelo QR code do cartaz
 	{"from_route": "/ponto/whatsapp", "to_route": "whatsapp"},
+	# docs/PRD-substituicoes.md: oferta de cobertura e cadastro do Banco de Talentos (QR Code da unidade)
+	{"from_route": "/ponto/cobertura", "to_route": "cobertura"},
+	{"from_route": "/ponto/talentos", "to_route": "talentos"},
 	{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"},
 ]
 
@@ -216,13 +220,19 @@ scheduler_events = {
 	# A coleta roda quando vence o intervalo_coleta da Configuracao Secullum (checado a cada 5 min).
 	"cron": {
 		# docs/PRD-whatsapp-aceite-auditoria.md (CW-11): mensagens da fila saem espaçadas, até o limite do dia
-		"* * * * *": ["hrms_secullum_brasil.apuracao.whatsapp.enviar_na_hora"],
+		"* * * * *": [
+			"hrms_secullum_brasil.apuracao.whatsapp.enviar_na_hora",
+			# docs/PRD-substituicoes.md: vagas de cobertura passam de nível (unidade → rede → Banco de Talentos)
+			"hrms_secullum_brasil.apuracao.cobertura.tick",
+		],
 		"*/5 * * * *": ["hrms_secullum_brasil.ingestion.coleta_batidas.tick"],
 		# processa a fila Reapuracao Pendente (marcada pela coleta, por tratamentos e pelo job diário)
 		"*/10 * * * *": [
 			"hrms_secullum_brasil.apuracao.servico.tick_reapuracao",
 			# docs/PRD-sincronizacao-secullum.md: o que ficou na fila de envio ao Secullum
 			"hrms_secullum_brasil.ingestion.sincronizacao.processar_fila",
+			# docs/PRD-substituicoes.md (CS-E6): escalado sem batida → aviso ao gestor (nunca abre a vaga)
+			"hrms_secullum_brasil.apuracao.cobertura.avisar_sem_batida",
 		],
 		# falta e atestado dos horistas de ontem e anteontem (AT/FT com a carga do dia) e auditoria dos horários
 		"20 6 * * *": ["hrms_secullum_brasil.ingestion.envios_secullum.preparar_horistas"],
@@ -254,6 +264,8 @@ scheduler_events = {
 	},
 	"daily": [
 		"hrms_secullum_brasil.ingestion.sync_colaboradores.reconciliar_cadastros",
+		# docs/PRD-substituicoes.md: CREF do prestador vencendo em até 15 dias
+		"hrms_secullum_brasil.apuracao.banco_talentos.avisar_cref",
 		# IS-08: origem Secullum — repete a importação dos cadastros (se ligada na Configuracao Secullum)
 		"hrms_secullum_brasil.ingestion.importacao_secullum.sincronizar",
 		"hrms_secullum_brasil.apuracao.servico.marcar_dia_anterior",

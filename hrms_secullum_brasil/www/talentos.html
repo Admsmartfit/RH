@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Banco de Talentos</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #94a3b8; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; --campo: #ffffff; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #64748b; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; --campo: #1e293b; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 34rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.3rem; margin-bottom: 0.25rem; }
+		h2 { font-size: 1.05rem; margin: 1.25rem 0 0.25rem; }
+		label { display: block; margin-top: 0.75rem; font-weight: 600; font-size: 0.95rem; }
+		input, select { display: block; width: 100%; min-height: 44px; margin-top: 0.25rem; padding: 0.4rem 0.6rem; border: 1px solid var(--borda); border-radius: 0.375rem; background: var(--campo); color: var(--texto); font: inherit; }
+		.dois { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
+		.termo { max-height: 16rem; overflow: auto; border: 1px solid var(--borda); border-radius: 0.375rem; padding: 0.75rem; font-size: 0.9rem; background: var(--campo); }
+		.aceite { display: flex; gap: 0.5rem; align-items: flex-start; font-weight: 600; }
+		.aceite input { width: 1.4rem; min-height: 1.4rem; margin-top: 0.15rem; flex: none; }
+		button { min-height: 48px; width: 100%; margin-top: 1.25rem; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.leve { background: transparent; color: var(--primario); margin-top: 0.5rem; }
+		button:disabled { opacity: 0.6; }
+		.suave { color: var(--suave); font-size: 0.9rem; font-weight: 400; } .erro { color: var(--perigo); } .ok { color: var(--ok); font-weight: 600; }
+	</style>
+</head>
+<body>
+{{ faixa_teste or "" }}
+	<main>
+		<h1>Banco de Talentos</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+
+		<form id="form" hidden novalidate>
+			<h2>Seus dados</h2>
+			<label>Nome completo<input name="nome" autocomplete="name" required /></label>
+			<div class="dois">
+				<label>CPF<input name="cpf" inputmode="numeric" required /></label>
+				<label>Celular (WhatsApp)<input name="celular" inputmode="tel" autocomplete="tel" required /></label>
+			</div>
+			<label>E-mail<input name="email" type="email" autocomplete="email" /></label>
+
+			<h2>CREF</h2>
+			<div class="dois">
+				<label>Número<input name="cref_numero" required /></label>
+				<label>Validade<input name="cref_validade" type="date" required /></label>
+			</div>
+			<label>Foto do CREF<input name="foto_cref" type="file" accept="image/*,application/pdf" required /></label>
+			<label>Comprovante de endereço<input name="comprovante_endereco" type="file" accept="image/*,application/pdf" required /></label>
+
+			<h2>Sua empresa (para a nota fiscal e o pagamento)</h2>
+			<div class="dois">
+				<label>CNPJ<input name="cnpj" inputmode="numeric" required /></label>
+				<label>Razão social<input name="razao_social" required /></label>
+			</div>
+			<label>Chave PIX do CNPJ<input name="pix" /></label>
+			<p class="suave">Ou informe banco, agência e conta da empresa:</p>
+			<div class="dois">
+				<label>Banco<input name="banco" /></label>
+				<label>Agência<input name="agencia" inputmode="numeric" /></label>
+			</div>
+			<label>Conta<input name="conta" /></label>
+
+			<h2 id="titulo-termo">Termo de credenciamento</h2>
+			<div id="termo" class="termo" tabindex="0" aria-labelledby="titulo-termo"></div>
+			<label class="aceite"><input name="aceite" type="checkbox" required /> <span>Li e aceito o termo de credenciamento de prestador eventual.</span></label>
+
+			<button type="submit" id="enviar">Enviar cadastro</button>
+		</form>
+
+		<form id="form-codigo" hidden>
+			<p id="codigo-texto"></p>
+			<label>Código de 6 dígitos<input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required /></label>
+			<button type="submit">Confirmar</button>
+			<button type="button" class="leve" id="reenviar">Mandar outro código</button>
+		</form>
+
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.banco_talentos";
+		const u = new URLSearchParams(location.search).get("u") || "";
+		const CSRF = "{{ csrf_token or '' }}";
+		let t = "";
+		const $ = (id) => document.getElementById(id);
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").innerHTML = "";
+			for (const parte of String(texto).split("\n")) {
+				const linha = document.createElement("div");
+				linha.textContent = parte;
+				$("status").appendChild(linha);
+			}
+		}
+		function erroDoServidor(corpo) {
+			try {
+				const msgs = JSON.parse(corpo._server_messages || "[]").map((m) => JSON.parse(m).message);
+				return msgs.join("\n").replace(/<br\s*\/?>/g, "\n").replace(/<[^>]+>/g, "") || corpo.exception || "";
+			} catch (e) {
+				return "";
+			}
+		}
+		async function post(metodo, corpo) {
+			const r = await fetch(`${API}.${metodo}`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": CSRF },
+				body: JSON.stringify(corpo),
+			});
+			const json = await r.json().catch(() => ({}));
+			if (!r.ok) throw new Error(erroDoServidor(json) || "Não foi possível enviar. Tente de novo.");
+			return json.message;
+		}
+		const lerArquivo = (arquivo) =>
+			new Promise((ok, falha) => {
+				if (!arquivo) return ok("");
+				if (arquivo.size > 5 * 1024 * 1024) return falha(new Error("Arquivo muito grande (máximo 5 MB)."));
+				const leitor = new FileReader();
+				leitor.onload = () => ok(leitor.result);
+				leitor.onerror = () => falha(new Error("Não foi possível ler o arquivo."));
+				leitor.readAsDataURL(arquivo);
+			});
+
+		async function carregar() {
+			const r = await fetch(`${API}.pagina?u=${encodeURIComponent(u)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido. Peça o QR Code na recepção da unidade.";
+				return;
+			}
+			const d = corpo.message;
+			if (!d.termo) {
+				$("cabecalho").textContent = `${d.empresa}: o cadastro ainda não está aberto. Fale com o gestor da unidade.`;
+				return;
+			}
+			$("cabecalho").textContent = `Cadastro de profissional para cobrir turnos avulsos na ${d.empresa}. Depois de aprovado pelo gestor, você recebe as ofertas pelo WhatsApp.`;
+			$("termo").innerHTML = d.termo.texto; // texto cadastrado pelo RH (Text Editor do Frappe)
+			$("form").hidden = false;
+		}
+
+		$("form").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			const f = ev.target;
+			$("enviar").disabled = true;
+			status("Enviando…", "suave");
+			try {
+				const dados = Object.fromEntries(["nome", "cpf", "celular", "email", "cref_numero", "cref_validade", "cnpj", "razao_social", "pix", "banco", "agencia", "conta"].map((c) => [c, f[c].value.trim()]));
+				dados.aceite = f.aceite.checked;
+				dados.foto_cref = await lerArquivo(f.foto_cref.files[0]);
+				dados.comprovante_endereco = await lerArquivo(f.comprovante_endereco.files[0]);
+				const r = await post("cadastrar", { u, dados: JSON.stringify(dados) });
+				t = r.t;
+				$("form").hidden = true;
+				$("form-codigo").hidden = false;
+				$("codigo-texto").textContent = r.enviado ? `Mandamos um código para o WhatsApp ${r.celular}. Digite aqui para confirmar.` : `Não conseguimos mandar o código para ${r.celular} agora. Toque em "Mandar outro código" em alguns minutos.`;
+				status("");
+			} catch (e) {
+				status(e.message, "erro");
+			} finally {
+				$("enviar").disabled = false;
+			}
+		});
+
+		$("form-codigo").addEventListener("submit", async (ev) => {
+			ev.preventDefault();
+			try {
+				await post("confirmar", { t, codigo: ev.target.codigo.value.trim() });
+				$("form-codigo").hidden = true;
+				status("Cadastro enviado! O gestor vai conferir o CREF e você recebe a aprovação pelo WhatsApp.", "ok");
+			} catch (e) {
+				status(e.message, "erro");
+			}
+		});
+		$("reenviar").addEventListener("click", async () => {
+			try {
+				const r = await post("reenviar_codigo", { t });
+				status(r.enviado ? "Código reenviado." : "Não foi possível mandar agora; tente em alguns minutos.", r.enviado ? "ok" : "erro");
+			} catch (e) {
+				status(e.message, "erro");
+			}
+		});
+		carregar();
+	</script>
+</body>
+</html>

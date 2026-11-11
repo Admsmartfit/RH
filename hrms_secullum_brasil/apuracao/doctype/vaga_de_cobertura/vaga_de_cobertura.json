@@ -1,0 +1,243 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "designation",
+  "data",
+  "periodos",
+  "horario",
+  "inicio_em",
+  "origem",
+  "employee_ausente",
+  "observacao",
+  "column_break_situacao",
+  "situacao",
+  "nivel",
+  "aberta_em",
+  "aberta_por",
+  "nivel_forcado_em",
+  "vencedor_employee",
+  "vencedor_prestador",
+  "vencedor_nome",
+  "preenchida_em",
+  "plantao",
+  "publicacao",
+  "aviso_horario",
+  "ofertas_section",
+  "ofertas"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Cargo",
+   "options": "Designation",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "Date",
+   "label": "Dia",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "periodos",
+   "fieldtype": "Small Text",
+   "label": "Turno",
+   "reqd": 1,
+   "description": "JSON: [[\"08:00\", \"12:00\"]]"
+  },
+  {
+   "fieldname": "horario",
+   "fieldtype": "Data",
+   "label": "Horário",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "inicio_em",
+   "fieldtype": "Datetime",
+   "label": "Início do turno",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem",
+   "fieldtype": "Select",
+   "label": "Origem",
+   "options": "Falta avisada\nHoras sem ninguém\nManual",
+   "default": "Manual"
+  },
+  {
+   "fieldname": "employee_ausente",
+   "fieldtype": "Link",
+   "label": "Quem faltou",
+   "options": "Employee",
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "observacao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  },
+  {
+   "fieldname": "column_break_situacao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Aberta\nPreenchida\nNão preenchida\nCancelada",
+   "default": "Aberta",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "nivel",
+   "fieldtype": "Select",
+   "label": "Nível atual",
+   "options": "Unidade\nRede\nBanco de Talentos",
+   "default": "Unidade",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aberta_em",
+   "fieldtype": "Datetime",
+   "label": "Aberta em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aberta_por",
+   "fieldtype": "Link",
+   "label": "Aberta por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "nivel_forcado_em",
+   "fieldtype": "Datetime",
+   "label": "Próximo nível pedido em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vencedor_employee",
+   "fieldtype": "Link",
+   "label": "Ficou com a vaga (colaborador)",
+   "options": "Employee",
+   "read_only": 1,
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "vencedor_prestador",
+   "fieldtype": "Link",
+   "label": "Ficou com a vaga (prestador)",
+   "options": "Prestador Eventual",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vencedor_nome",
+   "fieldtype": "Data",
+   "label": "Ficou com a vaga",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "preenchida_em",
+   "fieldtype": "Datetime",
+   "label": "Preenchida em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "plantao",
+   "fieldtype": "Link",
+   "label": "Plantão eventual",
+   "options": "Plantao Eventual",
+   "read_only": 1
+  },
+  {
+   "fieldname": "publicacao",
+   "fieldtype": "Link",
+   "label": "Publicação da escala",
+   "options": "Publicacao de Escala",
+   "read_only": 1
+  },
+  {
+   "fieldname": "aviso_horario",
+   "fieldtype": "Small Text",
+   "label": "Aviso",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ofertas_section",
+   "fieldtype": "Section Break",
+   "label": "Ofertas"
+  },
+  {
+   "fieldname": "ofertas",
+   "fieldtype": "Table",
+   "label": "Ofertas",
+   "options": "Oferta de Cobertura",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Vaga de Cobertura",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "Gestor Ponto",
+   "read": 1,
+   "permlevel": 0,
+   "write": 1,
+   "print": 1,
+   "report": 1,
+   "export": 1,
+   "create": 1,
+   "delete": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "VC-.#####",
+ "track_changes": 1
+}

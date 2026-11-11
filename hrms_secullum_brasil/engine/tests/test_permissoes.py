@@ -76,14 +76,21 @@ def test_dados_de_saude_folha_e_configuracao_so_para_rh(nome):
 	assert not [p for p in DOCTYPES[nome]["permissions"] if p["role"] in RESTRITOS], nome
 
 
+# permlevel 2: documentos e conta do prestador eventual (docs/PRD-substituicoes.md, LGPD): RH e gestor da unidade
+NIVEL_2 = {"Prestador Eventual": {"System Manager", "RH Ponto", "Gestor Ponto"}}
+
+
 def test_permlevel_1_so_para_rh_saude_e_system_manager():
 	for nome, d in DOCTYPES.items():
-		nivel_1 = [f["fieldname"] for f in d["fields"] if f.get("permlevel")]
-		papeis = {p["role"] for p in d["permissions"] if p.get("permlevel")}
-		if nivel_1:
-			assert papeis == {"RH Saúde", "System Manager"}, nome
-		else:
-			assert not papeis, nome
+		for nivel in (1, 2):
+			campos = [f["fieldname"] for f in d["fields"] if f.get("permlevel") == nivel]
+			papeis = {p["role"] for p in d["permissions"] if p.get("permlevel") == nivel}
+			esperado = {"RH Saúde", "System Manager"} if nivel == 1 else NIVEL_2.get(nome, set())
+			if campos:
+				assert papeis == esperado, (nome, nivel)
+			else:
+				assert not papeis, (nome, nivel)
+		assert not [f for f in d["fields"] if (f.get("permlevel") or 0) > 2], nome
 
 
 def test_cid_e_anexo_do_atestado_em_permlevel_1():

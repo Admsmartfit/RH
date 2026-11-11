@@ -38,6 +38,13 @@ const routes = [
 				meta: { titulo: "Termos de ocorrências" },
 			},
 			{
+				// docs/PRD-substituicoes.md: /ponto/talentos é a página sem login do QR Code
+				path: "banco-talentos",
+				name: "BancoTalentos",
+				component: () => import("@/pages/BancoTalentos.vue"),
+				meta: { titulo: "Banco de Talentos" },
+			},
+			{
 				path: "colaborador/:employee?",
 				name: "Colaborador",
 				component: () => import("@/pages/Colaborador.vue"),

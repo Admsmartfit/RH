@@ -76,3 +76,64 @@ class TestTurnos(FrappeTestCase):
 		self.assertEqual(parcial.periodo, Periodo(780, 1080))
 		with self.assertRaises(frappe.ValidationError):
 			frappe.get_doc({**base, "data_inicio": "2026-11-10", "data_fim": "2026-11-09"}).insert()
+
+
+class TestTurnosPeloPainel(FrappeTestCase):
+	"""RH, 11/11/2026: criar, alterar e apagar o turno padrão pelo balão da tela Escalas (sem o Desk)."""
+
+	def test_criar_alterar_e_apagar(self):
+		novo = turnos.salvar_turno(
+			{
+				"company": EMPRESA,
+				"nome_turno": f"P-{hash_curto()}",
+				"entrada": "08:00",
+				"saida": "13:00",
+				"pausa_minutos": 15,
+				"tipo_dia": "Sábado",
+			}
+		)
+		self.assertEqual((novo["entrada"], novo["saida"], novo["tipo_dia"]), ("08:00", "13:00", "Sábado"))
+		self.assertEqual(
+			frappe.db.get_value("Turno Padrao", novo["name"], "cor"), turnos.CORES_TIPO["Sábado"]
+		)
+		alterado = turnos.salvar_turno({**novo, "saida": "12:00", "pausa_minutos": 0})
+		self.assertEqual((alterado["saida"], alterado["pausa_minutos"]), ("12:00", 0))
+		with self.assertRaises(frappe.ValidationError):  # a validação do DocType vale: pausa fora do turno
+			turnos.salvar_turno({**novo, "pausa_minutos": 15, "pausa_inicio": "12:55"})
+		with self.assertRaises(frappe.ValidationError):
+			turnos.salvar_turno({"nome_turno": "Sem empresa", "entrada": "08:00", "saida": "12:00"})
+		self.assertEqual(turnos.excluir_turno(novo["name"]), "apagado")
+		self.assertFalse(frappe.db.exists("Turno Padrao", novo["name"]))
+
+	def test_turno_em_uso_so_sai_da_lista(self):
+		t = turno(f"U-{hash_curto()}", "08:00", "12:00", 0)
+		with patch.object(frappe, "enqueue"):
+			employee = make_employee(f"turno-{hash_curto()}@example.com", company=EMPRESA, cpf=gerar_cpf())
+		frappe.get_doc(
+			{
+				"doctype": "Rascunho de Escala",
+				"employee": employee,
+				"data": "2026-12-05",
+				"situacao": "Trabalho",
+				"turno_padrao": t.name,
+			}
+		).insert(ignore_permissions=True)
+		self.assertEqual(turnos.excluir_turno(t.name), "desativado")
+		self.assertEqual(frappe.db.get_value("Turno Padrao", t.name, "ativo"), 0)
+		self.assertNotIn(t.name, [x["name"] for x in turnos.turnos_da_empresa(EMPRESA)])
+
+	def test_gestor_nao_altera(self):
+		t = turno(f"G-{hash_curto()}", "08:00", "12:00", 0)
+		email = f"gestor-turno-{hash_curto()}@example.com"
+		frappe.get_doc(
+			{"doctype": "User", "email": email, "first_name": "G", "send_welcome_email": 0}
+		).insert(ignore_permissions=True).add_roles("Gestor Ponto")
+		frappe.set_user(email)
+		try:
+			self.assertEqual(turnos.dados_turno(t.name)["saida"], "12:00")  # lê
+			with self.assertRaises(frappe.PermissionError):
+				turnos.salvar_turno({**turnos.dados_turno(t.name), "saida": "11:00"})
+			with self.assertRaises(frappe.PermissionError):
+				turnos.excluir_turno(t.name)
+		finally:
+			frappe.set_user("Administrator")

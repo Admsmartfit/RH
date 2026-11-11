@@ -45,7 +45,11 @@
 
 				<p v-if="erro" role="alert" class="mt-4 rounded-md border border-perigo bg-perigo-suave p-3 text-sm text-perigo-texto">{{ erro }}</p>
 
-				<div class="mt-6 flex justify-end gap-2">
+				<div class="mt-6 flex flex-wrap justify-end gap-2">
+					<!-- docs/PRD-substituicoes.md: a pessoa faltou → oferta do turno pelo WhatsApp (cascata) -->
+					<button v-if="podeCobrir" type="button" class="botao mr-auto" @click="emit('cobrir', { periodos: periodosIniciais })">
+						Faltou? Procurar substituto
+					</button>
 					<button type="button" class="botao" @click="emit('fechar')">Cancelar</button>
 					<button type="submit" class="rounded-md bg-primario-forte px-3 py-2 text-sm font-medium text-sobre-primario">Aplicar</button>
 				</div>
@@ -72,8 +76,9 @@ const props = defineProps({
 	quebras: { type: Array, default: () => [] },
 	situacaoInicial: { type: String, default: "Trabalho" },
 	periodosIniciais: { type: Array, default: () => [] }, // [["08:00", "12:00"], ...]
+	podeCobrir: { type: Boolean, default: false },
 });
-const emit = defineEmits(["fechar", "confirmar"]);
+const emit = defineEmits(["fechar", "confirmar", "cobrir"]);
 
 const uid = Math.random().toString(36).slice(2, 8);
 const situacao = ref("Trabalho");

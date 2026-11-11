@@ -200,3 +200,68 @@ def criar_sugeridos(company: str, turnos, designation: str | None = None) -> lis
 		cadastrados.add(chave)
 		criados.append(doc.name)
 	return criados
+
+
+# ------------------------------------------------------------------ cadastro pelo painel (RH, 11/11/2026)
+# Só o administrador abre o Desk: o RH cria, altera e apaga os turnos padrão no balão da tela Escalas. As permissões
+# são as do DocType (RH Ponto e System Manager escrevem; o gestor só lê).
+
+CAMPOS_TURNO = (
+	"nome_turno",
+	"entrada",
+	"saida",
+	"pausa_minutos",
+	"pausa_inicio",
+	"tipo_dia",
+	"designation",
+	"cor",
+)
+
+
+@frappe.whitelist()
+def dados_turno(nome: str) -> dict:
+	doc = frappe.get_doc(TURNO, nome)
+	doc.check_permission("read")
+	horarios = ("entrada", "saida", "pausa_inicio")
+	return {
+		"name": doc.name,
+		"company": doc.company,
+		**{c: (_hhmm(minutos(doc.get(c))) if c in horarios else doc.get(c)) for c in CAMPOS_TURNO},
+	}
+
+
+@frappe.whitelist()
+def salvar_turno(dados) -> dict:
+	"""Cria (sem `name`) ou altera um turno padrão. A validação é a do DocType (períodos, pausa, avisos da CLT)."""
+	dados = json.loads(dados) if isinstance(dados, str) else dict(dados or {})
+	if dados.get("tipo_dia") not in ("", None, *TIPOS_DIA):
+		frappe.throw(_("Tipo de dia inválido: {0}.").format(dados.get("tipo_dia")))
+	valores = {c: dados.get(c) or None for c in CAMPOS_TURNO}
+	valores["pausa_minutos"] = cint(dados.get("pausa_minutos"))
+	valores["tipo_dia"] = dados.get("tipo_dia") or ""
+	if dados.get("name"):
+		doc = frappe.get_doc(TURNO, dados["name"])
+		doc.update(valores)
+		doc.save()
+	else:
+		if not dados.get("company"):
+			frappe.throw(_("Escolha a empresa."))
+		valores["cor"] = valores["cor"] or CORES_TIPO.get(valores["tipo_dia"])
+		doc = frappe.get_doc({"doctype": TURNO, "company": dados["company"], "ativo": 1, **valores}).insert()
+	return dados_turno(doc.name)
+
+
+@frappe.whitelist()
+def excluir_turno(nome: str) -> str:
+	"""Apaga o turno padrão. Se ele já está numa escala, rascunho ou convite, só sai da lista (fica inativo): o que
+	já foi escalado com ele não muda."""
+	doc = frappe.get_doc(TURNO, nome)
+	doc.check_permission("delete")
+	try:
+		frappe.db.savepoint("excluir_turno")
+		frappe.delete_doc(TURNO, nome)
+		return "apagado"
+	except frappe.LinkExistsError:
+		frappe.db.rollback(save_point="excluir_turno")
+		frappe.db.set_value(TURNO, nome, "ativo", 0)
+		return "desativado"

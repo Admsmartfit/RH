@@ -38,6 +38,7 @@ from hrms_secullum_brasil.configuracao_ponto.regras import (
 	get_regra_vigente,
 )
 from hrms_secullum_brasil.engine import defaults_legais as d
+from hrms_secullum_brasil.engine import escala_cobertura as cob
 from hrms_secullum_brasil.engine import escala_custo as ec
 from hrms_secullum_brasil.engine import escala_validacao as ev
 from hrms_secullum_brasil.engine.escala import (
@@ -333,6 +334,7 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 	pessoas = _colaboradores(company, designation, branch, department)
 	anteriores = _fds_anteriores([p.name for p in pessoas], inicio) if pessoas else {}
 	linhas, contagens = [], {}
+	trabalhando: dict[date, list] = {}  # cobertura do dia (de hoje em diante): quem trabalha e em que horas
 	with modo_lote():
 		for pessoa in pessoas:
 			dias, reais, p = _contexto(pessoa.name, inicio, fim, hoje)
@@ -375,6 +377,10 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 					}
 				)
 				celulas[chave] = celula
+				if dia.data >= hoje and dia.situacao == TRABALHO:
+					trabalhando.setdefault(dia.data, []).append(
+						(pessoa.employee_name, [(p_.inicio, p_.fim) for p_ in dia.periodos])
+					)
 			aviso = frappe.get_all(
 				"Notificacao WhatsApp",
 				filters={"employee": pessoa.name, "publicacao": ["is", "set"]},
@@ -426,10 +432,30 @@ def mes(competencia: str, company: str, designation=None, branch=None, departmen
 			}
 		)
 		dia += timedelta(days=1)
+	from hrms_secullum_brasil.apuracao import cobertura as vagas_cobertura
+
+	empresas = empresas_da_escala(company)
+	# plantões de prestadores (docs/PRD-substituicoes.md) também cobrem as horas
+	for data_plantao, linhas_plantao in vagas_cobertura.plantoes_do_periodo(
+		empresas, max(inicio, hoje), fim
+	).items():
+		trabalhando.setdefault(data_plantao, []).extend(linhas_plantao)
+	cobertura = {}
+	for item in dias_mes:
+		data = getdate(item["data"])
+		if data < hoje or not pessoas:
+			continue
+		abre, fecha = cob.funcionamento(item["tipo_dia"], data.weekday())
+		cobertura[item["data"]] = cob.como_dict(cob.cobertura_do_dia(trabalhando.get(data, []), abre, fecha))
 	return {
 		"competencia": competencia,
 		"dias": dias_mes,
 		"colaboradores": linhas,
+		# horas da academia sem ninguém da grade (de hoje em diante; engine/escala_cobertura.py)
+		"cobertura": cobertura,
+		# vagas de cobertura de falta do período (selo do dia e balão da vaga)
+		"vagas": vagas_cobertura.vagas_do_periodo(empresas, inicio, fim),
+		"cobertura_tempos": {"t1": vagas_cobertura.parametros().t1, "t2": vagas_cobertura.parametros().t2},
 		"turnos": [
 			{
 				"name": t["name"],
@@ -765,7 +791,9 @@ def publicar(company: str, employees=None) -> dict:
 	return {"publicacao": _registrar_publicacao(feitos), "colaboradores": len(feitos)}
 
 
-def _registrar_publicacao(feitos: dict[str, list], urgente: bool = False, justificativa: str = "") -> str:
+def _registrar_publicacao(
+	feitos: dict[str, list], urgente: bool = False, justificativa: str = "", avisar: bool = True
+) -> str:
 	datas = [dia.data for linhas in feitos.values() for dia, _antes in linhas]
 	doc = frappe.get_doc(
 		{
@@ -793,7 +821,8 @@ def _registrar_publicacao(feitos: dict[str, list], urgente: bool = False, justif
 	doc.insert(ignore_permissions=True)
 	from hrms_secullum_brasil.apuracao.whatsapp_escala import avisar_publicacao
 
-	avisar_publicacao(doc.name)  # CE-08: o resumo de cada pessoa
+	if avisar:  # a cobertura de falta manda a própria confirmação (docs/PRD-substituicoes.md)
+		avisar_publicacao(doc.name)  # CE-08: o resumo de cada pessoa
 	return doc.name
 
 

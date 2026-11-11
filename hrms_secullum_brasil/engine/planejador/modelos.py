@@ -177,6 +177,9 @@ class Premissas:
 	peso_cobertura: int = 5  # 1 a 10
 	peso_custo: int = 5  # 1 a 10
 	peso_estabilidade: int = 3  # 0 a 10: quanto custa cada mudança
+	mudanca_max_entrada: int | None = (
+		60  # quanto a entrada pode andar do horário de hoje (RH, 10/11/2026); None = livre
+	)
 	contratar: bool = False
 	custo_vaga_hora: Decimal = Decimal("0")
 	max_vagas: int = 3

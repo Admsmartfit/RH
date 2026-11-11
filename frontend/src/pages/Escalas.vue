@@ -163,18 +163,17 @@
 		<Bloco v-else titulo="Grade do mês" :recurso="mes">
 			<p v-if="podeEditar && dados?.pode_cadastrar_turnos && !turnosVisiveis.length" class="mb-3 text-xs text-texto-suave">
 				Nenhum turno padrão para este cargo:
-				<a :href="linkNovoTurno" target="_blank" rel="noopener" class="text-primario-texto underline">criar no Desk</a>
+				<button type="button" class="text-primario-texto underline" @click="(e) => novoTurno(e.currentTarget)">criar um turno</button>
 				ou use Ferramentas → Turnos pelo histórico.
 			</p>
 			<details v-if="podeEditar && turnosVisiveis.length" :open="paletaAberta" class="mb-3" aria-label="Turnos padrão" @toggle="(e) => guardarPaleta(e.target.open)">
 				<summary class="cursor-pointer select-none text-xs font-semibold text-texto-suave">
 					Turnos padrão ({{ turnosVisiveis.length }}) — arraste para um dia ou escolha e aperte Enter no dia; para outro horário, clique no dia
 				</summary>
-				<!-- cadastro dos turnos padrão fica no Desk (o painel não tem formulário de cadastro); clique duplo num turno abre ele -->
-				<p v-if="dados?.pode_cadastrar_turnos" class="mt-1 flex flex-wrap gap-x-3 text-xs">
-					<a :href="linkNovoTurno" target="_blank" rel="noopener" class="text-primario-texto underline">+ Novo turno</a>
-					<a :href="linkTurnos" target="_blank" rel="noopener" class="text-primario-texto underline">Editar ou apagar turnos</a>
-					<span class="text-texto-suave">(no Desk; clique duplo num turno abre ele. Depois, atualize esta tela)</span>
+				<!-- RH, 11/11/2026: só o administrador abre o Desk; o turno padrão é criado, alterado e excluído no balão -->
+				<p class="mt-1 flex flex-wrap items-center gap-x-3 text-xs">
+					<button v-if="dados?.pode_cadastrar_turnos" type="button" class="text-primario-texto underline" @click="(e) => novoTurno(e.currentTarget)">+ Novo turno</button>
+					<span class="text-texto-suave">Clique num turno para {{ dados?.pode_cadastrar_turnos ? "alterar, excluir ou escolher para pôr no dia" : "escolher para pôr no dia" }}.</span>
 				</p>
 				<div class="mt-2 flex flex-wrap gap-1 text-xs" role="tablist" aria-label="Tipo de dia dos turnos">
 					<button
@@ -207,19 +206,39 @@
 						:title="t.nome"
 						:aria-label="`${t.nome} ${t.rotulo}`"
 						:aria-pressed="pegado?.cartao.id === t.id"
-						@click="pegar(t, true)"
-						@dblclick="abrirTurno(t)"
+						@click="(e) => abrirBalaoTurno(t, e.currentTarget)"
 					>
 						{{ t.rotulo }}
 					</button>
 				</VueDraggable>
 			</details>
+			<BalaoTurno
+				:aberto="balaoTurno.aberto"
+				:ancora="balaoTurno.ancora"
+				:turno="balaoTurno.turno"
+				:company="filtros.company || ''"
+				:cargo="cargo || ''"
+				:pode-cadastrar="Boolean(dados?.pode_cadastrar_turnos)"
+				:pode-usar="podeEditar"
+				@fechar="balaoTurno.aberto = false"
+				@usar="usarTurno"
+				@salvo="turnoSalvo"
+			/>
 
 			<!-- CE-15: no celular, agenda por dia (os mesmos dados e regras do servidor) -->
 			<section v-if="dados && celular" class="space-y-3" aria-label="Agenda por dia">
 				<article v-for="d in colunas" :key="d.data" class="rounded-md border border-borda p-3">
 					<h3 class="text-sm font-semibold">
 						{{ d.dia_semana }} {{ dataBR(d.data) }}<span v-if="d.feriado" class="text-alerta-texto"> · feriado</span>
+						<button
+							v-if="dados.cobertura?.[d.data] && dados.cobertura[d.data].situacao !== 'ok'"
+							type="button"
+							class="cobertura ml-2"
+							:class="`cobertura-${dados.cobertura[d.data].situacao}`"
+							@click="abrirCobertura(d, $event.currentTarget)"
+						>
+							{{ dados.cobertura[d.data].resumo }}
+						</button>
 					</h3>
 					<ul class="mt-2 space-y-2">
 						<li v-for="p in escaladosNoDia(d)" :key="p.employee" class="rounded border border-borda p-2 text-sm" :class="{ 'border-dashed': grade[p.employee][d.data][0].rascunho }">
@@ -264,6 +283,33 @@
 								{{ d.data.slice(8, 10) }}/{{ d.data.slice(5, 7) }}<br />
 								<span class="font-normal text-texto-suave">{{ d.dia_semana.slice(0, 3) }}{{ d.feriado ? " · feriado" : "" }}</span>
 							</th>
+						</tr>
+						<!-- RH, 11/11/2026: um sinal por dia; o detalhe (quais horas) abre no balão -->
+						<tr v-if="temCobertura" class="border-t border-borda" data-testid="linha-cobertura">
+							<th scope="row" class="sticky left-0 z-10 bg-superficie-suave px-2 py-1 text-left font-normal text-texto-suave">Horas sem ninguém</th>
+							<td class="px-2 py-1"></td>
+							<td v-for="d in colunas" :key="d.data" class="px-1 py-1 text-center">
+								<button
+									v-if="dados.cobertura[d.data]"
+									type="button"
+									class="cobertura"
+									:class="`cobertura-${dados.cobertura[d.data].situacao}`"
+									:aria-label="`${dataBR(d.data)}: ${dados.cobertura[d.data].resumo}`"
+									@click="abrirCobertura(d, $event.currentTarget)"
+								>
+									{{ dados.cobertura[d.data].situacao === "ok" ? "✓" : dados.cobertura[d.data].resumo }}
+								</button>
+								<button
+									v-for="v in vagasAbertas(d)"
+									:key="v.name"
+									type="button"
+									class="cobertura cobertura-vaga mt-0.5 block w-full"
+									:aria-label="`Vaga de cobertura ${v.horario}: procurando substituto`"
+									@click="abrirVaga(v.name, $event.currentTarget)"
+								>
+									Procurando
+								</button>
+							</td>
 						</tr>
 					</thead>
 					<tbody>
@@ -327,6 +373,51 @@
 
 		<p role="status" aria-live="polite" class="min-h-5 text-sm text-conforme-texto">{{ aviso }}</p>
 
+		<Balao :aberto="Boolean(cobertura)" :ancora="cobertura?.ancora" :titulo="cobertura?.titulo || ''" @fechar="cobertura = null">
+			<div v-if="cobertura" class="mt-2 space-y-2 text-sm" data-testid="balao-cobertura">
+				<p class="text-xs text-texto-suave">
+					Academia aberta {{ cobertura.c.funcionamento.replace("-", " às ") }} · {{ cobertura.c.pessoas }}
+					{{ cobertura.c.pessoas === 1 ? "pessoa escalada" : "pessoas escaladas" }}{{ cargo ? ` (${cargo})` : "" }}
+				</p>
+				<p v-if="cobertura.c.situacao === 'ok'" class="text-conforme-texto">Todas as horas têm alguém.</p>
+				<div v-if="cobertura.c.sem_ninguem.length">
+					<h3 class="text-xs font-semibold text-perigo-texto">Sem ninguém</h3>
+					<ul class="mt-1 space-y-0.5">
+						<li v-for="f in cobertura.c.sem_ninguem" :key="f.de" class="flex flex-wrap items-center justify-between gap-2">
+							<span>{{ f.de }} às {{ f.ate }} <span class="text-texto-suave">({{ f.duracao }})</span></span>
+							<button
+								v-if="podeEditar && podeProcurar(cobertura.d)"
+								type="button"
+								class="text-xs text-primario-texto underline"
+								@click="procurarNaFaixa(cobertura.d, f, $event.currentTarget)"
+							>
+								Procurar substituto
+							</button>
+						</li>
+					</ul>
+				</div>
+				<div v-if="cobertura.c.so_pausa.length">
+					<h3 class="text-xs font-semibold text-texto-suave">Só na pausa (ninguém cobre)</h3>
+					<ul class="mt-1 space-y-0.5">
+						<li v-for="f in cobertura.c.so_pausa" :key="f.de">{{ f.de }} às {{ f.ate }} <span class="text-texto-suave">· pausa de {{ f.pausa_de.join(", ") }}</span></li>
+					</ul>
+				</div>
+				<div v-if="vagasDoDia(cobertura.d).length">
+					<h3 class="text-xs font-semibold text-texto-suave">Vagas de cobertura</h3>
+					<ul class="mt-1 space-y-0.5">
+						<li v-for="v in vagasDoDia(cobertura.d)" :key="v.name">
+							<button type="button" class="text-left underline" @click="abrirVaga(v.name, $event.currentTarget)">
+								{{ v.horario }} · {{ v.situacao }}<template v-if="v.vencedor"> ({{ v.vencedor }})</template>
+							</button>
+						</li>
+					</ul>
+				</div>
+				<p v-if="cobertura.c.sem_ninguem.length && podeEditar" class="text-xs text-texto-suave">
+					Para cobrir, clique no dia de alguém na grade, arraste um turno da paleta ou procure um substituto pelo WhatsApp.
+				</p>
+			</div>
+		</Balao>
+
 		<PopoverInconsistencia
 			:aberto="Boolean(balao)"
 			:ancora="balao?.ancora"
@@ -340,6 +431,14 @@
 			<section v-if="balao?.substitutos" class="mt-3" aria-label="Colegas sem conflito">
 				<h3 class="text-xs font-semibold text-texto-suave">Colegas sem conflito (menor carga na semana primeiro)</h3>
 				<p v-if="!balao.substitutos.length" class="mt-1 text-sm text-texto-suave">Ninguém pode fazer este turno sem quebra.</p>
+				<button
+					v-if="balao.cobrir && podeEditar"
+					type="button"
+					class="mt-2 text-sm text-primario-texto underline"
+					@click="procurarPeloWhatsapp(balao.alvoSubstituicao, $event.currentTarget)"
+				>
+					Procurar substituto pelo WhatsApp
+				</button>
 				<ul class="mt-1 space-y-1">
 					<li v-for="s in balao.substitutos" :key="s.employee">
 						<button type="button" class="cartao w-full text-left" @click="substituir(s)">
@@ -378,8 +477,21 @@
 			:quebras="editor.quebras"
 			:situacao-inicial="editor.situacao"
 			:periodos-iniciais="editor.periodos"
+			:pode-cobrir="editor.podeCobrir"
 			@fechar="fecharEditor"
 			@confirmar="aplicarEditor"
+			@cobrir="cobrirPeloEditor"
+		/>
+		<BalaoVaga
+			:aberto="balaoVaga.aberto"
+			:ancora="balaoVaga.ancora"
+			:nome="balaoVaga.nome"
+			:nova="balaoVaga.nova"
+			:pode-editar="podeEditar"
+			:t1="dados?.cobertura_tempos?.t1 ?? 15"
+			:t2="dados?.cobertura_tempos?.t2 ?? 30"
+			@fechar="balaoVaga.aberto = false"
+			@mudou="vagaMudou"
 		/>
 	</div>
 </template>
@@ -396,10 +508,12 @@ import DialogoTexto from "@/components/DialogoTexto.vue";
 import DialogoConvite from "@/components/DialogoConvite.vue";
 import DialogoTurnosSugeridos from "@/components/DialogoTurnosSugeridos.vue";
 import DialogoTurno from "@/components/DialogoTurno.vue";
+import Balao from "@/components/Balao.vue";
+import BalaoTurno from "@/components/BalaoTurno.vue";
+import BalaoVaga from "@/components/BalaoVaga.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
 import PainelConsulta from "@/components/planejador/PainelConsulta.vue";
 import { useFiltros } from "@/composables/useFiltros";
-import { documentoDesk, listaDesk } from "@/utils/desk";
 import { mensagem } from "@/utils/erros";
 import { alteracoesDoMovimento, cartao, diasVisiveis, montarGrade, moeda, nomeDaQuebra, rotuloDoTurno } from "@/utils/escalas";
 import { dataBR, hhmm, nomeDaCompetencia } from "@/utils/tempo";
@@ -554,20 +668,69 @@ function guardarPaleta(aberta) {
 	}
 }
 
-// turnos padrão: cadastro no Desk (cada empresa tem os seus; na escala conjunta, a lista mostra os das duas)
-const linkNovoTurno = computed(() => {
-	const q = new URLSearchParams({ company: filtros.value.company || "" });
-	if (cargo.value) q.set("designation", cargo.value);
-	return `/app/turno-padrao/new?${q.toString()}`;
-});
-const linkTurnos = computed(() =>
-	listaDesk("Turno Padrao", {
-		company: (dados.value?.empresas || []).length > 1 ? ["in", dados.value.empresas] : filtros.value.company,
-		designation: cargo.value || undefined,
-	})
-);
-function abrirTurno(t) {
-	if (t.turno && dados.value?.pode_cadastrar_turnos) window.open(documentoDesk("Turno Padrao", t.turno), "_blank", "noopener");
+// turnos padrão: criar, alterar e excluir no balão (RH, 11/11/2026: só o administrador abre o Desk). Cada empresa tem
+// os seus; na escala conjunta, a lista mostra os das duas.
+// horas sem ninguém (servidor: engine/escala_cobertura.py); só de hoje em diante
+const temCobertura = computed(() => colunas.value.some((d) => dados.value?.cobertura?.[d.data]));
+const cobertura = ref(null);
+function abrirCobertura(d, ancora) {
+	cobertura.value = { ancora, d, titulo: `${d.dia_semana} ${dataBR(d.data)}${d.feriado ? " · feriado" : ""}`, c: dados.value.cobertura[d.data] };
+}
+const balaoTurno = reactive({ aberto: false, ancora: null, turno: null });
+// cobertura de falta (docs/PRD-substituicoes.md): abrir a vaga e acompanhar a cascata no balão
+const balaoVaga = reactive({ aberto: false, ancora: null, nome: "", nova: null });
+const hojeISO = () => new Date().toLocaleDateString("sv-SE");
+const podeProcurar = (d) => Boolean(d) && d.data >= hojeISO();
+const vagasDoDia = (d) => (d && dados.value?.vagas?.[d.data]) || [];
+const vagasAbertas = (d) => vagasDoDia(d).filter((v) => v.situacao === "Aberta");
+function abrirVaga(nome, ancora) {
+	cobertura.value = null;
+	Object.assign(balaoVaga, { aberto: true, ancora, nome, nova: null });
+}
+function novaVaga(nova, ancora) {
+	cobertura.value = null;
+	balao.value = null;
+	Object.assign(balaoVaga, { aberto: true, ancora, nome: "", nova: { company: filtros.value.company, designation: cargo.value || null, ...nova } });
+}
+function procurarNaFaixa(d, f, ancora) {
+	novaVaga({ data: d.data, periodos: [[f.de, f.ate]], origem: "Horas sem ninguém", rotulo: `${d.dia_semana} ${dataBR(d.data)}, ${f.de} às ${f.ate}` }, ancora);
+}
+function procurarPeloWhatsapp(alvo, ancora) {
+	const pessoa = pessoas.value.find((x) => x.employee === alvo.employee);
+	const ausente = alvo.nome || pessoa?.nome || "";
+	novaVaga(
+		{
+			data: alvo.data,
+			periodos: alvo.periodos,
+			origem: "Falta avisada",
+			employee_ausente: alvo.employee,
+			ausente,
+			designation: pessoa?.cargo || cargo.value || null,
+			company: pessoa?.empresa || filtros.value.company,
+			rotulo: `${dataBR(alvo.data)}, ${alvo.periodos.map(([a, b]) => `${a} às ${b}`).join(" e ")}`,
+		},
+		ancora
+	);
+}
+function vagaMudou(texto) {
+	if (texto) aviso.value = texto;
+	mes.reload();
+}
+
+function abrirBalaoTurno(t, ancora) {
+	Object.assign(balaoTurno, { aberto: true, ancora, turno: t });
+}
+function novoTurno(ancora) {
+	Object.assign(balaoTurno, { aberto: true, ancora, turno: null });
+}
+function usarTurno(t) {
+	balaoTurno.aberto = false;
+	pegar(t, true);
+}
+function turnoSalvo(texto) {
+	balaoTurno.aberto = false;
+	aviso.value = texto;
+	mes.reload();
 }
 
 const menuFerramentas = ref(null);
@@ -822,7 +985,16 @@ function abrirEditor(p, d, foco = null) {
 		quebras: c.quebras.map((q) => q.mensagem),
 		situacao: atual ? "Trabalho" : c.situacao === "Repouso semanal" ? "Repouso semanal" : "Trabalho",
 		periodos: atual ? atual.periodos : c.periodos,
+		// docs/PRD-substituicoes.md: quem faltou hoje ou depois → procurar substituto pelo WhatsApp
+		podeCobrir: Boolean(atual && podeProcurar(d)),
+		nome: p.nome,
 	};
+}
+
+function cobrirPeloEditor({ periodos }) {
+	const { employee, data, foco, nome } = editor.value;
+	editor.value = null;
+	procurarPeloWhatsapp({ employee, data, periodos, nome }, foco);
 }
 
 function fecharEditor() {
@@ -1112,6 +1284,21 @@ function teclado(e) {
 }
 .foco-celula:focus {
 	pointer-events: auto;
+}
+.cobertura {
+	@apply whitespace-nowrap rounded-full px-1.5 py-0.5 text-[11px] font-medium;
+}
+.cobertura-sem_ninguem {
+	@apply bg-perigo-suave text-perigo-texto;
+}
+.cobertura-so_pausa {
+	@apply text-alerta-texto;
+}
+.cobertura-vaga {
+	@apply bg-alerta-suave text-alerta-texto;
+}
+.cobertura-ok {
+	@apply text-conforme-texto;
 }
 .alerta {
 	@apply pointer-events-auto absolute right-0.5 top-0.5 rounded-full bg-perigo-suave px-1 text-[10px] font-semibold text-perigo-texto;

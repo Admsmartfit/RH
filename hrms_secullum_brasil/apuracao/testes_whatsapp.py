@@ -7,7 +7,9 @@ import frappe
 CONFIG = "Configuracao Apuracao"
 
 
-def ligar(modo: str = "Ligado", **extra) -> None:
+def ligar(modo: str = "Ligado", todas_unidades: bool = True, **extra) -> None:
+	"""`todas_unidades`: no teste, o envio automático vale em todas as unidades (na operação, uma por vez)."""
+	frappe.flags.whatsapp_todas_unidades = todas_unidades
 	for campo, valor in {
 		"whatsapp_envio": modo,
 		"whatsapp_intervalo_min": 0,

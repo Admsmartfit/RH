@@ -154,6 +154,7 @@ def _gravar(ctx: Contexto, resultado: ResultadoDia | None) -> str:
 		"normais",
 		"atraso",
 		"falta",
+		"nao_remunerado",
 		"hora_extra",
 		"noturno_real",
 		"noturno_ficto",

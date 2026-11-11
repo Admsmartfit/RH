@@ -20,7 +20,7 @@ from hrms_secullum_brasil.engine.planejador.modelos import (
 	Turno,
 	diaria_permitida,
 )
-from hrms_secullum_brasil.engine.planejador.turnos import candidatos
+from hrms_secullum_brasil.engine.planejador.turnos import candidatos, perto_de_hoje
 
 CUSTO_VAGA = 50_000_00  # centavos-equivalentes: abrir uma vaga só quando o déficit justifica
 
@@ -126,7 +126,14 @@ def resolver(
 	limites = {p.id: diaria_permitida(p, regras, premissas, perfil.ampliar) for p in pessoas}
 	extras = (regras.diaria_compensada,) if premissas.usar_compensacao and regras.diaria_compensada else ()
 	cands = {
-		p.id: (None, *candidatos(limites[p.id], p.atual, padroes, extras=extras))
+		p.id: (
+			None,
+			*perto_de_hoje(
+				candidatos(limites[p.id], p.atual, padroes, extras=extras),
+				p.atual,
+				premissas.mudanca_max_entrada,
+			),
+		)
 		for p in pessoas
 		if not p.fixa
 	}

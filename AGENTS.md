@@ -119,7 +119,10 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 
 - O painel `/ponto` (`frontend/`, Vue 3 + frappe-ui) é só leitura e atalho para ações que já existem (`apuracao/acoes.py`, submit/delete padrão do Frappe). Regra de negócio nunca fica no `frontend/`; números, segmentos da linha do tempo e posições vêm do servidor (`engine/painel.py`).
 - Endpoints do painel ficam em `apuracao/painel.py`, sempre via `frappe.get_list` e filtrados por `employees_visiveis`, sem campos de `permlevel` 1 (nunca CID); PIS/CPF mascarados para quem não é RH Ponto (D-5).
-- Cadastros e regras continuam no Desk; não criar formulário de cadastro no `frontend/`.
+- Cadastros e regras continuam no Desk; não criar formulário de cadastro no `frontend/`. Exceção (RH, 11/11/2026): o
+  **turno padrão** é criado, alterado e excluído no balão da tela Escalas (`BalaoTurno.vue` →
+  `configuracao_ponto/turnos.py`: `dados_turno`, `salvar_turno`, `excluir_turno`; permissões do DocType; em uso só
+  fica inativo).
 - **Entrada** (`utils/acesso.py`): todo usuário do painel entra no /ponto (e o `/` redireciona); só RH Ponto e
   System Manager abrem o Desk (`barrar_desk`); o planejador é só do System Manager. Tela nova só para admin usa
   `sessao.admin`; link para o Desk só com `sessao.pode_abrir_desk`.
@@ -154,7 +157,9 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   `engine/lancamentos.py`, gravação só por `apuracao/lancamentos.py` (`acoes.lancar_ausencia`). Falta justificada
   não abona (o dia segue com falta) e exige justificativa de efeito Falta. Leave Application criada pelo programa
   passa por `aprovador_da_licenca` e `feriados.garantir_lista_da_empresa`; aprovada/cancelada reapura pelo hook
-  `reapurar_licenca`. Licença não remunerada (`is_lwp`) não entra pelo cartão.
+  `reapurar_licenca`. Licença não remunerada (`is_lwp`, RH 10/11/2026) entra pelo cartão, **não abona**: o dia vai
+  para `nao_remunerado` (sem falta, sem inconsistência e sem perder o DSR) e a folha desconta só o dia (rubrica
+  LICENCA_NR; horista só a quantidade). Separação em `adaptador.licencas_nao_remuneradas`.
 - **Pausa paga por liberalidade** (instrutor, 15 min) é parâmetro do cargo (`cargo.pausa_paga`): só a pausa
   **incluída pelo sistema** (tratamento: WhatsApp, termo, RH; `EntradaDia.marcacoes_incluidas`) é paga, na rubrica
   PAUSA_PAGA, e não é trabalho; a batida no relógio é só trabalho. Pelo WhatsApp, uma pausa por dia
@@ -165,7 +170,8 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   `excesso_jornada_nao_autorizada`, e o intervalo lançado nesse dia **não é pago**. O tipo está em
   `termo_ocorrencias.SO_NO_TERMO`: entra no termo, nunca em `COBRAVEIS` (o instrutor não recebe WhatsApp). O RH
   recebe a lista diária e lança pelo `acoes.lancar_intervalo` (`apuracao/intervalo_horista.py`, regra pura em
-  `engine/intervalo_horista.py`).
+  `engine/intervalo_horista.py`). O aviso mensal do monitoramento também não vai ao instrutor horista
+  (`monitoramento_horistas.instrutor_horista`; o gestor continua recebendo, RH 10/11/2026).
 - **Jornada fragmentada** (intervalo > 2h permitido) é parâmetro do cargo na CCT (`cargo.jornada_fragmentada`); o
   adaptador combina perfil OU cargo. Lançamento manual da folha só na tabela do Fechamento de Ponto
   (`fechamento.ajustes_manuais`, valor por `engine/valoracao.valor_manual`, somado à rubrica do ponto).
@@ -193,8 +199,13 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 ## WhatsApp com aceite, modo de teste e auditoria — docs/PRD-whatsapp-aceite-auditoria.md
 
 - **Interruptor** `Configuracao Apuracao.whatsapp_envio` = Desligado / Teste / Ligado. Toda mensagem passa por
-  `apuracao/whatsapp.py:enviar`, com as travas nesta ordem: regra em teste (não em Teste), interruptor, aceite,
-  celular, ritmo. Regra pura em `engine/whatsapp_envio.py`.
+  `apuracao/whatsapp.py:enviar`, com as travas nesta ordem: regra em teste (não em Teste), interruptor, **unidade
+  liberada**, aceite, celular, ritmo. Regra pura em `engine/whatsapp_envio.py`.
+- **Liberação por unidade** (RH, 11/11/2026): em Ligado, a mensagem com regra só sai sozinha nas unidades da tabela
+  `whatsapp_unidades_liberadas` (`segura_pela_unidade`); as outras ficam "Aguardando envio manual". A tabela aceita
+  **uma unidade nova por gravação** (nunca todas de uma vez). A unidade é `Notificacao WhatsApp.company` (do
+  colaborador, do prestador ou passada no `criar`): aviso sem colaborador passa `company=`. Nos testes Frappe,
+  `testes_whatsapp.ligar()` libera todas (`todas_unidades=False` para testar a trava).
 - **Modo de teste:**
   - vai só ao `whatsapp_numero_teste`, com o cabeçalho `[TESTE]`;
   - situação "Enviada (teste)", sem `id_mensagem`: **nunca conta como aviso**. Filtros de "enviado" usam só
@@ -237,6 +248,9 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 
 ## Cockpit de escalas e tratamento de inconsistências — docs/PRD-cockpit-escalas.md e docs/PRD-tratamento-inconsistencias.md
 
+- **Horas sem ninguém** na tela Escalas (RH, 11/11/2026): regra pura em `engine/escala_cobertura.py` (funcionamento
+  igual ao do planejador, pausa não é furo); `cockpit_escala.mes` devolve `cobertura` por dia (de hoje em diante) e a
+  tela só mostra um sinal por dia e o balão.
 - **Validação da escala** só no engine: `engine/escala_validacao.py` (quebras, soluções A/B, `ajustar_repouso`),
   `engine/escala_custo.py` (custo previsto; nunca gera verba — DE-3), `engine/escala_equidade.py`,
   `engine/turno_padrao.py`. O Frappe fica em `apuracao/cockpit_escala.py` (mês, validar, rascunho, publicar).
@@ -260,6 +274,20 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   início, mandando o cadastro lido com só o `HorarioNumero` trocado). Páginas sem login (`www/disponibilidade`,
   `www/assinar`) abrem só com token HMAC e mostram só os dados do próprio colaborador. O contexto delas vem de `utils/sem_login.preparar` e todo
   POST manda `X-Frappe-CSRF-Token` (navegador logado recusa sem ele).
+
+## Cobertura de faltas e Banco de Talentos — docs/PRD-substituicoes.md
+
+- Regra pura em `engine/cobertura.py` (níveis unidade → rede → Banco de Talentos pelo tempo, travas do prestador,
+  limite de plantões no mês, "primeiro ganha", valor = horas × valor-hora, aviso de falta sem batida, cadastro);
+  Frappe em `apuracao/cobertura.py` (vaga, rodada, `tick` de minuto, aceite com `select ... for update`) e
+  `apuracao/banco_talentos.py` (QR Code, cadastro, código, aprovação, plantões). Páginas sem login
+  `www/cobertura` e `www/talentos`; tela `BalaoVaga.vue` e `pages/BancoTalentos.vue`.
+- O interno só recebe sem nenhuma quebra da CLT (as do `escala_validacao`), conferido de novo no clique; ganhou →
+  `cockpit_escala._aplicar` + `_registrar_publicacao(urgente=True, avisar=False)`. Pagamento só pela apuração.
+- O prestador (`Prestador Eventual`) **não é colaborador**: nunca entra na folha nem no ponto; documentos e conta em
+  permlevel 2 (o 1 é só saúde). Aceite do termo imutável. O plantão conta na linha "Horas sem ninguém".
+- Ofertas e confirmações saem na hora (`ignorar_horario`), só no horário da configuração (5h-22h). Nada lê resposta
+  do WhatsApp; o aviso de falta sem batida nunca abre a vaga.
 
 ## Termo de ocorrências — docs/PRD-termo-ocorrencias.md
 
@@ -297,3 +325,16 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   heurística); o otimizador CP-SAT fica em `otimizacao/` (pode importar `ortools`; o engine não — há teste). O Frappe
   (`apuracao/planejador.py`, DocType Simulacao de Escala) só lê dados, roda em fila e confere cada proposta com o
   `escala_validacao` do cockpit (DP-5). O custo do horista considera o mínimo semanal pago (complemento).
+- **Montar escala dos instrutores** (docs/PRD-planejador-instrutores.md): regra pura em
+  `engine/planejador/montagem.py` (cobertura por hora 05h–23h, pausa acima de 4 h, pendências, rodízio, custo, equipe
+  da simulação, leitura da lista colada); Frappe em `apuracao/planejamento_escala.py` (DocType `Planejamento de
+  Escala`, só System Manager, cargo INSTRUTOR, mês do calendário). Também **só simulação**: nunca grava Escala Mensal,
+  Rascunho de Escala nem cadastro (há teste); a impressão é `templates/planejamento_escala.html`.
+  Não mudar muito o horário de quem já trabalha (RH, 10/11/2026): o horário de hoje é `membro.hoje`; o limite
+  (`parametros.mudanca_max`, padrão 60) e a regra das 6 h (`regra_6h`: liberados | cobrir) valem no rodízio, em
+  `tapar_buracos` e em `sugestoes`. Instruções em texto só por `engine/planejador/instrucoes.py` (frases conhecidas;
+  o que não entende, avisa; nada de IA). No otimizador, `Premissas.mudanca_max_entrada` filtra os turnos
+  (`turnos.perto_de_hoje`).
+- **Modelo da rede** (docs/PRD-modelo-rede.md, ex.: o da Smart): regra pura em `engine/planejador/modelo_rede.py`
+  (encaixe pelo horário mais perto, grade no modelo, comparação); Frappe em `apuracao/modelo_rede.py` (DocType `Modelo
+  de Escala da Rede`, editável). Só lê a escala de hoje (`dia_da_escala`); grava no máximo uma nova simulação.

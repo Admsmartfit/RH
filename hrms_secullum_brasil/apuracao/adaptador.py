@@ -284,7 +284,7 @@ def _carregar_abonos(employee: str, periodo) -> dict:
 				"from_date": ["<=", fim],
 				"to_date": [">=", inicio],
 			},
-			fields=["name", "from_date", "to_date"],
+			fields=["name", "from_date", "to_date", "leave_type"],
 		),
 		"afastamentos": frappe.get_all(
 			AFASTAMENTO,
@@ -404,6 +404,7 @@ def abonos_do_dia(employee: str, data: date) -> list[str]:
 				lic.name
 				for lic in dados["licencas"]
 				if getdate(lic.from_date) <= data <= getdate(lic.to_date)
+				and not _nao_remunerada(lic.leave_type)
 			]
 			+ [
 				af.name
@@ -427,17 +428,7 @@ def abonos_do_dia(employee: str, data: date) -> list[str]:
 			},
 			pluck="name",
 		),
-		*frappe.get_all(
-			"Leave Application",
-			filters={
-				"docstatus": 1,
-				"status": "Approved",
-				"employee": employee,
-				"from_date": ["<=", data],
-				"to_date": [">=", data],
-			},
-			pluck="name",
-		),
+		*[lic.name for lic in _licencas_do_dia(employee, data) if not _nao_remunerada(lic.leave_type)],
 		*[
 			af.name
 			for af in frappe.get_all(
@@ -453,6 +444,38 @@ def abonos_do_dia(employee: str, data: date) -> list[str]:
 			if _afastamento_abona(af.justificativa)
 		],
 	]
+
+
+def _licencas_do_dia(employee: str, data: date) -> list:
+	periodo = janela()
+	if ativo() and periodo and periodo[0] <= data <= periodo[1]:
+		dados = memo(("abonos", employee), lambda: _carregar_abonos(employee, periodo))
+		return [lic for lic in dados["licencas"] if getdate(lic.from_date) <= data <= getdate(lic.to_date)]
+	return frappe.get_all(
+		"Leave Application",
+		filters={
+			"docstatus": 1,
+			"status": "Approved",
+			"employee": employee,
+			"from_date": ["<=", data],
+			"to_date": [">=", data],
+		},
+		fields=["name", "leave_type"],
+	)
+
+
+def _nao_remunerada(leave_type: str | None) -> bool:
+	"""Licença não remunerada (Leave Type `is_lwp`): não abona o dia (RH, 10/11/2026)."""
+	if not leave_type:
+		return False
+	return bool(
+		cint(memo(("is_lwp", leave_type), lambda: frappe.db.get_value("Leave Type", leave_type, "is_lwp")))
+	)
+
+
+def licencas_nao_remuneradas(employee: str, data: date) -> list[str]:
+	"""Licenças não remuneradas aprovadas que cobrem o dia: o dia não é pago, mas não é falta."""
+	return [lic.name for lic in _licencas_do_dia(employee, data) if _nao_remunerada(lic.leave_type)]
 
 
 def _afastamento_abona(justificativa: str | None) -> bool:
@@ -565,7 +588,8 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 	pausa_do_cargo = pausa_paga(cct, emp.designation)
 	if pausa_do_cargo:
 		pausa_termo = 0
-	ctx.tratamentos = tratamentos + abonos + compensado + parciais
+	nao_remuneradas = licencas_nao_remuneradas(employee, data)
+	ctx.tratamentos = tratamentos + abonos + compensado + parciais + nao_remuneradas
 	if perfil.tipo == PROFESSOR:
 		aulas, recesso = grade
 		ctx.entrada_professor = EntradaProfessor(
@@ -589,6 +613,7 @@ def montar_entrada(employee: str, data) -> Contexto | None:
 		regra=regra,
 		feriado=eh_feriado(lista_de_feriados(emp), data),
 		abonado=bool(abonos),
+		licenca_nao_remunerada=bool(nao_remuneradas),
 		minutos_abonados=minutos_abonados,
 		minutos_pausa_termo=pausa_termo,
 		feriado_compensado=bool(compensado),

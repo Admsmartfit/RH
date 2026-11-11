@@ -6,6 +6,34 @@ from frappe.model.document import Document
 class ConfiguracaoApuracao(Document):
 	def validate(self):
 		self.validar_destinatarios_do_termo()
+		self.validar_unidades_whatsapp()
+
+	def validar_unidades_whatsapp(self):
+		"""RH, 11/11/2026: o envio automático é liberado por unidade, uma por vez (nunca todas de uma vez)."""
+		from frappe.utils import now_datetime
+
+		from hrms_secullum_brasil.engine.whatsapp_envio import liberacoes_novas
+
+		linhas = self.get("whatsapp_unidades_liberadas") or []
+		vistas = set()
+		for linha in linhas:
+			if linha.company in vistas:
+				frappe.throw(_("A unidade {0} está duas vezes na lista do WhatsApp.").format(linha.company))
+			vistas.add(linha.company)
+		antes = self.get_doc_before_save()
+		anteriores = [x.company for x in (antes.get("whatsapp_unidades_liberadas") or [])] if antes else []
+		novas = liberacoes_novas(anteriores, [x.company for x in linhas])
+		if len(novas) > 1:
+			frappe.throw(
+				_("Libere uma unidade por vez no envio automático do WhatsApp (nesta gravação: {0}).").format(
+					", ".join(novas)
+				),
+				title=_("Uma unidade por vez"),
+			)
+		for linha in linhas:
+			if linha.company in novas or not linha.liberada_em:
+				linha.liberada_em = linha.liberada_em or now_datetime()
+				linha.liberada_por = linha.liberada_por or frappe.session.user
 
 	def on_update(self):
 		self.dar_papel_aos_gestores()

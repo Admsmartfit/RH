@@ -19,7 +19,12 @@ import frappe
 from frappe import _
 from frappe.utils import cint, getdate, today
 
-from hrms_secullum_brasil.apuracao.adaptador import FALTA_JUSTIFICADA, abonos_do_dia, montar_entrada
+from hrms_secullum_brasil.apuracao.adaptador import (
+	FALTA_JUSTIFICADA,
+	abonos_do_dia,
+	licencas_nao_remuneradas,
+	montar_entrada,
+)
 from hrms_secullum_brasil.apuracao.feriados import garantir_lista_da_empresa
 from hrms_secullum_brasil.apuracao.periodos import periodo_fechado
 from hrms_secullum_brasil.engine import lancamentos as la
@@ -106,7 +111,7 @@ def _dia_da_falta(employee: str, data, hoje) -> la.DiaDaFalta:
 		data=data,
 		situacao=_situacao(ctx, None),
 		batidas=len(batidas_atuais(employee, data)),
-		abonado=bool(abonos_do_dia(employee, data))
+		abonado=bool(abonos_do_dia(employee, data) or licencas_nao_remuneradas(employee, data))
 		or bool(
 			frappe.db.exists(
 				TRATAMENTO, {"employee": employee, "data": data, "tipo": "Abono do dia", "docstatus": 0}

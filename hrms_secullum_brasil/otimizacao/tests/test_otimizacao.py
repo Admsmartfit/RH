@@ -44,7 +44,7 @@ cpsat = pytest.mark.skipif(not otimizacao.tem_otimizador(), reason="OR-Tools nã
 @cpsat
 def test_cpsat_cobre_noites_e_fim_de_semana_com_4_horistas():
 	pessoas = [horista(n) for n in ("ana", "bia", "caio", "davi")]
-	premissas = Premissas(budget_pct=None)
+	premissas = Premissas(budget_pct=None, mudanca_max_entrada=None)  # todos de manhã: a noite exige mudar
 	escala, situacao = otimizacao.cpsat.resolver(
 		pessoas, H, R42, demanda(), premissas, perfis(premissas)[0], limite_s=20
 	)

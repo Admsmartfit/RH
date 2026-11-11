@@ -50,7 +50,9 @@ function posicionar() {
 	const largura = caixa.value.offsetWidth;
 	const altura = caixa.value.offsetHeight;
 	const abaixo = alvo.bottom + 8;
-	topo.value = abaixo + altura <= window.innerHeight - 8 ? abaixo : Math.max(8, alvo.top - altura - 8);
+	const desejado = abaixo + altura <= window.innerHeight - 8 ? abaixo : alvo.top - altura - 8;
+	// sempre dentro da janela (a âncora pode estar fora dela, depois de rolar)
+	topo.value = Math.max(8, Math.min(desejado, window.innerHeight - altura - 8));
 	esquerda.value = Math.min(Math.max(8, alvo.left), window.innerWidth - largura - 8);
 }
 
@@ -84,13 +86,22 @@ function cliqueFora(evento) {
 	emit("fechar");
 }
 
+// o conteúdo pode crescer depois de aberto (ex.: carregou os dados): reposiciona para continuar na janela
+let observador = null;
+
 function ligar() {
+	if (typeof ResizeObserver !== "undefined" && caixa.value) {
+		observador = new ResizeObserver(() => posicionar());
+		observador.observe(caixa.value);
+	}
 	window.addEventListener("resize", posicionar);
 	window.addEventListener("scroll", posicionar, true);
 	document.addEventListener("mousedown", cliqueFora);
 }
 
 function desligar() {
+	observador?.disconnect();
+	observador = null;
 	window.removeEventListener("resize", posicionar);
 	window.removeEventListener("scroll", posicionar, true);
 	document.removeEventListener("mousedown", cliqueFora);

@@ -814,11 +814,10 @@ class ImportacaoSecullum:
 			avisos.append(f"Horário {c.horario_numero} sem Perfil de Jornada importado.")
 		if nome:
 			doc = frappe.get_doc("Employee", nome)
+			trocou = bool(perfil) and not mesmo_horario_do_secullum(doc.perfil_jornada, perfil)
 			atual = frappe.db.get_value(PERFIL, doc.perfil_jornada, "codigo") if doc.perfil_jornada else None
-			if atual and atual.endswith("-H"):  # cópia Horista feita na revisão (Etapa 12): é o mesmo horário
-				atual = atual[:-2]
 			novo = frappe.db.get_value(PERFIL, perfil, "codigo") if perfil else None
-			if perfil and atual != novo:
+			if trocou:
 				# IS-08: trocou de horário no Secullum. Ele não informa a data da troca: o perfil novo vale a partir de
 				# hoje (histórico de horário, sem reescrever o passado) e o RH acerta a data se foi antes.
 				self._trocar_horario(doc, perfil, c)
@@ -830,7 +829,7 @@ class ImportacaoSecullum:
 				valores["regra_cct"] = self._cct(c.empresa_documento, company)
 			demitido_agora = c.demissao and not doc.relieving_date
 			mudou = self._mudancas(doc, valores)
-			if atual != novo and perfil:
+			if trocou:
 				mudou.append("perfil_jornada")
 			if mudou:
 				self._salvar(doc)
@@ -1245,6 +1244,26 @@ def _vinculo_do_afastamento(vinculos: list, af, matricula: str | None) -> str | 
 		mesma = [v for v in candidatos if (v.matricula_secullum or "").strip() == str(matricula).strip()]
 		candidatos = mesma or candidatos
 	return candidatos[0].name if candidatos else None
+
+
+def mesmo_horario_do_secullum(atual: str | None, novo: str) -> bool:
+	"""O perfil do cadastro ainda é o horário que o Secullum informa? Vale o código (a cópia Horista "-H" da revisão é o
+	mesmo horário) ou o número do horário no Secullum na mesma empresa: o perfil individual que o RH criou com o
+	horário de cada pessoa (ex.: instrutor horista, 10/11/2026) não é desfeito pela importação seguinte."""
+	if not atual:
+		return False
+	campos = ["codigo", "numero_horario_secullum", "company"]
+	a = frappe.db.get_value(PERFIL, atual, campos, as_dict=True)
+	n = frappe.db.get_value(PERFIL, novo, campos, as_dict=True)
+	if not a or not n:
+		return False
+	codigo = a.codigo[:-2] if a.codigo and a.codigo.endswith("-H") else a.codigo
+	if codigo == n.codigo:
+		return True
+	return bool(a.numero_horario_secullum) and (a.numero_horario_secullum, a.company) == (
+		n.numero_horario_secullum,
+		n.company,
+	)
 
 
 def reapurar_dias_apurados(employee: str, inicio, fim, motivo: str) -> int:

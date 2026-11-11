@@ -1,0 +1,103 @@
+{
+ "actions": [],
+ "creation": "2026-11-11 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "nivel",
+  "employee",
+  "prestador",
+  "nome",
+  "company",
+  "situacao",
+  "motivo",
+  "notificacao",
+  "enviada_em",
+  "respondido_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "nivel",
+   "fieldtype": "Select",
+   "label": "Nível",
+   "options": "Unidade\nRede\nBanco de Talentos",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Colaborador",
+   "options": "Employee",
+   "in_list_view": 1,
+   "read_only": 1,
+   "ignore_user_permissions": 1
+  },
+  {
+   "fieldname": "prestador",
+   "fieldtype": "Link",
+   "label": "Prestador",
+   "options": "Prestador Eventual",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "nome",
+   "fieldtype": "Data",
+   "label": "Nome",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Empresa",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "situacao",
+   "fieldtype": "Select",
+   "label": "Situação",
+   "options": "Enviada\nBloqueada\nAceitou\nNão posso\nEncerrada",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo",
+   "fieldtype": "Small Text",
+   "label": "Motivo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notificacao",
+   "fieldtype": "Link",
+   "label": "Notificação",
+   "options": "Notificacao WhatsApp",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enviada_em",
+   "fieldtype": "Datetime",
+   "label": "Enviada em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "respondido_em",
+   "fieldtype": "Datetime",
+   "label": "Respondido em",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Oferta de Cobertura",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

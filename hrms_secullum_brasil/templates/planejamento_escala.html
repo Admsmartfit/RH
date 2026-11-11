@@ -1,0 +1,83 @@
+<div style="font-family: sans-serif; font-size: 9pt; color: #1b2433;">
+	<h2 style="margin: 0 0 2px; font-size: 14pt;">Simulação de escala 5x2 — {{ doc.titulo|e }}</h2>
+	<p style="margin: 0 0 6px; color: #555;">
+		{{ doc.empresas or doc.company|e }} · {{ "%02d"|format(doc.mes) }}/{{ doc.ano }} · {{ doc.name }} · situação {{ doc.situacao }}.
+		<b>Só simulação:</b> nada foi gravado na escala nem no contrato.
+	</p>
+	{% if bloqueantes %}
+	<div style="border: 2px solid #b42318; color: #b42318; padding: 4px 8px; font-weight: bold; margin-bottom: 6px;">
+		SIMULAÇÃO COM PENDÊNCIAS: {{ bloqueantes|length }} bloqueante(s) — veja a lista no fim.
+	</div>
+	{% endif %}
+	<table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;" border="1" cellpadding="3">
+		<tr style="background: #eef1f6;">
+			<td><b>Instrutores</b> {{ avaliacao.totais.instrutores }}</td>
+			<td><b>Estagiários</b> {{ avaliacao.totais.estagiarios }}</td>
+			<td><b>Horas descobertas no mês</b> {{ avaliacao.totais.horas_descobertas }}</td>
+			<td><b>Horas com 2 ou mais</b> {{ avaliacao.totais.horas_varios }}</td>
+			<td><b>Pausas sem outro instrutor</b> {{ avaliacao.totais.pausas_sem_cobertura }}</td>
+			<td><b>Custo previsto</b> R$ {{ avaliacao.custo.total }} (DSR {{ avaliacao.custo.indice_dsr }}%; 6x1: {{ avaliacao.custo.indice_dsr_6x1 }}%)</td>
+		</tr>
+	</table>
+
+	{% for semana in semanas %}
+	<div style="page-break-inside: avoid; margin-bottom: 10px;">
+		<h3 style="margin: 6px 0 3px; font-size: 11pt;">Semana {{ loop.index }}</h3>
+		<table style="width: 100%; border-collapse: collapse;" border="1" cellpadding="2">
+			<tr style="background: #1f3b64; color: #fff;">
+				<th style="text-align: left;">Colaborador</th>
+				{% for dia in semana.dias %}<th>{{ dia.rotulo }}</th>{% endfor %}
+			</tr>
+			{% for linha in semana.linhas %}
+			<tr>
+				<td style="background: #f6c544;"><b>{{ linha.nome|e }}</b>{% if linha.tipo == "estagiario" %} (estágio){% endif %}{% if linha.prevista %} (previsto){% endif %}</td>
+				{% for c in linha.celulas %}
+				<td style="text-align: center;{% if c.folga %} background: #e6f4ea; color: #1e6b3a; font-weight: bold;{% endif %}">
+					{{ c.texto }}{% if c.pausa %}<br><span style="font-size: 7pt; color: #555;">pausa {{ c.pausa }}</span>{% endif %}
+				</td>
+				{% endfor %}
+			</tr>
+			{% endfor %}
+		</table>
+		<table style="width: 100%; border-collapse: collapse; margin-top: 3px; font-size: 7.5pt;" border="1" cellpadding="1">
+			<tr style="background: #1f3b64; color: #fff;">
+				<th style="text-align: left;">Horas</th>
+				{% for h in horas %}<th>{{ "%02d"|format(h) }}h</th>{% endfor %}
+				<th>Descobertas</th><th>2 ou mais</th>
+			</tr>
+			{% for dia in semana.horas %}
+			<tr>
+				<td>{{ dia.rotulo }}</td>
+				{% for c in dia.cobertura %}
+				<td style="text-align: center;
+					{% if c.situacao == 'descoberta' or c.situacao == 'parcial' %} color: #b42318; font-weight: bold;{% elif c.situacao == 'varios' %} background: #dbe8ff; font-weight: bold;{% elif c.situacao == 'fora' %} background: #eee; color: #999;{% endif %}">
+					{% if c.situacao == 'descoberta' %}X{% elif c.situacao == 'parcial' %}X{% elif c.situacao == 'fora' %}·{% else %}{{ c.maximo }}{% endif %}{% if c.pausa_sem_cobertura %}*{% endif %}
+				</td>
+				{% endfor %}
+				<td style="text-align: center;">{{ dia.horas_descobertas }}</td>
+				<td style="text-align: center;">{{ dia.horas_varios }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	{% endfor %}
+	<p style="font-size: 7.5pt; color: #555;">X = hora sem instrutor (ou parte dela); número = instrutores na hora; azul = 2 ou mais ao mesmo tempo;
+		* = pausa sem outro instrutor; · = fora do funcionamento.</p>
+
+	{% if diferentes %}
+	<h3 style="font-size: 11pt;">Horário diferente do contrato</h3>
+	<table style="border-collapse: collapse;" border="1" cellpadding="3">
+		<tr style="background: #eef1f6;"><th>Instrutor</th><th>Contrato</th><th>Na simulação</th></tr>
+		{% for d in diferentes %}<tr><td>{{ d.nome|e }}</td><td>{{ d.contrato }}</td><td>{{ d.base }}</td></tr>{% endfor %}
+	</table>
+	{% endif %}
+
+	{% if avaliacao.pendencias %}
+	<h3 style="font-size: 11pt;">Pendências e avisos</h3>
+	<table style="width: 100%; border-collapse: collapse;" border="1" cellpadding="2">
+		{% for p in avaliacao.pendencias %}
+		<tr><td style="width: 12%;{% if p.gravidade == 'Bloqueante' %} color: #b42318; font-weight: bold;{% endif %}">{{ p.gravidade }}</td><td>{{ p.mensagem|e }}</td></tr>
+		{% endfor %}
+	</table>
+	{% endif %}
+</div>

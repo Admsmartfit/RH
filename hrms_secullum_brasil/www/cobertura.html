@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Cobertura de turno</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 30rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; }
+		.turno { border: 1px solid var(--borda); border-radius: 0.5rem; padding: 1rem; font-size: 1.1rem; }
+		.botoes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+		button { min-height: 48px; flex: 1; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.nao { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		button:disabled { opacity: 0.6; }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); font-weight: 600; }
+	</style>
+</head>
+<body>
+{{ faixa_teste or "" }}
+	<main>
+		<h1>Cobertura de turno</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+		<section id="turno" class="turno" aria-label="Turno" hidden></section>
+		<div id="botoes" class="botoes" hidden>
+			<button type="button" id="quero">Quero este turno</button>
+			<button type="button" class="nao" id="nao">Não posso</button>
+		</div>
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.cobertura";
+		const token = new URLSearchParams(location.search).get("token") || "";
+		const $ = (id) => document.getElementById(id);
+		const br = (iso) => iso.slice(0, 10).split("-").reverse().join("/");
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto;
+		}
+		function erroDoServidor(corpo) {
+			try {
+				const msgs = JSON.parse(corpo._server_messages || "[]").map((m) => JSON.parse(m).message);
+				return msgs.join(" ").replace(/<[^>]+>/g, " ") || corpo.exception || "";
+			} catch (e) {
+				return "";
+			}
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.dados?token=${encodeURIComponent(token)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido. Fale com o gestor da unidade.";
+				return;
+			}
+			const d = corpo.message;
+			$("cabecalho").textContent = `${d.nome}, você pode cobrir este turno na ${d.empresa}?`;
+			$("turno").hidden = false;
+			let texto = `${d.dia_semana}, ${br(d.data)} — ${d.horario}`;
+			if (d.valor) texto += ` (${d.duracao}) · R$ ${d.valor}, pagamento via NFS-e do seu CNPJ`;
+			$("turno").textContent = texto;
+			if (d.ganhou) return status("O turno é seu. Obrigado!", "ok");
+			if (d.resposta === "Não posso") status("Você respondeu que não pode. Se mudou de ideia e a vaga ainda estiver aberta, toque em Quero.", "suave");
+			if (d.aberto) $("botoes").hidden = false;
+			else status(`Vaga encerrada: ${d.motivo || "obrigado"}.`, "suave");
+		}
+
+		async function responder(resposta) {
+			for (const b of document.querySelectorAll("button")) b.disabled = true;
+			const r = await fetch(`${API}.responder`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
+				body: JSON.stringify({ token, resposta }),
+			});
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("botoes").hidden = true;
+				return status(erroDoServidor(corpo) || "Não foi possível responder: a vaga pode ter sido encerrada.", "erro");
+			}
+			$("botoes").hidden = true;
+			status(resposta === "Quero" ? "O turno é seu! Você vai receber a confirmação pelo WhatsApp." : "Tudo bem, obrigado por avisar.", "ok");
+		}
+
+		$("quero").addEventListener("click", () => responder("Quero"));
+		$("nao").addEventListener("click", () => responder("Não posso"));
+		carregar();
+	</script>
+</body>
+</html>

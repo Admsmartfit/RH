@@ -72,7 +72,13 @@ def criar(
 	chave: str | None = None,
 	**origem,
 ) -> str:
-	"""`origem`: `inconsistencia` (cobrança, TI-08) ou `publicacao` (escala, CE-08)."""
+	"""`origem`: `inconsistencia` (cobrança, TI-08) ou `publicacao` (escala, CE-08). A unidade (`company`) vem da
+	origem, do colaborador ou do prestador: é ela que diz se o envio automático já foi liberado (RH, 11/11/2026)."""
+	if not origem.get("company"):
+		if employee:
+			origem["company"] = frappe.db.get_value("Employee", employee, "company")
+		elif origem.get("prestador"):
+			origem["company"] = frappe.db.get_value("Prestador Eventual", origem["prestador"], "company")
 	doc = frappe.get_doc(
 		{
 			"doctype": NOTIFICACAO,
@@ -99,6 +105,15 @@ def _config() -> frappe._dict:
 		"whatsapp_exigir_aceite",
 	)
 	return frappe._dict({c: frappe.db.get_single_value(CONFIG, c) for c in campos})
+
+
+def unidades_liberadas() -> list[str] | None:
+	"""As unidades da lista da Configuração Apuração. None = todas: só nos testes Frappe (`testes_whatsapp.ligar`)."""
+	if frappe.flags.whatsapp_todas_unidades and frappe.in_test:
+		return None
+	return [
+		x.company for x in frappe.get_cached_doc(CONFIG).get("whatsapp_unidades_liberadas") or [] if x.company
+	]
 
 
 def _aceitou(employee: str | None) -> bool:
@@ -134,6 +149,12 @@ def enviar(
 				"resposta": _("Envio de WhatsApp desligado na Configuração Apuração."),
 			}
 		)
+		return doc.situacao
+	# RH, 11/11/2026: em Ligado, a mensagem automática só sai sozinha nas unidades liberadas (uma por vez)
+	if not ignorar_trava and envio.segura_pela_unidade(
+		atual, doc.regra, manual, doc.company, unidades_liberadas()
+	):
+		doc.db_set({"situacao": "Aguardando envio manual", "filtro": envio.MOTIVO_UNIDADE_EM_TESTE})
 		return doc.situacao
 	# CW-05: em Ligado, só o colaborador que aceitou recebe (escolha dele, não erro: não abre pendência)
 	if (

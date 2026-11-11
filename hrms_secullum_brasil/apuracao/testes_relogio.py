@@ -14,6 +14,8 @@ MODULOS = (
 	"hrms_secullum_brasil.apuracao.cockpit_escala",
 	"hrms_secullum_brasil.apuracao.convite_turno",
 	"hrms_secullum_brasil.apuracao.whatsapp_escala",
+	"hrms_secullum_brasil.apuracao.cobertura",
+	"hrms_secullum_brasil.apuracao.banco_talentos",
 )
 
 

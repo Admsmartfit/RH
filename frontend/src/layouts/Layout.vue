@@ -58,6 +58,7 @@ const MENU = [
 	{ nome: "Escalas", rotulo: "Escalas" },
 	{ nome: "Planejador", rotulo: "Planejador", soAdmin: true },
 	{ nome: "Termos", rotulo: "Termos" },
+	{ nome: "BancoTalentos", rotulo: "Banco de Talentos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },
 ];
 const menu = computed(() => MENU.filter((item) => !item.soAdmin || sessao.data?.admin));

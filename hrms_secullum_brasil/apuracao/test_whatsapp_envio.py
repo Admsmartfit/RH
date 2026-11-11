@@ -182,3 +182,73 @@ class TestWhatsappEnvio(FrappeTestCase):
 		self.assertEqual(whatsapp.enviar(self._criar()), envio.ENVIADA_TESTE)
 		contagem = dia_seguinte._sem_aceite_por_empresa(None)
 		self.assertIn(EMPRESA, [c["company"] for c in contagem])
+
+
+class TestUnidadesLiberadas(FrappeTestCase):
+	"""RH, 11/11/2026: em Ligado, o envio automático é liberado por unidade, uma por vez."""
+
+	def setUp(self):
+		self.mock = MockEvolutionClient()
+		frappe.flags.whatsapp_mock = self.mock
+		self.addCleanup(setattr, frappe.flags, "whatsapp_mock", None)
+		testes_whatsapp.ligar(todas_unidades=False)
+		self.addCleanup(setattr, frappe.flags, "whatsapp_todas_unidades", True)
+		cfg = frappe.get_single("Configuracao Apuracao")
+		self.antes = [x.company for x in cfg.whatsapp_unidades_liberadas]
+		cfg.set("whatsapp_unidades_liberadas", [])
+		cfg.save()
+		self.addCleanup(self._restaurar)
+		with patch.object(frappe, "enqueue"):
+			self.employee = make_employee(
+				f"wuni-{hash_curto()}@example.com",
+				company=EMPRESA,
+				cpf=gerar_cpf(),
+				cell_number="27998761234",
+			)
+		self.regra = frappe.get_doc(
+			{
+				"doctype": REGRA,
+				"nome_regra": f"Unidade {hash_curto()}",
+				"evento": "Escala: convite para turno",
+				"para_colaborador": 1,
+				"situacao": "Em produção",
+				"ativa": 0,
+			}
+		).insert()
+
+	def _restaurar(self):
+		cfg = frappe.get_single("Configuracao Apuracao")
+		cfg.set("whatsapp_unidades_liberadas", [{"company": c} for c in self.antes])
+		cfg.flags.ignore_validate = True
+		cfg.save()
+
+	def test_unidade_fora_da_lista_fica_para_o_envio_manual(self):
+		nome = whatsapp.criar(self.employee, "Colaborador", "27998761234", "Oi", regra=self.regra.name)
+		self.assertEqual(frappe.db.get_value(NOTIFICACAO, nome, "company"), EMPRESA)
+		self.assertEqual(whatsapp.enviar(nome, ignorar_horario=True), "Aguardando envio manual")
+		self.assertEqual(frappe.db.get_value(NOTIFICACAO, nome, "filtro"), envio.MOTIVO_UNIDADE_EM_TESTE)
+		self.assertFalse(self.mock.enviadas)
+		# o RH ainda envia na mão
+		self.assertEqual(whatsapp.enviar_manual(nome), "Enviada")
+		# código e aviso sem regra não passam pela trava
+		codigo = whatsapp.criar(self.employee, "Colaborador", "27998761234", "Código 123456")
+		self.assertEqual(whatsapp.enviar(codigo, ignorar_horario=True), "Enviada")
+
+	def test_unidade_liberada_envia_sozinha(self):
+		cfg = frappe.get_single("Configuracao Apuracao")
+		cfg.append("whatsapp_unidades_liberadas", {"company": EMPRESA})
+		cfg.save()
+		linha = frappe.get_single("Configuracao Apuracao").whatsapp_unidades_liberadas[0]
+		self.assertTrue(linha.liberada_em and linha.liberada_por)
+		nome = whatsapp.criar(self.employee, "Colaborador", "27998761234", "Oi", regra=self.regra.name)
+		self.assertEqual(whatsapp.enviar(nome, ignorar_horario=True), "Enviada")
+
+	def test_nunca_duas_unidades_novas_de_uma_vez(self):
+		outra = frappe.get_all("Company", filters={"name": ["!=", EMPRESA]}, pluck="name", limit=1)
+		if not outra:
+			self.skipTest("só uma empresa no site de testes")
+		cfg = frappe.get_single("Configuracao Apuracao")
+		cfg.append("whatsapp_unidades_liberadas", {"company": EMPRESA})
+		cfg.append("whatsapp_unidades_liberadas", {"company": outra[0]})
+		with self.assertRaises(frappe.ValidationError):
+			cfg.save()

@@ -26,7 +26,7 @@ from hrms_secullum_brasil.engine.planejador.modelos import (
 	Turno,
 	diaria_permitida,
 )
-from hrms_secullum_brasil.engine.planejador.turnos import candidatos
+from hrms_secullum_brasil.engine.planejador.turnos import candidatos, perto_de_hoje
 
 PARES_RODIZIO = ((1, 2), (3, 4), (5, 6))  # ter/qua, qui/sex, sáb/dom
 PESO_BUDGET = 10  # por centavo acima do budget
@@ -67,7 +67,9 @@ def resolver(
 
 	for p in pessoas:
 		limite = diaria_permitida(p, regras, premissas, perfil.ampliar)
-		cands = candidatos(limite, p.atual, padroes, extras=extras)
+		cands = perto_de_hoje(
+			candidatos(limite, p.atual, padroes, extras=extras), p.atual, premissas.mudanca_max_entrada
+		)
 		for i in dias:
 			if p.fixa or (p.id, i) in travas:
 				fixo = (p.atual[i] if p.atual else None) if p.fixa else travas[(p.id, i)]

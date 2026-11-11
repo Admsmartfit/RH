@@ -61,6 +61,7 @@ class MinutosPeriodo:
 	interjornada: int = 0
 	descanso_semanal: int = 0  # AJ-10: diferença até as 35h (Súmula 110), paga junto da INTER
 	falta: int = 0
+	nao_remunerado: int = 0  # licença não remunerada (só o dia; o DSR não é perdido)
 	atraso: int = 0  # já sem o que foi debitado do banco
 	dsr_perdido: int = 0
 	dsr_horista: int = 0
@@ -199,6 +200,7 @@ def valorar(
 	brutos.append(
 		("FALTA", m.falta, horas(m.falta) + desconto_aulas, "Faltas injustificadas e aulas não dadas")
 	)
+	brutos.append(("LICENCA_NR", m.nao_remunerado, horas(m.nao_remunerado), "Licença não remunerada"))
 	brutos.append(("ATRASO", m.atraso, horas(m.atraso), "Atrasos e saídas antecipadas"))
 	brutos.append(("DSR_DESC", m.dsr_perdido, horas(m.dsr_perdido) + reflexo_aulas, "DSR perdido"))
 	brutos.append(("VA_DESC", 0, Decimal(coparticipacao), "Coparticipação no VA/VR"))
@@ -239,7 +241,7 @@ def valorar(
 
 	resultado = []
 	for codigo, minutos, valor, descricao in brutos:
-		if base.horista and codigo == "FALTA":
+		if base.horista and codigo in ("FALTA", "LICENCA_NR"):
 			# AJ-14: falta do horista vai à folha só com a quantidade (conta para DSR e férias), sem valor
 			if minutos:
 				resultado.append(

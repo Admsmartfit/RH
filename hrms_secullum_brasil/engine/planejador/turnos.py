@@ -45,3 +45,14 @@ def candidatos(
 			saida.add(turno)
 			inicio += passo
 	return tuple(sorted(saida))
+
+
+def perto_de_hoje(
+	cands: Iterable[Turno], atuais: Iterable[Turno | None], limite: int | None
+) -> tuple[Turno, ...]:
+	"""Só os turnos cuja entrada fica a até `limite` minutos de uma entrada de hoje da pessoa (RH, 10/11/2026: não mudar
+	muito o horário de quem já trabalha). Sem escala de hoje ou sem limite, todos."""
+	entradas = {t.inicio for t in atuais if t}
+	if limite is None or not entradas:
+		return tuple(cands)
+	return tuple(t for t in cands if min(abs(t.inicio - e) for e in entradas) <= limite)

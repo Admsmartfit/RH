@@ -1,0 +1,94 @@
+{
+ "actions": [],
+ "creation": "2026-11-10 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "autoname": "field:nome_modelo",
+ "description": "Modelo de escala da rede (ex.: o da Smart): o horário de cada vaga e as folgas de cada semana do ciclo. Usado só no Planejador, aba Modelo da rede (docs/PRD-modelo-rede.md); nunca grava escala.",
+ "field_order": [
+  "nome_modelo",
+  "ativo",
+  "col1",
+  "semanas_ciclo",
+  "inicio_ciclo",
+  "vagas_section",
+  "vagas",
+  "descricao"
+ ],
+ "fields": [
+  {
+   "fieldname": "nome_modelo",
+   "fieldtype": "Data",
+   "label": "Nome do modelo",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "ativo",
+   "fieldtype": "Check",
+   "label": "Ativo",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "col1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "semanas_ciclo",
+   "fieldtype": "Int",
+   "label": "Semanas do ciclo",
+   "reqd": 1,
+   "default": "3",
+   "description": "De 1 a 4: depois da última, o ciclo volta à semana 1."
+  },
+  {
+   "fieldname": "inicio_ciclo",
+   "fieldtype": "Date",
+   "label": "Semana 1 começa em",
+   "reqd": 1,
+   "description": "A segunda-feira da semana 1. O ciclo continua de um mês para o outro."
+  },
+  {
+   "fieldname": "vagas_section",
+   "fieldtype": "Section Break",
+   "label": "Vagas"
+  },
+  {
+   "fieldname": "vagas",
+   "fieldtype": "Table",
+   "label": "Vagas",
+   "options": "Vaga do Modelo de Escala",
+   "reqd": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Small Text",
+   "label": "Observação"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-10 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Modelo de Escala da Rede",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "nome_modelo",
+ "track_changes": 1
+}

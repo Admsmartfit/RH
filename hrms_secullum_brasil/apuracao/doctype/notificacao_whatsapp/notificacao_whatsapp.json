@@ -5,6 +5,8 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
+  "company",
+  "prestador",
   "employee_name",
   "destinatario",
   "numero",
@@ -53,6 +55,21 @@
    "read_only": 1
   },
   {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Unidade",
+   "options": "Company",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "prestador",
+   "fieldtype": "Link",
+   "label": "Prestador",
+   "options": "Prestador Eventual",
+   "read_only": 1
+  },
+  {
    "fetch_from": "employee.employee_name",
    "fieldname": "employee_name",
    "fieldtype": "Data",
@@ -65,7 +82,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Para",
-   "options": "Colaborador\nGestor\nRH\nTeste",
+   "options": "Colaborador\nGestor\nRH\nTeste\nPrestador",
    "read_only": 1
   },
   {
@@ -282,7 +299,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-04 12:00:00.000000",
+ "modified": "2026-11-11 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Notificacao WhatsApp",

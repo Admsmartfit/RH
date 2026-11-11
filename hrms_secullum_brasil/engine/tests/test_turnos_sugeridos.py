@@ -33,7 +33,8 @@ def test_tipo_do_dia_e_feriado_vence():
 	assert tipo_do_dia(SAB) == SABADO
 	assert tipo_do_dia(DOM) == DOMINGO
 	assert tipo_do_dia(SEG, {SEG}) == FERIADO
-	assert tipo_do_dia(DOM, {DOM}) == FERIADO
+	assert tipo_do_dia(DOM, {DOM}) == DOMINGO  # feriado no domingo é domingo (RH, 11/11/2026)
+	assert tipo_do_dia(SAB, {SAB}) == FERIADO
 
 
 def test_serve_no_dia():

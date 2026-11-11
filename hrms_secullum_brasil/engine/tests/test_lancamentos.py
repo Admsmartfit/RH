@@ -63,7 +63,7 @@ def test_justificativa_da_falta_precisa_do_efeito_falta():
 	assert la.erro_da_justificativa("Falta") is None
 
 
-def test_tipos_de_licenca_sem_atestado_e_sem_nao_remunerada():
+def test_tipos_de_licenca_sem_atestado_com_a_nao_remunerada():
 	tipos = [
 		{"name": "Férias"},
 		{"name": "Atestado Médico"},
@@ -71,7 +71,8 @@ def test_tipos_de_licenca_sem_atestado_e_sem_nao_remunerada():
 		{"name": "Casamento"},
 		{"name": "Antigo", "disabled": 1},
 	]
-	assert la.tipos_de_licenca(tipos) == ["Casamento", "Férias"]
+	# a não remunerada entra (RH, 10/11/2026): a apuração não a paga nem a conta como falta
+	assert la.tipos_de_licenca(tipos) == ["Casamento", "Férias", "Licença não remunerada"]
 
 
 def test_texto_do_abono():

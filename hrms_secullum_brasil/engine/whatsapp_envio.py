@@ -8,7 +8,7 @@
 """
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import date, datetime, time, timedelta
 
 DESLIGADO = "Desligado"
@@ -19,6 +19,8 @@ MODOS = (DESLIGADO, TESTE, LIGADO)
 ENVIADA_TESTE = "Enviada (teste)"
 ENVIADAS_NO_DIA = ("Enviada", "Entregue", "Lida", ENVIADA_TESTE)
 MOTIVO_SEM_ACEITE = "sem aceite do WhatsApp"
+# RH, 11/11/2026: em Ligado, a mensagem automática (com regra) só sai sozinha nas unidades liberadas, uma por vez
+MOTIVO_UNIDADE_EM_TESTE = "unidade ainda não liberada para o envio automático"
 
 # padrões (o `default` dos campos da Configuracao Apuracao repete estes valores; há teste)
 INTERVALO_MIN_S = 20
@@ -63,6 +65,23 @@ def marcar_links_de_teste(texto: str, assinar: Callable[[str], str]) -> str:
 def precisa_de_aceite(modo: str | None, destinatario: str | None, exigir: bool = True) -> bool:
 	"""CW-05: em Ligado, a mensagem ao colaborador exige o aceite; gestor, RH e teste não."""
 	return bool(exigir) and modo == LIGADO and destinatario == "Colaborador"
+
+
+def segura_pela_unidade(
+	modo: str | None, regra: str | None, manual: bool, company: str | None, liberadas: Iterable[str] | None
+) -> bool:
+	"""Liberação por unidade (RH, 11/11/2026): em Ligado, a mensagem automática (vinda de uma regra) de unidade que não
+	está na lista fica para o envio manual. O envio manual do RH, os códigos e os avisos sem regra não passam por aqui.
+	`liberadas` None = todas (só nos testes Frappe). Sem unidade conhecida, segura."""
+	if modo != LIGADO or not regra or manual or liberadas is None:
+		return False
+	return not company or company not in set(liberadas)
+
+
+def liberacoes_novas(antes: Iterable[str], depois: Iterable[str]) -> list[str]:
+	"""As unidades que entraram na lista nesta gravação (a tela só aceita uma por vez)."""
+	ja = set(antes)
+	return [c for c in dict.fromkeys(depois) if c and c not in ja]
 
 
 def dentro_do_horario(momento: datetime, inicio: int = HORA_INICIO, fim: int = HORA_FIM) -> bool:

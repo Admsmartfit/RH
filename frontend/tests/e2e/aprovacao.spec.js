@@ -38,7 +38,7 @@ test("tratamento do gestor aparece na aba e aprovar fecha a inconsistência", as
 		await expect(linha).toContainText("Renata Teste Recepção");
 		await expect(linha).toContainText("17:48");
 		await linha.getByRole("button", { name: /Aprovar/ }).click();
-		await expect(page.getByRole("status")).toHaveText(`Tratamento ${criado.name} aprovado; dia reapurado.`);
+		await expect(page.getByRole("status")).toContainText(`${criado.name} aprovado; dia(s) reapurado(s).`);
 		await expect(linha).toHaveCount(0);
 		expect(await inconsistencia(page.request, "marcacao_impar", "Renata Teste Recepção", "2026-08-19")).toBeUndefined();
 	} finally {

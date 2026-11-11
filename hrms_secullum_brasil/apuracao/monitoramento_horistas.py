@@ -223,12 +223,28 @@ def _abrir_inconsistencia(alerta, datas: list[date], inicio: date, fim: date) ->
 	)
 
 
+def instrutor_horista(employee: str, data) -> bool:
+	"""Horista com pausa paga no cargo (o instrutor; RH, 09/11/2026): o intervalo que faltou é lançado pelo RH e
+	entra no termo; ele não recebe o WhatsApp do mês (RH, 10/11/2026)."""
+	from hrms_secullum_brasil.configuracao_ponto.cargo import pausa_paga
+	from hrms_secullum_brasil.configuracao_ponto.regras import get_regra_vigente
+
+	data = getdate(data)
+	return bool(
+		pausa_paga(
+			get_regra_vigente(employee, data), frappe.db.get_value("Employee", employee, "designation")
+		)
+	)
+
+
 def notificar(alerta, datas: list[date], cfg) -> list[str]:
 	"""WhatsApp ao horista (e ao gestor, se configurado). Com uma Regra de Envio WhatsApp ativa para o evento, valem
 	os destinatários, filtros e textos dela; senão, os da Configuração Apuração. Com o envio desligado, fica
-	registrado como não enviado."""
+	registrado como não enviado. O instrutor horista não recebe (o alerta fica no cockpit e os dias vão para o termo);
+	o gestor continua recebendo."""
 	from hrms_secullum_brasil.apuracao import regras_whatsapp
 
+	sem_colaborador = instrutor_horista(alerta.employee, max(datas) if datas else now_datetime())
 	regras = regras_whatsapp.regras_ativas(com.HORISTA)
 	if regras:
 		emp = frappe.db.get_value(
@@ -255,7 +271,7 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 				regra.mensagem_colaborador = cfg.mensagem_horista
 			if not regra.mensagem_gestor:
 				regra.mensagem_gestor = cfg.mensagem_gestor
-			nomes += regras_whatsapp.avisar(regra, emp, marco, valores, alerta.name)
+			nomes += regras_whatsapp.avisar(regra, emp, marco, valores, alerta.name, sem_colaborador)
 		return nomes
 	emp = frappe.db.get_value(
 		"Employee",
@@ -271,7 +287,8 @@ def notificar(alerta, datas: list[date], cfg) -> list[str]:
 		limite=cfg.limite,
 		dias=mh.dias_curtos(datas),
 	)
-	nomes.append(whatsapp.criar(alerta.employee, "Colaborador", emp.cell_number, texto, alerta.name))
+	if not sem_colaborador:
+		nomes.append(whatsapp.criar(alerta.employee, "Colaborador", emp.cell_number, texto, alerta.name))
 	for gestor in contatos_de_aviso(emp) if cfg.avisar_gestor else []:
 		texto_gestor = mh.montar_mensagem(
 			cfg.mensagem_gestor,

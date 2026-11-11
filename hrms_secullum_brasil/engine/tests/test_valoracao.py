@@ -66,6 +66,14 @@ def test_falta_atraso_e_dsr_perdido():
 	assert v == {"FALTA": Decimal("80.00"), "ATRASO": Decimal("4.17"), "DSR_DESC": Decimal("73.33")}
 
 
+def test_licenca_nao_remunerada_desconta_so_o_dia():
+	v = valores(MinutosPeriodo(nao_remunerado=2 * 440))
+	assert v == {"LICENCA_NR": Decimal("146.67")}  # 2 dias de 7h20 a R$ 10,00; sem DSR_DESC
+	horista = BaseValoracao(salario=Decimal("16.50"), divisor=1, horista=True)
+	lanc = {x.codigo: x for x in valorar(horista, MinutosPeriodo(nao_remunerado=240))}
+	assert lanc["LICENCA_NR"].valor == Decimal("0.00")  # horista: só a quantidade (as horas já não são pagas)
+
+
 def test_intervalos_indenizados():
 	v = valores(MinutosPeriodo(intrajornada=30, interjornada=180))
 	assert v["INTRA_IND"] == Decimal("7.50")  # 30 min com acréscimo de 50%

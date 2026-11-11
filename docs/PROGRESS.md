@@ -2542,3 +2542,218 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   respondeu pelo link escreve no termo o horário do intervalo: "… Se fez o intervalo, escreva o horário." Assinado com
   o horário, entra pelo `cartao_ponto.salvar` (motivo do termo). Testes: engine 1154; Frappe termo 14 e
   monitoramento 16.
+
+## Planejador dos instrutores: montar a escala 5x2 com o mouse (10/11/2026, docs/PRD-planejador-instrutores.md)
+
+- **PI-E0 a PI-E5 implementadas.** Continua **só simulação**: nada grava Escala Mensal, Rascunho de Escala ou
+  cadastro (há teste). Só System Manager; só o cargo INSTRUTOR; mês do calendário; unidades das 05h às 23h.
+- **Engine** (`engine/planejador/montagem.py`, puro):
+  - cobertura por hora (fora, descoberta ✕, parcial, 1, 2 ou mais) contada minuto a minuto;
+  - pausa acima de 4 h (15 min; acima de 6 h, 1 h), no meio do turno e de 15 em 15 min, ou onde o gestor puser;
+    "pausa sem outro instrutor" é aviso, não furo;
+  - pendências: bloqueantes (menos de 2 folgas na semana, mais de 8 h, interjornada, estagiário sem instrutor) e
+    avisos (acima de 4 h, folga no pico, hora descoberta, turno de fim de semana vazio, mês sem fim de semana livre,
+    equidade);
+  - turnos de sábado/feriado (08h–13h e 12h–17h) e domingo (08h–14h), editáveis por simulação;
+  - `sugerir_rodizio` (fins de semana para quem trabalhou menos; folgas onde abrem menos furo e fora do pico; o
+    estagiário de 5 h vai, dia a dia, para a janela de movimento com instrutor presente);
+  - custo previsto e índice de DSR (com a comparação 6x1); equipe: retirar, voltar, incluir, substituir;
+  - `ler_lista`: a lista colada do RH ("Nome 05:00 às 09:00"), com casamento de nomes sem acento.
+- **Frappe:** DocType `Planejamento de Escala` (PLE-); `apuracao/planejamento_escala.py` (unidades, criar com a
+  lista, abrir, avaliar, salvar, sugerir, candidatos, mudar_equipe, duplicar, excluir, comparar, o_que_mudar,
+  imprimir em PDF paisagem no formato dos slides, `templates/planejamento_escala.html`).
+- **Tela** (`/ponto/planejador`): abas **Montar escala** (grade da semana com arrastar, editor do turno, linha das
+  horas do dia com barras de arrastar, mapa da semana, pendências, equipe, desfazer/refazer) e **Propostas**
+  (simulações lado a lado, na unidade e mês abertos, + as propostas A a E do otimizador antigo).
+- **Testes:** pytest 1393 (engine 99%; `montagem.py` 99%); Frappe `test_planejamento_escala` 4 e `test_planejador`
+  5; e2e planejador 3/3 (com axe); suíte e2e completa 80/81: o `aprovacao.spec.js` esperava o texto antigo
+  da aprovação (mudou para "aprovado; dia(s) reapurado(s)" na etapa dos lançamentos); corrigido, 3/3. Lint e build OK.
+- **Operação:** backup e migrate (10/11/2026). Criadas 4 simulações de dezembro/2026 a partir da lista do RH (27 de
+  28 nomes casaram com o cadastro; o Keven entra como previsto, e cada unidade ganha 2 estagiários previstos):
+  Vila Velha 35 h descobertas no mês, Serra 40, Praia do Canto 6, Reta da Penha 60 (05h–07h sem ninguém); 1
+  bloqueante na Serra (dia em que nenhuma janela de 5 h do estagiário tem instrutor).
+
+## Modelo da rede (Smart) no planejador (10/11/2026, docs/PRD-modelo-rede.md)
+
+- Aba **Modelo da rede**:
+  - a escala de hoje (ou uma simulação) contra o modelo da Smart;
+  - encaixe pelo horário mais perto, com a vaga trocável à mão e o "Reforço";
+  - vaga vazia em ✕ ou como pessoa prevista;
+  - grade da semana no formato dos slides, com as mudanças destacadas;
+  - cenário do dia, hoje e no modelo;
+  - lista do que muda;
+  - "Criar simulação com o modelo".
+- **Modelo editável:** DocTypes `Modelo de Escala da Rede` / `Vaga do Modelo de Escala`; patch `modelo_smart` (semana 1
+  em 14/12/2026).
+- **Engine:** `engine/planejador/modelo_rede.py` (100%); os slides conferem: sextas das semanas 01 e 03 → 09h e 22h;
+  semana 02 → 05h e 18h.
+- **Testes:** Frappe `test_modelo_rede` 3; e2e "modelo da rede" 1.
+- **Suíte Frappe completa** (antes desta etapa): 555 testes OK, 1 pulado.
+
+## Planejador: mudar pouco o horário, 6 h opcional, instruções em texto, sugestões e tela mais limpa (10/11/2026)
+
+- **Pedido do RH, depois de usar as simulações:** nunca mudar muito o horário de quem trabalha, não tirar horas de
+  um para dar a outro, 4 h normal e 6 h em alguns casos, tela mais simples, um campo de texto para refazer a escala e
+  uma aba de sugestões. Revisão R-1 a R-6 no `docs/PRD-planejador-instrutores.md` (8.1).
+- **Decisões do RH:** frases prontas (sem IA); entrada até 1 h; as duas opções de 6 h ("só quem eu liberar" ou "para
+  tapar buraco"), escolhidas na simulação; sugestões com "Aplicar".
+- **Engine (`montagem.py`):**
+  - `membro.hoje`;
+  - parâmetros `mudanca_max`, `regra_6h`, `teto_dia`, `instrucoes` e `restricoes`;
+  - avisos `mudanca_horario`, `horas_desiguais`, `instrucao`, `sem_liberacao_6h` e `acima_de_6h`. O
+    `acima_de_4h` só vale no dia de semana (o turno do fim de semana é por desenho);
+  - rodízio com folga fixa, dia de trabalho e horário das instruções;
+  - `tapar_buracos`: move a entrada no limite ou estende até 6 h, dividindo entre os colegas;
+  - `sugestoes`.
+- **Instruções em texto:** `engine/planejador/instrucoes.py` (100%), com quem (nome, "quem entra/sai às", "quem
+  abre/fecha", "todos", "estagiários") e o quê (folga, trabalha, não mudar, até N h, 6 h, horário).
+- **Otimizador:** premissa `mudanca_max_entrada` (padrão 1 h; `turnos.perto_de_hoje` na heurística e no CP-SAT);
+  os dois testes que exigiam levar a manhã para a noite usam "sem limite".
+- **Frappe:** `planejamento_escala.instrucoes` e `planejamento_escala.sugestoes`.
+- **Tela:** "Mais", totais em faixa, "Regras e instruções", "⋯" na pessoa, abas Horas do dia / Semana / Pendências /
+  Sugestões / Equipe.
+- **Testes:**
+  - pytest 1417 (engine 99%);
+  - Frappe: `test_planejamento_escala` 4, `test_modelo_rede` 3, `test_planejador` 5;
+  - e2e planejador 4/4; suíte e2e completa 82/82;
+  - lint e build OK.
+- **Operação:** backup e migrate (10/11/2026; Modelo Smart criado). As simulações já criadas não foram refeitas: use
+  "Mais → Sugerir rodízio" ou "Entender e refazer" em cada uma para aplicar as regras novas.
+
+## Pendências respondidas pelo RH (10/11/2026)
+
+- **Licença não remunerada (`is_lwp`):** dia não pago, sem falta.
+  - `EntradaDia.licenca_nao_remunerada` → `ResultadoDia.nao_remunerado` (dia sem batida: sem falta e sem
+    inconsistência; o DSR não é perdido);
+  - campo `Apuracao Diaria.nao_remunerado`;
+  - rubrica `LICENCA_NR` (Salary Component "Desconto Licença Não Remunerada"; horista só a quantidade);
+  - `adaptador.licencas_nao_remuneradas` separa a não remunerada dos abonos;
+  - o cartão mostra o tipo e aceita o lançamento.
+- **Monitoramento de horistas:** o aviso mensal não vai mais ao instrutor horista (`instrutor_horista`: horista com
+  pausa paga no cargo). O alerta, a pendência e o aviso ao gestor continuam.
+- **Operação** (backup 10/11/2026 12:44 e migrate):
+  - TOP-2026-00009 cancelado e emitido de novo como **TOP-2026-00012** (textos novos; WhatsApp em "Aguardando envio
+    manual");
+  - a regra "Batida esquecida (ponto do dia)" tinha o modelo antigo gravado no texto do colaborador, por isso as
+    mensagens saíam no texto antigo. O texto foi limpo e passa a valer o texto do programa;
+  - WPP-00072 descartada (pendência já resolvida);
+  - WPP-00099/00100/00104/00105 descartadas e geradas de novo no texto novo (WPP-00114 a 00117), na fila.
+- **Testes:**
+  - pytest do engine (licença: apuração, valoração, lançamentos);
+  - Frappe: `test_lancamentos` 9, `test_monitoramento_horistas` 17, `test_fechamento` 16.
+- **Ficou na fila da operação** (decidir): 17 avisos mensais antigos "Horista além de 4h sem intervalo" (29/10) em
+  "Aguardando envio manual", que pela decisão de hoje não iriam mais aos instrutores.
+
+## Horário de cada instrutor horista no cadastro (11/11/2026, pedido do RH)
+
+- **Antes:** os instrutores horistas de cada unidade usavam o mesmo perfil, a cópia "-H" do horário 2 do Secullum
+  (seg a sex 07:00–11:00, sáb 07:00–12:00), então a apuração media atraso e saída contra 07–11.
+- **Decisões do RH:** um perfil por pessoa com o horário da lista, **desde 26/10/2026** (período aberto) e **sem
+  horário no sábado** (a escala do mês define o fim de semana).
+- **Operação** (backup 10/11 14:11):
+  - 27 perfis novos `PJ-00091` a `PJ-00117` (código `<perfil da unidade>-<NOME>`, mesmo número de horário do
+    Secullum);
+  - histórico de horário de cada um: o perfil da unidade desde a admissão e o individual desde 26/10;
+  - reapuração dos dias abertos;
+  - o Keven não está no cadastro (fica para quando for admitido);
+  - Marcos = Marco Aurélio; Patuzo = Sthefanne Patuzo.
+- **Importação do Secullum:** passou a comparar o horário por código **ou** pelo número do horário no Secullum na
+  mesma empresa (`importacao_secullum.mesmo_horario_do_secullum`). Sem isso, a próxima importação "trocaria" o
+  horário de volta ao perfil da unidade. Teste: `ingestion/test_mesmo_horario.py`; `test_importacao_secullum` OK.
+- **Secullum:** nada foi enviado. Lá o horário continua o 2 (HORISTA).
+
+## Turno padrão no balão da tela Escalas (11/11/2026, pedido do RH)
+
+- **Pedido:** só o administrador acessa o Desk; criar, alterar e excluir o turno padrão na tela Escalas, com um balão
+  ao clicar no horário.
+- **Servidor** (`configuracao_ponto/turnos.py`):
+  - `dados_turno`, `salvar_turno` (a validação é a do DocType) e `excluir_turno`. O turno em uso numa escala,
+    rascunho ou convite fica inativo em vez de apagado;
+  - permissões do DocType: RH Ponto e System Manager escrevem; o Gestor Ponto só lê.
+- **Tela:**
+  - `BalaoTurno.vue`: o clique no turno abre o balão (alterar, excluir, "Escolher para pôr no dia"); "+ Novo turno"
+    abre o balão vazio;
+  - saíram os links "Editar ou apagar turnos" e o clique duplo para o Desk;
+  - `Balao.vue` agora se reposiciona quando o conteúdo cresce, para não sair da janela.
+- **Testes:**
+  - Frappe `test_turnos` 7 (criar, alterar, validação, em uso, gestor sem permissão);
+  - e2e `escalas.spec.js` 10/10 (o clique no turno passa pelo "Escolher para pôr no dia");
+  - lint e build OK.
+
+## Horas sem ninguém na tela Escalas (11/11/2026, pedido do RH)
+
+- **Pedido:** avisar se, na escala do dia, alguma hora fica sem instrutor/profissional, sem poluir a página.
+- **Como ficou:** uma linha "Horas sem ninguém" logo abaixo das datas da grade, com um sinal pequeno por dia (✓,
+  "2h sem ninguém" em vermelho ou "só pausa"); o clique abre um balão com as faixas de horário e de quem é a pausa.
+  No celular, o sinal aparece ao lado da data, só quando há furo.
+- **Regra** (`engine/escala_cobertura.py`, pytest 100%): funcionamento do planejador (útil 05h-23h, sábado e feriado
+  08h-17h, domingo 08h-14h); conta quem está na grade filtrada (o cargo escolhido); a pausa sozinha não é furo.
+  `cockpit_escala.mes` devolve `cobertura` só de hoje em diante (o passado não se corrige pela escala).
+- **Pendência:** o funcionamento é o padrão para todas as unidades; se alguma abrir em outro horário, falta um
+  cadastro por empresa.
+
+## PRD de cobertura de faltas e Banco de Talentos (11/11/2026)
+
+- Analisado o "PRD V2 - Gestão de Substituições e Notificações de Ponto" e criado `docs/PRD-substituicoes.md`
+  (CS-E1 a CS-E6), com as decisões do RH: aceite por link com "primeiro ganha" (sem ler respostas do WhatsApp);
+  PJ com cadastro próprio e trava de frequência; vaga aberta pelo gestor e aviso automático de falta sem batida só
+  ao gestor; pagamento interno pela apuração (sem HE fixa de 50%); oferta na hora das 5h às 22h; Nível 1 na
+  unidade e depois na rede; valor do PJ por hora trabalhada; convocação relâmpago fora do escopo.
+- Pendências do RH (Seção 12): limite de plantões do PJ no mês, valor-hora por unidade, texto do Termo de
+  Credenciamento, tempos da cascata.
+
+## Feriado no domingo usa os turnos de domingo (11/11/2026, pedido do RH)
+
+- `engine/turno_padrao.tipo_do_dia`: domingo vence o feriado (antes, 15/11 mostrava só os turnos de "Feriado").
+  Vale para a paleta, o convite para turno, os turnos sugeridos e o horário da linha "Horas sem ninguém" (08h-14h).
+  A apuração não muda: o dia continua feriado para o pagamento (`horas_extras.tipo_do_dia`).
+- Testes: engine 1200, Frappe cockpit, turnos e convite OK.
+
+## Cobertura de faltas e Banco de Talentos: CS-E1 a CS-E6 (11/11/2026, docs/PRD-substituicoes.md)
+
+- **CS-E1 (engine):** `engine/cobertura.py` (pytest 100%): níveis pelo tempo, escolha dos internos (sem quebra,
+  menos horas na semana), travas do prestador (aprovado, CREF, termo da versão vigente, CNPJ, conta, não é CLT,
+  limite do mês com liberação do RH), primeiro ganha, vaga sem ninguém, valor do plantão, cadastro, aviso sem batida.
+  Textos novos em `engine/comunicacao.py` (`EVENTOS_COBERTURA`).
+- **CS-E2:** DocTypes `Vaga de Cobertura` (+ `Oferta de Cobertura`), `Prestador Eventual`, `Aceite de
+  Credenciamento` (imutável), `Termo de Credenciamento` (versão), `Plantao Eventual`, `Valor de Cobertura por
+  Empresa`; campos na Configuração Apuração; destinatário "Prestador" e campo `prestador` na Notificação WhatsApp.
+  `apuracao/cobertura.py`: abrir, rodada (unidade → rede → Banco), `tick` de minuto, aceite com trava de linha, o
+  interno entra publicado (urgente), o prestador ganha o plantão; avisos ao gestor (preenchida, não preenchida).
+  Patch `cobertura_padroes`: padrões e as 7 regras de WhatsApp **desligadas e Em teste** (o RH liga cada uma).
+- **CS-E3:** tela Escalas: "Procurar substituto" (faixa sem ninguém, editor do dia "Faltou?", "Cobrir este turno"),
+  selo "Procurando" e `BalaoVaga.vue`; página `/ponto/cobertura` ("Quero este turno" / "Não posso").
+- **CS-E4:** `apuracao/banco_talentos.py` + `/ponto/talentos` (QR Code da unidade): formulário, anexos privados,
+  código de 6 dígitos, aceite do termo (IP, aparelho, versão), fila de aprovação, aviso de CREF vencendo (diário),
+  limite por IP. Aba **Banco de Talentos** no painel.
+- **CS-E5:** plantão: confirmação do realizado pelo gestor (valor pelo engine), NFS-e pelo RH, relatório "Plantoes
+  Eventuais a Pagar"; os plantões contam na linha "Horas sem ninguém".
+- **CS-E6:** `cobertura.avisar_sem_batida` (a cada 10 min, das 5h às 22h): escalado sem batida X min depois do
+  início, com coleta nova → WhatsApp ao gestor, uma vez por dia; nunca abre a vaga.
+- Documentos e conta do prestador em **permlevel 2** (o 1 continua só de saúde; `test_permissoes` confere os dois).
+- **Testes:** pytest 1459 (engine 98%); Frappe `test_cobertura` 14; e2e `cobertura.spec.js` 3 (+ escalas, base e
+  acessibilidade); lint e build OK.
+- **Pendências do RH:** texto do Termo de Credenciamento (jurídico) e marcar "Vigente"; ligar as 7 regras de
+  WhatsApp (nascem desligadas), conferir e passar para "Em produção"; confirmar os padrões (6 plantões/mês bloqueia, R$ 30/h, 15 e 30 min).
+
+## Banco de Talentos: limite de 6 plantões e "sem limite" (11/11/2026, pedido do RH)
+
+- Limite padrão de plantões por prestador no mês passou de 4 para **6**; **0 = sem limite** (engine
+  `travas_do_prestador` e `perto_do_limite`; tela mostra "(sem limite)"). Gravado 6 na Configuração Apuração dos
+  dois sites (estava 4).
+- O valor-hora do prestador (R$ 30) já é um só para todos: mudar na Configuração Apuração aumenta ou diminui para
+  todos; a tabela por unidade ficou como "opcional".
+
+## WhatsApp automático liberado por unidade (11/11/2026, pedido do RH)
+
+- **Pedido:** sair do teste do WhatsApp automático por unidade (empresa), nunca todas de uma vez.
+- Configuração Apuração ganhou **Unidades liberadas para o envio automático** (DocType filho `Unidade Liberada
+  WhatsApp`: unidade, liberada em, liberada por, observação). A gravação recusa duas unidades novas de uma vez.
+- `whatsapp.enviar`: em Ligado, a mensagem com regra de unidade fora da lista vai para "Aguardando envio manual"
+  (filtro "unidade ainda não liberada para o envio automático"); envio manual do RH, códigos (sem regra) e o modo
+  Teste não passam pela trava. Regra pura `engine/whatsapp_envio.segura_pela_unidade` / `liberacoes_novas`.
+- `Notificacao WhatsApp.company` (preenchida pelo colaborador ou prestador; a cobertura passa a unidade nos avisos
+  ao gestor).
+- Testes: engine `test_whatsapp_envio` (+2); Frappe `TestUnidadesLiberadas` (fora da lista, liberada, duas de uma
+  vez).
+- Na operação, a lista começa **vazia**: ligar o envio sem liberar nenhuma unidade não manda nada sozinho.

@@ -10,7 +10,7 @@ from frappe.tests.utils import FrappeTestCase
 
 from hrms_secullum_brasil.apuracao import acoes, painel
 from hrms_secullum_brasil.apuracao.servico import reapurar_dia
-from hrms_secullum_brasil.apuracao.test_apuracao import DIAS_UTEIS, criar_raw, hash_curto
+from hrms_secullum_brasil.apuracao.test_apuracao import DIAS_UTEIS, criar_raw, hash_curto, inconsistencias
 from hrms_secullum_brasil.ingestion.test_sync_colaboradores import gerar_cpf
 
 EMPRESA = "_Test Company"
@@ -203,6 +203,30 @@ class TestLancamentos(FrappeTestCase):
 			self.lancar(
 				employee, "licenca", inicio=str(FALTA1), fim=str(FALTA1), leave_type="Atestado Médico"
 			)
+
+	def test_licenca_nao_remunerada_nao_paga_e_nao_e_falta(self):
+		"""RH, 10/11/2026: entra pelo cartão; o dia não é pago (nao_remunerado), não é falta e não abona."""
+		tipo = "Licença não remunerada (teste)"
+		if not frappe.db.exists("Leave Type", tipo):
+			frappe.get_doc(
+				{"doctype": "Leave Type", "leave_type_name": tipo, "is_lwp": 1, "allow_negative": 1}
+			).insert(ignore_permissions=True)
+		employee = self.novo()
+		r = self.lancar(
+			employee, "licenca", inicio=str(FALTA1), fim=str(FALTA1), leave_type=tipo, motivo="Pediu"
+		)
+		self.assertTrue(r["aprovado"])
+		apurado = frappe.db.get_value(
+			"Apuracao Diaria",
+			{"employee": employee, "data": FALTA1},
+			["falta", "normais", "nao_remunerado", "abonado"],
+			as_dict=True,
+		)
+		self.assertEqual(
+			(apurado.falta, apurado.normais, apurado.nao_remunerado, apurado.abonado), (0, 0, 480, 0)
+		)
+		self.assertNotIn("falta", inconsistencias(employee, FALTA1))
+		self.assertEqual(self.dia(employee, FALTA1)["abono"]["texto"], tipo)
 
 	def test_licenca_do_gestor_recusada_pelo_rh(self):
 		employee = self.novo(reports_to=self.gestor)

@@ -56,6 +56,17 @@ def test_turno_faixas_sem_a_pausa_e_textos():
 	assert ler_hora("08:30") == 510
 
 
+def test_turnos_perto_do_horario_de_hoje():
+	"""RH, 10/11/2026: a entrada de quem já trabalha anda no máximo 1 h (opção da simulação)."""
+	todos = turnos.candidatos(240, [MANHA])
+	perto = turnos.perto_de_hoje(todos, [MANHA, None], 60)
+	assert perto and all(abs(t.inicio - MANHA.inicio) <= 60 for t in perto)
+	assert MANHA in perto
+	assert len(turnos.perto_de_hoje(todos, [MANHA], None)) == len(todos)  # sem limite
+	assert len(turnos.perto_de_hoje(todos, [None], 60)) == len(todos)  # sem escala de hoje (vaga, previsto)
+	assert {t.inicio for t in turnos.perto_de_hoje(todos, [MANHA], 0)} == {MANHA.inicio}
+
+
 def test_candidatos_respeitam_a_diaria_e_o_horario():
 	quatro = turnos.candidatos(240, [MANHA])
 	assert all(t.minutos == 240 for t in quatro) and MANHA in quatro
@@ -251,10 +262,14 @@ def test_mapa_mudancas_e_indicadores():
 def test_heuristica_cobre_o_deficit_sem_quebrar_restricao_dura():
 	d = demanda_noite()
 	pessoas = [horista("ana", semanal_min=0), horista("bia", semanal_min=0)]
-	perfil = av.perfis(Premissas())[0]
-	escala = heuristica.resolver(pessoas, H1, R42, d, Premissas(), perfil)
-	assert not restricoes.tem_dura(restricoes.violacoes(escala, pessoas, H1, R42, Premissas()))
-	assert av.indicadores(escala, pessoas, H1, R42, d, Premissas()).cobertura_pct == 100
+	livre = Premissas(mudanca_max_entrada=None)  # a manhã vai para a noite: só sem o limite de mudança
+	perfil = av.perfis(livre)[0]
+	escala = heuristica.resolver(pessoas, H1, R42, d, livre, perfil)
+	assert not restricoes.tem_dura(restricoes.violacoes(escala, pessoas, H1, R42, livre))
+	assert av.indicadores(escala, pessoas, H1, R42, d, livre).cobertura_pct == 100
+	# com o limite de 1 h (o padrão), a manhã não vira noite
+	presa = heuristica.resolver(pessoas, H1, R42, d, Premissas(), perfil)
+	assert all(t is None or t.inicio <= 7 * 60 for t in presa["ana"])
 	travada = Premissas(travas=(("ana", 0, None),))
 	escala2 = heuristica.resolver(pessoas, H1, R42, d, travada, perfil)
 	assert escala2["ana"][0] is None

@@ -32,6 +32,7 @@
   "avisar_gestor",
   "whatsapp_section",
   "whatsapp_envio",
+  "whatsapp_unidades_liberadas",
   "evolution_url",
   "evolution_apikey",
   "evolution_instancia",
@@ -74,7 +75,18 @@
   "d1_horas_estabilizar",
   "d1_col",
   "d1_dias_resposta",
-  "d1_validade_link_dias"
+  "d1_validade_link_dias",
+  "cobertura_section",
+  "cobertura_t1_min",
+  "cobertura_t2_min",
+  "cobertura_por_rodada",
+  "cobertura_aviso_sem_batida_min",
+  "cobertura_col",
+  "cobertura_max_plantoes_mes",
+  "cobertura_valor_hora",
+  "cobertura_hora_inicio",
+  "cobertura_hora_fim",
+  "cobertura_valores"
  ],
  "fields": [
   {
@@ -246,6 +258,13 @@
    "label": "Envio de WhatsApp",
    "options": "Desligado\nTeste\nLigado",
    "description": "Desligado: nada sai (a mensagem fica registrada como não enviada). Teste: toda mensagem vai só para o Número de teste, com o aviso [TESTE], sem efeito no colaborador. Ligado: envio de verdade."
+  },
+  {
+   "fieldname": "whatsapp_unidades_liberadas",
+   "fieldtype": "Table",
+   "label": "Unidades liberadas para o envio automático",
+   "options": "Unidade Liberada WhatsApp",
+   "description": "Em Ligado, as mensagens automáticas só saem sozinhas nas unidades desta lista; nas outras ficam em \"Aguardando envio manual\". Libere uma unidade por vez (a gravação recusa duas novas de uma vez)."
   },
   {
    "fieldname": "evolution_url",
@@ -511,11 +530,86 @@
    "fieldtype": "Int",
    "non_negative": 1,
    "label": "Link de resposta vale (dias)"
+  },
+  {
+   "fieldname": "cobertura_section",
+   "fieldtype": "Section Break",
+   "label": "Cobertura de faltas (Banco de Talentos)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "cobertura_t1_min",
+   "fieldtype": "Int",
+   "label": "Chamar a rede depois de (min)",
+   "default": "15",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cobertura_t2_min",
+   "fieldtype": "Int",
+   "label": "Chamar os prestadores depois de (min)",
+   "default": "30",
+   "non_negative": 1,
+   "description": "Contado desde a abertura da vaga."
+  },
+  {
+   "fieldname": "cobertura_por_rodada",
+   "fieldtype": "Int",
+   "label": "Pessoas por nível",
+   "default": "10",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cobertura_aviso_sem_batida_min",
+   "fieldtype": "Int",
+   "label": "Avisar o gestor sem batida depois de (min)",
+   "default": "20",
+   "non_negative": 1,
+   "description": "0 = não avisa."
+  },
+  {
+   "fieldname": "cobertura_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cobertura_max_plantoes_mes",
+   "fieldtype": "Int",
+   "label": "Plantões por prestador no mês",
+   "default": "6",
+   "non_negative": 1,
+   "description": "0 = sem limite. Passou, bloqueia (o RH libera com motivo). O limite evita a habitualidade do PJ (risco de vínculo)."
+  },
+  {
+   "fieldname": "cobertura_valor_hora",
+   "fieldtype": "Currency",
+   "label": "Valor-hora padrão do prestador",
+   "default": "30",
+   "description": "Vale para todos os prestadores: mude aqui para aumentar ou diminuir para todos. A tabela por unidade (abaixo) só é usada se uma unidade precisar de outro valor."
+  },
+  {
+   "fieldname": "cobertura_hora_inicio",
+   "fieldtype": "Int",
+   "label": "Ofertas a partir de (hora)",
+   "default": "5",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cobertura_hora_fim",
+   "fieldtype": "Int",
+   "label": "Ofertas até (hora)",
+   "default": "22",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "cobertura_valores",
+   "fieldtype": "Table",
+   "label": "Valor-hora diferente por unidade (opcional)",
+   "options": "Valor de Cobertura por Empresa"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-11-09 12:00:00.000000",
+ "modified": "2026-11-11 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Configuracao Ponto",
  "name": "Configuracao Apuracao",

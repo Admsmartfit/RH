@@ -50,7 +50,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Quando enviar",
-   "options": "Ponto do dia (D+1)\nPonto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)\nEscala: turno incluído/alterado/removido\nCobrança de inconsistência\nEscala: pedido de disponibilidade\nJornada: documento para assinar\nEscala: convite para turno\nTermo de ocorrências\nTermo pendente — gerente\nTermo pendente — RH\nResposta do colaborador (D+1) — gestor",
+   "options": "Ponto do dia (D+1)\nPonto do dia: batida esquecida (marcação ímpar)\nPonto do dia: falta sem justificativa\nHorista além de 4h sem intervalo (limite do mês)\nEscala: turno incluído/alterado/removido\nCobrança de inconsistência\nEscala: pedido de disponibilidade\nJornada: documento para assinar\nEscala: convite para turno\nTermo de ocorrências\nTermo pendente — gerente\nTermo pendente — RH\nResposta do colaborador (D+1) — gestor\nCobertura: oferta (interno)\nCobertura: oferta (prestador)\nCobertura: confirmada\nCobertura: vaga preenchida — gestor\nCobertura: vaga não preenchida — gestor\nCobertura: falta sem batida — gestor\nBanco de Talentos: cadastro",
    "reqd": 1
   },
   {
@@ -169,7 +169,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-04 16:00:00.000000",
+ "modified": "2026-11-11 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Apuracao",
  "name": "Regra Envio WhatsApp",

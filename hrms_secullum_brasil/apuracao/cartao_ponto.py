@@ -25,6 +25,7 @@ from hrms_secullum_brasil.apuracao.adaptador import (
 	abonos_do_dia,
 	cartao_do_dia,
 	janela_do_dia,
+	licencas_nao_remuneradas,
 	montar_entrada,
 )
 from hrms_secullum_brasil.apuracao.lote import definir_janela, documento, modo_lote
@@ -304,7 +305,9 @@ def _abono(employee: str, data: date, grade: dict) -> dict | None:
 	if aprovado or pendente:
 		t = aprovado or pendente
 		return {"referencia": t.name, "doctype": TRATAMENTO, "pendente": not aprovado, "motivo": t.motivo}
-	outros = abonos_do_dia(employee, data)
+	outros = abonos_do_dia(employee, data) + licencas_nao_remuneradas(
+		employee, data
+	)  # a não remunerada aparece
 	if outros:
 		nome = outros[0]
 		doctype = next(

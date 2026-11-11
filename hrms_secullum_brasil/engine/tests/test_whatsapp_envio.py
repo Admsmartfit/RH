@@ -138,3 +138,27 @@ def test_vcard_e_primeira_mensagem():
 	assert "Jo%C3%A3o" in link and "%20" in link and " " not in link
 	assert "colaborador" in a.link_primeira_mensagem("27999990000", "")
 	assert a.primeiro_nome(None) == ""
+
+
+def test_segura_pela_unidade_so_em_ligado_com_regra():
+	from hrms_secullum_brasil.engine import whatsapp_envio as w
+
+	assert w.segura_pela_unidade(w.LIGADO, "Regra X", False, "Vila Velha", ["Serra"])
+	assert not w.segura_pela_unidade(w.LIGADO, "Regra X", False, "Serra", ["Serra"])
+	assert w.segura_pela_unidade(w.LIGADO, "Regra X", False, None, ["Serra"])  # sem unidade, segura
+	assert w.segura_pela_unidade(w.LIGADO, "Regra X", False, "Serra", [])  # nenhuma liberada
+	assert not w.segura_pela_unidade(w.LIGADO, "Regra X", True, "Vila Velha", [])  # envio manual do RH
+	assert not w.segura_pela_unidade(w.LIGADO, None, False, "Vila Velha", [])  # código, aviso sem regra
+	assert not w.segura_pela_unidade(
+		w.TESTE, "Regra X", False, "Vila Velha", []
+	)  # modo Teste: número de teste
+	assert not w.segura_pela_unidade(w.LIGADO, "Regra X", False, "Vila Velha", None)  # testes Frappe
+
+
+def test_liberacoes_novas():
+	from hrms_secullum_brasil.engine import whatsapp_envio as w
+
+	assert w.liberacoes_novas(["A"], ["A", "B"]) == ["B"]
+	assert w.liberacoes_novas(["A"], ["A", "B", "C"]) == ["B", "C"]
+	assert w.liberacoes_novas(["A", "B"], ["A"]) == []
+	assert w.liberacoes_novas([], ["", "B", "B"]) == ["B"]

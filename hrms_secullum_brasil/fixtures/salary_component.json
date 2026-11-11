@@ -296,5 +296,16 @@
   "salary_component": "Pausa Paga por Liberalidade",
   "salary_component_abbr": "PAUSA_PAGA",
   "type": "Earning"
+ },
+ {
+  "depends_on_payment_days": 0,
+  "description": "Dias de licença não remunerada (não é falta: o DSR não é descontado). RH, 10/11/2026.",
+  "doctype": "Salary Component",
+  "is_tax_applicable": 0,
+  "modified": "2026-11-10 16:00:00.000000",
+  "name": "Desconto Licença Não Remunerada",
+  "salary_component": "Desconto Licença Não Remunerada",
+  "salary_component_abbr": "LICENCA_NR",
+  "type": "Deduction"
  }
 ]

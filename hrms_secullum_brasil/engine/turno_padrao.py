@@ -54,10 +54,13 @@ _DIAS_CURTOS = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
 
 
 def tipo_do_dia(dia: date, feriados: Iterable[date] = ()) -> str:
-	"""Feriado vence o dia da semana."""
+	"""Feriado vence o dia da semana, menos o domingo: feriado que cai no domingo é domingo (turnos e horário de
+	funcionamento do domingo; RH, 11/11/2026)."""
+	if dia.weekday() == 6:
+		return DOMINGO
 	if dia in set(feriados):
 		return FERIADO
-	return {5: SABADO, 6: DOMINGO}.get(dia.weekday(), DIA_UTIL)
+	return {5: SABADO}.get(dia.weekday(), DIA_UTIL)
 
 
 def serve_no_dia(tipo_turno: str | None, dia: date, feriados: Iterable[date] = ()) -> bool:

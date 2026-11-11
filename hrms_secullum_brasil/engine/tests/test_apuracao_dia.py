@@ -110,6 +110,14 @@ def test_dia_abonado_sem_marcacao_conta_como_normal():
 	assert (r.falta, r.normais, r.inconsistencias) == (0, 480, [])
 
 
+def test_licenca_nao_remunerada_nao_e_falta_nem_e_paga():
+	"""RH, 10/11/2026: o dia não é pago (vai para nao_remunerado), mas não é falta (sem inconsistência nem DSR)."""
+	r = apurar(licenca_nao_remunerada=True)
+	assert (r.falta, r.normais, r.nao_remunerado, r.inconsistencias) == (0, 0, 480, [])
+	r = apurar(licenca_nao_remunerada=True, jornada=JornadaPrevista())  # folga dentro da licença: nada
+	assert (r.falta, r.nao_remunerado) == (0, 0)
+
+
 def test_dia_abonado_com_saida_antecipada_nao_gera_atraso():
 	r = apurar("08:00", "12:00", abonado=True)
 	assert (r.atraso, r.normais) == (0, 480)

@@ -60,6 +60,8 @@ def apurar_dia(entrada: EntradaDia) -> ResultadoDia:
 			return resultado
 		if entrada.abonado:
 			resultado.normais = previsto
+		elif entrada.licenca_nao_remunerada:
+			resultado.nao_remunerado = previsto
 		elif previsto:
 			resultado.falta = previsto
 			resultado.inconsistencias.append(Inconsistencia("falta", MEDIA, "Dia previsto sem marcação."))

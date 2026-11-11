@@ -206,6 +206,26 @@ class TestMonitoramentoHoristas(FrappeTestCase):
 		self.assertEqual(para["Gestor"].numero, "5527988887777")
 		self.assertIn("Termo de Ajuste", para["Gestor"].texto)
 
+	def test_instrutor_horista_nao_recebe_o_whatsapp_do_mes(self):
+		"""RH, 10/11/2026: o instrutor horista (pausa paga no cargo) não recebe o aviso do mês; o alerta e a
+		pendência continuam para o RH e o gestor ainda recebe."""
+		frappe.db.set_single_value(CONFIG, "avisar_gestor", 1)
+		with patch.object(frappe, "enqueue"):
+			gestor = make_employee(
+				f"mh-gestor-{hash_curto()}@example.com",
+				company=EMPRESA,
+				cpf=gerar_cpf(),
+				cell_number="27988887777",
+			)
+		employee = self.horista(reports_to=gestor)
+		self.assertFalse(mh.instrutor_horista(employee, ULTIMO))  # sem pausa paga no cargo
+		with patch.object(mh, "instrutor_horista", return_value=True):
+			mh.verificar(HOJE)
+		alerta = self.alerta(employee)
+		self.assertEqual(alerta.situacao, "No limite")
+		self.assertTrue(alerta.inconsistencia)
+		self.assertEqual([n.destinatario for n in self.notificacoes(employee)], ["Gestor"])
+
 	def test_sem_celular(self):
 		employee = self.horista(DIAS)
 		frappe.db.set_value("Employee", employee, "cell_number", "")

@@ -94,7 +94,8 @@ situação. As setas **◀ Anterior / Próximo ▶** (ou `[` e `]`) trocam de co
     Não escreva o CID no motivo: CID, anexo e médico o RH Saúde completa no Atestado Médico, no Desk;
   - **Férias, licença ou afastamento:** escolha o tipo (Férias, Casamento, Licença-maternidade...). Os dias ficam
     abonados e vão ao Secullum pela fila de licenças. O saldo de férias não é controlado no programa. A licença **não
-    remunerada** se lança no Desk.
+    remunerada** também entra por aqui, mas **não abona**: o dia não é pago (a folha desconta só o dia, rubrica
+    "Desconto Licença Não Remunerada"), não é falta e não tira o DSR da semana.
   - O que o **gestor** lança fica aguardando o RH, na aba **Aguardando aprovação** da central. Para desfazer o que já
     foi aprovado, o RH clica no texto da coluna Abono (abre o documento no Desk) e cancela.
 
@@ -248,10 +249,38 @@ PRAIA FITNESS no grupo "Praia".
 - **Turnos padrão** (Ponto → Escalas → Turnos padrão): por empresa e, se quiser, por cargo e por **tipo de dia**
   (dia útil, sábado, domingo ou feriado; vazio = qualquer dia); entrada, saída e pausa (6h seguidas pedem 15 min).
   Aparecem na paleta do cockpit e, no convite, só os do tipo do dia escolhido.
-- **Criar, editar ou apagar turnos:** na tela Escalas, logo abaixo de "Turnos padrão", os atalhos **+ Novo turno** (já
-  com a empresa e o cargo escolhidos) e **Editar ou apagar turnos** abrem o cadastro no Desk; clique duplo num turno da
-  paleta abre ele. Para tirar um turno da paleta sem apagar, desmarque "Ativo". Depois, atualize a tela Escalas. Só o RH
-  (e o Administrador) cadastra turnos.
+- **Feriado no domingo** vale como domingo: a paleta, o convite e o horário da academia usam os turnos de domingo
+  (o pagamento continua o de feriado, pela apuração).
+- **Cobertura de faltas e Banco de Talentos** (docs/PRD-substituicoes.md):
+  - o gestor abre a vaga na tela Escalas ("Procurar substituto"); a oferta vai pelo WhatsApp à unidade, depois à
+    rede (15 min) e ao Banco de Talentos (30 min); o primeiro "Quero" fica com o turno (publicado na escala);
+  - **regras de WhatsApp:** os eventos "Cobertura: ..." e "Banco de Talentos: cadastro" nascem **desligadas** e
+    **Em teste**. Marque "Ativa" para começar (em teste as mensagens ficam em "Aguardando envio manual"); depois de
+    conferir, passe para "Em produção". Sem a regra ativa a oferta não sai (o balão da vaga mostra o motivo);
+  - **Termo de Credenciamento** (Desk → Termo de Credenciamento): cadastre o texto do jurídico e marque "Vigente".
+    Sem termo vigente o QR Code mostra "cadastro ainda não aberto". Texto novo = nova versão (os aprovados passam a
+    precisar de novo aceite);
+  - **Configuração Apuração → Cobertura de faltas:** tempos (15/30 min), pessoas por nível (10), aviso sem batida
+    (20 min), limite de 6 plantões por prestador no mês (0 = sem limite), valor-hora do prestador (R$ 30, vale
+    para todos: mude ali para aumentar ou diminuir; por unidade só se uma precisar de outro valor), horário
+    (5h-22h);
+  - **Banco de Talentos** (menu do painel): QR Code da unidade para imprimir, aprovação, suspensão e **Liberar
+    limite** (só o RH, com motivo: o limite evita a habitualidade do PJ, risco de vínculo);
+  - plantões: o gestor confirma o realizado; o valor é horas × valor-hora. Relatório **Plantoes Eventuais a Pagar**
+    (Desk) para o financeiro, com CNPJ, conta e NFS-e (o RH registra o número da nota no painel);
+  - o colaborador que cobre recebe pela **apuração** (horista pelo valor-hora; hora extra só acima dos limites).
+- **Horas sem ninguém:** logo abaixo das datas, a linha "Horas sem ninguém" mostra um sinal por dia (de hoje em
+  diante): ✓ = todas as horas da academia têm alguém da grade (o cargo filtrado); em vermelho, quanto tempo fica
+  sem ninguém (ex.: "2h sem ninguém"); "só pausa" = o único da hora está na pausa. Clique no sinal para ver quais
+  horas. Funcionamento: de segunda a sexta 05h às 23h, sábado e feriado 08h às 17h, domingo 08h às 14h.
+- **Criar, alterar ou excluir turnos** (na própria tela Escalas, sem o Desk):
+  - **+ Novo turno**, logo abaixo de "Turnos padrão", abre um balão: nome, entrada, saída, pausa, início da pausa
+    (vazio = no meio), tipo de dia e "só para o cargo";
+  - **clique num turno** da paleta abre o mesmo balão para **alterar** ou **excluir**. O turno que já está numa
+    escala, rascunho ou convite só sai da lista: o que foi escalado com ele não muda;
+  - **Escolher para pôr no dia** pega o turno para colocar com o teclado (vá até o dia e aperte Enter). Arrastar
+    continua funcionando;
+  - só o RH (e o Administrador) altera; o gestor só escolhe o turno.
 - **Turnos pelo histórico** (botão na tela Escalas): lê as batidas dos últimos 90 dias do cargo escolhido e mostra os
   turnos mais feitos em cada tipo de dia (arredondados a 30 min, com quantas vezes e quem fez). Marque e crie: eles
   ficam com nome curto ("Útil manhã", "Sáb tarde", "Fer manhã") e a cor do tipo de dia.
@@ -533,7 +562,13 @@ O passo a passo completo está em `docs/manual-teste-whatsapp.md`. Em resumo:
   - **Desligado:** nada sai;
   - **Teste:** tudo vai só para o **Número de teste**, com o aviso `[TESTE] para: Fulano`. Não conta como aviso ao
     colaborador, e o link abre com a faixa "nada será gravado";
-  - **Ligado:** envio de verdade.
+  - **Ligado:** envio de verdade, **só nas unidades liberadas** (abaixo).
+- **Unidades liberadas para o envio automático** (logo abaixo do interruptor):
+  - com o envio Ligado, as mensagens automáticas só saem sozinhas nas unidades desta lista. Nas outras ficam em
+    **"Aguardando envio manual"** (fila do RH), com o motivo "unidade ainda não liberada";
+  - libere **uma unidade por vez**: a gravação recusa duas unidades novas de uma vez. Cada linha guarda quem liberou
+    e quando. Para voltar uma unidade ao teste, apague a linha;
+  - o envio manual do RH, os códigos de confirmação e o modo Teste não dependem da lista.
 - **Aceite:**
   - com o envio Ligado, o colaborador só recebe se **aceitou** pelo QR code do cartaz (botão **Cartaz do
     WhatsApp**);
@@ -860,22 +895,84 @@ coluna **Horário correto** só fica aberta em **batida faltando**, **intervalo*
 
 ## Planejador de escalas 5x2
 
-Painel → **Planejador** (no menu do painel). É **só uma simulação**: nada muda na escala.
+Painel → **Planejador** (só o administrador). É **só uma simulação**: nada muda na escala nem no contrato. Você
+salva, imprime e lança as mudanças à mão na tela Escalas.
 
-1. Escolha a empresa, o cargo (instrutor de musculação), o início (segunda-feira), as semanas e o regime — pode simular
-   já com o de 42h, mesmo antes de ativar.
-2. Ajuste as premissas: teto diário do horista (4h/6h/8h), quem pode ter a carga ampliada (por índice, todos ou uma
-   lista), "não mexer", estagiários e cota, aumento máximo da folha, pesos de cobertura/custo/estabilidade, mínimos por
-   faixa ("mín. 4 das 18h às 20h") e, se quiser, contratação (proposta D).
-3. **Rodar simulação** (de 1 a 2 minutos; dá para parar e usar o melhor até ali). O planejador lê a presença real dos
-   instrutores nas últimas semanas (a demanda) e monta as propostas A (menor custo), B (qualidade técnica), C (rodízio
-   de folgas), D (contratar) e E (personalizada).
-4. Compare no quadro do topo (custo, cobertura, déficit, quebras, mudanças, carga ampliada), veja a grade e o mapa de
-   calor (vermelho = abaixo do mínimo; o número é presentes/mínimo) e o **"O que mudar"** de cada pessoa, com o motivo.
-5. Trave células que não podem mudar e **rode de novo**. **Escolha** a proposta e lance as mudanças **à mão** na tela
-   Escalas (o painel do planejador aparece lá com a lista); marque o que já lançou. Exporte em planilha para a diretoria.
-6. Depois, o **Acompanhamento** compara o planejado com o realizado e avisa semana acima do teto e estagiário sem
-   profissional no salão.
+### Aba "Montar escala" (instrutores)
+
+1. Escolha a **unidade** (a Praia do Canto aparece numa grade só) e o **mês** do calendário e clique em **Nova
+   simulação**. Dê um título ("Vila Velha — 7 professores") e, se quiser, **cole a lista de horários** da unidade
+   (`Nome 05:00 às 09:00`, um por linha). Cada nome vira o horário base; quem não for achado no cadastro entra como
+   **pessoa prevista** (ex.: quem ainda vai ser contratado). Instrutores do cadastro que não estão na lista ficam como
+   "retirados" (dá para voltar). Sem lista, vale o horário do contrato. Entram também dois estagiários previstos (5 h,
+   segunda a sexta, nas horas de maior movimento).
+2. A simulação já nasce com o **rodízio sugerido** (2 folgas por semana, fins de semana divididos). Para refazer, use
+   **Sugerir rodízio**.
+3. **Grade da semana:** arraste uma célula para outro dia da mesma pessoa para trocar folga e trabalho. Clique numa
+   célula para editar entrada e saída, **Antecipar/Estender 1 h**, dar folga ou escolher o turno do fim de semana.
+   Teclado: F alterna folga/trabalho; + e − mudam a saída (com Shift, a entrada).
+4. **Linha das horas do dia** (05h às 23h): arraste a barra de cada pessoa para mover o horário e puxe as pontas para
+   esticar (de 15 em 15 min). **✕ vermelho** = hora sem instrutor; **azul com número** = 2 ou mais instrutores ao
+   mesmo tempo. O **mapa da semana** mostra o mesmo para os 7 dias.
+5. **Passou de 4 h** é só aviso (custo) e o turno ganha a **pausa de 15 min** não paga (acima de 6 h, 1 h). Se na
+   pausa não houver outro instrutor, aparece o aviso "pausa sem outro instrutor".
+6. **Pendências:** bloqueantes (menos de 2 folgas na semana, mais de 8 h no dia, descanso entre dias, estagiário
+   sozinho) e avisos (hora descoberta, folga em dia de alta demanda, turno de fim de semana, mês sem fim de semana
+   livre, desequilíbrio entre colegas). Clique na pendência para ir ao dia.
+7. **Equipe da simulação:** **retirar**, **voltar**, **incluir profissional** (do cadastro ou previsto) e
+   **substituir** (o novo herda os horários de quem sai, se quiser). Assim dá para comparar com 6, 7 ou 8 professores.
+8. Turnos de sábado/feriado (08h–13h e 12h–17h) e domingo (08h–14h) são o padrão e podem ser trocados na simulação.
+9. **Salvar** (Ctrl+Z desfaz). No menu **Mais**: Sugerir rodízio, **Imprimir** (PDF no formato dos slides),
+   **Duplicar** para testar outra ideia, **O que mudar** (a diferença para a escala de hoje, para lançar na tela
+   Escalas) e Excluir. Marque **Pronta** quando for levar à reunião.
+10. **Regras e instruções** (clique para abrir):
+    - **quanto a entrada de quem já trabalha pode mudar** (padrão: até 1 h; ou "não mudar"; ou até 2 h). O rodízio e
+      as sugestões nunca passam disso, e o aviso "entrada longe da de hoje" aparece se você passar à mão;
+    - **até 6 h por dia** (com 15 min de pausa): "só quem eu liberar" ou "qualquer um, para tapar hora descoberta".
+      4 h é o normal; acima de 6 h no dia de semana é alerta;
+    - **Instruções em texto**, uma por linha, e **Entender e refazer a escala**. Exemplos: "o que trabalha às 5:00
+      folga sempre sábado e domingo", "quem abre a academia folga no fim de semana", "Yago pode fazer 6 h", "Marcela
+      não muda o horário", "Pedro trabalha todo sábado", "Hugo pode mudar até 2 h", "Enzo horário 17:00 às 21:00",
+      "todos podem fazer 6 h". O programa mostra como entendeu cada linha (✓) e avisa a que não entendeu (?); a
+      escala é refeita respeitando as instruções e mexendo pouco no horário. Quem tem instrução aparece com
+      "instrução" na grade.
+11. Abaixo da grade, em abas: **Horas do dia**, **Semana** (mapa), **Pendências** (agrupadas por gravidade),
+    **Sugestões** e **Equipe** (incluir, retirados, lista importada). As ações de cada pessoa (substituir, retirar)
+    ficam no **⋯** ao lado do nome.
+12. **Sugestões:** ideias que tapam horas sem instrutor mexendo pouco ("Mudar a folga de X de sex para qua", "Mudar
+    Y em seg 07/12: 09:00 às 13:00 para 10:00 às 14:00", "Estender Z…" quando 6 h é permitido), cada uma com quanto
+    tapa e o botão **Aplicar** (só na simulação; dá para desfazer).
+13. Avisos novos: **horas por semana muito diferentes das de hoje** (2 h ou mais a mais ou a menos: evita tirar
+    horas de um e dar a outro), **passou de 4 h sem estar liberado** e **instrução não cumprida**. O turno de sábado
+    e domingo (5 h e 6 h) não avisa "passa de 4 h".
+
+### Aba "Modelo da rede" (o modelo da Smart)
+
+1. Escolha a unidade, o mês e o modelo ("Modelo Smart (3 semanas)"). Em **Partir de**, deixe **Escala de hoje** ou
+   escolha uma simulação já montada.
+2. **Quem vai para qual vaga:** o programa põe cada instrutor na vaga do modelo com o horário mais parecido com o de
+   hoje e mostra o horário novo em laranja. Troque a vaga de alguém na lista, se quiser; **Reforço** deixa a pessoa
+   na escala de hoje (quando a unidade tem mais de 7). Vaga sem ninguém aparece em vermelho; marque **Vaga sem
+   ninguém vira pessoa prevista** para simular com a contratação.
+3. Escolha a **semana** (o botão diz qual semana do modelo vale nela: 01, 02 ou 03). A grade mostra ✓ e FOLGA como
+   nos slides; a **borda laranja** marca o que muda em relação a hoje. Alterne **No modelo / Hoje**.
+4. **Cenário do dia** (clique no dia da grade; começa na sexta): as horas com ✕ hoje e no modelo.
+5. **O que muda para cada um:** a lista dia a dia, para lançar à mão na tela Escalas depois de decidir.
+6. **Criar simulação com o modelo** abre a simulação na aba Montar escala, para ajustar e imprimir.
+
+O modelo fica no Desk em **Modelo de Escala da Rede**: horário de cada vaga, folgas de cada semana ("sáb, dom"), o
+número de semanas do ciclo e a segunda-feira em que a semana 1 começa (14/12/2026 no da Smart). Dá para criar outro
+modelo se a rede mandar um novo.
+
+### Aba "Propostas"
+
+- **Simulações montadas, lado a lado:** todas as simulações da unidade no mês, com horas descobertas, horas com 2 ou
+  mais, pausas sem outro, bloqueantes e custo previsto (em verde, o melhor de cada coluna). Clique no nome para abrir.
+- **Propostas do otimizador** (o planejador antigo): escolha a empresa, o cargo, o início, as semanas e o regime,
+  ajuste as premissas e **Rodar simulação**; ele monta as propostas A (menor custo), B (qualidade técnica), C (rodízio
+  de folgas), D (contratar) e E (personalizada), com grade, mapa de calor e "O que mudar". Exporte em planilha para a
+  diretoria. Depois, o **Acompanhamento** compara o planejado com o realizado. Nas premissas, **Mudança máxima da
+  entrada de quem já trabalha** (padrão até 1 h) impede que o otimizador mude muito o horário de alguém.
 
 O índice de cada instrutor (0 a 100) vem do histórico de 90 dias: assiduidade, pontualidade, inconsistências e
 disponibilidade (convites aceitos). Mudança de contrato (ampliar a carga) é só recomendação: a Alteração de Jornada

@@ -97,6 +97,26 @@ Para montar e mudar a escala de fim de semana e feriados (e, quando preciso, a d
 7. A coluna **Fim de semana/feriado** mostra se a pessoa está na média da equipe (mês + 3 meses). Dias listrados são
    **indisponibilidades** aprovadas. Embaixo do nome: "✓✓ aviso lido" quando a pessoa leu o último aviso.
 
+## Falta de última hora: procurar substituto (cobertura)
+
+- **Como abrir a vaga** (tela Escalas):
+  - clique no dia de quem faltou → **Faltou? Procurar substituto**;
+  - ou, na linha "Horas sem ninguém", clique no sinal vermelho → **Procurar substituto** na faixa descoberta;
+  - no celular, "Cobrir este turno" → **Procurar substituto pelo WhatsApp**.
+- **O que acontece:** a oferta vai pelo WhatsApp com um link pessoal, nesta ordem:
+  1. quem é do cargo na unidade e faz o turno sem quebra da CLT (menos horas na semana primeiro);
+  2. sem resposta em 15 min, o mesmo cargo nas outras unidades;
+  3. em 30 min, os prestadores aprovados do Banco de Talentos.
+- **O primeiro que tocar em "Quero"** fica com o turno: o colaborador entra publicado na escala na hora; o prestador
+  ganha um plantão. Os links dos outros fecham. Você recebe o aviso de quem pegou.
+- O selo **Procurando** fica no dia enquanto a vaga está aberta. Clique para ver quem recebeu, quem viu, quem não
+  pode (e o motivo), **chamar o próximo nível agora** ou **cancelar a vaga** (a pessoa apareceu).
+- As ofertas saem das 5h às 22h. Chegou o início do turno sem ninguém: a vaga fecha e você recebe o aviso.
+- **Aviso de falta:** se alguém escalado não bateu o ponto 20 min depois do início (e a coleta do Secullum já
+  passou), você recebe um WhatsApp. O sistema **não** abre a vaga sozinho: atraso comum não vira oferta.
+- **Banco de Talentos** (menu do painel): aprove os prestadores que se cadastraram pelo QR Code da unidade
+  (confira o CREF em "Documentos") e confirme o horário realizado de cada plantão no dia.
+
 ## Cartão ponto: o balão do dia
 
 Clique no **! n** ao lado da data: abre um balão junto do dia (a grade não se mexe) com o que está errado e os botões:

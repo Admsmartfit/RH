@@ -113,6 +113,11 @@ def premissas_de(dados: dict) -> Premissas:
 		peso_estabilidade=cint(
 			dados.get("peso_estabilidade") if dados.get("peso_estabilidade") is not None else 3
 		),
+		mudanca_max_entrada=None
+		if dados.get("mudanca_max_entrada") in ("", "livre")
+		else round(
+			flt(dados.get("mudanca_max_entrada") if dados.get("mudanca_max_entrada") is not None else 1) * 60
+		),
 		contratar=bool(dados.get("contratar")),
 		custo_vaga_hora=Decimal(str(flt(dados.get("custo_vaga_hora")))),
 		max_vagas=cint(dados.get("max_vagas") or 3),
@@ -160,6 +165,7 @@ def opcoes() -> dict:
 			"peso_cobertura": 5,
 			"peso_custo": 5,
 			"peso_estabilidade": 3,
+			"mudanca_max_entrada": 1,
 			"contratar": False,
 			"custo_vaga_hora": 0,
 			"max_vagas": 3,
