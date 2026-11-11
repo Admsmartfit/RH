@@ -66,6 +66,7 @@ def eh_rh() -> bool:
 @frappe.whitelist()
 def sessao() -> dict:
 	"""Quem está usando o painel: nome, papéis do painel e se é RH (a tela esconde o que o papel não usa)."""
+	from hrms_secullum_brasil.engine.nahel import publicos_dos_papeis
 	from hrms_secullum_brasil.utils.acesso import e_administrador, pode_abrir_desk
 
 	exigir_acesso()
@@ -79,6 +80,8 @@ def sessao() -> dict:
 		# RH, 04/11/2026 (utils/acesso.py): "Abrir no Desk" só para RH e administrador; o planejador só para o admin
 		"pode_abrir_desk": pode_abrir_desk(),
 		"admin": e_administrador(),
+		# docs/PRD-ajuda-nahel.md: o Nahel aparece para quem tem algum público (RH, gestor, TI)
+		"nahel": bool(publicos_dos_papeis(frappe.get_roles())),
 		"idioma": frappe.local.lang,
 	}
 

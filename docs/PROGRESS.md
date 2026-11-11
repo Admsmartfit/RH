@@ -2757,3 +2757,31 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - Testes: engine `test_whatsapp_envio` (+2); Frappe `TestUnidadesLiberadas` (fora da lista, liberada, duas de uma
   vez).
 - Na operação, a lista começa **vazia**: ligar o envio sem liberar nenhuma unidade não manda nada sozinho.
+
+## PRD da Ajuda Nahel (11/11/2026)
+
+- Criado `docs/PRD-ajuda-nahel.md` (NH-E1 a NH-E6) a partir do PRD de exemplo e do roteiro do assistente enviados
+  pelo RH. Decisões do RH: **sem IA** (busca por palavras e sinônimos em guias prontos e conferidos), só links e
+  verificações de leitura (o assistente não dispara ação), progresso no perfil do usuário (servidor) e escopo só do
+  que existe no sistema.
+- Pendências do RH (Seção 12): revisar os textos dos guias, confirmar nome e atalho, escolher os primeiros guias de
+  segurança do trabalho.
+
+## Ajuda Nahel: NH-E1 a NH-E6 (11/11/2026, docs/PRD-ajuda-nahel.md)
+
+- **NH-E1:** `engine/nahel.py` (pytest 99%): leitura do guia (cabeçalho + 4 seções, trechos com links e
+  verificações), normalização sem acento, sinônimos, vários assuntos numa frase, pontuação, fora do escopo, tema
+  amplo, resposta, progresso, papéis → públicos, detector de dado pessoal.
+- **NH-E2:** 30 guias em `nahel/guias/` (implantação, Secullum, WhatsApp e liberação por unidade, jornada e CCT,
+  adicional de risco, regime 5x2, escalas, horas sem ninguém, cobertura, Banco de Talentos, inconsistências,
+  cartão, ausências, termo, fechamento, estágio, EPI, ASO, ambiente e backup). Teste de integridade: rotas do
+  painel e DocTypes existem, verificações conhecidas, manual de origem existe, sem CPF/telefone.
+- **NH-E3/E4:** `apuracao/nahel.py` (inicio, buscar, guia, verificar, marcar_passo, implantacao) com 17
+  verificações só de leitura (teste lê o código e recusa gravação); DocTypes `Progresso Nahel` e `Pergunta sem
+  Guia`; `painel.sessao.nahel`. Frappe `test_nahel` 7.
+- **NH-E5:** `NahelAssistente.vue` (botão Ajuda no cabeçalho, Ctrl+K, painel lateral com foco preso, busca, um
+  passo por vez, Feito, ✓/⚠, links do Desk só para quem abre o Desk, guias da tela atual, aba Implantação do RH) e
+  `components/nahel/`; menu Ajuda do Desk → "Ajuda Nahel" (`standard_help_items`). e2e `nahel.spec.js`;
+  `foco.spec` com o botão Ajuda na ordem de tabulação.
+- **NH-E6:** manuais (RH e gestor), AGENTS (guia acompanha a tela) e este registro.
+- **Pendências do RH:** revisar os textos dos 30 guias antes de liberar aos gestores.

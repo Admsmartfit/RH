@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "autoname": "NHP-.#####",
+ "creation": "2026-11-11 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "guia",
+  "titulo",
+  "feitos",
+  "total",
+  "iniciado_em",
+  "concluido_em",
+  "passos"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "Usuário",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "guia",
+   "fieldtype": "Data",
+   "label": "Guia (id)",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "label": "Guia",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "feitos",
+   "fieldtype": "Int",
+   "label": "Passos feitos",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "label": "Total de passos",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "iniciado_em",
+   "fieldtype": "Datetime",
+   "label": "Iniciado em"
+  },
+  {
+   "fieldname": "concluido_em",
+   "fieldtype": "Datetime",
+   "label": "Concluído em",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "passos",
+   "fieldtype": "Small Text",
+   "label": "Passos feitos (chaves)",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Progresso Nahel",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "permlevel": 0
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "permlevel": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

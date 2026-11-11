@@ -139,6 +139,11 @@ before_request = [
 ]
 
 # Painel de Ponto (docs/PRD-frontend.md): app Vue em /ponto, como o /hrms do HRMS
+# docs/PRD-ajuda-nahel.md: no menu Ajuda do Desk, abre o Nahel no painel
+standard_help_items = [
+	{"item_label": "Ajuda Nahel", "item_type": "Route", "route": "/ponto?ajuda=1", "is_standard": 1},
+]
+
 website_route_rules = [
 	# CE-14: página sem login do colaborador (antes da regra geral do painel)
 	{"from_route": "/ponto/disponibilidade", "to_route": "disponibilidade"},

@@ -29,7 +29,11 @@
 						</li>
 					</ul>
 				</nav>
-				<p class="ml-auto text-sm text-texto-suave">{{ sessao.data?.nome }}</p>
+				<div class="ml-auto flex items-center gap-3">
+					<!-- docs/PRD-ajuda-nahel.md: ajuda passo a passo (Ctrl+K) -->
+					<NahelAssistente v-if="sessao.data?.nahel" />
+					<p class="text-sm text-texto-suave">{{ sessao.data?.nome }}</p>
+				</div>
 			</div>
 			<div class="mx-auto max-w-7xl px-4 pb-3">
 				<FiltrosPeriodo />
@@ -46,6 +50,7 @@ import { computed, provide, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { createResource } from "frappe-ui";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo.vue";
+import NahelAssistente from "@/components/NahelAssistente.vue";
 
 const route = useRoute();
 const router = useRouter();

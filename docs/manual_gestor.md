@@ -34,6 +34,15 @@ Abra **/ponto** (ou o atalho **Painel de ponto** no espaço Ponto). Você vê s�
   em **Salvar…**, escolha o motivo e confirme: tudo vai **para o RH aprovar** de uma vez (aparece "aguardando RH" no
   dia). Na central, **Abrir no cartão ponto** (ou a tecla `C`) já abre no dia da inconsistência.
 
+## Ajuda Nahel (botão "Ajuda" ou Ctrl + K)
+
+- Em qualquer tela do painel, clique em **Ajuda** (ou aperte **Ctrl + K**) e digite o que quer fazer: "procurar
+  substituto", "tratar inconsistência", "publicar a escala".
+- Aparece o guia: objetivo, o que precisa antes, **um passo por vez** (com o link da tela) e como testar. Marque
+  **Feito** em cada passo: o Nahel guarda onde você parou.
+- O ✓ / ⚠ ao lado de um item é o sistema conferindo sozinho (ex.: "regras da cobertura ligadas"). Passo que só o RH
+  faz no Desk aparece como "peça ao RH".
+
 ## Rotina sugerida (5 minutos por dia)
 
 1. Abra o espaço **Ponto** e clique em **Inconsistências abertas**. A lista já vem filtrada pela sua equipe.

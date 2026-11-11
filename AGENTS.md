@@ -289,6 +289,19 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - Ofertas e confirmações saem na hora (`ignorar_horario`), só no horário da configuração (5h-22h). Nada lê resposta
   do WhatsApp; o aviso de falta sem batida nunca abre a vaga.
 
+## Ajuda Nahel — docs/PRD-ajuda-nahel.md
+
+- Guias passo a passo **sem IA**: um arquivo por guia em `nahel/guias/*.md` (cabeçalho + Objetivo, Pré-requisitos,
+  Passo a passo, Como testar; links `[[painel:rota|rótulo]]`, `[[desk:DocType]]`, `[[desk-lista:DocType]]` e
+  `{{verificar:chave}}`). Leitura, busca (sinônimos, vários assuntos, fora do escopo, tema amplo) e resposta em
+  `engine/nahel.py`; endpoints, verificações e progresso em `apuracao/nahel.py`; tela `NahelAssistente.vue` (Ctrl+K)
+  e `components/nahel/`.
+- **Tela nova, botão renomeado ou fluxo mudado → atualize o guia do Nahel.** O teste de integridade
+  (`engine/tests/test_nahel.py`) recusa link para rota ou DocType que não existe, verificação desconhecida e dado
+  pessoal no guia.
+- Verificação nova: chave em `engine/nahel.VERIFICACOES` + função em `apuracao/nahel.VERIFICACOES` (só leitura: o
+  teste recusa `insert`, `save`, `db_set`, `set_value`, `commit`, `sql`...). O Nahel nunca dispara ação.
+
 ## Termo de ocorrências — docs/PRD-termo-ocorrencias.md
 
 - Regra pura em `engine/termo_ocorrencias.py` (o que entra no termo, a regularização proposta de cada dia — a mesma

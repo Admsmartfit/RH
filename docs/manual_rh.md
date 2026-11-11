@@ -115,6 +115,15 @@ abonar; sem ela, o abono fica só no programa). Se o Secullum recusar, a correç
 a inconsistência **Correção não enviada ao Secullum**: use **Reenviar ao Secullum** (no painel do dia ou no
 documento **Envio Cartao Secullum**). Antes de ligar, faça um teste com um colaborador de teste.
 
+## Ajuda Nahel
+
+- **Ajuda** (ou **Ctrl + K**) em qualquer tela do painel; no Desk, menu **Ajuda → Ajuda Nahel**. Digite o assunto
+  (pode juntar dois: "configurar adicional de risco e testar whatsapp") e siga o guia passo a passo.
+- Sem IA: são guias prontos e conferidos (pasta `nahel/guias/`). O ✓ / ⚠ é o sistema conferindo a configuração
+  (só lê; nunca envia nem grava). Quem clica no botão de teste é você, na tela.
+- Aba **Implantação** (RH): em que guia cada pessoa parou e as **perguntas sem guia** (o que digitaram e não
+  achou). Peça à TI um guia novo para as mais frequentes.
+
 ## Rotina diária
 
 ### Inconsistências

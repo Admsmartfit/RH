@@ -1,0 +1,69 @@
+{
+ "actions": [],
+ "autoname": "NHS-.#####",
+ "creation": "2026-11-11 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "texto",
+  "publico",
+  "vezes",
+  "ultima_em"
+ ],
+ "fields": [
+  {
+   "fieldname": "texto",
+   "fieldtype": "Data",
+   "label": "O que foi digitado",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "publico",
+   "fieldtype": "Data",
+   "label": "Público de quem perguntou",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "vezes",
+   "fieldtype": "Int",
+   "label": "Vezes",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "ultima_em",
+   "fieldtype": "Datetime",
+   "label": "Última vez",
+   "in_list_view": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-11 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Pergunta sem Guia",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "permlevel": 0
+  },
+  {
+   "role": "RH Ponto",
+   "read": 1,
+   "write": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "permlevel": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
