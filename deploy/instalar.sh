@@ -2,6 +2,7 @@
 # Instalação do programa de ponto no servidor Linux (docs/manual_instalacao_servidor.md).
 #
 #   sudo bash instalar.sh --versao v2026.11.13 [--site ponto.ricardo.home.nom.br] [--restaurar /caminho/do/backup]
+#                         [--recriar]   (apaga o site que já existe e cria de novo: só na instalação!)
 #
 # --restaurar: pasta com o backup do site que já existe no computador de desenvolvimento (os 4 arquivos que o
 #   "bench --site ponto.localhost backup --with-files" gera: *-database.sql.gz, *-files.tar, *-private-files.tar e
@@ -13,11 +14,13 @@ set -euo pipefail
 VERSAO=""
 SITE="ponto.ricardo.home.nom.br"
 RESTAURAR=""
+RECRIAR=0
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--versao) VERSAO="$2"; shift 2 ;;
 		--site) SITE="$2"; shift 2 ;;
 		--restaurar) RESTAURAR="$2"; shift 2 ;;
+		--recriar) RECRIAR=1; shift ;; # apaga o site existente e cria de novo (perde o que estiver nele)
 		*) echo "Opção desconhecida: $1"; exit 1 ;;
 	esac
 done
@@ -64,9 +67,10 @@ for _ in $(seq 1 60); do
 done
 dc run --rm configurador
 
-# site que ficou pela metade numa tentativa anterior (pasta criada, instalação incompleta): apaga e cria de novo
-if dc run --rm backend bash -c "test -d sites/$SITE" && ! dc run --rm backend bench --site "$SITE" list-apps >/dev/null 2>&1; then
-	passo "O site $SITE ficou pela metade numa tentativa anterior: apagando para criar de novo"
+# site que ficou pela metade numa tentativa anterior (sem o app de ponto instalado) ou --recriar: apaga e cria de novo
+if dc run --rm backend bash -c "test -d sites/$SITE" \
+	&& { [ "$RECRIAR" = "1" ] || ! dc run --rm backend bench --site "$SITE" list-apps 2>/dev/null | grep -q "$APP"; }; then
+	passo "O site $SITE ficou pela metade (ou --recriar): apagando para criar de novo"
 	dc run --rm backend bench drop-site "$SITE" --force --no-backup --db-root-username root --db-root-password "$SENHA_BANCO" \
 		|| dc run --rm backend bash -c "rm -rf sites/$SITE"
 fi
