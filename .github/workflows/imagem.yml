@@ -35,8 +35,8 @@ jobs:
           repository: frappe/frappe_docker
           path: frappe_docker
 
+      # o frappe_docker recebe a lista como segredo do build ("apps_json", arquivo JSON); sem ela, monta só o Frappe
       - name: Lista de apps
-        id: apps
         run: |
           cat > apps.json <<EOF
           [
@@ -45,7 +45,7 @@ jobs:
             {"url": "https://github.com/${{ github.repository }}", "branch": "${{ steps.v.outputs.versao }}"}
           ]
           EOF
-          echo "base64=$(base64 -w 0 apps.json)" >> "$GITHUB_OUTPUT"
+          cat apps.json
 
       - uses: docker/setup-buildx-action@v3
 
@@ -60,12 +60,14 @@ jobs:
           context: frappe_docker
           file: frappe_docker/images/custom/Containerfile
           push: true
+          secret-files: |
+            apps_json=apps.json
           build-args: |
             FRAPPE_PATH=https://github.com/frappe/frappe
             FRAPPE_BRANCH=version-16
             PYTHON_VERSION=3.14
             NODE_VERSION=24
-            APPS_JSON_BASE64=${{ steps.apps.outputs.base64 }}
+            CACHE_BUST=${{ steps.v.outputs.versao }}
           tags: |
             ${{ steps.v.outputs.imagem }}:${{ steps.v.outputs.versao }}
           labels: |
