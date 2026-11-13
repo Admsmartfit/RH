@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
 
 import frappe
@@ -181,6 +181,19 @@ class TestApuracao(FrappeTestCase):
 
 		tratamento.cancel()  # revogar volta o dia ao estado anterior
 		self.assertEqual(self.apuracao().status, "Nao Apurado")
+
+	def test_dia_em_andamento_nao_abre_inconsistencia(self):
+		"""RH, 13/11/2026: o dia de hoje ainda não terminou: batida faltando não vira inconsistência; amanhã, sim."""
+		from hrms_secullum_brasil.apuracao import servico
+
+		for hora in (8, 12, 13):
+			criar_raw(self.employee, TERCA, hora)
+		with patch.object(servico, "today", lambda: str(TERCA)):
+			reapurar_dia(self.employee, TERCA)
+		self.assertNotIn("marcacao_impar", inconsistencias(self.employee, TERCA))
+		with patch.object(servico, "today", lambda: str(TERCA + timedelta(days=1))):
+			reapurar_dia(self.employee, TERCA)
+		self.assertIn("marcacao_impar", inconsistencias(self.employee, TERCA))
 
 	def test_desconsiderar_marcacao(self):
 		for hora in (8, 12, 13, 17):

@@ -532,8 +532,10 @@ balão ou digitando numa coluna livre), as outras se movem: 11:00, 12:07, 14:42 
 - Sem a pausa, o dia aceita até **jornada + 15 + 10 min** (4h sem pausa → até 4h25) sem pendência.
 - Se passar disso, abre **"Horas além da jornada sem autorização"**. As horas são pagas. O aviso oficial ao
   colaborador vai para a **fila do WhatsApp** (Painel → Fila do WhatsApp) e só sai quando o RH confere e envia.
-- No Secullum, a pausa pode ser lançada pela justificativa **PAUSA15**, depois dos testes T-P1/T-P2 (manual de
-  teste do envio, Etapa H).
+- **No Secullum** (13/11/2026): com o envio de correções ligado, o programa manda o intervalo (as duas batidas,
+  marcadas com "*") e, **uma vez por dia**, a justificativa **PAUSA15** no primeiro par livre do cartão. A PAUSA15 é
+  o aviso para você: no Cartão Ponto do Secullum, **apague a PAUSA15 e digite +00:15 na coluna Ajuste** (a API do
+  Secullum não grava o Ajuste). O programa não manda a PAUSA15 de novo naquele dia, mesmo que o dia seja reenviado.
 - As duas regras acima (até 4h25 sem pendência e "Horas além da jornada sem autorização") valem para o **instrutor
   mensalista**. O instrutor **horista** segue a seção seguinte.
 

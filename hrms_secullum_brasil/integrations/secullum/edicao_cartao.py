@@ -85,19 +85,59 @@ def operacoes(
 	justificativa: str | None = None,
 	grupos_abono: int = 1,
 	justificativa_retirada: str | None = None,
+	pausa_paga: str | None = None,
 ) -> list[Operacao]:
 	"""Operações para o cartão do Secullum no dia ficar com `horarios` (na ordem do dia de trabalho).
 
 	`justificativa`: abono do dia sem batidas → a justificativa nos grupos 1..`grupos_abono`.
 	`justificativa_retirada`: abono tirado no programa → apaga só os grupos com essa justificativa (as lançadas no
 	próprio Secullum ficam).
+	`pausa_paga`: marcador da pausa paga (ex.: PAUSA15, RH 13/11/2026) no primeiro par livre depois das batidas, se o
+	dia ainda não tem. É só o aviso ao RH: no Secullum, ele apaga o marcador e lança +00:15 no Ajuste.
 	"""
+	ops = _operacoes(data, atuais, horarios, motivo, justificativa, grupos_abono, justificativa_retirada)
+	if pausa_paga and horarios and pausa_paga not in atuais.values():
+		grupo = par_livre(atuais, horarios)
+		if grupo:
+			ops.append(
+				Operacao(
+					*JUSTIFICATIVA, {"Data": data.isoformat(), "Grupo": grupo, "Justificativa": pausa_paga}
+				)
+			)
+	return ops
+
+
+def par_livre(atuais: dict[str, str], horarios: list[str]) -> int | None:
+	"""Primeiro par (1..5) sem batida desejada e sem justificativa que fica no dia. None = não há."""
+	desejadas = disposicao(atuais, horarios)
+	for grupo in range(1, len(COLUNAS) // 2 + 1):
+		colunas = (f"Entrada{grupo}", f"Saida{grupo}")
+		if any(desejadas.get(c) for c in colunas):
+			continue
+		if any(atuais.get(c) and not _hora(atuais[c]) for c in colunas):
+			continue
+		return grupo
+	return None
+
+
+def _operacoes(
+	data: date,
+	atuais: dict[str, str],
+	horarios: list[str],
+	motivo: str,
+	justificativa: str | None,
+	grupos_abono: int,
+	justificativa_retirada: str | None,
+) -> list[Operacao]:
 	if len(horarios) > len(COLUNAS):
 		raise ValueError(
 			f"O Secullum aceita até {len(COLUNAS)} batidas no dia; o programa tem {len(horarios)}."
 		)
+	from hrms_secullum_brasil.engine.texto_externo import motivo_para_o_secullum
+
 	dia = data.isoformat()
-	motivo = (motivo or "Correção do cartão ponto").strip()[:LIMITE_MOTIVO]
+	# RH, 13/11/2026: nada de "pausa/intervalo pago ou remunerado" no espelho homologado
+	motivo = (motivo_para_o_secullum(motivo) or "Correção do cartão ponto")[:LIMITE_MOTIVO]
 	desejadas = disposicao(atuais, horarios)
 	ops: list[Operacao] = []
 	grupos_com_justificativa = set()

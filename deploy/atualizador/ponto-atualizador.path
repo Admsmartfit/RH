@@ -1,0 +1,9 @@
+[Unit]
+Description=Pedido de atualização do programa de ponto (botão "Atualizar")
+
+[Path]
+PathExists=/opt/ponto/controle/pedido.json
+Unit=ponto-atualizador.service
+
+[Install]
+WantedBy=multi-user.target

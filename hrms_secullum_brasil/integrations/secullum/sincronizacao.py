@@ -335,7 +335,8 @@ def justificativas_por_quantidade() -> list[Justificativa]:
 # pausa paga por liberalidade do instrutor (RH, 04/11/2026): a API não aceita minutos livres (cada justificativa tem
 # valor fixo e o cartão só recebe "Justificativa no Grupo"); como a pausa é sempre de 15 min, uma justificativa fixa
 # de 0:15 com Ajuste, lançada num grupo livre do dia (as batidas ficam). Precisa dos casos T-P1 e T-P2.
-PAUSA_PAGA = Justificativa("PAUSA15", "PAUSA PAGA LIBERALIDADE", {"ajuste": True}, "00:15")
+# RH, 13/11/2026: o nome no Secullum nunca fala de pausa paga/remunerada (fica no espelho homologado)
+PAUSA_PAGA = Justificativa("PAUSA15", "PAUSA 15 MINUTOS", {"ajuste": True}, "00:15")
 # justificativas que podem ir num dia com batida (num grupo livre): nunca cobrem uma batida
 PODE_COM_BATIDA = frozenset({PAUSA_PAGA.nome})
 
@@ -457,7 +458,7 @@ def cabe_no_dia(registro: dict | None, operacoes: list[dict]) -> tuple[bool, str
 
 # ------------------------------------------------------------------ pausa paga completa (T-P3)
 
-MOTIVO_PAUSA = "Pausa paga por liberalidade (intervalo de {0} min)"
+MOTIVO_PAUSA = "Intervalo de {0} min incluído no cartão ponto"  # neutro: vai ao Secullum (RH, 13/11/2026)
 
 
 def _horas_do_dia(atuais: dict[str, str]) -> list[str]:

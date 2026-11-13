@@ -61,6 +61,13 @@ TIPOS_DA_APURACAO = {
 }
 
 
+def dia_em_andamento(data) -> bool:
+	"""RH, 13/11/2026: o dia de hoje (ou futuro) ainda não terminou: o colaborador pode bater o ponto. A apuração grava
+	os números, mas não abre inconsistência de ponto; elas nascem quando o dia é reapurado depois de terminar
+	(`marcar_dia_anterior` de madrugada, ou a coleta seguinte)."""
+	return getdate(data) >= getdate(today())
+
+
 def nome_apuracao(employee: str, data) -> str:
 	return f"AP-{employee}-{getdate(data).isoformat()}"
 
@@ -126,7 +133,7 @@ def _gravar(ctx: Contexto, resultado: ResultadoDia | None) -> str:
 	inconsistencias = list(ctx.avisos)
 	if ctx.motivo_nao_apurado:
 		inconsistencias.append(Inconsistencia("configuracao_ausente", ALTA, ctx.motivo_nao_apurado))
-	if resultado:
+	if resultado and not dia_em_andamento(ctx.data):
 		inconsistencias += resultado.inconsistencias
 
 	valores = {

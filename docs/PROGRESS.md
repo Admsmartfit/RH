@@ -2785,3 +2785,54 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   `foco.spec` com o botão Ajuda na ordem de tabulação.
 - **NH-E6:** manuais (RH e gestor), AGENTS (guia acompanha a tela) e este registro.
 - **Pendências do RH:** revisar os textos dos 30 guias antes de liberar aos gestores.
+
+## Cabeçalho mais compacto e dia em andamento sem inconsistência (13/11/2026, pedido do RH)
+
+- **Cabeçalho do painel:** menu, Ajuda e usuário numa linha; Competência, Empresa, Filial, Departamento e Status
+  numa linha (o período da folha ao lado do título "Competência"; o aviso de empresas com fechamentos diferentes virou
+  "⚠ mês cheio" com o texto no título). O conteúdo (Cockpit) sobe. e2e foco/filtros/base/acessibilidade/cockpit 20 OK.
+- **Dia em andamento:** `servico.dia_em_andamento` — o dia de hoje é apurado, mas não abre inconsistência de ponto
+  (o colaborador ainda pode bater); ela nasce quando o dia é reapurado depois de terminar (`marcar_dia_anterior` de
+  madrugada ou a coleta). Teste `test_dia_em_andamento_nao_abre_inconsistencia`; Frappe apuração 17, cartão 14 e
+  dia seguinte 16 OK. Na operação, 28 dias de hoje reapurados: nenhuma inconsistência de hoje aberta.
+
+## Pausa paga no Secullum: intervalo + PAUSA15 uma vez (13/11/2026, pedido do RH)
+
+- O T-P3 mostrou que a PAUSA15 num par com batidas dá Ajuste 0:00, e só o Secullum é homologado. Conferido no
+  Swagger da Integração Externa: **não há rota que grave a coluna Ajuste** (sem PUT; `AtividadesLancamentos` só
+  registra atividade por período). O RH testou "+00:15" digitado no Ajuste: funciona.
+- Decisão do RH: o envio do cartão manda o intervalo (batidas) e **uma** PAUSA15 por dia no primeiro par livre
+  (`edicao_cartao.operacoes(pausa_paga=)`, `par_livre`; `envio_cartao.marcador_da_pausa`, campo
+  `Envio Cartao Secullum.pausa_enviada`). O RH apaga a PAUSA15 e lança +00:15 no Ajuste. Sem lista, conferência
+  nem trava no fechamento.
+- Testes: pytest `test_edicao_cartao` 18 (3 novos); Frappe `test_envio_cartao` com 2 novos (rodar quando o
+  container voltar).
+
+## Nada de "pausa/intervalo pago" no Secullum nem no WhatsApp do colaborador (13/11/2026, pedido do RH)
+
+- Textos de origem neutros: motivo do intervalo do horista ("Intervalo não marcado — lançado pelo RH"), motivo do
+  T-P3 ("Intervalo de 15 min incluído no cartão ponto") e o nome completo da PAUSA15 ("PAUSA 15 MINUTOS").
+- Trava geral `engine/texto_externo.py`: o motivo que vai ao Secullum vira "Intervalo incluído no cartão ponto" se
+  falar de pausa/intervalo pago, remunerado, indenizado ou "liberalidade" (`edicao_cartao.operacoes`); a mensagem
+  de WhatsApp ao colaborador/prestador com esse texto fica Barrada (`whatsapp.enviar`), mesmo no envio manual.
+- **Pendência do RH no Secullum:** renomear a justificativa PAUSA15 (nome completo criado no T-P1 como "PAUSA PAGA
+  LIBERALIDADE") e conferir o motivo das batidas 10:23/10:38 do teste T-P3 (31/10).
+- Testes: pytest 1550 (16 novos em `test_texto_externo`). Frappe pendente (containers desligados).
+
+## Pacote de instalação no servidor Linux e botão de atualizar (13/11/2026, pedido do RH)
+
+- Servidor limpo pelo RH (fica só o Evolution; removidos secullum10, Smartfit análise/Metabase, gmm-flask, redis e
+  nginx do sistema, com backup em `~/backup_remocao`). Memória: 3,7 GB → instalação **enxuta**.
+- `.github/workflows/imagem.yml`: tag `v...` → imagem (frappe_docker `images/custom`, Frappe/ERPNext/HRMS
+  version-16, Python 3.14, Node 24, app na tag) em `ghcr.io/admsmartfit/rh:<tag>`.
+- `deploy/`: `docker-compose.yml` enxuto (db 384M de buffer, 2 workers gunicorn, uma fila para tudo, limites de
+  memória; porta 127.0.0.1:5020 para o túnel), `env.exemplo`, `instalar.sh` (site novo ou `--restaurar` o backup do
+  computador de desenvolvimento, com a `encryption_key`), atualizador (`atualizar.sh` + systemd path/service:
+  baixa, backup, troca, migra, confere; volta e restaura o banco se falhar; estado em `controle/estado.json`).
+- Tela **Atualizacao do Sistema** (`utils/atualizacao.py`, `integrations/github/versoes.py`), guia do Nahel
+  "Atualizar o sistema" e `docs/manual_instalacao_servidor.md`.
+- Testes: pytest 1560 (versões do GitHub; integridade do guia). Frappe `utils/test_atualizacao.py` (5) pendente:
+  containers desligados.
+- **Pendências:** primeira montagem no GitHub (conferir o Actions verde e deixar o pacote público); o tema do Desk
+  (swift_theme) não entra na imagem (não temos o endereço do repositório dele); o cliente de backup automático
+  externo (cópia dos backups para fora do servidor) fica para depois.

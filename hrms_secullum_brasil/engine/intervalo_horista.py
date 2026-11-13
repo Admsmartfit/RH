@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from datetime import date
 
 TIPO = "intervalo_nao_marcado_horista"
-MOTIVO = "Intervalo não marcado — lançado pelo RH (instrutor horista, não remunerado)"
+# vai ao Secullum como motivo da batida: fato neutro, sem falar de pagamento (RH, 13/11/2026)
+MOTIVO = "Intervalo não marcado — lançado pelo RH"
 LIMITE_LINHAS = 30  # mensagem de WhatsApp curta: o resto fica no link da central
 
 

@@ -71,6 +71,34 @@ def test_batida_no_meio_move_a_original_sem_apagar():
 	assert all(o.rota != EXCLUIR[1] for o in ops)  # nenhuma batida do relógio desconsiderada
 
 
+def pausa(grupo):
+	return Operacao(*JUSTIFICATIVA, {"Data": "2026-10-01", "Grupo": grupo, "Justificativa": "PAUSA15"})
+
+
+def test_pausa_paga_vai_o_intervalo_e_a_pausa15_no_par_livre():
+	# RH, 13/11/2026: intervalo como batida e a PAUSA15 (aviso ao RH) no primeiro par livre depois das batidas
+	atuais = {"Entrada1": "07:59", "Saida1": "13:02"}
+	ops = operacoes(DIA, atuais, ["07:59", "10:23", "10:38", "13:02"], "Pausa", pausa_paga="PAUSA15")
+	assert ops[-1] == pausa(3)
+	assert ops[:-1] == operacoes(DIA, atuais, ["07:59", "10:23", "10:38", "13:02"], "Pausa")
+
+
+def test_pausa15_ja_no_dia_ou_sem_batida_nao_vai():
+	com_pausa = {**NORMAL, "Entrada3": "PAUSA15", "Saida3": "PAUSA15"}
+	assert operacoes(DIA, com_pausa, ["08:00", "12:00", "13:00", "17:00"], "x", pausa_paga="PAUSA15") == []
+	assert operacoes(DIA, {}, [], "x", pausa_paga="PAUSA15") == []
+
+
+def test_pausa15_pula_par_com_justificativa_e_sem_par_livre_nao_vai():
+	from hrms_secullum_brasil.integrations.secullum.edicao_cartao import par_livre
+
+	atuais = {**NORMAL, "Entrada3": "DECLARA", "Saida3": "DECLARA"}
+	assert par_livre(atuais, ["08:00", "12:00", "13:00", "17:00"]) == 4
+	cheio = [f"{h:02d}:00" for h in range(6, 16)]
+	assert par_livre({}, cheio) is None
+	assert JUSTIFICATIVA[1] not in {o.rota for o in operacoes(DIA, {}, cheio, "x", pausa_paga="PAUSA15")}
+
+
 def test_saida_do_intervalo_esquecida_abre_espaco_de_tras_para_frente():
 	# T-C1 (04/11/2026): 08:02, 10:45 e 14:02 do relógio; o RH incluiu a volta do intervalo 11:00
 	atuais = {"Entrada1": "08:02", "Saida1": "10:45", "Entrada2": "14:02"}

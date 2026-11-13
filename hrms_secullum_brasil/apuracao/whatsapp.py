@@ -129,6 +129,12 @@ def enviar(
 	doc = frappe.get_doc(NOTIFICACAO, nome)
 	if doc.situacao in ("Enviada", "Entregue", "Lida", envio.ENVIADA_TESTE):
 		return doc.situacao
+	# RH, 13/11/2026: pausa ou intervalo "pago/remunerado" nunca vai ao colaborador (nem em teste, nem na mão)
+	from hrms_secullum_brasil.engine import texto_externo
+
+	if doc.destinatario in ("Colaborador", "Prestador") and texto_externo.tem_texto_proibido(doc.texto):
+		doc.db_set({"situacao": "Barrada", "filtro": texto_externo.MOTIVO_BARRADA})
+		return doc.situacao
 	atual = modo()
 	teste = atual == envio.TESTE and not ignorar_trava
 	cfg = _config()

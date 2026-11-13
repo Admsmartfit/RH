@@ -17,6 +17,7 @@
   "motivo",
   "justificativa",
   "justificativa_retirada",
+  "pausa_enviada",
   "usuario",
   "section_resposta",
   "operacoes",
@@ -98,6 +99,14 @@
    "fieldname": "justificativa_retirada",
    "fieldtype": "Data",
    "label": "Justificativa retirada",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "A PAUSA15 (marcador da pausa paga) foi enviada neste dia. Vai uma vez só: o RH apaga no Secullum e lança +00:15 no Ajuste.",
+   "fieldname": "pausa_enviada",
+   "fieldtype": "Check",
+   "label": "PAUSA15 enviada",
    "read_only": 1
   },
   {

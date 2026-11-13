@@ -25,14 +25,14 @@ test("Ctrl+K abre, busca, guia um passo por vez e marca feito", async ({ page })
 	await page.keyboard.press("Control+k");
 	const nahel = page.getByTestId("nahel");
 	await expect(nahel).toBeVisible();
-	await expect(nahel.getByRole("region", { name: /Nesta tela/ }).or(nahel.getByText("Nesta tela"))).toBeVisible();
+	await expect(nahel.getByRole("region", { name: "Nesta tela" })).toBeVisible();
 	await nahel.getByLabel("O que você quer configurar, testar ou entender?").fill("liberar o zap numa unidade");
 	await nahel.getByRole("button", { name: /Liberar o WhatsApp automático numa unidade/ }).first().click();
 	await expect(nahel.getByRole("heading", { name: "Liberar o WhatsApp automático numa unidade" })).toBeVisible();
 	await expect(nahel.getByText("Passo 1 de 2")).toBeVisible();
 	await expect(nahel.locator("[data-verificacao=whatsapp_modo]").first()).toBeVisible();
 	expect((await new AxeBuilder({ page }).include("[data-testid=nahel]").withTags(["wcag2a", "wcag2aa"]).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact))).toEqual([]);
-	await nahel.getByLabel("Feito").check();
+	await nahel.getByLabel("Feito", { exact: true }).check();
 	await expect(nahel.getByText("Passo 2 de 2")).toBeVisible();
 	await expect(nahel.getByRole("progressbar", { name: "1 de 2 passos feitos" })).toBeVisible();
 	await expect(nahel.getByText("🧪 Como testar")).toBeVisible();
@@ -41,7 +41,7 @@ test("Ctrl+K abre, busca, guia um passo por vez e marca feito", async ({ page })
 	await expect(page.getByRole("button", { name: /Ajuda/ })).toBeFocused();
 	// reabre e o guia aparece em "Continuar de onde parei"
 	await page.keyboard.press("Control+k");
-	await expect(page.getByTestId("nahel").getByRole("region", { name: /Continuar/ }).or(page.getByTestId("nahel").getByText("Continuar de onde parei"))).toBeVisible();
+	await expect(page.getByTestId("nahel").getByRole("region", { name: "Continuar de onde parei" })).toBeVisible();
 });
 
 test("pergunta fora do assunto e tema amplo", async ({ page }) => {

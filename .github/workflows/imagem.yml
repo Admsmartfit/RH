@@ -1,0 +1,75 @@
+# Imagem de produção do programa (docs/manual_instalacao_servidor.md).
+# Ao marcar uma versão (git tag v2026.11.13 && git push --tags), o GitHub monta a imagem com Frappe, ERPNext, HRMS
+# (version-16) e o app nesta versão, já com o painel /ponto montado, e publica em ghcr.io. O servidor só baixa a
+# imagem pronta (ele tem pouca memória para montar sozinho).
+name: Imagem de produção
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Versão (tag) a montar, ex.: v2026.11.13"
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  imagem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Versão
+        id: v
+        run: |
+          VERSAO="${{ github.event.inputs.versao || github.ref_name }}"
+          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+          echo "imagem=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      # o frappe_docker oficial monta a imagem a partir de uma lista de apps
+      - uses: actions/checkout@v4
+        with:
+          repository: frappe/frappe_docker
+          path: frappe_docker
+
+      - name: Lista de apps
+        id: apps
+        run: |
+          cat > apps.json <<EOF
+          [
+            {"url": "https://github.com/frappe/erpnext", "branch": "version-16"},
+            {"url": "https://github.com/frappe/hrms", "branch": "version-16"},
+            {"url": "https://github.com/${{ github.repository }}", "branch": "${{ steps.v.outputs.versao }}"}
+          ]
+          EOF
+          echo "base64=$(base64 -w 0 apps.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: frappe_docker
+          file: frappe_docker/images/custom/Containerfile
+          push: true
+          build-args: |
+            FRAPPE_PATH=https://github.com/frappe/frappe
+            FRAPPE_BRANCH=version-16
+            PYTHON_VERSION=3.14
+            NODE_VERSION=24
+            APPS_JSON_BASE64=${{ steps.apps.outputs.base64 }}
+          tags: |
+            ${{ steps.v.outputs.imagem }}:${{ steps.v.outputs.versao }}
+          labels: |
+            org.opencontainers.image.version=${{ steps.v.outputs.versao }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

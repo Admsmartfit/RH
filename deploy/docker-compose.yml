@@ -1,0 +1,137 @@
+# Produção do programa de ponto (docs/manual_instalacao_servidor.md). Versão ENXUTA para servidor com pouca memória
+# (3,7 GB): um processo de cada, banco com cache pequeno e limites de memória. Com 8 GB ou mais, aumente os valores
+# marcados com "ENXUTO" (o manual diz quais).
+#
+# A imagem vem pronta do GitHub (ghcr.io), montada quando uma versão é marcada. A versão em uso fica no .env
+# (VERSAO=...), e é o atualizador (deploy/atualizador/atualizar.sh) quem a troca.
+name: ponto
+
+x-app: &app
+  image: ${IMAGEM}:${VERSAO}
+  restart: unless-stopped
+  environment:
+    PONTO_VERSAO: ${VERSAO}
+    PONTO_REPOSITORIO: ${REPOSITORIO}
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+  depends_on:
+    db:
+      condition: service_healthy
+    redis-cache:
+      condition: service_started
+    redis-queue:
+      condition: service_started
+
+services:
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+      - --innodb-buffer-pool-size=384M # ENXUTO (8 GB: 1G)
+      - --performance-schema=OFF # ENXUTO
+      - --max-connections=60
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SENHA_BANCO}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 30
+    mem_limit: 800m # ENXUTO
+
+  redis-cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru"] # ENXUTO
+    mem_limit: 150m
+
+  redis-queue:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-queue-data:/data
+    mem_limit: 150m
+
+  # uma vez, na instalação e quando o banco/redis mudam: grava a configuração comum do bench
+  configurador:
+    <<: *app
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host db;
+        bench set-config -gp db_port 3306;
+        bench set-config -g redis_cache redis://redis-cache:6379;
+        bench set-config -g redis_queue redis://redis-queue:6379;
+        bench set-config -g redis_socketio redis://redis-queue:6379;
+        bench set-config -gp socketio_port 9000;
+    depends_on: {}
+
+  backend:
+    <<: *app
+    command:
+      - /home/frappe/frappe-bench/env/bin/gunicorn
+      - --chdir=/home/frappe/frappe-bench/sites
+      - --bind=0.0.0.0:8000
+      - --threads=4
+      - --workers=2 # ENXUTO (8 GB: 4)
+      - --worker-class=gthread
+      - --worker-tmp-dir=/dev/shm
+      - --timeout=120
+      - --preload
+      - frappe.app:application
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      # o botão "Atualizar" deixa o pedido aqui; o atualizador do servidor (systemd) faz o resto
+      - ./controle:/controle
+    mem_limit: 900m # ENXUTO
+
+  websocket:
+    <<: *app
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    mem_limit: 150m
+
+  # todas as filas num processo só (ENXUTO; com 8 GB, separe short/default e long em dois serviços)
+  fila:
+    <<: *app
+    command: ["bench", "worker", "--queue", "short,default,long"]
+    mem_limit: 700m # ENXUTO
+
+  agendador:
+    <<: *app
+    command: ["bench", "schedule"]
+    mem_limit: 250m
+
+  frontend:
+    <<: *app
+    command: ["nginx-entrypoint.sh"]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE}
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    # só no próprio servidor: quem publica na internet é o túnel do Cloudflare (ponto.<domínio> → localhost:5020)
+    ports:
+      - "127.0.0.1:${PORTA}:8080"
+    depends_on:
+      - backend
+      - websocket
+    mem_limit: 100m
+
+volumes:
+  sites:
+  logs:
+  db-data:
+  redis-queue-data:

@@ -95,6 +95,24 @@ class TestEnvioCartao(FrappeTestCase):
 		)
 		return employee, cpf
 
+	def test_pausa_paga_manda_a_pausa15_uma_vez_so(self):
+		"""RH, 13/11/2026: dia com pausa paga → o intervalo vai como batida e a PAUSA15 no par livre, uma vez só."""
+		_r, jobs = self.salvar(1)
+		frappe.db.set_value("Apuracao Diaria", {"employee": self.employee, "data": DIA}, "pausa_paga", 15)
+		self.assertEqual(envio_cartao.marcador_da_pausa(self.employee, DIA), "PAUSA15")
+		self.assertEqual(envio_cartao.processar(jobs[0]), "Enviado")
+		doc = frappe.get_doc(ENVIO, jobs[0])
+		self.assertTrue(doc.pausa_enviada)
+		self.assertIn('"Justificativa": "PAUSA15"', doc.operacoes)
+		self.assertIn('"Grupo": 3', doc.operacoes)
+		# o RH apaga a PAUSA15 no Secullum e lança +00:15 no Ajuste: reenviar o dia não manda de novo
+		self.assertIsNone(envio_cartao.marcador_da_pausa(self.employee, DIA))
+		envio_cartao.reenviar(jobs[0])
+		self.assertNotIn("PAUSA15", frappe.get_doc(ENVIO, jobs[0]).operacoes or "")
+
+	def test_sem_pausa_paga_nao_manda_pausa15(self):
+		self.assertIsNone(envio_cartao.marcador_da_pausa(self.employee, DIA))
+
 	def salvar(self, enviar, employee=None, horarios=("08:00", "12:00", "13:00", "17:00")):
 		with patch.object(frappe, "enqueue") as enqueue:
 			r = acoes.salvar_cartao(

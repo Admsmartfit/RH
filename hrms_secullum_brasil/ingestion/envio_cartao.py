@@ -95,6 +95,20 @@ def horarios_do_programa(employee: str, data) -> tuple[list[str], int]:
 	return [hhmm(b["minuto"]) for b in grade["batidas"] if not b.get("pendente")], periodos
 
 
+def marcador_da_pausa(employee: str, data) -> str | None:
+	"""Pausa paga por liberalidade (RH, 13/11/2026): o intervalo vai como batida (envio normal do cartão) e, uma vez
+	por dia, a PAUSA15 no primeiro par livre, como aviso ao RH (no Secullum ele apaga a PAUSA15 e lança +00:15 no
+	Ajuste). Depois de enviada, nunca vai de novo, mesmo que o dia seja reenviado. Sem lista, conferência ou trava."""
+	from hrms_secullum_brasil.integrations.secullum.sincronizacao import PAUSA_PAGA
+
+	data = getdate(data)
+	if not cint(frappe.db.get_value("Apuracao Diaria", {"employee": employee, "data": data}, "pausa_paga")):
+		return None
+	if frappe.db.exists(ENVIO, {"employee": employee, "data": data, "pausa_enviada": 1}):
+		return None
+	return PAUSA_PAGA.nome
+
+
 def processar(nome: str) -> str | None:
 	if not frappe.db.exists(ENVIO, nome):  # o salvar do dia foi desfeito depois de enfileirar
 		return None
@@ -129,6 +143,7 @@ def processar(nome: str) -> str | None:
 		)
 		horarios, periodos = horarios_do_programa(doc.employee, data)
 		atuais = colunas_do_registro(registro)
+		marcador = marcador_da_pausa(doc.employee, data)
 		ops = operacoes(
 			data,
 			atuais,
@@ -137,6 +152,7 @@ def processar(nome: str) -> str | None:
 			justificativa=doc.justificativa,
 			grupos_abono=periodos,
 			justificativa_retirada=doc.justificativa_retirada,
+			pausa_paga=marcador,
 		)
 		_sem_apagar_sem_tratamento(doc.employee, data, atuais, ops)
 		for op in ops:
@@ -156,6 +172,8 @@ def processar(nome: str) -> str | None:
 			doc.name,
 		)
 	else:
+		if marcador and any(op.corpo.get("Justificativa") == marcador for op in ops):
+			doc.pausa_enviada = 1
 		doc.update(
 			{
 				"situacao": "Enviado",

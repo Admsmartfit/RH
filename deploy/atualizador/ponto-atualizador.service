@@ -1,0 +1,9 @@
+[Unit]
+Description=Atualizador do programa de ponto
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/ponto/atualizador/atualizar.sh
+TimeoutStartSec=3600

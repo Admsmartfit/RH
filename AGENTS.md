@@ -27,6 +27,17 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   teste é `frappe.in_test` (não só `frappe.flags.in_test`), e o `bench execute` não deixa ligá-lo — preparações de
   teste do HRMS rodam pelo `bench console` (`utils/site_testes.py`); a política de senha vem ligada.
 
+## Produção e atualização — docs/manual_instalacao_servidor.md
+
+- Servidor Linux com Docker (`deploy/`): `docker-compose.yml` (versão ENXUTA, marcas `ENXUTO`), `instalar.sh` e o
+  atualizador (`deploy/atualizador/`: `atualizar.sh` + systemd `ponto-atualizador.path`). A imagem é montada pelo
+  GitHub Actions (`.github/workflows/imagem.yml`) **só a partir de tags `v...`** e publicada em
+  `ghcr.io/admsmartfit/rh`; o painel `/ponto` é montado no build (`package.json` da raiz).
+- O botão é a tela **Atualizacao do Sistema** (Single, só System Manager; `utils/atualizacao.py`): verifica as tags
+  (`integrations/github/versoes.py`) e só grava `/controle/pedido.json`. Backup, troca, migração e volta automática
+  são do `atualizar.sh`. A versão instalada vem de `PONTO_VERSAO` (sem ela = "desenvolvimento", sem atualizador).
+- Repositório **público**: nunca senha, token ou `.env` no código.
+
 ## Estrutura (PRD, Seção 3.2)
 
 | Camada | Pasta | Tipo |
@@ -66,6 +77,9 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 - **Campos `Time`:** o Frappe (v15 e v16) grava a hora atual em todo campo Time vazio de documento novo criado no servidor (inclusive sobre o `default`). Todo DocType com campo Time deve chamar `configuracao_ponto/horarios.py:descartar_hora_automatica` no `before_validate`.
 - **Testes Frappe:** rode no ambiente `docker/` (`cd /workspace/frappe-bench-16 && bench --site testes.localhost run-tests --app hrms_secullum_brasil`). Em testes que fazem `patch` de `frappe.enqueue`, filtre as chamadas pelo método do app (o Frappe também enfileira).
 - **Motor de apuração:** entrada única `engine.models.EntradaDia` → `engine.apuracao_dia.apurar_dia` → `ResultadoDia`. Regras da CCT chegam em `RegraApuracao`; nunca leia DocType dentro do engine. Todo tipo de inconsistência emitido pelo engine deve existir no Select de Inconsistencia de Ponto (há teste).
+- **Dia em andamento** (RH, 13/11/2026): o dia de hoje (ou futuro) é apurado, mas **não abre inconsistência de
+  ponto** (`servico.dia_em_andamento`); elas nascem quando o dia é reapurado depois de terminar
+  (`marcar_dia_anterior` de madrugada ou a coleta seguinte).
 - **Apuração no Frappe:** sempre via `apuracao/servico.py:reapurar_dia` (ou a fila `Reapuracao Pendente`); nunca grave `Apuracao Diaria` direto. Novas fontes de dados entram em `apuracao/adaptador.py:montar_entrada`.
 - **Visibilidade:** DocTypes com campo `employee` usados por gestores/colaboradores devem entrar em `permission_query_conditions` e `has_permission` (`apuracao/permissoes.py`).
 - **Gestor da unidade:** um cadastro por empresa (Configuracao Apuracao, tabela `termo_destinatarios`: colaborador ou
@@ -164,7 +178,14 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   **incluída pelo sistema** (tratamento: WhatsApp, termo, RH; `EntradaDia.marcacoes_incluidas`) é paga, na rubrica
   PAUSA_PAGA, e não é trabalho; a batida no relógio é só trabalho. Pelo WhatsApp, uma pausa por dia
   (`d1.pausas_incluidas`); passar disso + tolerância abre `excesso_jornada_nao_autorizada`, cujo aviso é
-  `dia_seguinte.SEMPRE_CONFERIR` (sempre fila manual). No Secullum só como PAUSA15 num grupo livre (`s.cabe_no_dia`).
+  `dia_seguinte.SEMPRE_CONFERIR` (sempre fila manual). No Secullum (RH, 13/11/2026): o intervalo vai como batida
+  pelo envio do cartão e, **uma vez por dia**, a PAUSA15 no primeiro par livre (`edicao_cartao.operacoes(pausa_paga=)`,
+  `envio_cartao.marcador_da_pausa`, campo `pausa_enviada`); o RH apaga a PAUSA15 no Secullum e lança +00:15 no
+  Ajuste (a API não grava o Ajuste). Sem lista, conferência ou trava.
+- **Nunca "pausa/intervalo pago, remunerado ou por liberalidade" fora do programa** (RH, 13/11/2026): no Secullum
+  (motivo da batida, nome da justificativa) e no WhatsApp ao colaborador/prestador. Regra pura em
+  `engine/texto_externo.py`: `edicao_cartao.operacoes` troca o motivo pelo neutro (`motivo_para_o_secullum`) e
+  `whatsapp.enviar` barra a mensagem (`tem_texto_proibido`). O pagamento fica só na folha (PAUSA_PAGA) e no Ajuste.
 - **Instrutor horista** (horista + pausa paga no cargo, RH 09/11/2026): passou de 4h15 (exato) sem intervalo no
   relógio → só `intervalo_nao_marcado_horista` (`apuracao_dia.intervalo_nao_marcado`), sem `intrajornada` nem
   `excesso_jornada_nao_autorizada`, e o intervalo lançado nesse dia **não é pago**. O tipo está em

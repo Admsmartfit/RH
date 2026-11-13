@@ -7,7 +7,7 @@
 		:aria-expanded="aberto"
 		@click="abrir()"
 	>
-		Ajuda <span class="text-xs text-texto-suave">Ctrl K</span>
+		Ajuda <span class="hidden text-xs text-texto-suave xl:inline">Ctrl K</span>
 	</button>
 
 	<Teleport to="body">

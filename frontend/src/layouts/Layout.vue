@@ -8,14 +8,15 @@
 			Pular para o conteúdo
 		</a>
 		<header class="sticky top-0 z-30 border-b border-borda bg-superficie/95 backdrop-blur">
-			<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-				<p class="text-base font-semibold">Painel de ponto</p>
-				<nav aria-label="Telas do painel">
-					<ul class="flex flex-wrap gap-1 text-sm">
+			<!-- RH, 13/11/2026: menu, Ajuda e usuário numa linha; filtros na linha de baixo (o conteúdo sobe) -->
+			<div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 lg:flex-nowrap">
+				<p class="shrink-0 text-base font-semibold">Painel de ponto</p>
+				<nav aria-label="Telas do painel" class="min-w-0 flex-1">
+					<ul class="flex flex-wrap gap-0.5 text-sm">
 						<li v-for="item in menu" :key="item.nome">
 							<router-link
 								:to="{ name: item.nome, query: route.query }"
-								class="rounded-md px-3 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave"
+								class="whitespace-nowrap rounded-md px-2.5 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave"
 								active-class="!bg-primario-suave !text-primario-texto"
 								:exact-active-class="item.exato ? '!bg-primario-suave !text-primario-texto' : ''"
 							>
@@ -23,19 +24,19 @@
 							</router-link>
 						</li>
 						<li v-if="sessao.data?.pode_abrir_desk">
-							<a href="/app/ponto" class="rounded-md px-3 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave">
+							<a href="/app/ponto" class="whitespace-nowrap rounded-md px-2.5 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave">
 								Abrir no Desk
 							</a>
 						</li>
 					</ul>
 				</nav>
-				<div class="ml-auto flex items-center gap-3">
+				<div class="ml-auto flex shrink-0 items-center gap-3">
 					<!-- docs/PRD-ajuda-nahel.md: ajuda passo a passo (Ctrl+K) -->
 					<NahelAssistente v-if="sessao.data?.nahel" />
-					<p class="text-sm text-texto-suave">{{ sessao.data?.nome }}</p>
+					<p class="max-w-[10rem] truncate text-sm text-texto-suave" :title="sessao.data?.nome">{{ sessao.data?.nome }}</p>
 				</div>
 			</div>
-			<div class="mx-auto max-w-7xl px-4 pb-3">
+			<div class="mx-auto max-w-7xl px-4 pb-2">
 				<FiltrosPeriodo />
 			</div>
 		</header>
