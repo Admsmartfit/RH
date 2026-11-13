@@ -68,7 +68,7 @@ if dc run --rm backend bash -c "test -d sites/$SITE"; then
 else
 	SENHA_ADMIN="$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-16)"
 	passo "Criando o site $SITE"
-	dc run --rm backend bench new-site "$SITE" --db-root-password "$SENHA_BANCO" --admin-password "$SENHA_ADMIN" \
+	dc run --rm backend bench new-site "$SITE" --db-root-username root --db-root-password "$SENHA_BANCO" --admin-password "$SENHA_ADMIN" \
 		--mariadb-user-host-login-scope='%' --install-app erpnext --install-app hrms --install-app "$APP"
 	if [ -n "$RESTAURAR" ]; then
 		passo "Restaurando o backup de $RESTAURAR"
@@ -79,7 +79,7 @@ else
 		dc up -d backend
 		ID="$(dc ps -q backend)"
 		docker cp "$DB" "$ID:/tmp/banco.sql.gz"
-		ARGS=(/tmp/banco.sql.gz --db-root-password "$SENHA_BANCO" --force)
+		ARGS=(/tmp/banco.sql.gz --db-root-username root --db-root-password "$SENHA_BANCO" --force)
 		if [ -n "$PUB" ]; then docker cp "$PUB" "$ID:/tmp/publicos.tar"; ARGS+=(--with-public-files /tmp/publicos.tar); fi
 		if [ -n "$PRIV" ]; then docker cp "$PRIV" "$ID:/tmp/privados.tar"; ARGS+=(--with-private-files /tmp/privados.tar); fi
 		dc exec -T -u root backend chown frappe:frappe /tmp/banco.sql.gz /tmp/publicos.tar /tmp/privados.tar 2>/dev/null || true

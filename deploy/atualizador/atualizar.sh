@@ -113,7 +113,7 @@ voltar() { # voltar <motivo> <restaurar_banco 0|1>
 	dc up -d --remove-orphans >> "$LOG" 2>&1
 	if [ "$2" = "1" ] && [ -n "$BACKUP_DB" ]; then
 		log "Restaurando o banco do backup $BACKUP_DB"
-		dc exec -T backend bench --site "$SITE" restore --force "$BACKUP_DB" --db-root-password "$SENHA_BANCO" >> "$LOG" 2>&1
+		dc exec -T backend bench --site "$SITE" restore --force "$BACKUP_DB" --db-root-username root --db-root-password "$SENHA_BANCO" >> "$LOG" 2>&1
 		dc exec -T backend bench --site "$SITE" migrate >> "$LOG" 2>&1
 	fi
 	dc restart backend fila agendador websocket >> "$LOG" 2>&1
