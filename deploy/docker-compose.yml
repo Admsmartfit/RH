@@ -15,6 +15,7 @@ x-app: &app
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - logs:/home/frappe/frappe-bench/logs
+    - ./my.cnf:/home/frappe/.my.cnf:ro # cliente do banco sem SSL (rede interna)
   depends_on:
     db:
       condition: service_healthy
@@ -90,6 +91,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
       - logs:/home/frappe/frappe-bench/logs
+      - ./my.cnf:/home/frappe/.my.cnf:ro
       # o botão "Atualizar" deixa o pedido aqui; o atualizador do servidor (systemd) faz o resto
       - ./controle:/controle
     mem_limit: 900m # ENXUTO

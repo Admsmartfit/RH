@@ -34,6 +34,8 @@ passo() { echo; echo "==> $*"; }
 passo "Pastas em $DIR"
 mkdir -p "$DIR/controle" "$DIR/atualizador" "$DIR/backups"
 cp "$ORIGEM/docker-compose.yml" "$DIR/docker-compose.yml"
+cp "$ORIGEM/my.cnf" "$DIR/my.cnf"
+chmod 644 "$DIR/my.cnf"
 cp "$ORIGEM/atualizador/atualizar.sh" "$DIR/atualizador/atualizar.sh"
 chmod 750 "$DIR/atualizador/atualizar.sh"
 chown 1000:1000 "$DIR/controle" # o usuário "frappe" dos containers grava o pedido aqui
@@ -61,6 +63,13 @@ for _ in $(seq 1 60); do
 	sleep 5
 done
 dc run --rm configurador
+
+# site que ficou pela metade numa tentativa anterior (pasta criada, instalação incompleta): apaga e cria de novo
+if dc run --rm backend bash -c "test -d sites/$SITE" && ! dc run --rm backend bench --site "$SITE" list-apps >/dev/null 2>&1; then
+	passo "O site $SITE ficou pela metade numa tentativa anterior: apagando para criar de novo"
+	dc run --rm backend bench drop-site "$SITE" --force --no-backup --db-root-username root --db-root-password "$SENHA_BANCO" \
+		|| dc run --rm backend bash -c "rm -rf sites/$SITE"
+fi
 
 if dc run --rm backend bash -c "test -d sites/$SITE"; then
 	passo "O site $SITE já existe: só migrando"
