@@ -97,6 +97,11 @@ else
 		if [ -n "$PRIV" ]; then docker cp "$PRIV" "$ID:/tmp/privados.tar"; ARGS+=(--with-private-files /tmp/privados.tar); fi
 		dc exec -T -u root backend chown frappe:frappe /tmp/banco.sql.gz /tmp/publicos.tar /tmp/privados.tar 2>/dev/null || true
 		dc exec -T backend bench --site "$SITE" restore "${ARGS[@]}"
+		# apps que só existem no computador de desenvolvimento (tema do Desk, app só dos testes): fora da lista do site
+		for so_no_pc in swift_theme payments; do
+			dc exec -T backend bash -c "test -d apps/$so_no_pc" \
+				|| dc exec -T backend bench --site "$SITE" remove-from-installed-apps "$so_no_pc" </dev/null || true
+		done
 		# a chave de criptografia do site antigo: sem ela, as senhas gravadas (Secullum, WhatsApp) não abrem
 		CHAVE="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("encryption_key",""))' "$CONF")"
 		[ -n "$CHAVE" ] && dc exec -T backend bench --site "$SITE" set-config encryption_key "$CHAVE"
