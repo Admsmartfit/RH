@@ -29,6 +29,21 @@ NOMES = {
 	"intervalo_nao_marcado_horista": "Excedeu o horário de trabalho de 4 h sem marcar o intervalo",
 }
 TIPOS_DO_TERMO = tuple(NOMES)  # uma linha a confirmar por dia
+# a tela Termos agrupa os problemas (RH, 14/11/2026); todo tipo de NOMES fica num grupo (há teste)
+GRUPOS = (
+	("Batidas", ("marcacao_duplicada", "marcacao_impar")),
+	("Ausência", ("falta", "aula_nao_registrada")),
+	("Horário", ("atraso", "he_acima_limite", "excesso_jornada_estagio")),
+	(
+		"Intervalo",
+		("intrajornada", "intervalo_superior_2h", "intervalo_fora_de_hora", "intervalo_nao_marcado_horista"),
+	),
+)
+# atraso/saída antecipada que não virou pendência (abaixo do mínimo da CCT) entra no termo só como registro
+REGISTRO_ATRASO = "atraso"
+# "mais críticos" na tela Termos: soma dos pesos da severidade de cada ocorrência (o registro pesa como a Baixa)
+PESOS = {"Alta": 9, "Média": 3, "Baixa": 1}
+ORDEM_SEVERIDADE = ("Baixa", "Média", "Alta")
 # no termo, mas nunca cobrados do colaborador pelo WhatsApp (o RH trata; RH, 09/11/2026)
 SO_NO_TERMO = frozenset({"intervalo_nao_marcado_horista"})
 # da semana ou do mês, sem um dia a corrigir: só como informação no texto (seção 6)
@@ -90,6 +105,8 @@ class DiaTermo:
 	contexto: ContextoDia
 	correcao: CorrecaoColaborador | None = None
 	tipos_do_dia: tuple[str, ...] = ()  # o que o dia teve (para o quadro), mesmo já resolvido pela correção
+	# fatos sem pendência que o termo só registra (atraso/saída antecipada abaixo do mínimo; RH, 14/11/2026)
+	registros: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -149,6 +166,11 @@ def _intervalo(minutos: Sequence[int], contexto: ContextoDia) -> str:
 		f"Intervalo registrado de {duracao(maior)}, menor que o mínimo de {duracao(exigido)}. "
 		+ ESCREVA_O_INTERVALO
 	)
+
+
+def texto_atraso(minutos: Sequence[int], contexto: ContextoDia) -> str:
+	"""O fato do dia (entrada depois / saída antes do previsto), para o termo e o aviso pelo WhatsApp."""
+	return _atraso(minutos, contexto)
 
 
 def _atraso(minutos: Sequence[int], contexto: ContextoDia) -> str:
@@ -303,17 +325,19 @@ def montar_itens(dias: Iterable[DiaTermo]) -> list[ItemTermo]:
 	itens = []
 	for dia in sorted(dias, key=lambda d: d.data):
 		do_termo = [(nome, tipo) for nome, tipo in dia.ocorrencias if entra_no_termo(tipo)]
+		registros = {t for t in dia.registros if entra_no_termo(t)} - {t for _, t in do_termo}
 		marcacoes = tuple(sorted(b.minuto for b in dia.contexto.batidas))
 		c = dia.correcao
 		if c and c.situacao != RECUSADA:
 			abertas = [] if c.situacao != APROVADA else do_termo
 			tipos = tuple(
 				sorted(
-					{t for t in dia.tipos_do_dia if entra_no_termo(t)} | {t for _, t in abertas},
+					{t for t in dia.tipos_do_dia if entra_no_termo(t)} | {t for _, t in abertas} | registros,
 					key=TIPOS_DO_TERMO.index,
 				)
 			)
-			resto = propor_dia([t for _, t in abertas], dia.contexto) if abertas else None
+			fatos = [t for _, t in abertas] + sorted(registros)
+			resto = propor_dia(fatos, dia.contexto) if fatos else None
 			texto = texto_da_correcao(c) + (f" {resto.texto}" if resto else "")
 			itens.append(
 				ItemTermo(
@@ -330,9 +354,9 @@ def montar_itens(dias: Iterable[DiaTermo]) -> list[ItemTermo]:
 				)
 			)
 			continue
-		if not do_termo:
+		if not do_termo and not registros:
 			continue
-		tipos = tuple(sorted({t for _, t in do_termo}, key=TIPOS_DO_TERMO.index))
+		tipos = tuple(sorted({t for _, t in do_termo} | registros, key=TIPOS_DO_TERMO.index))
 		proposta = propor_dia(tipos, dia.contexto)
 		if c:  # recusada: o registro do que ele mandou vem antes do fato do dia
 			proposta = replace(proposta, texto=f"{texto_da_correcao(c)} {proposta.texto}")
@@ -375,6 +399,38 @@ def resumo_ocorrencias(
 
 def texto_marcacoes(minutos: Sequence[int]) -> str:
 	return " ".join(hhmm(m) for m in minutos) or "sem batida"
+
+
+# ------------------------------------------------------------------ tela Termos: grupos e gravidade (RH, 14/11/2026)
+
+
+def grupo_do_tipo(tipo: str) -> str:
+	return next((nome for nome, tipos in GRUPOS if tipo in tipos), "Outros")
+
+
+def criticidade(severidades: Iterable[str]) -> int:
+	"""Soma dos pesos (Alta 9, Média 3, Baixa 1): ordena a lista "mais críticos primeiro"."""
+	return sum(PESOS.get(s, PESOS["Baixa"]) for s in severidades)
+
+
+def severidade_maxima(severidades: Iterable[str]) -> str:
+	lista = [s for s in severidades if s in ORDEM_SEVERIDADE]
+	return max(lista, key=ORDEM_SEVERIDADE.index) if lista else "Baixa"
+
+
+# ------------------------------------------------------------------ aviso de atraso/saída antecipada pelo WhatsApp
+
+# texto neutro (como o do termo): o fato, sem citar lei e sem dizer o efeito na folha
+MODELO_AVISO_ATRASO = (
+	"Olá, {primeiro_nome}! No seu registro de ponto ({empresa}), de {periodo}, a entrada foi depois ou a saída foi "
+	"antes do horário previsto nestes dias:\n{atrasos}\n"
+	"Se algum registro estiver errado, fale com o seu gestor. Obrigado!"
+)
+
+
+def linhas_atrasos(dias: Iterable[tuple[date, str]]) -> str:
+	""" "• 05/11: Entrada às 13:10, 10 min depois do horário previsto (13:00)." — um dia por linha, em ordem."""
+	return "\n".join(f"• {data_curta(d)}: {texto}" for d, texto in sorted(dias, key=lambda x: x[0]))
 
 
 # ------------------------------------------------------------------ prazos em dias úteis (DO-7)

@@ -346,6 +346,13 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   não entra no termo. O que o colaborador mandou pelo link (Resposta WhatsApp Ponto) entra como registro
   (`texto_da_correcao`); aguardando o RH, o item fica sem inconsistências (a assinatura não mexe no dia). Batida
   faltando assinada "De acordo" sem horário volta ao RH (Aberta), nunca Mantida.
+- **Atraso sem pendência e aviso de atraso** (RH, 14/11/2026): o atraso/saída antecipada abaixo do
+  `atraso_minimo_pendencia` entra no termo **só como registro** (`DiaTermo.registros`, linha sem inconsistência,
+  assinatura = "Registro: ciente"), lido por `termo_ocorrencias.atrasos_sem_pendencia` (pula hoje, dia com
+  pendência de atraso e dia já num termo). Entra quando o termo leva tudo ou o tipo "atraso" foi escolhido no lote.
+  O botão "Avisar por WhatsApp" da tela Termos (`avisar_atrasos`, texto `MODELO_AVISO_ATRASO`, neutro) é envio
+  manual pelas travas de `whatsapp.enviar`, uma vez por dia por pessoa (`ATRS:`). Grupos dos problemas e gravidade
+  ("mais críticos") vêm do engine (`GRUPOS`, `criticidade`; todo tipo de `NOMES` num grupo, há teste).
 
 ## Jornada legal com vigência e planejador 5x2 — docs/PRD-planejador-5x2.md
 

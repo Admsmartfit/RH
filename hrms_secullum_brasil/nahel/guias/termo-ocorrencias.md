@@ -3,7 +3,7 @@ id: termo-ocorrencias
 titulo: Termo de ocorrências
 publico: RH, Gestor
 tema: Termo e D+1
-palavras_chave: termo, ocorrencias, assinatura, assinar, regularizar, lote
+palavras_chave: termo, ocorrencias, assinatura, assinar, regularizar, lote, atraso, saida antecipada, avisar
 manual: manual_rh.md
 telas: termos
 ---
@@ -17,7 +17,15 @@ efeito na folha.
 
 ## Passo a passo
 ### Emitir
-- O que fazer: escolha o problema e o período, marque as pessoas e emita (um termo por colaborador).
+- O que fazer: escolha o período e os problemas (agrupados em Batidas, Ausência, Horário e Intervalo), clique em
+  Buscar, ordene a lista (mais críticos, mais problemas ou nome), marque as pessoas e clique em "Emitir termo(s)".
+  "Atraso ou saída antecipada" traz também os atrasos que não viraram pendência: no termo eles entram só como
+  registro.
+- Onde acessar: [[painel:termos|Termos]]
+
+### Só avisar os atrasos pelo WhatsApp
+- O que fazer: com as pessoas marcadas, clique em "Avisar por WhatsApp" (quadro "Avisar atrasos pelo WhatsApp"). Vai
+  uma mensagem com os dias de entrada depois ou saída antes do previsto, sem emitir termo; uma vez por dia por pessoa.
 - Onde acessar: [[painel:termos|Termos]]
 
 ### Colher a assinatura

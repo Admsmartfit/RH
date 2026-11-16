@@ -213,8 +213,8 @@ def _periodo_texto(inicio: date, fim: date) -> str:
 
 def _abertas(employee: str, inicio: date, fim: date, nomes=None) -> list:
 	filtros = {"employee": employee, "status": ABERTA, "data": ["between", [inicio, fim]]}
-	if nomes:
-		filtros["name"] = ["in", list(nomes)]
+	if nomes is not None:  # lista vazia = nenhuma (o lote de quem só tem atraso registrado)
+		filtros["name"] = ["in", list(nomes) or [""]]
 	return frappe.get_all(
 		INCONSISTENCIA, filters=filtros, fields=["name", "data", "tipo"], order_by="data asc"
 	)
@@ -239,11 +239,67 @@ def _dias_do_alerta(inconsistencia: str, inicio: date, fim: date, por_dia: dict)
 			ocorrencias.append((inconsistencia, "intrajornada"))
 
 
-def montar(employee: str, inicio: date, fim: date, nomes=None) -> tuple[list, list, dict]:
-	"""(itens do engine, informativos [(tipo, data)], hora de virada por dia)."""
+def atrasos_sem_pendencia(inicio, fim, filtros: dict | None = None) -> list:
+	"""Dias com atraso/saída antecipada na apuração que não viraram pendência (abaixo do mínimo da CCT) e ainda não
+	estão num termo (RH, 14/11/2026): o termo os registra. Hoje fica de fora (o dia não terminou)."""
+	inicio = getdate(inicio)
+	fim = min(getdate(fim), add_to_date(getdate(today()), days=-1))
+	if fim < inicio:
+		return []
+	linhas = frappe.get_all(
+		"Apuracao Diaria",
+		filters={**(filtros or {}), "data": ["between", [inicio, fim]], "atraso": [">", 0]},
+		fields=["employee", "employee_name", "company", "branch", "data", "atraso"],
+		order_by="data asc",
+	)
+	if not linhas:
+		return []
+	pessoas = list({linha.employee for linha in linhas})
+	fora = {
+		(i.employee, getdate(i.data))
+		for i in frappe.get_all(
+			INCONSISTENCIA,
+			filters={"employee": ["in", pessoas], "tipo": "atraso", "data": ["between", [inicio, fim]]},
+			fields=["employee", "data"],
+		)
+	}
+	itens = frappe.get_all(
+		ITEM,
+		filters={
+			"parenttype": DOCTYPE,
+			"data": ["between", [inicio, fim]],
+			"tipos": ["like", f"%{to.REGISTRO_ATRASO}%"],
+		},
+		fields=["parent", "data"],
+	)
+	if itens:
+		termos = dict(
+			frappe.get_all(
+				DOCTYPE,
+				filters={"name": ["in", list({i.parent for i in itens})], "status": ["!=", CANCELADO]},
+				fields=["name", "employee"],
+				as_list=True,
+			)
+		)
+		fora |= {(termos[i.parent], getdate(i.data)) for i in itens if i.parent in termos}
+	return [linha for linha in linhas if (linha.employee, getdate(linha.data)) not in fora]
+
+
+def montar(
+	employee: str, inicio: date, fim: date, nomes=None, atrasos: bool | None = None
+) -> tuple[list, list, dict]:
+	"""(itens do engine, informativos [(tipo, data)], hora de virada por dia). `nomes`: só essas inconsistências
+	(lista vazia = nenhuma). `atrasos`: registra também o atraso/saída antecipada sem pendência (padrão: quando o
+	termo leva tudo, sem `nomes`)."""
 	from hrms_secullum_brasil.apuracao.cartao_ponto import _carregar, contexto_do_dia
 	from hrms_secullum_brasil.apuracao.lote import definir_janela, modo_lote
 
+	if atrasos is None:
+		atrasos = nomes is None
+	registros: dict[date, list] = {}
+	if atrasos:
+		for linha in atrasos_sem_pendencia(inicio, fim, {"employee": employee}):
+			registros.setdefault(getdate(linha.data), []).append(to.REGISTRO_ATRASO)
 	por_dia: dict[date, list] = {}
 	informativos = []
 	for inc in _abertas(employee, inicio, fim, nomes):
@@ -254,10 +310,10 @@ def montar(employee: str, inicio: date, fim: date, nomes=None) -> tuple[list, li
 			informativos.append((inc.tipo, dia))
 		if inc.tipo == "excesso_jornada_horista":
 			_dias_do_alerta(inc.name, inicio, fim, por_dia)
-	correcoes = {} if nomes else _correcoes_do_colaborador(employee, inicio, fim)
+	correcoes = {} if nomes is not None else _correcoes_do_colaborador(employee, inicio, fim)
 	tipos_do_dia = _tipos_dos_dias(employee, list(correcoes))
 	viradas, dias = {}, []
-	todos = sorted(set(por_dia) | set(correcoes))
+	todos = sorted(set(por_dia) | set(correcoes) | set(registros))
 	if todos:
 		dados = _carregar(employee, todos[0], todos[-1])
 		with modo_lote():
@@ -274,6 +330,7 @@ def montar(employee: str, inicio: date, fim: date, nomes=None) -> tuple[list, li
 						contexto,
 						correcoes.get(dia),
 						tipos_do_dia.get(dia, ()),
+						tuple(registros.get(dia, ())),
 					)
 				)
 	return to.montar_itens(dias), informativos, viradas
@@ -475,7 +532,14 @@ def emitir(
 	return resumo_envio(nome)
 
 
-def _emitir(employee: str, inicio: date, fim: date, nomes=None, texto: str | None = None) -> str:
+def _emitir(
+	employee: str,
+	inicio: date,
+	fim: date,
+	nomes=None,
+	texto: str | None = None,
+	atrasos: bool | None = None,
+) -> str:
 	aberto = _em_aberto(employee)
 	if aberto:
 		frappe.throw(
@@ -484,7 +548,7 @@ def _emitir(employee: str, inicio: date, fim: date, nomes=None, texto: str | Non
 			).format(aberto)
 		)
 	emp = frappe.get_doc("Employee", employee)
-	itens, informativos, viradas = montar(employee, inicio, fim, nomes)
+	itens, informativos, viradas = montar(employee, inicio, fim, nomes, atrasos)
 	if not itens:
 		frappe.throw(_("Não há ocorrência aberta para o termo neste período."))
 	hoje = getdate(today())
@@ -1377,6 +1441,11 @@ def _aplicar_item(doc, linha, resposta: str, horarios: str | None, anexo: str | 
 	from hrms_secullum_brasil.apuracao.servico import reapurar_dia
 
 	incs = [n for n in (linha.inconsistencias or "").split(",") if n]
+	if not incs:  # linha só de registro (atraso sem pendência, correção do link): nada muda no ponto
+		linha.resposta = to.NAO_RECONHECE if resposta == to.NAO_RECONHECE else to.DE_ACORDO
+		if resposta == to.NAO_RECONHECE:
+			return _("Não reconhece o registro: o RH confere.")
+		return _("Registro: ciente.")
 	aguardando = [n for n in incs if frappe.db.get_value(INCONSISTENCIA, n, "status") == AGUARDANDO]
 	if not aguardando:
 		linha.resposta = to.JA_RESOLVIDO
@@ -1560,7 +1629,9 @@ def assinar(
 def candidatos(
 	tipos=None, inicio=None, fim=None, company: str | None = None, branch: str | None = None
 ) -> list[dict]:
-	"""Colaboradores visíveis com inconsistências abertas que cabem num termo (dos tipos pedidos), no período."""
+	"""Colaboradores visíveis com inconsistências abertas que cabem num termo (dos tipos pedidos), no período. Com o
+	tipo "atraso" escolhido, entra também o atraso/saída antecipada sem pendência (só registro; RH, 14/11/2026).
+	Cada pessoa leva a gravidade (para ordenar) e o total de atrasos/saídas do período (aviso pelo WhatsApp)."""
 	from hrms_secullum_brasil.apuracao.permissoes import employees_visiveis
 
 	inicio, fim = _periodo(inicio, fim)
@@ -1569,45 +1640,69 @@ def candidatos(
 		for t in (frappe.parse_json(tipos) if isinstance(tipos, str) else tipos or [])
 		if to.entra_no_termo(t)
 	]
+	base = {}
+	if company:
+		base["company"] = company
+	if branch:
+		base["branch"] = branch
+	visiveis = employees_visiveis()
+	if visiveis is not None:
+		base["employee"] = ["in", visiveis or [""]]
 	filtros = {
+		**base,
 		"status": ABERTA,
 		"data": ["between", [inicio, fim]],
 		"tipo": ["in", tipos or list(to.TIPOS_DO_TERMO)],
 	}
-	if company:
-		filtros["company"] = company
-	if branch:
-		filtros["branch"] = branch
-	visiveis = employees_visiveis()
-	if visiveis is not None:
-		filtros["employee"] = ["in", visiveis or [""]]
 	por_pessoa: dict[str, dict] = {}
-	for inc in frappe.get_all(
-		INCONSISTENCIA,
-		filters=filtros,
-		fields=["name", "employee", "employee_name", "company", "branch", "data", "tipo"],
-		order_by="employee_name asc, data asc",
-	):
-		p = por_pessoa.setdefault(
-			inc.employee,
+
+	def pessoa(linha) -> dict:
+		return por_pessoa.setdefault(
+			linha.employee,
 			{
-				"employee": inc.employee,
-				"employee_name": inc.employee_name,
-				"company": inc.company,
-				"branch": inc.branch,
+				"employee": linha.employee,
+				"employee_name": linha.employee_name,
+				"company": linha.company,
+				"branch": linha.branch,
 				"ocorrencias": 0,
 				"dias": [],
 				"tipos": [],
 				"inconsistencias": [],
+				"_severidades": [],
+				"registros": 0,
 			},
 		)
+
+	def anotar(p: dict, data, tipo: str) -> None:
 		p["ocorrencias"] += 1
-		p["inconsistencias"].append(inc.name)
-		dia = f"{getdate(inc.data):%d/%m}"
+		dia = f"{getdate(data):%d/%m}"
 		if dia not in p["dias"]:
 			p["dias"].append(dia)
-		if to.NOMES[inc.tipo] not in p["tipos"]:
-			p["tipos"].append(to.NOMES[inc.tipo])
+		if to.NOMES[tipo] not in p["tipos"]:
+			p["tipos"].append(to.NOMES[tipo])
+
+	for inc in frappe.get_all(
+		INCONSISTENCIA,
+		filters=filtros,
+		fields=["name", "employee", "employee_name", "company", "branch", "data", "tipo", "severidade"],
+		order_by="employee_name asc, data asc",
+	):
+		p = pessoa(inc)
+		p["inconsistencias"].append(inc.name)
+		p["_severidades"].append(inc.severidade)
+		anotar(p, inc.data, inc.tipo)
+	if to.REGISTRO_ATRASO in tipos:
+		for linha in atrasos_sem_pendencia(inicio, fim, base):
+			p = pessoa(linha)
+			p["registros"] += 1
+			p["_severidades"].append("Baixa")
+			anotar(p, linha.data, to.REGISTRO_ATRASO)
+	for p in por_pessoa.values():
+		severidades = p.pop("_severidades")
+		p["criticidade"] = to.criticidade(severidades)
+		p["severidade"] = to.severidade_maxima(severidades)
+		p["dias"].sort(key=lambda d: (d[3:], d[:2]))
+	_resumo_atrasos(por_pessoa, inicio, fim)
 	abertos = dict(
 		frappe.get_all(
 			DOCTYPE,
@@ -1618,7 +1713,28 @@ def candidatos(
 	)
 	for p in por_pessoa.values():
 		p["em_aberto"] = abertos.get(p["employee"])
-	return list(por_pessoa.values())
+	return sorted(por_pessoa.values(), key=lambda p: (p["employee_name"] or "").casefold())
+
+
+def _resumo_atrasos(por_pessoa: dict, inicio: date, fim: date) -> None:
+	"""Dias e minutos de atraso/saída antecipada de cada pessoa no período (com ou sem pendência; hoje fica de fora)."""
+	for p in por_pessoa.values():
+		p["atraso_dias"], p["atraso_minutos"] = 0, 0
+	fim = min(fim, add_to_date(getdate(today()), days=-1))
+	if not por_pessoa or fim < inicio:
+		return
+	for linha in frappe.get_all(
+		"Apuracao Diaria",
+		filters={
+			"employee": ["in", list(por_pessoa)],
+			"data": ["between", [inicio, fim]],
+			"atraso": [">", 0],
+		},
+		fields=["employee", "atraso"],
+	):
+		p = por_pessoa[linha.employee]
+		p["atraso_dias"] += 1
+		p["atraso_minutos"] += cint(linha.atraso)
 
 
 @frappe.whitelist()
@@ -1629,10 +1745,82 @@ def lote(tipos=None, inicio=None, fim=None, company: str | None = None, branch: 
 	return {
 		"inicio": str(inicio_d),
 		"fim": str(fim_d),
-		"tipos": [{"tipo": t, "nome": n} for t, n in to.NOMES.items()],
+		"tipos": [{"tipo": t, "nome": n, "grupo": to.grupo_do_tipo(t)} for t, n in to.NOMES.items()],
+		"grupos": [nome for nome, _tipos in to.GRUPOS],
 		"colaboradores": candidatos(tipos, inicio_d, fim_d, company, branch),
 		"modelo": com.texto_padrao(com.TERMO, "Colaborador"),
+		"modelo_atraso": to.MODELO_AVISO_ATRASO,
 	}
+
+
+# ------------------------------------------------------------------ aviso de atraso/saída antecipada (RH, 14/11/2026)
+
+
+def atrasos_do_periodo(employee: str, inicio: date, fim: date) -> list[tuple[date, str]]:
+	"""(dia, fato) de cada atraso/saída antecipada do período, com ou sem pendência; hoje fica de fora."""
+	from hrms_secullum_brasil.apuracao.cartao_ponto import _carregar, contexto_do_dia
+	from hrms_secullum_brasil.apuracao.lote import definir_janela, modo_lote
+
+	fim = min(fim, add_to_date(getdate(today()), days=-1))
+	if fim < inicio:
+		return []
+	dias = [
+		getdate(d)
+		for d in frappe.get_all(
+			"Apuracao Diaria",
+			filters={"employee": employee, "data": ["between", [inicio, fim]], "atraso": [">", 0]},
+			order_by="data asc",
+			pluck="data",
+		)
+	]
+	if not dias:
+		return []
+	dados = _carregar(employee, dias[0], dias[-1])
+	saida = []
+	with modo_lote():
+		definir_janela(dias[0], dias[-1])
+		for dia in dias:
+			contexto = contexto_do_dia(employee, dia, dados)[4]
+			saida.append((dia, to.texto_atraso(sorted(b.minuto for b in contexto.batidas), contexto)))
+	return saida
+
+
+@frappe.whitelist()
+def avisar_atrasos(employees, inicio=None, fim=None, texto: str | None = None) -> dict:
+	"""Botão da tela Termos: WhatsApp a cada colaborador com os dias de entrada depois ou saída antes do previsto
+	(mesmo sem pendência). Envio manual do RH/gestor: passa pelas travas de `whatsapp.enviar` (interruptor, aceite,
+	celular, ritmo); uma vez por dia por pessoa."""
+	frappe.only_for(PAPEIS)
+	employees = frappe.parse_json(employees) if isinstance(employees, str) else employees or []
+	inicio_d, fim_d = _periodo(inicio, fim)
+	hoje = getdate(today())
+	resumo = {"enviados": [], "ignorados": []}
+	for employee in employees:
+		_exigir(employee)
+		emp = frappe.get_doc("Employee", employee)
+		dias = atrasos_do_periodo(employee, inicio_d, fim_d)
+		if not dias:
+			resumo["ignorados"].append(
+				{"employee_name": emp.employee_name, "motivo": _("sem atraso no período")}
+			)
+			continue
+		chave = f"ATRS:{employee}:{hoje}"
+		if _ja_enviado(chave):
+			resumo["ignorados"].append({"employee_name": emp.employee_name, "motivo": _("já avisado hoje")})
+			continue
+		mensagem = montar_mensagem(
+			texto or to.MODELO_AVISO_ATRASO,
+			primeiro_nome=com.primeiro_nome(emp.first_name or emp.employee_name),
+			periodo=_periodo_texto(inicio_d, fim_d),
+			atrasos=to.linhas_atrasos(dias),
+			empresa=_nome_da_empresa(emp.company),
+		)
+		nome = whatsapp.criar(employee, "Colaborador", emp.cell_number, mensagem, chave=chave)
+		situacao = whatsapp.enviar(nome, manual=True)
+		resumo["enviados"].append(
+			{"employee_name": emp.employee_name, "dias": len(dias), "situacao": situacao}
+		)
+	return resumo
 
 
 @frappe.whitelist()
@@ -1695,10 +1883,12 @@ def _emitir_lote(
 	frappe.only_for(PAPEIS)
 	employees = frappe.parse_json(employees) if isinstance(employees, str) else employees or []
 	inicio_d, fim_d = _periodo(inicio, fim)
+	tipos = frappe.parse_json(tipos) if isinstance(tipos, str) else tipos or []
+	# "todas" leva tudo, inclusive o atraso sem pendência (registro); senão, só com o tipo "atraso" escolhido
+	tipos = list(to.TIPOS_DO_TERMO) if cint(todas) else tipos
+	atrasos = to.REGISTRO_ATRASO in tipos
 	escolhidos = {
-		p["employee"]: p
-		for p in candidatos(None if cint(todas) else tipos, inicio_d, fim_d)
-		if p["employee"] in set(employees)
+		p["employee"]: p for p in candidatos(tipos, inicio_d, fim_d) if p["employee"] in set(employees)
 	}
 	resumo = {"emitidos": [], "ignorados": []}
 	for feitos, employee in enumerate(employees):
@@ -1724,9 +1914,11 @@ def _emitir_lote(
 		try:
 			_exigir(employee)
 			modelo = (
-				_modelo_pessoal(texto, employee, inicio_d, fim_d, p["inconsistencias"]) if texto else None
+				_modelo_pessoal(texto, employee, inicio_d, fim_d, p["inconsistencias"], atrasos)
+				if texto
+				else None
 			)
-			nome = _emitir(employee, inicio_d, fim_d, p["inconsistencias"], modelo)
+			nome = _emitir(employee, inicio_d, fim_d, p["inconsistencias"], modelo, atrasos)
 			resumo["emitidos"].append({**resumo_envio(nome), "employee_name": nome_pessoa})
 		except Exception as exc:
 			frappe.db.rollback(save_point=ponto)
@@ -1737,9 +1929,9 @@ def _emitir_lote(
 	return resumo
 
 
-def _modelo_pessoal(modelo: str, employee: str, inicio: date, fim: date, nomes) -> str:
+def _modelo_pessoal(modelo: str, employee: str, inicio: date, fim: date, nomes, atrasos=None) -> str:
 	emp = frappe.get_doc("Employee", employee)
-	itens, informativos, _v = montar(employee, inicio, fim, nomes)
+	itens, informativos, _v = montar(employee, inicio, fim, nomes, atrasos)
 	return texto_whatsapp(emp, inicio, fim, itens, informativos, modelo)
 
 

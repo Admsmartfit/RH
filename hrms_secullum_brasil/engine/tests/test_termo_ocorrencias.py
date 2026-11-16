@@ -239,3 +239,65 @@ def test_estatisticas_por_colaborador():
 		"tipos": "Intervalo não registrado ou menor que o mínimo (2), Atraso ou saída antecipada (1), Falta (dia sem batida) (1)",
 	}
 	assert (e["B"]["aguardando"], e["B"]["dias_medio"], e["B"]["taxa_recusa"]) == (1, None, None)
+
+
+# RH, 14/11/2026: atraso/saída antecipada sem pendência entra no termo como registro; grupos, gravidade e aviso
+
+
+def test_atraso_sem_pendencia_entra_como_registro():
+	dias = [
+		to.DiaTermo(date(2026, 11, 5), (), ctx(490, 720, 780, 1020), registros=("atraso",)),
+		# o dia que já tem a pendência de atraso não repete o registro
+		to.DiaTermo(date(2026, 11, 6), (("INC-1", "atraso"),), ctx(530, 1020), registros=("atraso",)),
+		to.DiaTermo(
+			date(2026, 11, 9), (("INC-2", "marcacao_impar"),), ctx(495, 720, 780), registros=("atraso",)
+		),
+		to.DiaTermo(date(2026, 11, 10), (), ctx(480, 720, 780, 1020), registros=("tipo_estranho",)),
+	]
+	itens = to.montar_itens(dias)
+	assert [(i.data.day, i.tipos, i.inconsistencias) for i in itens] == [
+		(5, ("atraso",), ()),
+		(6, ("atraso",), ("INC-1",)),
+		(9, ("marcacao_impar", "atraso"), ("INC-2",)),
+	]
+	assert itens[0].proposta.texto == "Entrada às 08:10, 10 min depois do horário previsto (08:00)."
+	assert itens[0].proposta.sem_horario and itens[0].proposta.horarios is None
+	assert not itens[2].proposta.sem_horario  # a batida faltando deixa o horário aberto
+
+
+def test_registro_de_atraso_no_dia_corrigido_pelo_link():
+	c = to.CorrecaoColaborador(date(2026, 11, 7), to.AGUARDANDO_RH, ("08:10",), ("08:10", "17:00"))
+	[item] = to.montar_itens(
+		[to.DiaTermo(date(2026, 11, 5), (), ctx(490, 720, 780, 1020), c, ("marcacao_impar",), ("atraso",))]
+	)
+	assert item.tipos == ("marcacao_impar", "atraso")
+	assert item.inconsistencias == ()
+	assert item.proposta.texto.endswith("Entrada às 08:10, 10 min depois do horário previsto (08:00).")
+
+
+def test_todo_tipo_do_termo_tem_grupo():
+	agrupados = [t for _nome, tipos in to.GRUPOS for t in tipos]
+	assert sorted(agrupados) == sorted(to.NOMES)
+	assert to.grupo_do_tipo("falta") == "Ausência"
+	assert to.grupo_do_tipo("outro") == "Outros"
+
+
+def test_gravidade_para_ordenar():
+	assert to.criticidade(["Alta", "Baixa", "Média"]) == 13
+	assert to.criticidade(["", "Baixa"]) == 2
+	assert to.criticidade([]) == 0
+	assert to.severidade_maxima(["Baixa", "Alta", "Média"]) == "Alta"
+	assert to.severidade_maxima([]) == "Baixa"
+
+
+def test_aviso_de_atraso_neutro():
+	texto = to.texto_atraso([510, 720, 780, 980], ctx(510, 720, 780, 980))
+	linhas = to.linhas_atrasos([(date(2026, 11, 6), "B."), (date(2026, 11, 5), texto)])
+	assert linhas.splitlines() == [
+		"• 05/11: Entrada às 08:30, 30 min depois do horário previsto (08:00); saída às 16:20, 40 min antes do "
+		"horário previsto (17:00).",
+		"• 06/11: B.",
+	]
+	for proibido in ("CLT", "art.", "Lei ", "desconta", "pago", "remunerad", "folha"):
+		assert proibido not in to.MODELO_AVISO_ATRASO
+	assert "{atrasos}" in to.MODELO_AVISO_ATRASO and "{primeiro_nome}" in to.MODELO_AVISO_ATRASO

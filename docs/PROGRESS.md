@@ -2836,3 +2836,18 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
 - **Pendências:** primeira montagem no GitHub (conferir o Actions verde e deixar o pacote público); o tema do Desk
   (swift_theme) não entra na imagem (não temos o endereço do repositório dele); o cliente de backup automático
   externo (cópia dos backups para fora do servidor) fica para depois.
+
+## Tela Termos: atrasos no termo, aviso de atraso pelo WhatsApp, lista organizada (14/11/2026, pedido do RH)
+
+- **Atraso sem pendência no termo:** atraso/saída antecipada abaixo do mínimo da pendência (15 min) entra no termo
+  como **registro** (sem inconsistência; assinatura "Registro: ciente", nada muda no ponto). Fica de fora: hoje, dia
+  com pendência de atraso e dia já registrado num termo. Entra no termo individual (tudo) e no lote com "todas" ou
+  com o tipo "Atraso ou saída antecipada" escolhido. A Sugestão da semana continua só com pendências.
+- **Aviso de atraso pelo WhatsApp** (botão na tela Termos): mensagem neutra com os dias (`MODELO_AVISO_ATRASO`,
+  editável na tela), sem emitir termo, envio manual pelas travas do WhatsApp (interruptor, aceite, celular, ritmo),
+  uma vez por dia por pessoa.
+- **Tela:** Sugestão da semana em uma linha (nomes recolhidos), problemas em grupos (Batidas, Ausência, Horário,
+  Intervalo), lista com ordenação (mais críticos = soma das severidades; mais problemas; nome A–Z, lembrada no
+  navegador), coluna de gravidade, unidade sob o nome, total de atrasos por pessoa, mensagens recolhidas.
+- Testes: pytest 1561; Frappe `test_termo_ocorrencias` (15), `test_dia_seguinte` (16), `test_monitoramento_horistas`
+  (17) OK; `yarn lint` e `yarn build` OK. e2e não rodado.

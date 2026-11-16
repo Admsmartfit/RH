@@ -355,6 +355,55 @@ class TestTermoOcorrencias(FrappeTestCase):
 		self.assertIn("Batida faltando (entrada ou saída): 01/09", termo.texto_whatsapp)
 		self.assertTrue(termo.texto_whatsapp.endswith(f"({termo.name})"))
 
+	def test_atraso_sem_pendencia_no_lote_no_termo_e_no_aviso(self):
+		# RH, 14/11/2026: atraso abaixo do mínimo da pendência entra no termo como registro e pode ser avisado
+		from hrms_secullum_brasil.apuracao import testes_whatsapp
+
+		self.batidas(QUARTA, "08:12", "12:00", "13:00", "17:00")
+		atraso = frappe.db.get_value("Apuracao Diaria", {"employee": self.employee, "data": QUARTA}, "atraso")
+		self.assertGreater(atraso, 0)
+		self.assertIsNone(status_inc(self.employee, QUARTA, "atraso"))
+
+		def da_pessoa(tipos):
+			return [
+				p
+				for p in top.lote(tipos, str(QUARTA), str(QUARTA))["colaboradores"]
+				if p["employee"] == self.employee
+			]
+
+		self.assertEqual(da_pessoa(["falta"]), [])  # só com o tipo "atraso" escolhido
+		[p] = da_pessoa(["atraso"])
+		self.assertEqual(
+			(p["registros"], p["atraso_dias"], p["atraso_minutos"], p["inconsistencias"], p["severidade"]),
+			(1, 1, atraso, [], "Baixa"),
+		)
+		self.assertEqual(p["criticidade"], 1)
+
+		testes_whatsapp.ligar()
+		resumo = top.avisar_atrasos([self.employee], str(QUARTA), str(QUARTA))
+		self.assertEqual([e["dias"] for e in resumo["enviados"]], [1])
+		texto = frappe.db.get_value(
+			"Notificacao WhatsApp", {"employee": self.employee, "chave": ["like", "ATRS:%"]}, "texto"
+		)
+		self.assertIn("• 02/09: Entrada às 08:12", texto)
+		de_novo = top.avisar_atrasos([self.employee], str(QUARTA), str(QUARTA))
+		self.assertEqual(de_novo["ignorados"][0]["motivo"], "já avisado hoje")
+
+		with patch.object(top, "conta_de_email", return_value=None):
+			lote = top.emitir_lote([self.employee], ["atraso"], str(QUARTA), str(QUARTA))["resumo"]
+		termo = frappe.get_doc(top.DOCTYPE, lote["emitidos"][0]["name"])
+		[item] = termo.itens
+		self.assertEqual((item.tipos, item.inconsistencias or "", item.sem_horario), ("atraso", "", 1))
+		self.assertTrue(item.proposta.startswith("Entrada às 08:12"))
+		# já registrado num termo: não entra de novo
+		self.assertEqual(top.atrasos_sem_pendencia(QUARTA, QUARTA, {"employee": self.employee}), [])
+		self.confirmar(termo, "conforme")
+		termo.reload()
+		self.assertEqual(
+			(termo.itens[0].resposta, termo.itens[0].resultado), ("De acordo", "Registro: ciente.")
+		)
+		self.assertEqual(tratamentos(self.employee, QUARTA), [])
+
 	def test_comprovante_versao_previa_e_relatorio(self):
 		from hrms_secullum_brasil.reports.report.termos_de_ocorrencias.termos_de_ocorrencias import execute
 
