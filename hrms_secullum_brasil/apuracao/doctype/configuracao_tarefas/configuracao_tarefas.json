@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "creation": "2026-11-18 12:00:00.000000",
+ "description": "Quadro de tarefas (docs/PRD-quadro-tarefas.md): cartões automáticos (todos começam desligados; ligue um por vez) e o resumo da manhã.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "automacoes_section",
+  "auto_tarefa_secullum",
+  "auto_fechamento",
+  "auto_inconsistencia_alta",
+  "dias_inconsistencia",
+  "resumo_section",
+  "pausar_resumo"
+ ],
+ "fields": [
+  {
+   "fieldname": "automacoes_section",
+   "fieldtype": "Section Break",
+   "label": "Cartões automáticos"
+  },
+  {
+   "default": "0",
+   "description": "Um cartão para o RH por Tarefa Secullum pendente, com o passo a passo. Fecha sozinho quando a conferência confirma.",
+   "fieldname": "auto_tarefa_secullum",
+   "fieldtype": "Check",
+   "label": "Tarefa Secullum aberta"
+  },
+  {
+   "default": "0",
+   "description": "Um cartão para o RH por Fechamento de Ponto em rascunho com bloqueios. Fecha quando o fechamento é concluído.",
+   "fieldname": "auto_fechamento",
+   "fieldtype": "Check",
+   "label": "Fechamento de ponto bloqueado"
+  },
+  {
+   "default": "0",
+   "description": "Um cartão por colaborador para os gestores da unidade quando há inconsistência Alta aberta há mais dias úteis que o limite abaixo. Fecha quando todas forem tratadas.",
+   "fieldname": "auto_inconsistencia_alta",
+   "fieldtype": "Check",
+   "label": "Inconsistência Alta parada"
+  },
+  {
+   "default": "2",
+   "depends_on": "auto_inconsistencia_alta",
+   "fieldname": "dias_inconsistencia",
+   "fieldtype": "Int",
+   "label": "Dias úteis parada",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "resumo_section",
+   "fieldtype": "Section Break",
+   "label": "Resumo da manhã"
+  },
+  {
+   "default": "0",
+   "description": "O resumo sai às 8h, de segunda a sábado: uma mensagem por pessoa com as tarefas abertas (só para quem escolheu WhatsApp ou e-mail na preferência). Marque para pausar para todos.",
+   "fieldname": "pausar_resumo",
+   "fieldtype": "Check",
+   "label": "Pausar o resumo da manhã"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Configuracao Tarefas",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

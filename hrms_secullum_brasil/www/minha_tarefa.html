@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="noindex" />
+	<title>Sua tarefa</title>
+	<style>
+		:root { --fundo: #f8fafc; --texto: #0f172a; --suave: #475569; --borda: #cbd5e1; --primario: #1d4ed8; --perigo: #b91c1c; --ok: #15803d; }
+		@media (prefers-color-scheme: dark) { :root { --fundo: #0f172a; --texto: #f1f5f9; --suave: #b6c2d3; --borda: #334155; --primario: #93c5fd; --perigo: #fca5a5; --ok: #86efac; } }
+		* { box-sizing: border-box; }
+		body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--fundo); color: var(--texto); }
+		main { max-width: 30rem; margin: 0 auto; padding: 1rem; }
+		h1 { font-size: 1.25rem; }
+		.tarefa { border: 1px solid var(--borda); border-radius: 0.5rem; padding: 1rem; }
+		.tarefa h2 { font-size: 1.1rem; margin: 0 0 0.25rem; }
+		ul { padding-left: 1.25rem; }
+		label { display: block; margin-top: 1rem; font-weight: 600; }
+		textarea { width: 100%; min-height: 4.5rem; margin-top: 0.25rem; padding: 0.5rem; border-radius: 0.375rem; border: 1px solid var(--borda); background: transparent; color: inherit; font: inherit; }
+		.botoes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+		button { min-height: 48px; flex: 1; padding: 0.5rem 1rem; border-radius: 0.375rem; border: 1px solid var(--primario); background: var(--primario); color: var(--fundo); font: inherit; font-weight: 600; cursor: pointer; }
+		button.nao { background: transparent; color: var(--perigo); border-color: var(--perigo); }
+		button:disabled { opacity: 0.6; cursor: wait; }
+		.suave { color: var(--suave); } .erro { color: var(--perigo); } .ok { color: var(--ok); }
+	</style>
+</head>
+<body>
+{{ faixa_teste or "" }}
+	<main>
+		<h1>Sua tarefa</h1>
+		<p id="cabecalho" class="suave">Carregando…</p>
+		<section id="tarefa" class="tarefa" aria-label="Tarefa" hidden>
+			<h2 id="titulo"></h2>
+			<p id="prazo" class="suave"></p>
+			<p id="descricao"></p>
+			<ul id="checklist"></ul>
+		</section>
+		<form id="form" hidden>
+			<label for="comentario">Quer deixar um recado? (opcional)</label>
+			<textarea id="comentario" maxlength="500"></textarea>
+			<div class="botoes">
+				<button type="button" id="feito">Feito</button>
+				<button type="button" class="nao" id="nao">Não consigo</button>
+			</div>
+		</form>
+		<p id="status" role="status" aria-live="polite"></p>
+	</main>
+	<script>
+		const API = "/api/method/hrms_secullum_brasil.apuracao.tarefas";
+		const token = new URLSearchParams(location.search).get("token") || "";
+		const $ = (id) => document.getElementById(id);
+		const br = (iso) => iso.slice(0, 10).split("-").reverse().join("/");
+		function status(texto, classe) {
+			$("status").className = classe || "";
+			$("status").textContent = texto;
+		}
+
+		async function carregar() {
+			const r = await fetch(`${API}.dados_colaborador?token=${encodeURIComponent(token)}`);
+			const corpo = await r.json().catch(() => ({}));
+			if (!r.ok) {
+				$("cabecalho").className = "erro";
+				$("cabecalho").textContent = "Link inválido. Fale com o seu gestor.";
+				return;
+			}
+			const d = corpo.message;
+			$("cabecalho").textContent = d.nome ? `${d.nome}, esta é a tarefa que pediram para você:` : "Esta é a sua tarefa:";
+			$("tarefa").hidden = false;
+			$("titulo").textContent = d.titulo;
+			$("prazo").textContent = d.prazo ? `Prazo: ${br(d.prazo)}` : "";
+			$("descricao").textContent = d.descricao || "";
+			$("checklist").replaceChildren(...(d.checklist || []).map((item) => Object.assign(document.createElement("li"), { textContent: item })));
+			if (d.aberta) $("form").hidden = false;
+			else status(`Esta tarefa já foi encerrada (${d.situacao}). Obrigado!`, "suave");
+			if (d.resposta) status(`Sua resposta: ${d.resposta}`, "suave");
+		}
+
+		async function responder(resposta) {
+			$("feito").disabled = $("nao").disabled = true;
+			const r = await fetch(`${API}.responder_colaborador`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", "X-Frappe-CSRF-Token": "{{ csrf_token or '' }}" },
+				body: JSON.stringify({ token, resposta, comentario: $("comentario").value }),
+			});
+			$("feito").disabled = $("nao").disabled = false;
+			if (!r.ok) return status("Não foi possível responder: a tarefa pode ter sido encerrada.", "erro");
+			$("form").hidden = true;
+			status(resposta === "Feito" ? "Obrigado! Seu gestor foi avisado." : "Tudo bem, obrigado por avisar. Seu gestor vai falar com você.", "ok");
+		}
+
+		$("feito").addEventListener("click", () => responder("Feito"));
+		$("nao").addEventListener("click", () => responder("Não consigo"));
+		carregar();
+	</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-11-18 12:00:00.000000",
+ "description": "\"Ocultar até…\" de um cartão ou \"Silenciar este tipo\" no quadro de tarefas. Vale só para o usuário.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "cartao",
+  "origem_tipo",
+  "ate"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Usuário",
+   "options": "User",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "cartao",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cartão",
+   "options": "Cartao de Tarefa"
+  },
+  {
+   "fieldname": "origem_tipo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tipo silenciado"
+  },
+  {
+   "fieldname": "ate",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Até",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Tarefa Oculta",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

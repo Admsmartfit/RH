@@ -26,6 +26,13 @@ const routes = [
 				meta: { titulo: "Escalas" },
 			},
 			{
+				// docs/PRD-quadro-tarefas.md: /ponto/minha-tarefa é a página sem login do colaborador
+				path: "tarefas",
+				name: "Tarefas",
+				component: () => import("@/pages/Tarefas.vue"),
+				meta: { titulo: "Tarefas" },
+			},
+			{
 				path: "termos",
 				name: "Termos",
 				component: () => import("@/pages/Termos.vue"),

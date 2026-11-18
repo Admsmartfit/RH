@@ -1,7 +1,11 @@
 # PRD — Quadro de tarefas (estilo Trello) e retirada do planejador
 
-**Situação:** respostas do RH incluídas (18/11/2026). A retirada do planejador (etapa 1) está liberada. O resto
-espera a confirmação do resumo diário (seção 9).
+**Situação:** aprovado e implementado em 18/11/2026 (etapas 1 a 6). Ajustes feitos na implementação:
+
+- o prazo é só a data (sem hora);
+- a tarefa que se repete ganha o próximo cartão quando é concluída (assim nunca há dois abertos);
+- o quadro se atualiza sozinho a cada minuto, em vez de em tempo real;
+- o resumo da manhã vem ligado; a Configuração Tarefas tem "Pausar o resumo da manhã".
 
 ## 1. Objetivo
 

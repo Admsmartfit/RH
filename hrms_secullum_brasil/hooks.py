@@ -156,6 +156,8 @@ website_route_rules = [
 	# docs/PRD-substituicoes.md: oferta de cobertura e cadastro do Banco de Talentos (QR Code da unidade)
 	{"from_route": "/ponto/cobertura", "to_route": "cobertura"},
 	{"from_route": "/ponto/talentos", "to_route": "talentos"},
+	# docs/PRD-quadro-tarefas.md (2.1): a tarefa do colaborador da equipe, pelo link do WhatsApp
+	{"from_route": "/ponto/minha-tarefa", "to_route": "minha_tarefa"},
 	{"from_route": "/ponto/<path:app_path>", "to_route": "ponto"},
 ]
 
@@ -252,7 +254,12 @@ scheduler_events = {
 			"hrms_secullum_brasil.apuracao.regras_whatsapp.enviar_ponto_do_dia",
 			# docs/PRD-cockpit-escalas.md (CE-11): rascunho a menos de 48h do dia vira inconsistência
 			"hrms_secullum_brasil.apuracao.cockpit_escala.avisar_rascunhos_esquecidos",
+			# docs/PRD-quadro-tarefas.md: cartões automáticos (fontes ligadas) e atraso de 2 dias úteis ao RH
+			"hrms_secullum_brasil.apuracao.tarefas_auto.sincronizar",
+			"hrms_secullum_brasil.apuracao.tarefas.avisar_atrasos",
 		],
+		# docs/PRD-quadro-tarefas.md (3.4): resumo da manhã, de segunda a sábado
+		"0 8 * * 1-6": ["hrms_secullum_brasil.apuracao.tarefas.resumo_da_manha"],
 		# AJ-11: feriados do ano seguinte, todo 1º de dezembro
 		"0 6 1 12 *": ["hrms_secullum_brasil.apuracao.feriados.gerar_ano_seguinte"],
 		# AJ-08: contribuições da CCT da folha anterior, todo dia 1º
@@ -285,6 +292,7 @@ scheduler_events = {
 		"hrms_secullum_brasil.apuracao.jornada_assinatura.acompanhar",
 		# docs/PRD-planejador-5x2.md (PE-01): lembra o RH de ativar o regime de jornada preparado (EC 141/2026)
 		"hrms_secullum_brasil.configuracao_ponto.regime_jornada.lembrar",
+		"hrms_secullum_brasil.apuracao.tarefas.limpar_ocultacoes_vencidas",
 	],
 }
 
@@ -313,9 +321,12 @@ permission_query_conditions = {
 	"Termo de Ocorrencias": f"{_PERM}.condicao_termo_ocorrencias",
 	"Resposta WhatsApp Ponto": f"{_PERM}.condicao_resposta_whatsapp",
 	"Aceite WhatsApp": f"{_PERM}.condicao_aceite_whatsapp",
+	# docs/PRD-quadro-tarefas.md: o RH vê tudo; o gestor, as suas unidades e o que é dele
+	"Cartao de Tarefa": "hrms_secullum_brasil.apuracao.tarefas.condicao",
 }
 has_permission = {
 	"File": f"{_PERM}.permissao_arquivo",
+	"Cartao de Tarefa": "hrms_secullum_brasil.apuracao.tarefas.tem_permissao",
 	**{
 		doctype: f"{_PERM}.tem_permissao"
 		for doctype in (

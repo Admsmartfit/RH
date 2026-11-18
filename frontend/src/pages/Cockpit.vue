@@ -35,6 +35,19 @@
 			Jornada legal em vigor: {{ r.regime.atual }} · {{ r.regime.teto_horas }}h semanais · {{ r.regime.folgas }} folga(s) por semana
 		</p>
 
+		<!-- docs/PRD-quadro-tarefas.md (seção 4): atalho para o quadro -->
+		<router-link
+			v-if="tarefas?.data?.abertas"
+			:to="{ name: 'Tarefas', query: route.query }"
+			class="flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm"
+			:class="tarefas.data.atrasadas ? 'border-perigo bg-perigo-suave text-perigo-texto' : 'border-borda bg-superficie'"
+			data-testid="minhas-tarefas"
+		>
+			<strong>Minhas tarefas: {{ tarefas.data.abertas }}</strong>
+			<span v-if="tarefas.data.atrasadas">({{ tarefas.data.atrasadas }} atrasada{{ tarefas.data.atrasadas > 1 ? "s" : "" }})</span>
+			<span class="underline">abrir o quadro</span>
+		</router-link>
+
 		<Bloco titulo="Números do mês" :recurso="resumo">
 			<template #carregando><SkeletonCockpit /></template>
 			<div v-if="r" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -250,7 +263,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, inject, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { call, createResource } from "frappe-ui";
 import {
@@ -278,6 +291,7 @@ import { dataBR, nomeDaCompetencia } from "@/utils/tempo";
 
 const route = useRoute();
 const { filtros, parametros } = useFiltros();
+const tarefas = inject("tarefas", null); // contagem do quadro (Layout)
 
 const resumo = createResource({
 	url: "hrms_secullum_brasil.apuracao.painel.resumo",

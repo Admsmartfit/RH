@@ -354,6 +354,22 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   manual pelas travas de `whatsapp.enviar`, uma vez por dia por pessoa (`ATRS:`). Grupos dos problemas e gravidade
   ("mais críticos") vêm do engine (`GRUPOS`, `criticidade`; todo tipo de `NOMES` num grupo, há teste).
 
+## Quadro de tarefas — docs/PRD-quadro-tarefas.md
+
+- Regra pura em `engine/tarefas.py` (colunas fixas, ordem, atraso em dias úteis, atalhos do título `@nome`/`!urgente`/
+  prazo no fim, pilhas, ocultos, repetição, textos dos avisos); Frappe em `apuracao/tarefas.py` (tela, permissões,
+  avisos, página sem login `/ponto/minha-tarefa`) e `apuracao/tarefas_auto.py` (cartões automáticos); tela
+  `pages/Tarefas.vue`, `components/tarefas/` e o sininho no Layout.
+- Visibilidade do `Cartao de Tarefa` por `tarefas.condicao`/`tem_permissao` (RH vê tudo; gestor, as suas unidades e o
+  que é dele). Endpoints gravam com `ignore_permissions` **depois** de `_exigir`/`_checar_destino`.
+- Avisos: sininho = `Notification Log` do cartão (`tarefas.notificar`); WhatsApp só por `whatsapp.enviar` (gestor/RH
+  por `whatsapp_ao_usuario`; colaborador da equipe só com aceite, por `enviar_ao_colaborador`). Uma mensagem de resumo
+  por dia por pessoa (`resumo_da_manha`, 8h seg-sáb, só com preferência WhatsApp/E-mail).
+- Cartão automático novo: função em `tarefas_auto` que chama `garantir(tipo, chave, ...)` e devolve as chaves abertas
+  (o `sincronizar` fecha as outras), tipo em `engine/tarefas.TIPOS_AUTOMATICOS` e liga/desliga na `Configuracao
+  Tarefas` (começa desligado). Caso encerrado (concluído ou descartado) não renasce para a mesma chave.
+- "Ocultar" e "Silenciar" valem só para quem fez (`Tarefa Oculta`) e nunca resolvem: o atraso continua contando.
+
 ## Jornada legal com vigência — docs/PRD-planejador-5x2.md (PE-01)
 
 - **Nunca** use `defaults_legais.CARGA_SEMANAL_MAXIMA_MIN` nem `DIVISOR_PADRAO` direto no Frappe: leia o regime da

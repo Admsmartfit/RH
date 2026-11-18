@@ -1,0 +1,59 @@
+{
+ "actions": [],
+ "autoname": "field:user",
+ "creation": "2026-11-18 12:00:00.000000",
+ "description": "Como cada pessoa recebe o resumo da manhã do quadro de tarefas.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "canal"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Usuário",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Só no painel",
+   "fieldname": "canal",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Resumo da manhã",
+   "options": "Só no painel\nWhatsApp\nE-mail",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Preferencia de Tarefas",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

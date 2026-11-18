@@ -2866,3 +2866,39 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   `testes.localhost` (0 DocTypes/tabelas restantes).
 - Testes: pytest 1509 (cobertura 97,7%); ruff OK; Frappe `test_acesso` (4), `test_cockpit_escala` (17),
   `test_cobertura` (14) OK; `yarn lint` e `yarn build` OK. e2e não rodado (`foco.spec` ajustado ao menu).
+
+## Quadro de tarefas no painel (18/11/2026, pedido do RH; docs/PRD-quadro-tarefas.md)
+
+- **Tela /ponto/tarefas:**
+  - 4 colunas fixas (A fazer, Fazendo, Aguardando, Feito) e filtros Minhas/Todas/Atrasadas, unidade, origem,
+    prioridade e busca;
+  - arrastar ou "Mover para…"; "+ Nova tarefa" com atalhos (`@nome`, `!urgente`, prazo no fim) e prévia do que foi
+    entendido;
+  - painel lateral do cartão: prazo, para quem (pessoa, RH, gestores da unidade, alguém da equipe), checklist,
+    anexos, comentários com @menção e histórico;
+  - "Pegar para mim" nos cartões de grupo;
+  - atualiza sozinho a cada minuto.
+- **Sem poluição:**
+  - automáticos iguais viram pilha;
+  - "Ocultar até…", "Silenciar este tipo" (1/7/30 dias, só para quem silenciou) e "Não mostrar mais" (com motivo);
+  - botão "Ocultos".
+- **Avisos:**
+  - sininho no topo do painel e número no menu;
+  - atalho "Minhas tarefas" no Cockpit;
+  - Urgente sai também pelo WhatsApp;
+  - atraso de 2 dias úteis avisa o RH uma vez;
+  - resumo da manhã (8h, seg-sáb) só para quem escolheu WhatsApp ou E-mail.
+- **Equipe sem acesso:** WhatsApp só com aceite, com link pessoal `/ponto/minha-tarefa` (Feito / Não consigo +
+  recado); sem aceite, o cartão avisa "avise pessoalmente".
+- **Cartões automáticos** (Configuracao Tarefas, todos desligados):
+  - Tarefa Secullum aberta;
+  - fechamento de ponto bloqueado (`FechamentodePonto.bloqueios()`, extraído do `before_submit`);
+  - inconsistência Alta parada há N dias úteis (um cartão por colaborador, para os gestores da unidade).
+  - Fecham sozinhos quando o caso se resolve.
+- **Cadastros:** Cartao de Tarefa (+ Item de Checklist de Tarefa), Tarefa Oculta, Preferencia de Tarefas,
+  Configuracao Tarefas. Jobs: `tarefas_auto.sincronizar` e `tarefas.avisar_atrasos` (hora em hora),
+  `tarefas.resumo_da_manha` (8h seg-sáb), `limpar_ocultacoes_vencidas` (diário). Guia do Nahel `quadro-tarefas`.
+- **Pendências:**
+  - ligar as automações na operação, uma por vez;
+  - cada pessoa escolher o canal do resumo;
+  - rodar o e2e (`foco.spec` ajustado ao menu novo).

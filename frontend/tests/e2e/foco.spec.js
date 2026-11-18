@@ -14,7 +14,7 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	await page.goto("/ponto?competencia=2026-08&company=ES%20Fitness%20Ltda");
 	await expect(page.getByTestId("inconsistencias-abertas")).toHaveText("24");
 	const ordem = [];
-	for (let n = 0; n < 20; n++) {
+	for (let n = 0; n < 24; n++) {
 		await page.keyboard.press("Tab");
 		ordem.push(
 			await page.evaluate(() => {
@@ -33,13 +33,15 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	ordem.length = 0;
 	ordem.push(...campos);
 	expect(ordem[0]).toBe("Pular para o conteúdo");
-	expect(ordem.slice(1, 10)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Escalas", "Termos", "Banco de Talentos", "Colaborador", "Abrir no Desk", "Ajuda Ctrl K"]);
-	expect(ordem[10]).toContain("Competência");
-	expect(ordem[12]).toContain("Empresa");
-	expect(ordem[13]).toContain("Filial");
-	expect(ordem[14]).toContain("Departamento");
-	expect(ordem[15]).toContain("Status");
-	expect(ordem[16]).toContain("Ver lista");
+	// "Tarefas" e o sininho de "Avisos" podem trazer o número de abertas/não lidas no rótulo
+	const sem_numero = ordem.map((r) => r.replace(/,.*$/, ""));
+	expect(sem_numero.slice(1, 12)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Escalas", "Tarefas", "Termos", "Banco de Talentos", "Colaborador", "Abrir no Desk", "Avisos", "Ajuda Ctrl K"]);
+	expect(ordem[12]).toContain("Competência");
+	expect(ordem[14]).toContain("Empresa");
+	expect(ordem[15]).toContain("Filial");
+	expect(ordem[16]).toContain("Departamento");
+	expect(ordem[17]).toContain("Status");
+	expect(ordem[18]).toContain("Ver lista");
 });
 
 test("o 'Pular para o conteúdo' leva o foco ao conteúdo principal", async ({ page }) => {

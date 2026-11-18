@@ -64,7 +64,8 @@ class FechamentodePonto(Document):
 		self.pendencias = "\n".join(pendencias(self.company, self.periodo_inicio, self.periodo_fim)) or None
 		return self
 
-	def before_submit(self):
+	def bloqueios(self) -> list[str]:
+		"""O que impede fechar (também lido pelo cartão automático do quadro de tarefas)."""
 		from hrms_secullum_brasil.ingestion.conferencia_secullum import bloqueios_do_fechamento
 
 		bloqueios = pendencias(self.company, self.periodo_inicio, self.periodo_fim)
@@ -72,7 +73,10 @@ class FechamentodePonto(Document):
 		# docs/PRD-sincronizacao-secullum.md: envios com erro/divergência e tarefas no Secullum pendentes
 		from hrms_secullum_brasil.ingestion.sincronizacao import bloqueios_do_fechamento as da_sincronizacao
 
-		bloqueios += da_sincronizacao(self)
+		return bloqueios + da_sincronizacao(self)
+
+	def before_submit(self):
+		bloqueios = self.bloqueios()
 		if bloqueios:
 			frappe.throw(bloqueios, title=_("O período não pode ser fechado"), as_list=True)
 		calcular(self)

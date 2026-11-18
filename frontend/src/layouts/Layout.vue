@@ -19,8 +19,18 @@
 								class="whitespace-nowrap rounded-md px-2.5 py-1.5 font-medium text-texto-suave hover:bg-superficie-suave"
 								active-class="!bg-primario-suave !text-primario-texto"
 								:exact-active-class="item.exato ? '!bg-primario-suave !text-primario-texto' : ''"
+								:aria-label="item.contador && tarefas.data?.abertas ? `${item.rotulo}, ${tarefas.data.abertas} aberta(s)` : item.rotulo"
 							>
 								{{ item.rotulo }}
+								<!-- docs/PRD-quadro-tarefas.md: minhas abertas; vermelho quando alguma atrasou -->
+								<span
+									v-if="item.contador && tarefas.data?.abertas"
+									class="ml-0.5 rounded-full px-1.5 text-[10px] font-semibold"
+									:class="tarefas.data.atrasadas ? 'bg-perigo text-white' : 'bg-superficie-suave text-texto-suave'"
+									aria-hidden="true"
+								>
+									{{ tarefas.data.abertas }}
+								</span>
 							</router-link>
 						</li>
 						<li v-if="sessao.data?.pode_abrir_desk">
@@ -31,6 +41,7 @@
 					</ul>
 				</nav>
 				<div class="ml-auto flex shrink-0 items-center gap-3">
+					<SinoTarefas />
 					<!-- docs/PRD-ajuda-nahel.md: ajuda passo a passo (Ctrl+K) -->
 					<NahelAssistente v-if="sessao.data?.nahel" />
 					<p class="max-w-[10rem] truncate text-sm text-texto-suave" :title="sessao.data?.nome">{{ sessao.data?.nome }}</p>
@@ -47,13 +58,22 @@
 </template>
 
 <script setup>
-import { computed, provide } from "vue";
+import { computed, provide, watch } from "vue";
 import { useRoute } from "vue-router";
 import { createResource } from "frappe-ui";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo.vue";
 import NahelAssistente from "@/components/NahelAssistente.vue";
+import SinoTarefas from "@/components/tarefas/SinoTarefas.vue";
 
 const route = useRoute();
+
+// docs/PRD-quadro-tarefas.md: o número no menu "Tarefas" (minhas abertas e atrasadas); recontado a cada troca de tela
+const tarefas = createResource({ url: "hrms_secullum_brasil.apuracao.tarefas.contagem", auto: true });
+watch(
+	() => route.fullPath,
+	() => tarefas.reload()
+);
+provide("tarefas", tarefas);
 
 // `soAdmin: true` = item só do administrador (o servidor também recusa)
 const MENU = [
@@ -61,6 +81,7 @@ const MENU = [
 	{ nome: "Inconsistencias", rotulo: "Inconsistências" },
 	{ nome: "Cartao", rotulo: "Cartão ponto" },
 	{ nome: "Escalas", rotulo: "Escalas" },
+	{ nome: "Tarefas", rotulo: "Tarefas", contador: true },
 	{ nome: "Termos", rotulo: "Termos" },
 	{ nome: "BancoTalentos", rotulo: "Banco de Talentos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },

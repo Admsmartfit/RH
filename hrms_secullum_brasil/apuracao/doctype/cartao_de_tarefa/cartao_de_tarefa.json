@@ -1,0 +1,317 @@
+{
+ "actions": [],
+ "autoname": "TAR-.#####",
+ "creation": "2026-11-18 12:00:00.000000",
+ "description": "Cartão do quadro de tarefas do painel /ponto (docs/PRD-quadro-tarefas.md).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "titulo",
+  "descricao",
+  "coluna",
+  "prioridade",
+  "prazo",
+  "column_break_resp",
+  "responsavel_tipo",
+  "responsavel",
+  "colaborador_responsavel",
+  "colaborador_nome",
+  "acompanhante",
+  "company",
+  "employee",
+  "employee_name",
+  "checklist_section",
+  "checklist",
+  "origem_section",
+  "origem",
+  "origem_tipo",
+  "origem_chave",
+  "origem_doctype",
+  "origem_nome",
+  "link_origem",
+  "column_break_origem",
+  "repetir",
+  "repetir_dia",
+  "fechamento_section",
+  "concluida_em",
+  "concluida_por",
+  "motivo_descarte",
+  "resposta_colaborador",
+  "column_break_fech",
+  "avisado_atraso",
+  "notificacao_whatsapp"
+ ],
+ "fields": [
+  {
+   "fieldname": "titulo",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Título",
+   "length": 200,
+   "reqd": 1
+  },
+  {
+   "fieldname": "descricao",
+   "fieldtype": "Small Text",
+   "label": "Descrição"
+  },
+  {
+   "default": "A fazer",
+   "fieldname": "coluna",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Coluna",
+   "options": "A fazer\nFazendo\nAguardando\nFeito\nDescartado",
+   "reqd": 1
+  },
+  {
+   "default": "Normal",
+   "fieldname": "prioridade",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Prioridade",
+   "options": "Urgente\nAlta\nNormal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prazo",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Prazo"
+  },
+  {
+   "fieldname": "column_break_resp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pessoa",
+   "description": "Pessoa: um usuário do painel. RH / Gestores da unidade: o grupo; o primeiro que pegar vira o dono. Colaborador: alguém da equipe, só pelo WhatsApp (com aceite).",
+   "fieldname": "responsavel_tipo",
+   "fieldtype": "Select",
+   "label": "Para",
+   "options": "Pessoa\nRH\nGestores da unidade\nColaborador",
+   "reqd": 1
+  },
+  {
+   "fieldname": "responsavel",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Responsável",
+   "options": "User"
+  },
+  {
+   "fieldname": "colaborador_responsavel",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Colaborador responsável",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "colaborador_responsavel.employee_name",
+   "fieldname": "colaborador_nome",
+   "fieldtype": "Data",
+   "label": "Nome do colaborador responsável",
+   "read_only": 1
+  },
+  {
+   "description": "Quem acompanha (o gestor que criou a tarefa da equipe).",
+   "fieldname": "acompanhante",
+   "fieldtype": "Link",
+   "label": "Acompanhante",
+   "options": "User"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Unidade",
+   "options": "Company"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Colaborador relacionado",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Nome do colaborador relacionado",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checklist_section",
+   "fieldtype": "Section Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "Item de Checklist de Tarefa"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "origem_section",
+   "fieldtype": "Section Break",
+   "label": "Origem e repetição"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "origem",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Origem",
+   "options": "Manual\nAutomática",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_tipo",
+   "fieldtype": "Data",
+   "label": "Tipo automático",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_chave",
+   "fieldtype": "Data",
+   "label": "Chave da origem",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_doctype",
+   "fieldtype": "Link",
+   "label": "Documento de origem (tipo)",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "origem_nome",
+   "fieldtype": "Dynamic Link",
+   "label": "Documento de origem",
+   "options": "origem_doctype",
+   "read_only": 1
+  },
+  {
+   "fieldname": "link_origem",
+   "fieldtype": "Data",
+   "label": "Endereço da origem",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_origem",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "repetir",
+   "fieldtype": "Select",
+   "label": "Repetir",
+   "options": "\nSemanal\nMensal"
+  },
+  {
+   "depends_on": "repetir",
+   "description": "Semanal: 0 = segunda ... 6 = domingo. Mensal: dia do mês (31 = último dia).",
+   "fieldname": "repetir_dia",
+   "fieldtype": "Int",
+   "label": "Dia da repetição"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "fechamento_section",
+   "fieldtype": "Section Break",
+   "label": "Conclusão"
+  },
+  {
+   "fieldname": "concluida_em",
+   "fieldtype": "Datetime",
+   "label": "Concluída em",
+   "read_only": 1
+  },
+  {
+   "fieldname": "concluida_por",
+   "fieldtype": "Link",
+   "label": "Concluída por",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motivo_descarte",
+   "fieldtype": "Small Text",
+   "label": "Motivo do descarte",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resposta_colaborador",
+   "fieldtype": "Small Text",
+   "label": "Resposta do colaborador",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fech",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "avisado_atraso",
+   "fieldtype": "Check",
+   "label": "RH avisado do atraso",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notificacao_whatsapp",
+   "fieldtype": "Link",
+   "label": "WhatsApp ao colaborador",
+   "options": "Notificacao WhatsApp",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-18 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Apuracao",
+ "name": "Cartao de Tarefa",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "RH Ponto",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Gestor Ponto"
+  }
+ ],
+ "search_fields": "responsavel,coluna",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "titulo",
+ "track_changes": 1
+}
