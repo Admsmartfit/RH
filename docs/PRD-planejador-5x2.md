@@ -1,5 +1,7 @@
 # PRD — Planejador inteligente de escalas 5x2 (EC nº 141/2026)
 
+> **Planejador retirado em 18/11/2026** (pedido do RH). Continua valendo daqui só o **regime de jornada legal com vigência** (PE-01). Ver docs/PRD-quadro-tarefas.md, seção 6.
+
 Este PRD revisa e amplia a proposta do RH "PRD: Módulo Simulador de Transição 5x2 (Smart Scheduler)" (PDF, 29/10/2026).
 A proposta é de um simulador; este PRD faz dele um **planejador**: lê o ponto real, entende as regras novas, gera
 propostas de escala otimizadas e explica cada uma. A escala escolhida é lançada **à mão** pelo gestor na tela Escalas (DP-9) e a apuração passa a seguir a jornada legal vigente em cada data.

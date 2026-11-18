@@ -93,7 +93,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Escalas",
-   "link_count": 12,
+   "link_count": 10,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -193,29 +193,6 @@
    "label": "Alterações de horário (assinatura)",
    "link_count": 0,
    "link_to": "Alteracao de Jornada",
-   "link_type": "DocType",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "doctype": "Workspace Link",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Planejador de escalas 5x2 (painel)",
-   "link_count": 0,
-   "link_to": null,
-   "link_type": "URL",
-   "onboard": 0,
-   "type": "Link",
-   "url": "/ponto/planejador"
-  },
-  {
-   "doctype": "Workspace Link",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Simulações de escala",
-   "link_count": 0,
-   "link_to": "Simulacao de Escala",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

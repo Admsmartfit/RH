@@ -5,10 +5,8 @@ from pathlib import Path
 
 ENGINE_DIR = Path(__file__).resolve().parent.parent
 APP_DIR = ENGINE_DIR.parent
-PACOTES_PUROS = (ENGINE_DIR, APP_DIR / "integrations", APP_DIR / "otimizacao")
+PACOTES_PUROS = (ENGINE_DIR, APP_DIR / "integrations")
 PACOTES_PROIBIDOS = ("frappe", "erpnext", "hrms")
-# o engine fica só com a biblioteca padrão: o otimizador (OR-Tools) mora em otimizacao/ (docs/PRD-planejador-5x2.md)
-SO_FORA_DO_ENGINE = ("ortools",)
 
 
 def _eh_proibido(nome: str, proibidos=PACOTES_PROIBIDOS) -> bool:

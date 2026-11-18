@@ -138,7 +138,7 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   `configuracao_ponto/turnos.py`: `dados_turno`, `salvar_turno`, `excluir_turno`; permissões do DocType; em uso só
   fica inativo).
 - **Entrada** (`utils/acesso.py`): todo usuário do painel entra no /ponto (e o `/` redireciona); só RH Ponto e
-  System Manager abrem o Desk (`barrar_desk`); o planejador é só do System Manager. Tela nova só para admin usa
+  System Manager abrem o Desk (`barrar_desk`). Tela nova só para admin usa
   `sessao.admin`; link para o Desk só com `sessao.pode_abrir_desk`.
 - Novo tipo de inconsistência ou status de apuração entra também no `BadgeStatus` (`frontend/src/components/BadgeStatus.vue`) e nos nomes/grupos da central (`frontend/src/utils/inconsistencias.js`).
 - Antes de concluir mudança no `frontend/`: `yarn lint` e `yarn build` (e, no ambiente `docker/` com o `bench start` ligado, `yarn test:e2e`), além do que este arquivo já pede.
@@ -270,7 +270,7 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
 ## Cockpit de escalas e tratamento de inconsistências — docs/PRD-cockpit-escalas.md e docs/PRD-tratamento-inconsistencias.md
 
 - **Horas sem ninguém** na tela Escalas (RH, 11/11/2026): regra pura em `engine/escala_cobertura.py` (funcionamento
-  igual ao do planejador, pausa não é furo); `cockpit_escala.mes` devolve `cobertura` por dia (de hoje em diante) e a
+  em `FUNCIONAMENTO`, pausa não é furo); `cockpit_escala.mes` devolve `cobertura` por dia (de hoje em diante) e a
   tela só mostra um sinal por dia e o balão.
 - **Validação da escala** só no engine: `engine/escala_validacao.py` (quebras, soluções A/B, `ajustar_repouso`),
   `engine/escala_custo.py` (custo previsto; nunca gera verba — DE-3), `engine/escala_equidade.py`,
@@ -354,28 +354,12 @@ Leia este arquivo e `docs/PROGRESS.md` no início de **cada** etapa. A especific
   manual pelas travas de `whatsapp.enviar`, uma vez por dia por pessoa (`ATRS:`). Grupos dos problemas e gravidade
   ("mais críticos") vêm do engine (`GRUPOS`, `criticidade`; todo tipo de `NOMES` num grupo, há teste).
 
-## Jornada legal com vigência e planejador 5x2 — docs/PRD-planejador-5x2.md
+## Jornada legal com vigência — docs/PRD-planejador-5x2.md (PE-01)
 
 - **Nunca** use `defaults_legais.CARGA_SEMANAL_MAXIMA_MIN` nem `DIVISOR_PADRAO` direto no Frappe: leia o regime da
   data por `configuracao_ponto/regime_jornada.py` (`teto_semanal`, `divisor_padrao`, `contar_dias`, `folgas_faltando`);
   a regra pura é `engine/regime_jornada.py`. Os regimes da EC 141/2026 ficam **Preparados** e só valem quando o RH
   ativa (`regime_jornada.ativar`, data depois do último fechamento); a semana da troca tem teto proporcional.
-- O planejador de escalas é **só simulação**: nunca grava escala, rascunho, alteração de jornada ou cadastro; o
-  gestor lança à mão na tela Escalas (lista "o que mudar", painel de consulta e exportação).
-- Regra pura do planejador em `engine/planejador/` (modelos, demanda, turnos, restrições, custo, índice, avaliação,
-  heurística); o otimizador CP-SAT fica em `otimizacao/` (pode importar `ortools`; o engine não — há teste). O Frappe
-  (`apuracao/planejador.py`, DocType Simulacao de Escala) só lê dados, roda em fila e confere cada proposta com o
-  `escala_validacao` do cockpit (DP-5). O custo do horista considera o mínimo semanal pago (complemento).
-- **Montar escala dos instrutores** (docs/PRD-planejador-instrutores.md): regra pura em
-  `engine/planejador/montagem.py` (cobertura por hora 05h–23h, pausa acima de 4 h, pendências, rodízio, custo, equipe
-  da simulação, leitura da lista colada); Frappe em `apuracao/planejamento_escala.py` (DocType `Planejamento de
-  Escala`, só System Manager, cargo INSTRUTOR, mês do calendário). Também **só simulação**: nunca grava Escala Mensal,
-  Rascunho de Escala nem cadastro (há teste); a impressão é `templates/planejamento_escala.html`.
-  Não mudar muito o horário de quem já trabalha (RH, 10/11/2026): o horário de hoje é `membro.hoje`; o limite
-  (`parametros.mudanca_max`, padrão 60) e a regra das 6 h (`regra_6h`: liberados | cobrir) valem no rodízio, em
-  `tapar_buracos` e em `sugestoes`. Instruções em texto só por `engine/planejador/instrucoes.py` (frases conhecidas;
-  o que não entende, avisa; nada de IA). No otimizador, `Premissas.mudanca_max_entrada` filtra os turnos
-  (`turnos.perto_de_hoje`).
-- **Modelo da rede** (docs/PRD-modelo-rede.md, ex.: o da Smart): regra pura em `engine/planejador/modelo_rede.py`
-  (encaixe pelo horário mais perto, grade no modelo, comparação); Frappe em `apuracao/modelo_rede.py` (DocType `Modelo
-  de Escala da Rede`, editável). Só lê a escala de hoje (`dia_da_escala`); grava no máximo uma nova simulação.
+- **O planejador de escalas foi retirado** (RH, 18/11/2026; docs/PRD-quadro-tarefas.md, seção 6): telas,
+  `engine/planejador/`, `otimizacao/` (OR-Tools) e os DocTypes de simulação (patch `remover_planejador`). Não
+  recriar simulação de escala; o horário de funcionamento das "Horas sem ninguém" é `escala_cobertura.FUNCIONAMENTO`.

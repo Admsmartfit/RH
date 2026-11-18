@@ -33,8 +33,8 @@ test("Tab começa no 'Pular para o conteúdo' e segue o menu, os filtros e o con
 	ordem.length = 0;
 	ordem.push(...campos);
 	expect(ordem[0]).toBe("Pular para o conteúdo");
-	expect(ordem.slice(1, 11)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Escalas", "Planejador", "Termos", "Banco de Talentos", "Colaborador", "Abrir no Desk", "Ajuda Ctrl K"]);
-	expect(ordem[11]).toContain("Competência");
+	expect(ordem.slice(1, 10)).toEqual(["Cockpit", "Inconsistências", "Cartão ponto", "Escalas", "Termos", "Banco de Talentos", "Colaborador", "Abrir no Desk", "Ajuda Ctrl K"]);
+	expect(ordem[10]).toContain("Competência");
 	expect(ordem[12]).toContain("Empresa");
 	expect(ordem[13]).toContain("Filial");
 	expect(ordem[14]).toContain("Departamento");

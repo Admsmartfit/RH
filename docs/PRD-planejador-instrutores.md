@@ -1,5 +1,7 @@
 # PRD — Planejador de escala 5x2 dos instrutores (grade de arrastar, horas descobertas e regras da rede)
 
+> **Retirado em 18/11/2026** (pedido do RH): o planejador saiu do sistema; este PRD fica como histórico. Ver docs/PRD-quadro-tarefas.md, seção 6.
+
 **Versão 3 — 10/11/2026**, com as respostas do RH (todas as perguntas respondidas). **Implementado em 10/11/2026
 (PI-E0 a PI-E5); detalhes em `docs/PROGRESS.md`.**
 

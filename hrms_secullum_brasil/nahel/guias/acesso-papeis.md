@@ -32,5 +32,5 @@ e ASO), **Gestor Ponto** (vê e trata o ponto da unidade, só pelo painel) e **S
 
 ## Como testar
 - Ação: entre com o usuário novo numa janela anônima do navegador.
-- Resultado esperado: ele cai no **Painel de ponto** ([[painel:cockpit|Cockpit]]). O gestor não vê "Abrir no Desk"
-  nem o Planejador; o RH vê os dois.
+- Resultado esperado: ele cai no **Painel de ponto** ([[painel:cockpit|Cockpit]]). O gestor não vê "Abrir no Desk";
+  o RH vê.

@@ -2851,3 +2851,18 @@ Registro de andamento por etapa (PRD, Seção 11). Atualizar ao final de cada et
   navegador), coluna de gravidade, unidade sob o nome, total de atrasos por pessoa, mensagens recolhidas.
 - Testes: pytest 1561; Frappe `test_termo_ocorrencias` (15), `test_dia_seguinte` (16), `test_monitoramento_horistas`
   (17) OK; `yarn lint` e `yarn build` OK. e2e não rodado.
+
+## Retirada do planejador de escalas (18/11/2026, pedido do RH)
+
+- **Saiu:** a aba Planejador do painel (Montar escala, Modelo da rede, Propostas, Comparador), o painel de consulta
+  na tela Escalas, os atalhos do workspace, `engine/planejador/`, `otimizacao/` (CP-SAT) e a dependência OR-Tools,
+  `apuracao/planejador.py`, `planejamento_escala.py`, `modelo_rede.py`, a impressão `planejamento_escala.html`,
+  o patch `modelo_smart` e os testes. Os DocTypes Simulacao de Escala, Planejamento de Escala, Modelo de Escala da
+  Rede e Vaga do Modelo de Escala **e os dados** são apagados pelo patch `remover_planejador` (backup antes).
+- **Ficou:** regime de jornada com vigência (EC 141/2026), tela Escalas, cobertura de faltas. O horário de
+  funcionamento das "Horas sem ninguém" passou para `engine/escala_cobertura.FUNCIONAMENTO` (mesmos valores).
+- Próximo: quadro de tarefas (docs/PRD-quadro-tarefas.md), aguardando a confirmação do resumo diário.
+- Backup local antes: `ponto.localhost/private/backups/20261118_112606-*`. Migrado `ponto.localhost` e
+  `testes.localhost` (0 DocTypes/tabelas restantes).
+- Testes: pytest 1509 (cobertura 97,7%); ruff OK; Frappe `test_acesso` (4), `test_cockpit_escala` (17),
+  `test_cobertura` (14) OK; `yarn lint` e `yarn build` OK. e2e não rodado (`foco.spec` ajustado ao menu).

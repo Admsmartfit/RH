@@ -4,7 +4,6 @@
   (hook get_website_user_home_page) e o endereço raiz "/" redireciona para lá (website_redirects).
 - Só o RH (RH Ponto) e o administrador (System Manager) abrem o Desk; o gestor que tentar abrir /app ou /desk volta
   ao /ponto (hook before_request). Quem não usa o painel (outros usuários do sistema) continua no Desk.
-- O planejador de escalas é só do administrador (apuracao/planejador.py).
 """
 
 import frappe

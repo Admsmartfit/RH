@@ -1,4 +1,4 @@
-"""Entrada no programa (RH, 04/11/2026): /ponto para todos, Desk só para RH e administrador, planejador só admin."""
+"""Entrada no programa (RH, 04/11/2026): /ponto para todos, Desk só para RH e administrador."""
 
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -7,7 +7,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from werkzeug.exceptions import HTTPException
 
-from hrms_secullum_brasil.apuracao import painel, planejador
+from hrms_secullum_brasil.apuracao import painel
 from hrms_secullum_brasil.utils import acesso
 
 
@@ -61,16 +61,13 @@ class TestAcesso(FrappeTestCase):
 		self.desk("Administrator")
 		self.desk(self.outro)  # quem não usa o painel continua no Desk (o /ponto o mandaria de volta)
 
-	def test_sessao_e_planejador(self):
+	def test_sessao(self):
 		frappe.set_user(self.gestor)
 		s = painel.sessao()
 		self.assertEqual((s["pode_abrir_desk"], s["admin"]), (False, False))
 		frappe.set_user(self.rh)
 		s = painel.sessao()
 		self.assertEqual((s["pode_abrir_desk"], s["admin"]), (True, False))
-		with self.assertRaises(frappe.PermissionError):
-			planejador.opcoes()
-		self.assertEqual(planejador.consulta_escalas("_Test Company", "2026-11-01", "2026-11-30"), [])
 		frappe.set_user("Administrator")
 		self.assertTrue(painel.sessao()["admin"])
 

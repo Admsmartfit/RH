@@ -3,11 +3,11 @@
 A tela mostra só um sinal por dia na linha "Cobertura" do rodapé da grade; o detalhe (quais horas e de quem é a
 pausa) abre num balão. Regras:
 
-- o horário de funcionamento é o mesmo do planejador (`planejador.montagem.PADROES["funcionamento"]`): de segunda
-  a sexta 05h-23h, sábado 08h-17h, domingo 08h-14h; feriado segue o sábado;
+- horário de funcionamento (`FUNCIONAMENTO`): de segunda a sexta 05h-23h, sábado 08h-17h, domingo 08h-14h; feriado
+  segue o sábado;
 - conta quem está na grade filtrada (o cargo escolhido na tela); minutos sem ninguém viram faixas "sem ninguém";
 - minuto sem ninguém só porque a pessoa está na pausa (entre dois períodos dela) não é furo: vira o aviso leve
-  "só pausa", como no planejador (DI-8).
+  "só pausa".
 
 Horários em minutos do dia.
 """
@@ -16,10 +16,11 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import pairwise
 
-from hrms_secullum_brasil.engine.planejador.montagem import PADROES
 from hrms_secullum_brasil.engine.turno_padrao import DOMINGO, FERIADO, SABADO
 
 SEM_NINGUEM, SO_PAUSA, OK = "sem_ninguem", "so_pausa", "ok"
+# funcionamento por dia da semana (0 = segunda), em minutos do dia; feriado segue o sábado
+FUNCIONAMENTO = {str(i): (300, 1380) for i in range(5)} | {"5": (480, 1020), "6": (480, 840)}
 
 
 @dataclass(frozen=True)
@@ -49,7 +50,7 @@ class CoberturaDia:
 
 def funcionamento(tipo_dia: str, weekday: int, tabela: dict | None = None) -> tuple[int, int]:
 	"""(abre, fecha) do dia. Feriado segue o sábado; `tabela` por dia da semana ("0" = segunda)."""
-	tabela = tabela or PADROES["funcionamento"]
+	tabela = tabela or FUNCIONAMENTO
 	if tipo_dia in (FERIADO, SABADO):
 		chave = "5"
 	elif tipo_dia == DOMINGO:

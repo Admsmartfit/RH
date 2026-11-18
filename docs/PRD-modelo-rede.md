@@ -1,5 +1,7 @@
 # PRD — Planejador: comparar a escala com o modelo da rede (Smart)
 
+> **Retirado em 18/11/2026** (pedido do RH): o planejador saiu do sistema; este PRD fica como histórico. Ver docs/PRD-quadro-tarefas.md, seção 6.
+
 **Versão 1 — 10/11/2026.** Implementado no mesmo dia.
 
 - **Pedido do RH:** "com base nesta referência que a Smart deu, crie outro módulo no planejador para mostrar

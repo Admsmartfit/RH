@@ -26,12 +26,6 @@ const routes = [
 				meta: { titulo: "Escalas" },
 			},
 			{
-				path: "planejador",
-				name: "Planejador",
-				component: () => import("@/pages/Planejador.vue"),
-				meta: { titulo: "Planejador de escalas" },
-			},
-			{
 				path: "termos",
 				name: "Termos",
 				component: () => import("@/pages/Termos.vue"),

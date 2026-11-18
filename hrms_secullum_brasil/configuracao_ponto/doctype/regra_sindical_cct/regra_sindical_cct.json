@@ -623,7 +623,7 @@
    "fieldtype": "Section Break",
    "label": "Compensação de jornada (EC 141/2026)",
    "collapsible": 1,
-   "description": "Quando a CCT permitir compensar (ex.: 8h24 por dia para fechar 42h em 5 dias). Usado pelo planejador de escalas."
+   "description": "Quando a CCT permitir compensar (ex.: 8h24 por dia para fechar 42h em 5 dias)."
   },
   {
    "default": "0",

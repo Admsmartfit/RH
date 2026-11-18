@@ -77,7 +77,7 @@ def sessao() -> dict:
 		"papeis": sorted(PAPEIS_DO_PAINEL & set(frappe.get_roles()))
 		or (["System Manager"] if user == "Administrator" else []),
 		"rh": eh_rh(),
-		# RH, 04/11/2026 (utils/acesso.py): "Abrir no Desk" só para RH e administrador; o planejador só para o admin
+		# RH, 04/11/2026 (utils/acesso.py): "Abrir no Desk" só para RH e administrador
 		"pode_abrir_desk": pode_abrir_desk(),
 		"admin": e_administrador(),
 		# docs/PRD-ajuda-nahel.md: o Nahel aparece para quem tem algum público (RH, gestor, TI)

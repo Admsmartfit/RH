@@ -299,7 +299,7 @@ def aplicar_respostas_rh() -> dict:
 # ------------------------------------------------------------------ segunda rodada de respostas (26/10/2026)
 
 # 40h por semana é a MARGEM da escala do instrutor horista (não passar disso para nunca chegar à hora extra das
-# 44h), não um mínimo pago (RH, 30/10/2026). O planejador usa como teto semanal; o cadastro fica sem mínimo.
+# 44h), não um mínimo pago (RH, 30/10/2026). O cadastro fica sem mínimo.
 TETO_ESCALA_INSTRUTOR = 40
 INSALUBRIDADE_ASG = 20  # grau médio, sobre o salário base (padrão do sistema)
 

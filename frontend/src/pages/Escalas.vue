@@ -154,8 +154,6 @@
 			</ul>
 		</section>
 
-		<PainelConsulta v-if="filtros.company" :company="filtros.company" :inicio="periodoDoMes[0]" :fim="periodoDoMes[1]" />
-
 		<p v-if="!filtros.company" class="rounded-md border border-alerta bg-alerta-suave p-3 text-sm text-alerta-texto">
 			Escolha a empresa no filtro acima para montar a escala.
 		</p>
@@ -512,7 +510,6 @@ import Balao from "@/components/Balao.vue";
 import BalaoTurno from "@/components/BalaoTurno.vue";
 import BalaoVaga from "@/components/BalaoVaga.vue";
 import PopoverInconsistencia from "@/components/PopoverInconsistencia.vue";
-import PainelConsulta from "@/components/planejador/PainelConsulta.vue";
 import { useFiltros } from "@/composables/useFiltros";
 import { mensagem } from "@/utils/erros";
 import { alteracoesDoMovimento, cartao, diasVisiveis, montarGrade, moeda, nomeDaQuebra, rotuloDoTurno } from "@/utils/escalas";
@@ -535,12 +532,6 @@ const MODOS = [
 const route = useRoute();
 const router = useRouter();
 const { filtros } = useFiltros();
-// docs/PRD-planejador-5x2.md (PE-10): o painel de consulta do planejador lê as mudanças do mês
-const periodoDoMes = computed(() => {
-	const [ano, mes] = filtros.value.competencia.split("-").map(Number);
-	return [`${filtros.value.competencia}-01`, `${filtros.value.competencia}-${String(new Date(ano, mes, 0).getDate()).padStart(2, "0")}`];
-});
-
 const modo = computed({
 	get: () => (route.query.modo === "mes" ? "mes" : "fds"),
 	set: (valor) => router.replace({ query: { ...route.query, modo: valor === "mes" ? "mes" : undefined } }),

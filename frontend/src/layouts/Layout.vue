@@ -47,22 +47,20 @@
 </template>
 
 <script setup>
-import { computed, provide, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { computed, provide } from "vue";
+import { useRoute } from "vue-router";
 import { createResource } from "frappe-ui";
 import FiltrosPeriodo from "@/components/FiltrosPeriodo.vue";
 import NahelAssistente from "@/components/NahelAssistente.vue";
 
 const route = useRoute();
-const router = useRouter();
 
-// pedido do RH (04/11/2026): o planejador é só do administrador (o servidor também recusa)
+// `soAdmin: true` = item só do administrador (o servidor também recusa)
 const MENU = [
 	{ nome: "Cockpit", rotulo: "Cockpit", exato: true },
 	{ nome: "Inconsistencias", rotulo: "Inconsistências" },
 	{ nome: "Cartao", rotulo: "Cartão ponto" },
 	{ nome: "Escalas", rotulo: "Escalas" },
-	{ nome: "Planejador", rotulo: "Planejador", soAdmin: true },
 	{ nome: "Termos", rotulo: "Termos" },
 	{ nome: "BancoTalentos", rotulo: "Banco de Talentos" },
 	{ nome: "Colaborador", rotulo: "Colaborador" },
@@ -81,13 +79,4 @@ const sessao = createResource({
 	cache: "ponto-sessao",
 });
 provide("sessao", sessao);
-
-// quem não é administrador e abre o endereço do planejador volta ao cockpit
-watch(
-	() => [route.name, sessao.data],
-	() => {
-		if (route.name === "Planejador" && sessao.data && !sessao.data.admin) router.replace({ name: "Cockpit", query: route.query });
-	},
-	{ immediate: true }
-);
 </script>
